@@ -170,7 +170,7 @@ let n = 0;
       await newGame('cs'); await clearUI();
       const scenes = [
         { scene: 'cinema', kind: 'film', title: 'Night Train', sub: 'Action · Theater 1', film: 'Night Train', pal: ['#274', '#9bd'], popcorn: true, lines: ['The lights go down.', 'Previews end.'] },
-        { scene: 'salon', kind: 'salon', title: 'Fresh trim', sub: "Bianca's Salon", before: 0, after: 1, lines: ['Snip snip.'] },
+        { scene: 'salon', kind: 'salon', title: 'Fresh trim', sub: "Bianca's Salon", before: Object.assign({}, PLAYER_LOOK), after: Object.assign({}, PLAYER_LOOK, { hair: '#5a3a8a' }), lines: ['Snip snip.'] },
         { scene: 'laundry', kind: 'laundry', title: 'Wash and dry', sub: 'Suds Laundromat', lines: ['Quarters in. Soap in.'] },
         { scene: 'music', kind: 'mic', title: 'Open mic night', sub: 'Cafe Luna', singer: (typeof NPC_LOOK !== 'undefined' ? NPC_LOOK[5] : null), lines: ['A shy poet.'] },
         { scene: 'dentist', kind: 'dental', title: 'Checkup', sub: 'Dr. Patel', lines: ['Open wide.'] },
