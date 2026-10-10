@@ -1,0 +1,37 @@
+/* Layout: one full-height game shell. The town itself is the hero: a live canvas with a day and night cycle sits behind the title, and in play a slim glass HUD rides above it. Menus, the graduation cutscene and the degree picker are overlays. Committed single look: after-dark navy glass, marigold for money and primary actions, coral (the player's shirt) as the one warm accent. */
+:root{
+  --ink:#0b131e; --ink2:#121d2b; --ink3:#1c2b3d; --line:#2b4157;
+  --text:#eaf1f6; --muted:#8fa5b6;
+  --gold:#ffc247; --gold-ink:#2b1c00; --coral:#ff7a59;
+  --food:#ff9a3d; --water:#47b8ff; --rest:#a393ff;
+  --good:#5bd39b; --warn:#ffb54a; --bad:#ff6b6b;
+  --glass:rgba(13,22,34,.78); --hair:rgba(255,255,255,.1);
+  --sky:#ffc98a;
+  --font-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --font-body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--ink);color:var(--text);font:400 15px/1.4 var(--font-body);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+h1,h2{font-family:var(--font-display);text-wrap:balance}
+#app{position:relative;height:100%;overflow:hidden;background:var(--ink)}
+.screen{position:absolute;inset:0;animation:scr .45s ease-out}
+@keyframes scr{from{opacity:0}to{opacity:1}}
+
+/* buttons */
+.btn{position:relative;border:0;border-radius:14px;padding:13px 24px;font-weight:700;font-size:16px;color:var(--gold-ink);background:linear-gradient(180deg,#ffd778 0,var(--gold) 45%,#f2a92a 100%);box-shadow:0 1px 0 #fff6 inset,0 -2px 0 #0002 inset,0 8px 22px #ffb02433,0 2px 4px #0006;transition:transform .12s,filter .12s,box-shadow .12s}
+.btn:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(1px);box-shadow:0 1px 0 #fff4 inset,0 2px 6px #0006}
+.btn:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:rgba(255,255,255,.06);color:var(--text);box-shadow:0 0 0 1px var(--hair) inset;backdrop-filter:blur(6px)}
+.btn.ghost:hover:not(:disabled){box-shadow:0 0 0 1px var(--gold) inset;filter:none}
+.chip-btn{border:0;background:rgba(255,255,255,.07);box-shadow:0 0 0 1px var(--hair) inset;border-radius:10px;padding:7px 11px;font:500 12px var(--font-mono);color:var(--text);transition:background .12s,box-shadow .12s}
+.chip-btn:hover{background:rgba(255,194,71,.14);box-shadow:0 0 0 1px var(--gold) inset}
+.eyebrow{font:500 12px var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+

@@ -1,0 +1,16 @@
+/* fishing */
+#fishing{background:rgba(4,8,14,.8)}
+.fcard{width:min(900px,100%);display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:#0d141f;box-shadow:0 0 0 1px #ffffff1f,0 40px 100px #000c;animation:card .3s cubic-bezier(.2,.9,.3,1.15)}
+.fhead{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px}
+.fhead b{font:800 20px var(--font-display)}.fhead span{flex:1;color:var(--muted);font-size:12.5px}
+.fstage{position:relative}
+#fishCv{display:block;width:100%;aspect-ratio:16/9;max-height:68vh;touch-action:none;cursor:pointer;user-select:none;-webkit-user-select:none}
+#fishMsg{position:absolute;left:50%;top:16px;transform:translateX(-50%);padding:7px 16px;border-radius:99px;background:rgba(8,12,22,.7);color:#fff;font:600 14px var(--font-body);pointer-events:none;white-space:nowrap}
+#fishMsg:empty{display:none}
+#fishResult{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(circle,rgba(20,30,50,.85),rgba(8,12,22,.94));animation:scr .25s ease-out}
+#fishResult[hidden]{display:none}
+#fishPic{width:240px;height:120px}
+#fishResult b{font:800 26px var(--font-display)}#fishResult small{color:var(--muted);font-size:14px;margin-bottom:10px}
+#fishResult .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+@media (max-width:560px){.fhead span{display:none}#fishCv{aspect-ratio:4/5;max-height:70vh}}
+

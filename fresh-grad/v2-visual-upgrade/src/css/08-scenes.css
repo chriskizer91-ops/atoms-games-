@@ -1,0 +1,23 @@
+/* ---------- town life additions ---------- */
+:root{--mood:#ff7eb6;--good:#5be3a0}
+.gauge[data-k=mood]{--c:var(--mood)}
+#chips i.good{background:#5be3a022;color:var(--good);box-shadow:0 0 0 1px #5be3a066 inset;animation:none}
+@media (max-width:760px){.gauge{min-width:0}.gauges{gap:8px}.gauge label{font-size:9.5px;letter-spacing:.05em}}
+@media (max-width:380px){.gauge label span:first-child{max-width:4.2em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* scenes: movies, laundry, reading, haircuts */
+#scene{background:rgba(4,6,12,.82)}
+.scard{position:relative;width:min(100%,760px);display:flex;flex-direction:column;gap:0;border-radius:22px;overflow:hidden;background:#0d141f;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 40px 100px #000c;animation:card .3s cubic-bezier(.2,.9,.3,1.15)}
+#sceneCv{display:block;width:100%;aspect-ratio:16/9;max-height:62vh;background:#000}
+#sceneLine{position:absolute;left:0;right:0;top:calc(min(62vh,(min(100vw - 32px,760px)) * 9 / 16) - 54px);margin:0 auto;width:max-content;max-width:88%;padding:7px 14px;border-radius:99px;background:rgba(8,10,18,.72);color:#fff;font:500 14px var(--font-body,inherit);text-align:center;opacity:0;pointer-events:none}
+#sceneLine:empty{display:none}
+#sceneLine.in{animation:sline .5s ease-out forwards}
+@keyframes sline{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.sinfo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px 10px}
+.sinfo b{display:block;font-family:var(--font-display,inherit);font-size:20px;letter-spacing:-.01em;line-height:1.15}
+.sinfo small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+#sceneClock{font:600 15px var(--font-mono);color:var(--gold);flex:none;font-variant-numeric:tabular-nums}
+.sbar{height:6px;margin:0 18px 16px;border-radius:4px;background:#0a121c;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.07) inset}
+.sbar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--coral));border-radius:4px;transition:width .2s linear}
+@media (max-width:560px){.sinfo b{font-size:17px}#sceneLine{font-size:12.5px}}
+

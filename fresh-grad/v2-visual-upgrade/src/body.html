@@ -1,0 +1,204 @@
+<div id="app">
+  <section id="title" class="screen">
+    <canvas id="titleCanvas" aria-hidden="true"></canvas>
+    <div class="t-clock" aria-hidden="true"><i></i><span id="titleClock">Maple Court &middot; 6:05 PM</span></div>
+    <div class="t-lock">
+      <svg class="cap" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M32 12 6 24l26 12 26-12z" fill="currentColor" fill-opacity=".18"/><path d="M16 30v12c0 5 9 9 16 9s16-4 16-9V30"/><path d="M58 24v18"/><circle cx="58" cy="46" r="3" fill="currentColor"/></svg>
+      <p class="eyebrow">A small life-sim about your first real job</p>
+      <h1>Fresh <em>Grad</em></h1>
+      <p class="sub">Pick your career, rent a place, eat three meals a day and try to get some sleep.</p>
+      <div class="row">
+        <button class="btn" id="btnStart">New game</button>
+        <button class="btn ghost" id="btnContinue" hidden>Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="cut" class="screen" hidden>
+    <canvas id="cutCanvas"></canvas>
+    <div id="cutCap"><b></b><span></span></div>
+    <div id="cutCard" hidden><p></p></div>
+    <button class="chip-btn" id="cutSkip">Skip</button>
+  </section>
+
+  <section id="degree" class="screen" hidden>
+    <div class="dg-wrap">
+      <div class="dg-head">
+        <p class="eyebrow">Diploma in hand</p>
+        <h2>What did you study?</h2>
+        <p>Your degree decides your job, your pay and how hard the workday hits you. Choose one.</p>
+      </div>
+      <div id="degList"></div>
+      <div class="dg-side">
+        <div class="diploma">
+          <small>Fresh Grad State University</small>
+          <h3>Bachelor of <span class="field" id="dField"></span></h3>
+          <small>with all rights and privileges thereunto appertaining</small>
+          <div class="seal"></div>
+        </div>
+        <div class="offer" id="offer"></div>
+      </div>
+    </div>
+    <div class="dg-bar"><button class="btn" id="btnAccept" disabled>Pick a degree</button></div>
+  </section>
+
+  <section id="game" class="screen" hidden>
+    <header id="hud" data-tod="day">
+      <div class="clock">
+        <span class="dial"><span class="tod"></span></span>
+        <div class="clock-txt"><b id="hTime">7:00 AM</b><small><span class="dow" id="hDow">MON</span> &middot; <span id="hDay">Day 1</span></small></div>
+      </div>
+      <div class="gauges">
+        <div class="gauge" data-k="hunger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v7a2 2 0 0 0 4 0V3M9 3v18M17 3c-2 2-3 5-3 8h3v10"/></svg><div class="g-main"><label><span>Hunger</span><span class="v">70</span></label><div class="bar"><span></span></div></div></div>
+        <div class="gauge" data-k="thirst"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/></svg><div class="g-main"><label><span>Thirst</span><span class="v">70</span></label><div class="bar"><span></span></div></div></div>
+        <div class="gauge" data-k="energy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 5 13h6l-1 9 8-11h-6z"/></svg><div class="g-main"><label><span>Energy</span><span class="v">70</span></label><div class="bar"><span></span></div></div></div>
+        <div class="gauge" data-k="mood"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14.5c1 1.4 2.4 2 4 2s3-.6 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg><div class="g-main"><label><span>Mood</span><span class="v">70</span></label><div class="bar"><span></span></div></div></div>
+      </div>
+      <div class="meals" title="Meals eaten today"><span data-m="b">B</span><span data-m="l">L</span><span data-m="d">D</span></div>
+      <div class="money"><b id="hMoney">$0</b><small id="hRent">Rent</small></div>
+      <div class="tools"><button class="chip-btn" id="bSpeed" title="Game speed">1x</button><button class="chip-btn" id="bSound">Music</button><button class="chip-btn phone-btn" id="bPhone" title="Your phone (P)"><span class="lv">Lv 1</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/></svg><span class="pl">Phone</span></button><button class="chip-btn" id="bMenu">Menu</button></div>
+    </header>
+    <div id="goal"><b>Goal</b><span id="goalText"></span><div id="chips"></div></div>
+    <div id="stage">
+      <canvas id="world"></canvas>
+      <div id="warm"></div><div id="vig"></div>
+      <canvas id="mini" width="392" height="262" hidden></canvas>
+      <button id="prompt" hidden></button>
+      <div id="wipe" hidden></div>
+      <div id="gig" hidden><b>Delivery</b><span id="gigTo"></span><i id="gigTime"></i><div class="gbar"><span id="gigBar"></span></div></div>
+      <div id="hint">WASD / arrows to walk &middot; E to interact &middot; click to walk</div>
+      <div id="pad">
+        <span></span><button data-d="up" aria-label="Up">&#9650;</button><span></span>
+        <button data-d="left" aria-label="Left">&#9664;</button><span></span><button data-d="right" aria-label="Right">&#9654;</button>
+        <span></span><button data-d="down" aria-label="Down">&#9660;</button><span></span>
+      </div>
+    </div>
+  </section>
+
+  <div id="panel" class="overlay" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+      <header id="pHead"><h2 id="pTitle"></h2><p id="pSub"></p><button class="x" id="pClose" aria-label="Close">&times;</button></header>
+      <div class="body" id="pBody"></div>
+    </div>
+  </div>
+
+  <div id="skip" class="overlay" hidden>
+    <div class="card">
+      <h2 id="skipTitle"></h2>
+      <p id="skipSub"></p>
+      <div id="skipClock">0:00</div>
+      <div id="skipBar"><span></span></div>
+    </div>
+  </div>
+
+  <div id="job" class="overlay" hidden>
+    <div class="jcard" role="dialog" aria-modal="true" aria-labelledby="jTitle">
+      <header class="jhead">
+        <div class="jid"><span class="jmark" id="jMark" aria-hidden="true"></span><div><b id="jTitle"></b><small id="jSub"></small></div></div>
+        <div class="jclock"><b id="jClock">8:00 AM</b><small id="jLeft"></small></div>
+        <div class="jperf"><small>Performance</small><b id="jPerf">&ndash;</b></div>
+      </header>
+      <div class="jbar" aria-hidden="true"><span id="jBarFill"></span></div>
+      <div class="jstage" id="jStage"></div>
+      <div class="jfoot" id="jFoot"></div>
+    </div>
+  </div>
+
+  <div id="phone" class="overlay" hidden>
+    <div class="phone" role="dialog" aria-modal="true" aria-label="Your phone">
+      <div class="ph-status"><b id="phTime">7:00 AM</b><span class="ph-notch"></span><span class="ph-sig"><i></i><i></i><i></i><em></em></span></div>
+      <div class="ph-body" id="phBody"></div>
+      <nav class="ph-tabs">
+        <button type="button" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>Today</button>
+        <button type="button" data-tab="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</button>
+        <button type="button" data-tab="msgs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Texts</button>
+        <button type="button" data-tab="career"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 12h18"/></svg>Career</button>
+        <button type="button" data-tab="trophies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0zM5 5h3M16 5h3M5 5c0 3 1 4 3 4M19 5c0 3-1 4-3 4M12 13v4M8 20h8"/></svg>Trophies</button>
+      </nav>
+      <button class="ph-x" id="phClose" type="button" aria-label="Close phone">&times;</button>
+    </div>
+  </div>
+
+  <div id="lvl" class="overlay" hidden>
+    <div class="lvcard" role="dialog" aria-modal="true" aria-labelledby="lvlTitle">
+      <div class="lv-burst"><small id="lvlKicker">Level up</small><b id="lvlNum">2</b></div>
+      <h2 id="lvlTitle"></h2>
+      <p id="lvlSub"></p>
+      <div id="lvlBody"></div>
+    </div>
+  </div>
+
+  <div id="recap" class="overlay" hidden>
+    <div class="card recard" role="dialog" aria-modal="true" aria-labelledby="recapTitle">
+      <header style="--band:#34507a"><h2 id="recapTitle">Good morning</h2><p id="recapSub"></p></header>
+      <div class="body" id="recapBody"></div>
+      <div class="rc-foot"><button class="btn" id="recapGo" type="button">Start the day</button></div>
+    </div>
+  </div>
+
+  <div id="fishing" class="overlay" hidden>
+    <div class="fcard" role="dialog" aria-modal="true" aria-labelledby="fishTitle">
+      <div class="fhead"><b id="fishTitle">Fishing</b><span>Tap or Space: cast, hook, hold to reel</span><button class="chip-btn" id="fishLeave" type="button">Done fishing</button></div>
+      <div class="fstage">
+        <canvas id="fishCv"></canvas>
+        <p id="fishMsg"></p>
+        <div id="fishResult" hidden>
+          <canvas id="fishPic" width="240" height="120"></canvas>
+          <b id="fishName"></b><small id="fishInfo"></small>
+          <div class="row"><button class="btn" id="fishKeep" type="button">Keep for dinner</button><button class="btn ghost" id="fishSell" type="button">Sell</button><button class="btn ghost" id="fishAgain" type="button">Let it go</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="scene" class="overlay" hidden>
+    <div class="scard" role="dialog" aria-modal="true" aria-labelledby="sceneTitle">
+      <canvas id="sceneCv" aria-hidden="true"></canvas>
+      <p id="sceneLine"></p>
+      <div class="sinfo"><div><b id="sceneTitle"></b><small id="sceneSub"></small></div><span id="sceneClock">0:00</span></div>
+      <div class="sbar"><span id="sceneBar"></span></div>
+    </div>
+  </div>
+
+  <div id="dream" class="overlay" hidden data-mood="calm">
+    <canvas id="dreamCanvas"></canvas>
+    <div class="dream-ui">
+      <p class="dream-kind" id="dreamKind">Dreaming</p>
+      <h2 id="dreamTitle"></h2>
+      <p id="dreamLine"></p>
+      <div id="dreamChoice" hidden>
+        <p id="dreamQ"></p>
+        <div class="row"><button class="btn" id="dreamA" type="button"></button><button class="btn ghost" id="dreamB" type="button"></button></div>
+      </div>
+    </div>
+    <div class="dream-foot"><span id="dreamClock">10:00 PM</span><div id="dreamBar"><span></span></div><button class="chip-btn" id="dreamWake" type="button">Wake up</button></div>
+  </div>
+
+  <div id="menu" class="overlay" hidden>
+    <div class="card">
+      <header><h2>Menu</h2><button class="x" id="mClose" aria-label="Close">&times;</button></header>
+      <div class="body">
+        <div id="mLife"></div>
+        <p class="msave">Your game saves automatically every in-game hour.</p>
+        <div class="row">
+          <button class="btn" id="mResume">Resume</button>
+          <button class="btn ghost" id="mRestart">Start over</button>
+        </div>
+        <p id="mConfirm" hidden>This erases your current life. Press Start over again to confirm.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="over" class="overlay" hidden>
+    <div class="card">
+      <header style="--band:#7a2a2a"><h2 id="oTitle">Evicted</h2><p id="oSub"></p></header>
+      <div class="body">
+        <div class="stats" id="oStats"></div>
+        <button class="btn" id="oAgain">Back to title</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" aria-live="polite"></div>
+  <canvas id="confetti" hidden aria-hidden="true"></canvas>
+</div>

@@ -1,0 +1,16 @@
+/* title: the live town with the name set low and left */
+#title{background:#0b131e}
+#titleCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#title::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,12,20,.74) 0,rgba(7,12,20,.34) 36%,rgba(7,12,20,0) 62%),linear-gradient(0deg,rgba(7,12,20,.6) 0,rgba(7,12,20,0) 34%);pointer-events:none;z-index:1}
+.t-lock{z-index:2;position:absolute;left:clamp(20px,6vw,88px);bottom:clamp(28px,9vh,96px);right:20px;display:flex;flex-direction:column;align-items:flex-start;gap:14px;max-width:620px}
+.t-lock>*{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+.t-lock>:nth-child(2){animation-delay:.06s}.t-lock>:nth-child(3){animation-delay:.12s}.t-lock>:nth-child(4){animation-delay:.18s}.t-lock>:nth-child(5){animation-delay:.24s}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#title .cap{width:64px;height:64px;color:var(--gold);filter:drop-shadow(0 6px 18px #ffb02455)}
+#title h1{font-weight:800;font-size:clamp(60px,12.5vw,148px);line-height:.84;letter-spacing:-.035em;text-shadow:0 2px 0 #0008,0 18px 60px #000a}
+#title h1 em{font-style:normal;color:var(--gold)}
+#title .sub{max-width:36ch;color:#d5e0e8;font-size:clamp(16px,2vw,19px);text-shadow:0 1px 12px #000c}
+#title .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.t-clock{z-index:2;position:absolute;right:clamp(16px,3vw,32px);top:clamp(16px,3vh,28px);display:flex;align-items:center;gap:9px;padding:8px 13px;border-radius:99px;background:var(--glass);box-shadow:0 0 0 1px var(--hair) inset;backdrop-filter:blur(8px);font:500 12px var(--font-mono);letter-spacing:.06em;color:#d5e0e8}
+.t-clock i{width:8px;height:8px;border-radius:50%;background:var(--sky);box-shadow:0 0 10px var(--sky)}
+
