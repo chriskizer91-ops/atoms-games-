@@ -1,8 +1,9 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Fresh Grad Seasons</title>
+<meta name="theme-color" content="#0b131e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,600&display=swap">
 <style>
 /* Layout: one full-height game shell. The town itself is the hero: a live canvas with a day and night cycle sits behind the title, and in play a slim glass HUD rides above it. Menus, the graduation cutscene and the degree picker are overlays. Committed single look: after-dark navy glass, marigold for money and primary actions, coral (the player's shirt) as the one warm accent. */
 :root{
@@ -900,6 +901,38 @@ h1,h2{font-family:var(--font-display);text-wrap:balance}
 </div>
 <script>
 'use strict';
+/* ============================ optional illustrated art ============================
+   Drop PNGs into assets/ using the file names in ../IMAGE_PROMPTS.md (assets/<key>.png). Anything missing is
+   skipped silently and the procedural drawing is used, so the game never depends on them. Add ?noart to the
+   page URL to force the all-procedural look. Images are only ever drawn, never read back, so a file:// page works. */
+const ART = {
+  on: !/[?&]noart\b/.test(location.search),
+  base: 'assets/',
+  cache: new Map(),
+  /* the loaded image, or null. The first ask starts the load, so call it every frame without worrying. */
+  get(key) {
+    if (!this.on) return null;
+    let e = this.cache.get(key);
+    if (!e) {
+      e = { img: new Image(), ok: false, bad: false };
+      e.img.onload = () => { e.ok = true; };
+      e.img.onerror = () => { e.bad = true; };
+      e.img.src = this.base + key + '.png';
+      this.cache.set(key, e);
+    }
+    return e.ok ? e.img : null;
+  },
+  has(key) { return !!this.get(key); },
+  preload(keys) { keys.forEach(k => this.get(k)); },
+  /* draw an image to cover a w x h box (like CSS object-fit: cover), with a focal point 0..1 and a zoom >= 1 */
+  cover(c, img, x, y, w, h, fx, fy, zoom) {
+    const z = zoom || 1, s = Math.max(w / img.naturalWidth, h / img.naturalHeight) * z;
+    const sw = w / s, sh = h / s;
+    const sx = clamp((fx == null ? 0.5 : fx) * img.naturalWidth - sw / 2, 0, img.naturalWidth - sw);
+    const sy = clamp((fy == null ? 0.5 : fy) * img.naturalHeight - sh / 2, 0, img.naturalHeight - sh);
+    c.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  }
+};
 /* ============================ helpers ============================ */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
