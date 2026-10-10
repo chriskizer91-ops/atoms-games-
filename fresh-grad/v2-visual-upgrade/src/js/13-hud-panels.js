@@ -25,6 +25,8 @@ function updateHud() {
   hud.dataset.tod = isNight(S.t) && !(h >= 5 && h < 6.5) ? 'night' : ((h >= 17.5 && h < 20) || (h >= 5 && h < 6.5)) ? 'dusk' : 'day';
   { const X = xpInto(), pb = $('#bPhone'); pb.querySelector('.lv').textContent = 'Lv ' + X.L; pb.style.setProperty('--xpp', Math.round(X.x / X.need * 100) + '%'); }
   hud.style.setProperty('--p', (S.t / 1440 * 100).toFixed(1) + '%');
+  hud.style.setProperty('--tf', (S.t / 1440).toFixed(4)); /* v2: orbit angle of the sun and moon in the clock disc */
+  { const bs = $('#bSound'); if (bs) { const st = bs.textContent === 'Muted' ? 'muted' : 'on'; if (bs.dataset.s !== st) bs.dataset.s = st; } }
   if (FX.A) $('#app').style.setProperty('--sky', rgbS(mix3(FX.A.bot, [150, 170, 255], FX.A.nf * 0.8)));
   if (hudMoneyS !== S) { hudMoneyS = S; hudMoney = S.money; }
   else if (Math.abs(S.money - hudMoney) > 0.004) {
@@ -81,6 +83,49 @@ function closedSpec(id) {
   const names = { apartment: 'Apartment', work: job().employer, grocery: 'Corner Grocery', diner: "Dot's Diner", park: 'Park' };
   return { band: PLACES[id] ? PLACES[id].col : '#3a4a58', title: names[id] || placeTitle(id), sub: 'Closed', note: closedWhy(id) + (PLACES[id] ? ' ' + hoursText(id) : ''), sections: [] };
 }
+/* v2 presentation helpers: which glyph a panel header or an option row wears, and how a tag splits into price and time pills */
+const OPT_ICONS = [
+  [/\bbed\b|sleep|lie-in/i, 'bed', '#a393ff'], [/\bnap\b/i, 'zz', '#a393ff'], [/rent|lease|landlord/i, 'key', '#ffc247'],
+  [/shift|clock in|clock-in|office|desk/i, 'brief', '#ffc247'], [/coffee|latte|espresso|\btea\b|milkshake|cocoa|cappuccino/i, 'cup', '#ff9a3d'],
+  [/pack|grocer|pantry|coupon/i, 'basket', '#ff9a3d'], [/water|fountain|juice|soda|drink|energy drink|lemonade/i, 'drop', '#47b8ff'],
+  [/cook|breakfast|lunch|dinner|plate|meal|snack|fries|pie\b|special|burger|stew|soup|salad|sandwich|bowl/i, 'plate', '#ff9a3d'],
+  [/bread|bakery|pastry|muffin|croissant|cookie|cake|donut|bun\b|loaf|treat/i, 'bread', '#ff9a3d'],
+  [/bench|sit\b|duck|stroll|walk around/i, 'tree', '#5be3a0'], [/\bbus\b|ride to/i, 'bus', '#47b8ff'],
+  [/movie|film|ticket|\bshow\b|theat/i, 'film', '#ff7eb6'], [/hair|trim|cut\b|style|dye|shave/i, 'scissors', '#ff7eb6'],
+  [/laundry|wash|dryer|\bdry\b|detergent|load\b/i, 'washer', '#47b8ff'], [/bike|helmet|spoke|tire|tyre/i, 'bike', '#5be3a0'],
+  [/pizza|slice|pie\b/i, 'pizza', '#ff9a3d'], [/pill|medicine|relief|vitamin|bandage|cough|ointment|remedy|pharm/i, 'pill', '#5be3a0'],
+  [/deposit|withdraw|saving|bank|interest|autopay|account|\bloan\b/i, 'dollar', '#ffc247'], [/tooth|dental|filling|floss|brace/i, 'tooth', '#47b8ff'],
+  [/book|read|chapter|novel|library|magazine/i, 'book', '#ff7eb6'], [/music|mic\b|song|sing|perform|record|guitar|piano/i, 'note', '#ff7eb6'],
+  [/\bfish|\brod\b|bait|tackle|lure/i, 'fish', '#47b8ff'], [/deliver|courier|rider|scooter/i, 'scooter', '#ffc247'],
+  [/lesson|teach|class|school|student|homework|lecture/i, 'school', '#ffc247'], [/clinic|doctor|nurse|checkup|check-up|treat(?:ment)?/i, 'cross', '#ff6b6b'],
+  [/chat|talk|ask|say\b|hello|greet|gossip|hang|friend|coffee with/i, 'chat', '#ff7eb6'], [/hammer|tool|drill|paint|lamp|plant|chair|mattress|curtain|shelf|furnit|buy|purchase/i, 'hammer', '#ffc247'],
+  [/play|game|claw|arcade|prize|ticket/i, 'star', '#ffc247'], [/plan|goal|mission|goals/i, 'flag', '#ffc247']
+];
+function optIcon(it) {
+  for (const r of OPT_ICONS) if (r[0].test(it.t || '')) return [r[1], r[2]];
+  const txt = (it.t || '') + ' ' + (it.d || '');
+  for (const r of OPT_ICONS) if (r[0].test(txt)) return [r[1], r[2]];
+  return ['sparkle', '#8fa5b6'];
+}
+function panelGlyph(id, spec) {
+  if (id === 'notice') return 'alert';
+  if (id.startsWith('npc:')) return 'chat';
+  if (id.startsWith('bus:')) return 'bus';
+  if (id.startsWith('sch:')) return 'school';
+  if (id.startsWith('ispot:')) { const P = S && S.intId && PLACE_ICON[S.intId]; return P ? P[1] : (S && S.intId === 'work' ? 'brief' : 'pin'); }
+  if (spec && spec.sub === 'Closed') return 'lock';
+  const P = PLACE_ICON[id]; return P ? P[1] : 'pin';
+}
+function tagPills(tag) {
+  const box = el('span', 'tag'); box.title = tag; box.setAttribute('aria-label', tag);
+  const parts = String(tag).split(' · ');
+  if (parts.length === 1 && !/^(\$|free\b)/i.test(parts[0]) && !/^\d+(\.\d+)?\s*(min|h|hr)\b|^\d+h\b/i.test(parts[0])) { box.textContent = tag; return box; }
+  parts.forEach(pt => {
+    const k = /^\$|^free\b/i.test(pt) ? (/^free\b/i.test(pt) ? 'fr' : 'pr') : (/^\d+(\.\d+)?\s*(min|h|hr)\b|^\d+h\b|^\d+\s*h\s*\d*/i.test(pt) ? 'tm' : 'ot');
+    box.appendChild(el('i', k, pt));
+  });
+  return box;
+}
 function renderPanel() {
   const id = G.inside;
   if (!id || !S) return;
@@ -90,22 +135,26 @@ function renderPanel() {
   $('#pTitle').textContent = spec.title;
   $('#pSub').textContent = spec.sub || '';
   $('#pSub').hidden = !spec.sub;
+  $('#pSub').className = spec.sub === 'Closed' ? 'closed' : '';
+  { const gl = panelGlyph(id, spec); $('#pGlyph').innerHTML = uiIcon(gl); $('#pMark').innerHTML = uiIcon(gl, '', 1.1); }
   const body = $('#pBody'); body.innerHTML = '';
   if (spec.note) body.appendChild(el('div', 'note' + (spec.bad ? ' bad' : ''), spec.note));
   if (spec.stock) {
     const st = el('div', 'stock');
-    spec.stock.forEach(s => st.appendChild(el('span', '', s)));
+    spec.stock.forEach(s => st.appendChild(el('span', /^\$/.test(s) ? 'cash' : '', s)));
     body.appendChild(st);
   }
   (spec.sections || []).forEach(sec => {
     const box = el('div', 'sec');
     box.appendChild(el('h3', '', sec.h));
     sec.items.forEach(it => {
-      const b = el('button', 'opt'); b.type = 'button';
+      const b = el('button', 'opt' + (it.off ? ' locked' : '')); b.type = 'button';
       b.dataset.i = PANEL_ITEMS.length; PANEL_ITEMS.push(it);
+      const oi = optIcon(it), ic = el('span', 'oi'); ic.style.setProperty('--oc', it.off ? '#8fa5b6' : oi[1]); ic.innerHTML = uiIcon(it.off ? 'lock' : oi[0]); ic.setAttribute('aria-hidden', 'true');
+      b.appendChild(ic);
       b.appendChild(el('b', '', it.t));
       b.appendChild(el('small', it.off ? 'why' : '', it.off || it.d || ''));
-      if (it.tag) b.appendChild(el('span', 'tag', it.tag));
+      if (it.tag) b.appendChild(tagPills(it.tag));
       if (it.off) b.disabled = true;
       box.appendChild(b);
     });

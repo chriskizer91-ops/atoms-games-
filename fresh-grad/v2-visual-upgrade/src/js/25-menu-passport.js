@@ -21,12 +21,8 @@ function renderLife() {
   const grid = el('div', 'pp');
   PASSPORT.forEach(id => {
     const b = el('button', 'stamp' + (S.stamps[id] ? ' got' : '')); b.type = 'button'; b.dataset.go = id;
-    const cv = document.createElement('canvas'); cv.width = 64; cv.height = 64; b.appendChild(cv);
-    const g = cv.getContext('2d'); g.scale(2, 2);
-    const P = PLACE_ICON[id] || ['#556', 'home'];
-    g.fillStyle = S.stamps[id] ? P[0] : '#2a3442'; g.beginPath(); g.arc(16, 16, 15, 0, 7); g.fill();
-    g.strokeStyle = 'rgba(255,255,255,.35)'; g.setLineDash([2, 2]); g.lineWidth = 1.2; g.beginPath(); g.arc(16, 16, 13, 0, 7); g.stroke(); g.setLineDash([]);
-    placeIcon(g, P[1], 16, 16, 0.85, S.stamps[id] ? '#fff' : '#6b7a8c');
+    const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96; b.appendChild(cv);
+    drawStampArt(cv.getContext('2d'), id, !!S.stamps[id]);
     b.appendChild(el('span', '', placeTitle(id)));
     const open = id === 'park' || id === 'apartment' || isOpen(id);
     b.appendChild(el('small', open ? 'on' : '', open ? 'Open now' : 'Closed'));

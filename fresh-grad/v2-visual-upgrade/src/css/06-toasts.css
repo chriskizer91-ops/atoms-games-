@@ -1,11 +1,26 @@
-/* toasts */
-#toasts{position:absolute;top:calc(var(--top-h,0px) + 12px);left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;z-index:40;pointer-events:none;width:min(94%,540px)}
-.toast{display:flex;align-items:baseline;gap:9px;background:var(--glass);box-shadow:0 0 0 1px var(--hair) inset,0 12px 30px #0009;backdrop-filter:blur(10px);padding:9px 15px;border-radius:14px;font-size:14px;text-align:left;animation:tin .3s cubic-bezier(.2,1.2,.4,1)}
-.toast::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--muted);transform:translateY(-1px)}
-.toast.good::before{background:var(--good);box-shadow:0 0 10px var(--good)}
-.toast.warn::before{background:var(--warn);box-shadow:0 0 10px var(--warn)}
-.toast.bad::before{background:var(--bad);box-shadow:0 0 10px var(--bad)}
-.toast.out{opacity:0;transition:opacity .4s}
-@keyframes tin{from{transform:translateY(-10px) scale(.96);opacity:0}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.toast,.card,.overlay,.screen,#prompt,.t-lock>*,#dreamChoice{animation:none}.gauge .bar span{transition:none}.gauge.low svg,#chips i{animation:none}.btn,.deg,.opt{transition:none}}
-
+/* toasts: glass chips with a category colour rail and icon. info / good / warn / bad, plus the gold trophy toast */
+#toasts{position:absolute;top:calc(var(--top-h,0px) + 12px);left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:40;pointer-events:none;width:min(94%,540px)}
+.toast{--tc:#8fa5b6;--ti:var(--i-info);position:relative;display:flex;align-items:center;gap:11px;max-width:100%;padding:10px 16px 10px 12px;border-radius:15px;font-size:14px;line-height:1.35;text-align:left;
+  box-shadow:var(--edge-hi),0 0 0 1px color-mix(in srgb,var(--tc),transparent 74%),var(--shadow-2),0 0 22px color-mix(in srgb,var(--tc),transparent 88%);
+  animation:tin var(--t3) var(--spring);overflow:hidden}
+.toast::before{content:"";flex:none;width:26px;height:26px;border-radius:9px;
+  background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--tc),#fff 38%),var(--tc) 70%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 12px color-mix(in srgb,var(--tc),transparent 55%)}
+.toast::after{content:"";position:absolute;left:12px;top:50%;width:26px;height:26px;margin-top:-13px;background:#0b1422;opacity:.85;-webkit-mask:var(--ti) center/16px 16px no-repeat;mask:var(--ti) center/16px 16px no-repeat;pointer-events:none}
+.toast.good{--tc:var(--good);--ti:var(--i-check)}
+.toast.warn{--tc:var(--warn);--ti:var(--i-alert)}
+.toast.bad{--tc:var(--bad);--ti:var(--i-x)}
+.toast.out{opacity:0;transform:translateY(-6px) scale(.98);transition:opacity .4s,transform .4s var(--ease)}
+@keyframes tin{0%{transform:translateY(-14px) scale(.94);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+/* trophy: gold foil with a one-shot shimmer sweep */
+.toast.trophy{--tc:#ffc247;--ti:var(--i-trophy);display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:1px;align-items:center;width:100%;padding:12px 18px 12px 12px;
+  background:linear-gradient(100deg,transparent 42%,rgba(255,236,170,.42) 50%,transparent 58%) 150% 0/260% 100% no-repeat,linear-gradient(115deg,rgba(255,255,255,.14) 0,rgba(255,255,255,0) 22%),var(--noise-lite),linear-gradient(135deg,#4d3710,#2a1d09 55%,#3b2a0a);
+  box-shadow:inset 0 1px 0 rgba(255,226,150,.4),0 0 0 1px rgba(255,194,71,.6),var(--shadow-2),0 0 36px rgba(255,194,71,.28);
+  animation:tin var(--t3) var(--spring),foil 1.5s var(--ease) .4s 1 both}
+.toast.trophy::before{grid-row:1/3;width:40px;height:40px;border-radius:13px;background:radial-gradient(circle at 30% 20%,#fff1b8,#ffc247 55%,#c9820c);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 3px rgba(130,70,0,.4),0 0 18px rgba(255,194,71,.55)}
+.toast.trophy::after{width:40px;height:40px;margin-top:-20px;background:#4a2c00;opacity:.9;-webkit-mask-size:22px 22px;mask-size:22px 22px}
+.toast.trophy b{grid-column:2;color:var(--gold);font-size:14px;text-shadow:0 0 14px rgba(255,194,71,.35)}
+.toast.trophy span{grid-column:2;font-size:13px;color:#f2e6c9}
+@keyframes foil{from{background-position:150% 0,0 0,0 0,0 0}to{background-position:-60% 0,0 0,0 0,0 0}}
+@media (prefers-reduced-motion:reduce){.toast,.card,.overlay,.screen,#prompt,.t-lock>*,#dreamChoice{animation:none}.gauge .bar span{transition:none}.gauge.low svg,#chips i{animation:none}.btn,.deg,.opt{transition:none}.toast.out{transition:opacity .4s}}
+@media (prefers-contrast:more){.toast{box-shadow:inset 0 0 0 1px var(--tc),var(--shadow-2)}}

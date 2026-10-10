@@ -1,84 +1,212 @@
-/* HUD */
+/* HUD: a glass instrument bar. clock disc, four glass vials, three plates, coin counter, tool keys */
 #game{display:flex;flex-direction:column}
-#hud{position:relative;z-index:5;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;grid-template-areas:"clock gauges meals money tools";align-items:center;gap:8px 22px;padding:9px 16px 10px;background:linear-gradient(180deg,#152334 0,#0f1a28 100%);box-shadow:0 10px 30px #0008}
-#hud::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent 0,var(--sky) 18%,var(--sky) 82%,transparent 100%);opacity:.75;transition:background 1s}
-.clock{grid-area:clock;display:flex;align-items:center;gap:11px;min-width:0}
-.dial{position:relative;flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--sky) var(--p,30%),rgba(255,255,255,.09) 0)}
-.dial::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#101b29}
-.tod{position:relative;width:15px;height:15px;border-radius:50%;background:#ffd35a;box-shadow:0 0 12px #ffd35aaa}
-#hud[data-tod=night] .tod{background:#e6ecff;box-shadow:inset -5px -1px 0 #7d8ee0,0 0 10px #9db0ff66}
-#hud[data-tod=dusk] .tod{background:#ff9a4d;box-shadow:0 0 12px #ff9a4daa}
+#hud{position:relative;z-index:5;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;grid-template-areas:"clock gauges meals money tools";align-items:center;gap:8px 18px;padding:9px 16px 11px;
+  background:var(--noise-lite),linear-gradient(180deg,#1a2b40 0,#122033 46%,#0d1827 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.4),0 12px 30px rgba(4,7,18,.55)}
+#hud::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 52%);pointer-events:none}
+#hud::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent 0,var(--sky) 16%,var(--sky) 84%,transparent 100%);opacity:.8;box-shadow:0 0 14px var(--sky),0 1px 22px color-mix(in srgb,var(--sky),transparent 60%);transition:background 1s}
+#hud>*{position:relative}
+
+/* clock: a day/night disc. the ring is the day's progress; inside, a sun and a moon ride an orbit over a little skyline */
+.clock{grid-area:clock;display:flex;align-items:center;gap:12px;min-width:0}
+.dial{position:relative;flex:none;width:46px;height:46px;border-radius:50%;background:conic-gradient(from 0deg,var(--sky) var(--p,30%),rgba(255,255,255,.1) 0);box-shadow:0 0 0 1px rgba(0,0,0,.45),0 0 14px color-mix(in srgb,var(--sky),transparent 72%),0 3px 8px rgba(0,0,0,.4)}
+.dial::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#0c1521;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.disc{position:absolute;inset:5px;border-radius:50%;overflow:hidden;background:linear-gradient(180deg,#5fb8f5 0,#a9dcff 58%,#ffe6b0 100%);box-shadow:inset 0 2px 5px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.18);transition:background .8s}
+.disc::before{content:"";position:absolute;inset:0;border-radius:50%;opacity:0;transition:opacity .8s;
+  background:radial-gradient(1px 1px at 22% 24%,#fff 50%,transparent 60%),radial-gradient(1px 1px at 70% 18%,#fff 50%,transparent 60%),radial-gradient(1.2px 1.2px at 82% 46%,#e9eeff 50%,transparent 60%),radial-gradient(1px 1px at 36% 42%,#fff 50%,transparent 60%),radial-gradient(1px 1px at 56% 30%,#dbe4ff 50%,transparent 60%)}
+.disc::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-1px;height:36%;z-index:2;
+  background:linear-gradient(#0f1a28,#0f1a28) 14% 100%/5px 9px no-repeat,linear-gradient(#0f1a28,#0f1a28) 27% 100%/4px 13px no-repeat,linear-gradient(#0f1a28,#0f1a28) 62% 100%/6px 10px no-repeat,linear-gradient(#0f1a28,#0f1a28) 76% 100%/4px 7px no-repeat,linear-gradient(180deg,#16253a,#0b131e);
+  border-radius:50% 50% 0 0/60% 60% 0 0;box-shadow:0 -1px 0 rgba(255,255,255,.1)}
+.tod{position:absolute;inset:0;transform:rotate(calc(var(--tf,.3) * 360deg));will-change:transform}
+.tod::before{content:"";position:absolute;left:50%;bottom:1px;width:11px;height:11px;margin-left:-5.5px;transition:opacity .8s;border-radius:50%;background:radial-gradient(circle at 36% 32%,#fff6cf 0,#ffd35a 45%,#ffab2e 100%);box-shadow:0 0 9px 2px rgba(255,200,80,.75)}
+.tod::after{content:"";position:absolute;left:50%;top:1px;width:10px;height:10px;margin-left:-5px;opacity:0;transition:opacity .8s;border-radius:50%;background:#eef2ff;box-shadow:inset -3.5px -1px 0 #8795e6,0 0 8px rgba(157,176,255,.55)}
+#hud[data-tod=dusk] .disc{background:linear-gradient(180deg,#463a8c 0,#d46a7a 52%,#ffb468 100%)}
+#hud[data-tod=dusk] .tod::before{background:radial-gradient(circle at 36% 32%,#ffe7b0 0,#ff9a4d 55%,#e0622a 100%);box-shadow:0 0 10px 3px rgba(255,130,60,.7)}
+#hud[data-tod=dusk] .tod::after{opacity:.9}
+#hud[data-tod=night] .tod::before{opacity:0}
+#hud[data-tod=night] .tod::after{opacity:1}
+#hud[data-tod=night] .disc{background:linear-gradient(180deg,#070c24 0,#16205a 70%,#2b3a86 100%)}
+#hud[data-tod=night] .disc::before{opacity:1}
+#hud[data-tod=night] .disc::after{background:linear-gradient(#26334f,#26334f) 14% 100%/5px 9px no-repeat,linear-gradient(#26334f,#26334f) 27% 100%/4px 13px no-repeat,linear-gradient(#26334f,#26334f) 62% 100%/6px 10px no-repeat,linear-gradient(#26334f,#26334f) 76% 100%/4px 7px no-repeat,linear-gradient(180deg,#0f1830,#070c18)}
 .clock-txt{display:flex;flex-direction:column;line-height:1.05;min-width:0}
-.clock b{font:500 22px var(--font-mono);white-space:nowrap;letter-spacing:-.01em}
-.clock small{font:500 11px var(--font-mono);letter-spacing:.08em;color:var(--muted);white-space:nowrap;margin-top:3px}
+.clock b{font:500 23px var(--font-mono);white-space:nowrap;letter-spacing:-.015em;font-variant-numeric:tabular-nums;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.clock small{font:500 11px var(--font-mono);letter-spacing:.09em;color:var(--muted);white-space:nowrap;margin-top:4px}
 .clock .dow{color:var(--gold)}
+
+/* gauges: glass vials with liquid, tick marks, a gloss band and a low-state alarm */
 .gauges{grid-area:gauges;display:flex;gap:16px;min-width:0}
-.gauge{flex:1 1 0;min-width:74px;display:flex;align-items:center;gap:8px}
-.gauge svg{flex:none;width:20px;height:20px;color:var(--c)}
-.g-main{flex:1;min-width:0}
-.gauge label{display:flex;justify-content:space-between;font:500 10.5px var(--font-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.gauge label .v{color:var(--text);font-variant-numeric:tabular-nums}
-.gauge .bar{position:relative;height:10px;border-radius:6px;background:#0a121c;box-shadow:0 0 0 1px rgba(255,255,255,.07) inset,0 1px 2px #0008 inset;overflow:hidden}
-.gauge .bar span{display:block;height:100%;width:50%;border-radius:6px;background:linear-gradient(180deg,color-mix(in srgb,var(--c),#fff 38%) 0,var(--c) 50%,color-mix(in srgb,var(--c),#000 22%) 100%);box-shadow:0 0 10px color-mix(in srgb,var(--c),transparent 55%);transition:width .25s}
-.gauge .bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),#0a121c99 calc(25% - 1px) 25%);pointer-events:none}
-.gauge[data-k=hunger]{--c:var(--food)}
-.gauge[data-k=thirst]{--c:var(--water)}
-.gauge[data-k=energy]{--c:var(--rest)}
-.gauge.low{--c:var(--bad)}
-.gauge.low label,.gauge.low label .v{color:var(--bad)}
-.gauge.low svg{animation:pulse 1s ease-in-out infinite}
-@keyframes pulse{50%{transform:scale(1.2);opacity:.6}}
-.meals{grid-area:meals;display:flex;gap:5px}
-.meals span{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:500 11px var(--font-mono);background:#0a121c;box-shadow:0 0 0 1px rgba(255,255,255,.1) inset;color:var(--muted);transition:background .2s,color .2s}
-.meals .got{background:var(--good);color:#06281a;box-shadow:0 0 12px #5bd39b66}
-.meals .now{box-shadow:0 0 0 2px var(--gold) inset}
-.meals .got.now{box-shadow:0 0 0 2px var(--gold) inset,0 0 12px #5bd39b66}
-.money{grid-area:money;position:relative;text-align:right}
-.money b{display:block;font:500 23px var(--font-mono);color:var(--gold);line-height:1.1;letter-spacing:-.01em;text-shadow:0 0 18px #ffc24744;font-variant-numeric:tabular-nums}
-.money small{display:block;font-size:12px;color:var(--muted);white-space:nowrap}
+#hud .gauge{--c:var(--muted);flex:1 1 0;min-width:84px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"ico label" "bar bar";column-gap:6px;row-gap:5px;align-items:center}
+#hud .gauge[data-k=hunger]{--c:var(--food)}
+#hud .gauge[data-k=thirst]{--c:var(--water)}
+#hud .gauge[data-k=energy]{--c:var(--rest)}
+#hud .gauge[data-k=mood]{--c:var(--mood,#ff7eb6)}
+#hud .gauge.low{--c:var(--bad)}
+.g-main{display:contents}
+.gauge svg{grid-area:ico;width:15px;height:15px;padding:0;color:var(--c);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--c),transparent 55%))}
+#hud .gauge label{grid-area:label;display:flex;justify-content:space-between;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+#hud .gauge label .v{display:inline-grid;place-items:center;min-width:25px;height:17px;padding:0 6px;border-radius:99px;background:rgba(2,6,12,.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);color:var(--text);font:500 11px/1 var(--font-mono);letter-spacing:0;font-variant-numeric:tabular-nums}
+#hud .gauge .bar{grid-area:bar;position:relative;height:12px;padding:0;border-radius:99px;background:linear-gradient(180deg,#04080f 0,#0b1522 100%);box-shadow:inset 0 2px 3px rgba(0,0,0,.75),inset 0 0 0 1px rgba(255,255,255,.075),0 1px 0 rgba(255,255,255,.07);overflow:hidden}
+#hud .gauge .bar span{position:relative;display:block;height:100%;width:50%;min-width:0;border-radius:99px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c),#fff 34%) 0,var(--c) 42%,color-mix(in srgb,var(--c),#000 34%) 100%);
+  box-shadow:0 0 12px color-mix(in srgb,var(--c),transparent 52%),inset -2px 0 0 rgba(255,255,255,.3);transition:width .3s var(--ease),background .3s}
+#hud .gauge .bar span::before{content:"";position:absolute;left:3px;right:3px;top:1.5px;height:38%;border-radius:99px;background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.08))}
+#hud .gauge .bar span::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(100deg,transparent 0 28%,rgba(255,255,255,.34) 46%,transparent 64% 100%);background-size:240% 100%;background-repeat:no-repeat;animation:liquid 3.4s linear infinite}
+@keyframes liquid{from{background-position:140% 0}to{background-position:-60% 0}}
+#hud .gauge .bar::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.2) 0,rgba(255,255,255,0) 44%),
+    linear-gradient(90deg,transparent calc(100% - 1px),rgba(6,10,18,.5) 0) 0 0/25% 100% repeat-x,
+    linear-gradient(90deg,transparent calc(100% - 1px),rgba(6,10,18,.38) 0) 0 100%/12.5% 38% repeat-x}
+#hud .gauge.low label,#hud .gauge.low label .v{color:#ff9d9d}
+#hud .gauge.low label .v{background:rgba(255,107,107,.2);box-shadow:inset 0 0 0 1px rgba(255,107,107,.55)}
+#hud .gauge.low svg{animation:pulse 1s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,107,107,.9))}
+#hud .gauge.low .bar{animation:lowglow 1.1s ease-in-out infinite}
+#hud .gauge.low .bar span::after{animation-duration:1.4s}
+@keyframes pulse{50%{transform:scale(1.14);opacity:.75}}
+@keyframes lowglow{0%,100%{box-shadow:inset 0 2px 3px rgba(0,0,0,.75),inset 0 0 0 1px rgba(255,107,107,.45),0 0 0 rgba(255,107,107,0)}50%{box-shadow:inset 0 2px 3px rgba(0,0,0,.75),inset 0 0 0 1px rgba(255,107,107,.9),0 0 14px rgba(255,107,107,.55)}}
+
+/* meals: three little plates. eaten = filled green with a check, the current meal period wears a gold ring */
+.meals{grid-area:meals;display:flex;align-items:center;gap:6px;padding:4px 9px 4px 8px;border-radius:99px;background:rgba(2,6,12,.34);box-shadow:inset 0 1px 3px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.06)}
+.meals::before{content:"";width:15px;height:15px;margin-right:2px;background:var(--muted);opacity:.85;-webkit-mask:var(--i-plate) center/contain no-repeat;mask:var(--i-plate) center/contain no-repeat}
+.meals span{position:relative;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:600 10.5px var(--font-mono);color:var(--muted);
+  background:radial-gradient(circle at 50% 40%,#16273a 0 44%,#0b1522 45% 100%);
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.12),inset 0 -2px 3px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.06);transition:background .25s,color .25s,box-shadow .25s,transform .3s var(--spring)}
+.meals .got{color:#04281a;background:radial-gradient(circle at 36% 30%,#a6f5cf 0,var(--good) 48%,#2c9a6c 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 3px rgba(0,60,34,.4),0 0 12px rgba(91,227,160,.4);transform:scale(1.04)}
+.meals .got::after{content:"";position:absolute;right:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:#0b131e;box-shadow:0 0 0 1px rgba(91,227,160,.8);-webkit-mask:none}
+.meals .got::before{content:"";position:absolute;right:-1px;top:-1px;width:7px;height:7px;background:var(--good);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat;z-index:1}
+.meals .now{box-shadow:inset 0 0 0 1.5px var(--gold),0 0 0 2px rgba(255,194,71,.22);color:var(--gold)}
+.meals .got.now{color:#04281a;box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 1px 0 rgba(255,255,255,.55),0 0 0 2px rgba(255,194,71,.3),0 0 12px rgba(91,227,160,.4)}
+.meals .now:not(.got){animation:nowring 2.2s ease-in-out infinite}
+@keyframes nowring{50%{box-shadow:inset 0 0 0 1.5px var(--gold),0 0 0 5px rgba(255,194,71,.08)}}
+
+/* money: a coin and a glowing mono counter. rent line colours by urgency */
+.money{grid-area:money;position:relative;text-align:right;padding-left:2px}
+.money b{display:flex;align-items:center;justify-content:flex-end;gap:7px;font:500 24px var(--font-mono);color:var(--gold);line-height:1.1;letter-spacing:-.015em;text-shadow:0 0 18px rgba(255,194,71,.38),0 1px 0 rgba(0,0,0,.5);font-variant-numeric:tabular-nums}
+.money b::before{content:"";flex:none;width:17px;height:17px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff4c4 0,#ffd35a 36%,#e59a1c 100%);box-shadow:inset 0 0 0 1.5px rgba(173,104,10,.7),inset 0 -2px 2px rgba(150,80,0,.4),0 0 10px rgba(255,194,71,.5),0 1px 2px rgba(0,0,0,.5)}
+.money small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;margin-top:1px}
 .money small.warn{color:var(--warn)}
-.money small.bad{color:var(--bad)}
-.money .delta{position:absolute;right:0;top:100%;font:500 14px var(--font-mono);pointer-events:none;animation:delta 1.5s ease-out forwards;white-space:nowrap;text-shadow:0 1px 6px #000c;z-index:6}
-.money .delta.up{color:var(--good)}.money .delta.down{color:var(--bad)}
-@keyframes delta{0%{opacity:0;transform:translateY(-6px)}15%{opacity:1}100%{opacity:0;transform:translateY(22px)}}
-.tools{grid-area:tools;display:flex;gap:6px}
-@media (max-width:760px){
-  #hud{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"clock money tools" "gauges gauges meals";gap:8px 12px;padding:8px 16px 10px}
-  .clock b{font-size:19px}
-  .money b{font-size:19px}
-  .dial{width:32px;height:32px}
-  .gauges{gap:10px}
-  .gauge svg{display:none}
-  .chip-btn{padding:7px 9px}
-}
-@media (max-width:560px){
-  #hud{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"clock money" "gauges gauges" "meals tools";gap:8px 12px}
-  .meals span{width:24px;height:24px}
-  .tools{justify-content:flex-end}
-  #title::before{background:linear-gradient(0deg,rgba(7,12,20,.9) 0,rgba(7,12,20,.62) 34%,rgba(7,12,20,0) 62%)}
-}
-#goal{position:relative;z-index:4;display:flex;align-items:center;gap:10px;padding:7px 16px;font-size:13.5px;color:var(--text);background:linear-gradient(180deg,#0f1a28,#0b131e);box-shadow:0 1px 0 var(--hair) inset,0 6px 16px #0006;min-height:36px}
-#goal b{font:500 10.5px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);background:var(--gold);border-radius:6px;padding:2px 7px;flex:none}
-#goalText{flex:1;min-width:0}
+.money small.bad{color:#ff9d9d;font-weight:600;animation:rentbad 1.4s ease-in-out infinite}
+@keyframes rentbad{50%{text-shadow:0 0 10px rgba(255,107,107,.8)}}
+.money .delta{position:absolute;right:0;top:100%;margin-top:4px;padding:3px 9px;border-radius:99px;font:600 14px var(--font-mono);pointer-events:none;animation:delta 1.6s var(--ease) forwards;white-space:nowrap;z-index:6;background:rgba(8,14,24,.92);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px currentColor,0 6px 18px rgba(0,0,0,.55)}
+.money .delta.up{color:var(--good);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(91,227,160,.6),0 0 16px rgba(91,227,160,.35),0 6px 18px rgba(0,0,0,.5)}
+.money .delta.down{color:#ff8f8f;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(255,107,107,.6),0 0 16px rgba(255,107,107,.3),0 6px 18px rgba(0,0,0,.5)}
+@keyframes delta{0%{opacity:0;transform:translateY(-8px) scale(.7)}12%{opacity:1;transform:translateY(0) scale(1.12)}22%{transform:translateY(2px) scale(1)}78%{opacity:1}100%{opacity:0;transform:translateY(24px) scale(.96)}}
+
+/* tool keys */
+.tools{grid-area:tools;display:flex;gap:6px;align-items:center}
+.tools .chip-btn{display:inline-flex;align-items:center;gap:6px}
+#bSpeed::before,#bSound::before,#bMenu::before{content:"";width:14px;height:14px;background:currentColor;opacity:.85;-webkit-mask:var(--gi) center/contain no-repeat;mask:var(--gi) center/contain no-repeat}
+#bSpeed{--gi:var(--i-ff)}
+#bSound{--gi:var(--i-speaker)}
+#bSound[data-s=muted]{--gi:var(--i-speakerOff);color:var(--muted)}
+#bMenu{--gi:var(--i-menu)}
+.phone-btn svg{width:15px;height:15px}
+
+/* the goal strip: a quest tracker */
+#goal{position:relative;z-index:4;display:flex;align-items:center;gap:12px;padding:7px 16px;font-size:13.5px;color:var(--text);min-height:38px;
+  background:var(--noise-lite),linear-gradient(180deg,#0f1a29,#0a121c);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 18px rgba(4,7,18,.5)}
+#goal::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,rgba(255,194,71,.5),rgba(255,194,71,.08) 38%,rgba(255,255,255,.04))}
+#goal b{display:inline-flex;align-items:center;gap:6px;flex:none;font:600 10.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);
+  background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0) 50%),linear-gradient(180deg,#ffd16a,#f2a92a);
+  padding:5px 16px 5px 9px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,0 100%);border-radius:6px 0 0 6px;filter:drop-shadow(0 0 8px rgba(255,194,71,.3))}
+#goal b::before{content:"";width:11px;height:11px;background:currentColor;-webkit-mask:var(--i-flag) center/contain no-repeat;mask:var(--i-flag) center/contain no-repeat}
+#goalText{flex:1;min-width:0;text-wrap:pretty}
 #chips{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
-#chips i{font:500 11px var(--font-mono);font-style:normal;padding:2px 9px;border-radius:99px;background:#ff6b6b26;color:var(--bad);box-shadow:0 0 0 1px #ff6b6b66 inset;animation:pulse2 1.6s ease-in-out infinite}
-#chips i.mild{background:#ffb54a22;color:var(--warn);box-shadow:0 0 0 1px #ffb54a66 inset;animation:none}
-@keyframes pulse2{50%{background:#ff6b6b44}}
+#goal #chips i{display:inline-flex;align-items:center;gap:6px;font:500 11px/1 var(--font-mono);font-style:normal;padding:5px 10px 5px 8px;border-radius:99px;background:rgba(255,107,107,.15);color:#ff9d9d;box-shadow:inset 0 0 0 1px rgba(255,107,107,.5),0 0 12px rgba(255,107,107,.12);animation:pulse2 1.6s ease-in-out infinite}
+#goal #chips i::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+#goal #chips i.mild{background:rgba(255,181,74,.13);color:var(--warn);box-shadow:inset 0 0 0 1px rgba(255,181,74,.45);animation:none}
+#goal #chips i.good{background:rgba(91,227,160,.12);color:var(--good);box-shadow:inset 0 0 0 1px rgba(91,227,160,.42);animation:none}
+@keyframes pulse2{50%{background:rgba(255,107,107,.3);box-shadow:inset 0 0 0 1px rgba(255,107,107,.8),0 0 14px rgba(255,107,107,.3)}}
+
 #stage{position:relative;flex:1;min-height:0;background:#0b131e}
 #world{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;background:#0b131e}
 #vig,#warm{position:absolute;inset:0;pointer-events:none}
 #vig{background:radial-gradient(ellipse at 50% 46%,rgba(8,10,28,0) 46%,rgba(8,10,28,.62) 100%);opacity:var(--vig,.5)}
 #warm{background:linear-gradient(115deg,rgba(255,170,90,.42) 0,rgba(255,170,90,0) 62%);opacity:var(--warm,0)}
 #stage[data-sun=r] #warm{background:linear-gradient(245deg,rgba(255,170,90,.42) 0,rgba(255,170,90,0) 62%)}
-#mini{position:absolute;right:12px;top:12px;width:196px;height:131px;border-radius:14px;box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 0 4px rgba(11,19,30,.6),0 12px 30px #000a;pointer-events:none;background:#0b131e}
-@media (max-width:700px){#mini{width:128px;height:85px;right:10px;top:10px;border-radius:10px}}
-#prompt{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);max-width:calc(100% - 32px);padding:13px 22px;border-radius:99px;border:0;background:linear-gradient(180deg,#ffd778 0,var(--gold) 45%,#f2a92a 100%);color:var(--gold-ink);font-weight:700;box-shadow:0 1px 0 #fff6 inset,0 10px 30px #000b,0 0 0 5px rgba(255,194,71,.18);white-space:nowrap;animation:pop .22s cubic-bezier(.2,1.4,.4,1)}
-@keyframes pop{from{opacity:0;transform:translateX(-50%) translateY(10px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
-#prompt.closed{background:var(--glass);color:var(--muted);box-shadow:0 0 0 1px var(--hair) inset,0 10px 30px #000b;backdrop-filter:blur(8px)}
-#prompt kbd{font:500 12px var(--font-mono);background:#0003;border-radius:6px;padding:2px 7px;margin-left:8px}
-#hint{position:absolute;left:14px;bottom:14px;font:500 12px var(--font-mono);color:#dbe6ee;background:var(--glass);box-shadow:0 0 0 1px var(--hair) inset;backdrop-filter:blur(8px);padding:7px 11px;border-radius:10px;pointer-events:none}
-#pad{position:absolute;left:14px;bottom:14px;display:none;grid-template:repeat(3,54px)/repeat(3,54px);gap:5px;touch-action:none}
-#pad button{border-radius:16px;border:0;box-shadow:0 0 0 1px rgba(255,255,255,.22) inset;background:rgba(10,18,28,.62);backdrop-filter:blur(6px);color:#fff;font-size:18px;padding:0;touch-action:none}
-#pad button:active{background:#ffc247dd;color:#2b1c00}
+/* minimap: the frame, gloss, compass and corner marks are painted into the canvas by drawMinimap */
+#mini{position:absolute;right:12px;top:12px;width:196px;height:131px;border-radius:14px;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 0 0 3px rgba(9,15,25,.78),0 0 0 4px rgba(255,255,255,.14),0 14px 32px rgba(3,6,16,.6);pointer-events:none;background:#0b131e}
+
+/* interaction prompt: a marigold pill with a real keycap and a breathing glow */
+#prompt{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);max-width:calc(100% - 32px);display:flex;align-items:center;gap:12px;padding:9px 10px 9px 22px;min-height:48px;border-radius:99px;border:0;color:var(--gold-ink);font-weight:700;font-size:15.5px;white-space:nowrap;text-shadow:0 1px 0 rgba(255,255,255,.35);
+  background:linear-gradient(180deg,rgba(255,255,255,.36) 0,rgba(255,255,255,0) 50%),linear-gradient(180deg,#ffdc84 0,var(--gold) 46%,#f1a526 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -2px 0 rgba(150,82,0,.32),0 0 0 1px rgba(150,82,0,.45),0 12px 30px rgba(3,6,16,.65),0 0 0 5px rgba(255,194,71,.18);
+  animation:prompt-in .26s var(--spring),breathe 2.6s ease-in-out .3s infinite;transition:filter var(--t1)}
+@keyframes prompt-in{from{opacity:0;transform:translateX(-50%) translateY(12px) scale(.92)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes breathe{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -2px 0 rgba(150,82,0,.32),0 0 0 1px rgba(150,82,0,.45),0 12px 30px rgba(3,6,16,.65),0 0 0 5px rgba(255,194,71,.16),0 0 22px rgba(255,194,71,.18)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -2px 0 rgba(150,82,0,.32),0 0 0 1px rgba(150,82,0,.45),0 12px 30px rgba(3,6,16,.65),0 0 0 9px rgba(255,194,71,.07),0 0 34px rgba(255,194,71,.42)}}
+#prompt:hover{filter:brightness(1.05)}
+#prompt:active{transform:translateX(-50%) translateY(1px) scale(.985)}
+#prompt:focus-visible{outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 0 0 2px var(--ink),0 0 0 4px var(--gold),0 12px 30px rgba(3,6,16,.65)}
+#prompt kbd{margin:0;min-width:30px;height:30px;border-radius:9px;font:600 13px/1 var(--font-mono);color:var(--cream);text-shadow:none;transform:none;
+  background:linear-gradient(180deg,#34465c 0,#18263a 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(5,8,15,.95),0 3px 0 1px #0a111b,0 5px 7px rgba(0,0,0,.45);
+  transition:transform var(--t1)}
+#prompt:active kbd{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(5,8,15,.95),0 1px 0 1px #0a111b}
+#prompt.closed{color:var(--muted);text-shadow:none;animation:prompt-in .26s var(--spring);padding-left:18px;font-weight:600}
+#prompt.closed::before{content:"";width:16px;height:16px;flex:none;background:currentColor;-webkit-mask:var(--i-lock) center/contain no-repeat;mask:var(--i-lock) center/contain no-repeat}
+#prompt.closed kbd{color:var(--muted);background:linear-gradient(180deg,#27364a,#142031)}
+#hint{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;max-width:calc(100% - 28px);font:500 12px var(--font-mono);color:#dbe6ee;padding:7px 12px 7px 9px;border-radius:12px;pointer-events:none}
+#hint kbd{height:22px;min-width:22px;font-size:11px}
+#hint i{font-style:normal;opacity:.4}
+/* touch pad: glass keys */
+#pad{position:absolute;left:14px;bottom:14px;display:none;grid-template:repeat(3,56px)/repeat(3,56px);gap:6px;touch-action:none}
+#pad button{display:grid;place-items:center;border-radius:18px;border:0;padding:0;touch-action:none;color:#f2f6fa;
+  background:var(--sheen),linear-gradient(180deg,rgba(32,48,70,.74),rgba(10,17,28,.74));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -2px 0 rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.14),0 6px 16px rgba(3,6,16,.5);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform var(--t1) var(--ease),background var(--t1),color var(--t1)}
+#pad button svg{width:24px;height:24px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+#pad button:active{transform:scale(.92);color:var(--gold-ink);background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 50%),linear-gradient(180deg,#ffdc84,#f1a526);box-shadow:inset 0 2px 4px rgba(120,60,0,.4),0 0 0 1px rgba(150,82,0,.5),0 0 22px rgba(255,194,71,.45)}
+#pad span:nth-child(5){display:block;margin:15px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.14),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
 @media (pointer:coarse){#pad{display:grid}#hint{display:none}}
 
+@media (max-width:760px){
+  #hud{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"clock money tools" "gauges gauges meals";gap:8px 12px;padding:8px 14px 11px}
+  .clock b{font-size:20px}
+  .money b{font-size:20px}
+  .dial{width:40px;height:40px}
+  .gauges{gap:10px}
+  #hud .gauge{min-width:0}
+  .gauge svg{display:none}
+  #hud .gauge label{font-size:9.5px;letter-spacing:.05em}
+  .chip-btn{padding:7px 9px}
+}
+@media (max-width:560px){
+  #hud{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"clock money" "gauges gauges" "meals tools";gap:8px 12px}
+  .meals span{width:25px;height:25px}
+  .tools{justify-content:flex-end;gap:5px}
+  #bSpeed::before,#bSound::before,#bMenu::before{display:none}
+  #title::before{background:linear-gradient(0deg,rgba(7,12,20,.9) 0,rgba(7,12,20,.62) 34%,rgba(7,12,20,0) 62%)}
+  #mini{box-shadow:0 0 0 1px rgba(255,255,255,.1),0 0 0 2px rgba(9,15,25,.78),0 0 0 3px rgba(255,255,255,.14),0 10px 22px rgba(3,6,16,.6)}
+}
+@media (max-width:760px){
+  #goal{flex-wrap:wrap;gap:6px 10px;padding:8px 14px}
+  #goalText{flex:1 1 150px}
+  #chips{flex:1 1 100%;justify-content:flex-start}
+  #chips:empty{display:none}
+  .money .delta{top:0;right:100%;margin:0 12px 0 0}
+}
+@media (pointer:coarse) and (max-width:700px){
+  #prompt{left:auto;right:12px;bottom:70px;transform:none;max-width:calc(100% - 206px);white-space:normal;border-radius:22px;padding:9px 9px 9px 16px;font-size:14px;line-height:1.2;animation:prompt-in-m .26s var(--spring),breathe 2.6s ease-in-out .3s infinite}
+  #prompt:active{transform:translateY(1px) scale(.985)}
+  #prompt.closed{animation:prompt-in-m .26s var(--spring)}
+  #pad{bottom:12px}
+}
+@keyframes prompt-in-m{from{opacity:0;transform:translateY(12px) scale(.92)}to{opacity:1;transform:none}}
+@media (max-width:380px){#hud .gauge label span:first-child{max-width:4.2em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+@media (max-width:700px){#mini{width:128px;height:85px;right:10px;top:10px;border-radius:10px}}
+/* four gauges need more room: drop the icons sooner and stack the bar on mid-size screens */
+@media (max-width:1360px){.phone-btn .pl{display:none}}
+@media (max-width:1180px){.gauges{gap:14px}#hud{column-gap:16px}}
+@media (max-width:1100px) and (min-width:561px){
+  #hud{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"clock money tools" "gauges gauges meals";gap:8px 12px;padding:8px 16px 11px}
+}
+@media (pointer:coarse){
+  .tools .chip-btn{min-height:44px}
+  .btn{min-height:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  #hud .gauge .bar span::after,.meals .now:not(.got),#prompt,#prompt.closed,#hud .gauge.low .bar,#hud .gauge.low svg,#goal #chips i,.money small.bad{animation:none}
+  .money .delta{animation:delta-rm 1.6s linear forwards}
+  .tod{transition:none}
+}
+@keyframes delta-rm{0%{opacity:0}10%,80%{opacity:1}100%{opacity:0}}
