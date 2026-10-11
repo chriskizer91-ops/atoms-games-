@@ -24,7 +24,7 @@ function ppPal(o) {
   const hs = ppHash(key), hsh = ppHash(shirt), hp = ppHash(pants);
   const sh = PP_SHOES[hp % PP_SHOES.length];
   p = {
-    shirt, shirtL: shade(shirt, 0.2), shirtLL: shade(shirt, 0.4), shirtD: shade(shirt, -0.2), shirtDD: shade(shirt, -0.38),
+    key, shirt, shirtL: shade(shirt, 0.2), shirtLL: shade(shirt, 0.4), shirtD: shade(shirt, -0.2), shirtDD: shade(shirt, -0.38),
     pants, pantsL: shade(pants, 0.22), pantsD: shade(pants, -0.26), pantsDD: shade(pants, -0.45),
     hair, hairL: shade(hair, 0.3), hairLL: shade(hair, 0.55), hairD: shade(hair, -0.32),
     skin, skinL: shade(skin, 0.16), skinD: shade(skin, -0.15), skinDD: shade(skin, -0.34),
@@ -296,21 +296,13 @@ function ppFace(c, P, o, hx, hy, f, mv, blink, glance, capOn, style) {
   c.fillStyle = 'rgba(232,98,92,' + (0.1 + (1 - P.lum) * 0.06 + 0.1).toFixed(2) + ')';
   c.beginPath(); c.ellipse(hx - 3.2 + f * 0.8, hy + 2.5, 1.5, 1, 0, 0, 7); c.ellipse(hx + 3.2 + f * 0.8, hy + 2.5, 1.5, 1, 0, 0, 7); c.fill();
 }
-function drawPerson(c, x, y, o) {
-  const s = o.s || 1, mv = !!o.moving, ph = o.phase || 0, face = o.face || 1, back = !!o.back;
-  const P = ppPal(o), style = lookStyle(o), A = FX.A, tm = FX.time;
-  const sunny = !!(A && S && S.scene === 'town' && FX.sh.a > 0.02);
-  const rd = o.ride != null;   // seated on a bike: o.ride is the pedal phase
-  if (!rd) { ppShadow(c, x, y, s, sunny ? FX.sh.dx : 0, sunny ? FX.sh.dy : 0.4); if (o.me) ppRing(c, x, y, s); }
-  const sn = mv ? Math.sin(ph) : 0, cs = mv ? Math.cos(ph) : 0;
-  const breathe = mv || REDUCED ? 0 : Math.sin(tm * 1.9 + x * 0.07 + P.seed * 6.283);
-  const bob = mv ? Math.abs(cs) * 1.25 : breathe * 0.22;
-  const lean = rd ? face * 4.5 : mv ? face * 1.4 : 0;
-  const sway = mv ? Math.sin(ph * 2 + 1) * 0.6 : (REDUCED ? 0 : Math.sin(tm * 1.3 + P.seed * 9) * 0.25);
+/* the figure in its local frame; `st` carries the animation state (already quantised when drawn into a cached sprite) */
+function ppBody(c, o, P, style, st) {
+  const mv = st.mv, ph = st.ph, face = st.face, back = st.back, rd = st.rd, bob = st.bob, lean = st.lean, sway = st.sway, breathe = st.breathe;
   const g = P.garm, tucked = g === 1 || g === 3;
   const hemY = tucked ? -14.6 : -13.2;
   const f = face;
-  c.save(); c.translate(rd ? x - 5 * f * s : x, rd ? y - 2.8 * s : y); c.scale(s, s);
+  c.save();
   if (rd) {
     // pedalling: the pedals sit on the bike's crank at (3f, -3.2) from the hips, one leg each side of it
     const an = o.ride * f, bx = 3 * f, by = -3.2;
@@ -360,14 +352,13 @@ function drawPerson(c, x, y, o) {
     c.fillStyle = P.skinD; c.globalAlpha = 0.5; c.beginPath(); c.ellipse(hx + 4.8, hy + 1.5, 2.4, 5, 0, 0, 7); c.fill();
     c.fillStyle = P.skinDD; c.globalAlpha = 0.18; c.beginPath(); c.ellipse(hx, hy + 6.8, 5, 2.2, 0, 0, 7); c.fill();
     c.restore(); c.globalAlpha = 1;
-    const blink = !REDUCED && ((tm * 0.31 + x * 0.013 + P.seed * 3) % 1) > 0.965;
-    const glance = mv || REDUCED ? 0 : Math.sin(tm * 0.55 + P.seed * 20) * 0.3;
+    const blink = st.blink, glance = st.glance;
     if (style === 3) { ppFace(c, P, o, hx, hy, f, mv, blink, glance, true, style); ppCap(c, P, hx, hy, f); }
     else { ppFace(c, P, o, hx, hy, f, mv, blink, glance, false, style); ppHairFront(c, P, style, hx, hy, f, face, mv, sway * 0.6, false); }
   }
   // rim light when the sun is low and warm
-  if (sunny && A.warm > 0.25 && A.nf < 0.7) {
-    const k = clamp(A.warm * A.sh * 1.4, 0, 1) * (1 - A.nf), sd = A.sunX > 0 ? 1 : -1;
+  if (st.rim > 0.02) {
+    const k = st.rim, sd = st.rimSide;
     c.strokeStyle = 'rgba(255,214,150,' + (0.55 * k).toFixed(3) + ')'; c.lineWidth = 0.9; c.lineCap = 'round';
     c.beginPath();
     c.arc(hx, hy - 0.4, 5.1, sd > 0 ? -1.15 : Math.PI + 0.15, sd > 0 ? 0.35 : Math.PI + 1.3);
@@ -375,4 +366,49 @@ function drawPerson(c, x, y, o) {
     c.stroke(); c.lineCap = 'butt';
   }
   c.restore();
+}
+
+/* Standing and walking figures are cached as small sprites (one per look, facing, walk-cycle step and idle state) and
+   blitted, so a crowd costs a handful of canvas calls each. Kids at other sizes, riders and the big salon/mic scenes draw directly. */
+const PP_SPR = new Map(), PP_ST = { mv: false, ph: 0, face: 1, back: false, rd: false, bob: 0, lean: 0, sway: 0, breathe: 0, blink: false, glance: 0, rim: 0, rimSide: 1 };
+const PP_W = 30, PP_H = 47, PP_OX = 15, PP_OY = 44;
+function drawPerson(c, x, y, o) {
+  const s = o.s || 1, mv = !!o.moving, face = o.face || 1, back = !!o.back;
+  const P = ppPal(o), style = lookStyle(o), A = FX.A, tm = FX.time;
+  const sunny = !!(A && S && S.scene === 'town' && FX.sh.a > 0.02);
+  const rd = o.ride != null;   // seated on a bike: o.ride is the pedal phase
+  if (!rd) { ppShadow(c, x, y, s, sunny ? FX.sh.dx : 0, sunny ? FX.sh.dy : 0.4); if (o.me) ppRing(c, x, y, s); }
+  const st = PP_ST, cache = !rd && s <= 1.5 && c.getTransform;
+  let ph = o.phase || 0;
+  if (cache && mv) ph = Math.round((((ph % 6.2832) + 6.2832) % 6.2832) / 6.2832 * 16) % 16 * 6.2832 / 16;
+  const cs = mv ? Math.cos(ph) : 0;
+  let breathe = mv || REDUCED ? 0 : Math.sin(tm * 1.9 + x * 0.07 + P.seed * 6.283);
+  if (cache && !mv) breathe = breathe > 0.4 ? 1 : breathe < -0.4 ? -1 : 0;
+  st.mv = mv; st.ph = ph; st.face = face; st.back = back; st.rd = rd; st.breathe = breathe;
+  st.bob = mv ? Math.abs(cs) * 1.25 : breathe * 0.22;
+  st.lean = rd ? face * 4.5 : mv ? face * 1.4 : 0;
+  st.sway = mv ? Math.sin(ph * 2 + 1) * 0.6 : (cache || REDUCED ? 0 : Math.sin(tm * 1.3 + P.seed * 9) * 0.25);
+  st.blink = !back && !REDUCED && !mv && ((tm * 0.31 + x * 0.013 + P.seed * 3) % 1) > 0.965;
+  st.glance = 0;
+  st.rim = 0; st.rimSide = 1;
+  if (sunny && A.warm > 0.25 && A.nf < 0.7) { st.rim = clamp(A.warm * A.sh * 1.4, 0, 1) * (1 - A.nf); st.rimSide = A.sunX > 0 ? 1 : -1; if (cache) st.rim = Math.round(st.rim * 4) / 4; }
+  if (!cache) {
+    // direct: any scale, riders and the big close-ups keep their time-based glance
+    st.glance = mv || REDUCED ? 0 : Math.sin(tm * 0.55 + P.seed * 20) * 0.3;
+    c.save(); c.translate(rd ? x - 5 * face * s : x, rd ? y - 2.8 * s : y); c.scale(s, s);
+    ppBody(c, o, P, style, st);
+    c.restore();
+    return;
+  }
+  const m = Math.abs(c.getTransform().a), R = Math.min(3, Math.max(1, Math.ceil(m * s - 0.15)));
+  const key = P.key + (o.me ? 'M' : '') + '|' + face + '|' + style + '|' + (back ? 1 : 0) + '|' + (mv ? Math.round(ph * 16 / 6.2832) : 'i' + breathe + (st.blink ? 'b' : '')) + '|' + st.rim + st.rimSide + '|' + R;
+  let spr = PP_SPR.get(key);
+  if (!spr) {
+    if (PP_SPR.size > 220) PP_SPR.clear();
+    spr = document.createElement('canvas'); spr.width = PP_W * R; spr.height = PP_H * R;
+    const g = spr.getContext('2d'); g.setTransform(R, 0, 0, R, PP_OX * R, PP_OY * R);
+    ppBody(g, o, P, style, st);
+    PP_SPR.set(key, spr);
+  }
+  c.drawImage(spr, x - PP_OX * s, y - PP_OY * s, PP_W * s, PP_H * s);
 }

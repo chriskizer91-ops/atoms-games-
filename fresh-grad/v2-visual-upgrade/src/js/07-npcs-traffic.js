@@ -144,16 +144,11 @@ function carGlass(c, x0, y0, x1, y1) {
   const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, FX.glassA); g.addColorStop(1, FX.glassB);
   c.fillStyle = g;
 }
-function drawCar(c, k) {
-  const p = carXY(k), kind = carKind(k), on = FX.nf > 0.05, braking = k.v < k.spd * 0.45;
+/* The static body of each car (colour, kind, view, time-of-day glass) is painted once into a small sprite and blitted;
+   wheels, tail lamps, shadows and the light hooks stay live. */
+const CAR_SPR = new Map();
+function carSideStatic(c, k, kind, L, on, glint, sunny) {
   const dark = shade(k.col, -0.3), lite = shade(k.col, 0.32), mid = shade(k.col, -0.12);
-  const sd = FX.sh.a > 0.02 ? FX.sh.dx : 0, glint = parseFloat(FX.glint) || 0, sunny = FX.sh.a > 0.12;
-  if (k.lane.ax === 'x') {
-    const x = p.x, y = p.y, L = k.len, d = k.lane.dir;
-    c.fillStyle = 'rgba(6,10,22,.14)'; c.beginPath(); c.ellipse(x + sd * 3, y + 9.6, L / 2 + 4, 5.2, 0, 0, 7); c.fill();
-    c.fillStyle = 'rgba(6,10,22,.3)'; c.beginPath(); c.ellipse(x + sd * 1.4, y + 9, L / 2 - 1, 3, 0, 0, 7); c.fill();
-    c.save(); c.translate(x, y); c.scale(d, 1);
-    // cabin
     const tall = kind === 4 ? 13 : kind === 3 ? 11 : 10, c0 = kind === 4 ? -L / 2 + 3 : -L / 2 + 9, c1 = kind >= 3 ? L / 2 - 15 : L / 2 - 18, mx = (c0 + c1) / 2;
     c.fillStyle = dark; c.beginPath(); c.moveTo(c0, -6); c.lineTo(c0 + (kind === 4 ? 2 : 6), -6 - tall); c.lineTo(c1 - 8, -6 - tall); c.lineTo(c1, -6); c.closePath(); c.fill();
     if (kind === 4) {
@@ -196,29 +191,13 @@ function drawCar(c, k) {
       c.fillStyle = on ? '#fff3b0' : '#f6f1e7'; c.fillRect(-3.6, -8.6 - tall, 7.2, 2.6); c.fillStyle = '#9a7a10'; c.fillRect(-2.4, -7.9 - tall, 4.8, 0.7);
       c.fillStyle = '#20242c'; for (let i = 0; i < 7; i++) c.fillRect(-L / 2 + 6 + i * 7, -2.1, 3.5, 1.6);
     }
-    // wheels
-    carWheel(c, -L / 2 + 11, 5.5, 5.2, p.x * d, k.v); carWheel(c, L / 2 - 12, 5.5, 5.2, p.x * d, k.v);
     // lamps: a lens with a bright core, tail lamp that glows when braking
     const hg = c.createLinearGradient(L / 2 - 4, 0, L / 2, 0); hg.addColorStop(0, on ? '#fff6c4' : '#e8dfae'); hg.addColorStop(1, on ? '#ffffff' : '#f4efd0');
     c.fillStyle = hg; rr(c, L / 2 - 4.4, -4.8, 4.4, 4.8, 1.5); c.fill();
     c.fillStyle = 'rgba(255,255,255,.7)'; c.fillRect(L / 2 - 3.6, -4.2, 2.2, 0.9);
-    c.fillStyle = braking ? '#ff4a3c' : '#a83026'; rr(c, -L / 2, -4.8, 3.4, 4.8, 1.2); c.fill();
-    c.fillStyle = braking ? 'rgba(255,200,180,.8)' : 'rgba(255,255,255,.2)'; c.fillRect(-L / 2 + 0.6, -4.2, 1.4, 0.9);
-    c.restore();
-    if (on) {
-      FX.beams.push(x + d * (L / 2 - 2), y + 3, d > 0 ? 0 : Math.PI);
-      addEmit(x + d * (L / 2 - 2), y - 2, 15, 0, 0.95);
-      addEmit(x - d * (L / 2 - 1), y - 2, braking ? 17 : 10, 2, braking ? 0.95 : 0.55);
-    }
-    if (FX.A && FX.A.wet > 0.08) {
-      FX.refl.push(x + d * (L / 2 - 2), y + 9, 0, 0.4, 16); FX.refl.push(x - d * (L / 2 - 1), y + 9, 2, braking ? 0.45 : 0.26, braking ? 15 : 10);
-    }
-  } else {
-    const x = p.x, y = p.y, L = k.len - 8, W = 26, d = k.lane.dir;
-    c.fillStyle = 'rgba(6,10,22,.12)'; rr(c, x - W / 2 + 1 + sd * 2.5, y - L / 2 + 5, W + 4, L + 2, 8); c.fill();
-    c.fillStyle = 'rgba(6,10,22,.26)'; rr(c, x - W / 2 + 2 + sd * 1.2, y - L / 2 + 5, W - 1, L, 7); c.fill();
-    c.save(); c.translate(x, y); c.scale(1, d);
-    // wheels peek out at the corners
+}
+function carTopStatic(c, k, kind, L, W, on, glint, sunny) {
+  const dark = shade(k.col, -0.3), lite = shade(k.col, 0.32), mid = shade(k.col, -0.12);
     c.fillStyle = '#101318'; rr(c, -W / 2 - 2, -L / 2 + 6, 3.6, 10, 1.4); c.fill(); rr(c, W / 2 - 1.6, -L / 2 + 6, 3.6, 10, 1.4); c.fill(); rr(c, -W / 2 - 2, L / 2 - 17, 3.6, 10, 1.4); c.fill(); rr(c, W / 2 - 1.6, L / 2 - 17, 3.6, 10, 1.4); c.fill();
     c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(-W / 2 - 1.6, -L / 2 + 7, 0.9, 8); c.fillRect(-W / 2 - 1.6, L / 2 - 16, 0.9, 8);
     // body, lit from the left
@@ -245,6 +224,51 @@ function drawCar(c, k) {
     c.fillStyle = on ? '#fff6c4' : '#f2e9b8'; rr(c, -W / 2 + 2.5, L / 2 - 3.8, 6.4, 3.2, 1.2); c.fill(); rr(c, W / 2 - 8.9, L / 2 - 3.8, 6.4, 3.2, 1.2); c.fill();
     c.fillStyle = 'rgba(255,255,255,.7)'; c.fillRect(-W / 2 + 3.4, L / 2 - 3.2, 2.6, 0.8); c.fillRect(W / 2 - 8, L / 2 - 3.2, 2.6, 0.8);
     c.fillStyle = '#2c3138'; rr(c, -W / 2 + 9.6, L / 2 - 3.2, W - 19.2, 2.4, 1); c.fill();
+}
+function carSprite(c, k, kind, axis, L, W, on, glint, sunny) {
+  const m = c.getTransform ? Math.abs(c.getTransform().a) : 1, R = Math.min(3, Math.max(1, Math.ceil(m - 0.15)));
+  const key = axis + kind + k.col + L + (on ? 1 : 0) + (sunny ? 1 : 0) + '|' + Math.floor((S ? S.t : 0) / 30) + '|' + R;
+  let e = CAR_SPR.get(key);
+  if (!e) {
+    if (CAR_SPR.size > 120) CAR_SPR.clear();
+    const cv = document.createElement('canvas'), g = (axis === 'x');
+    const w = g ? L + 6 : W + 8, h = g ? 33 : L + 4, ox = w / 2, oy = g ? 25 : h / 2;
+    cv.width = Math.ceil(w * R); cv.height = Math.ceil(h * R);
+    const x = cv.getContext('2d'); x.setTransform(R, 0, 0, R, ox * R, oy * R);
+    if (g) carSideStatic(x, k, kind, L, on, glint, sunny); else carTopStatic(x, k, kind, L, W, on, glint, sunny);
+    e = { cv, w, h, ox, oy }; CAR_SPR.set(key, e);
+  }
+  return e;
+}
+function drawCar(c, k) {
+  const p = carXY(k), kind = carKind(k), on = FX.nf > 0.05, braking = k.v < k.spd * 0.45;
+  const sd = FX.sh.a > 0.02 ? FX.sh.dx : 0, glint = parseFloat(FX.glint) || 0, sunny = FX.sh.a > 0.12;
+  if (k.lane.ax === 'x') {
+    const x = p.x, y = p.y, L = k.len, d = k.lane.dir;
+    c.fillStyle = 'rgba(6,10,22,.14)'; c.beginPath(); c.ellipse(x + sd * 3, y + 9.6, L / 2 + 4, 5.2, 0, 0, 7); c.fill();
+    c.fillStyle = 'rgba(6,10,22,.3)'; c.beginPath(); c.ellipse(x + sd * 1.4, y + 9, L / 2 - 1, 3, 0, 0, 7); c.fill();
+    c.save(); c.translate(x, y); c.scale(d, 1);
+    const e = carSprite(c, k, kind, 'x', L, 0, on, glint, sunny);
+    c.drawImage(e.cv, -e.ox, -e.oy, e.w, e.h);
+    carWheel(c, -L / 2 + 11, 5.5, 5.2, p.x * d, k.v); carWheel(c, L / 2 - 12, 5.5, 5.2, p.x * d, k.v);
+    c.fillStyle = braking ? '#ff4a3c' : '#a83026'; rr(c, -L / 2, -4.8, 3.4, 4.8, 1.2); c.fill();
+    c.fillStyle = braking ? 'rgba(255,200,180,.8)' : 'rgba(255,255,255,.2)'; c.fillRect(-L / 2 + 0.6, -4.2, 1.4, 0.9);
+    c.restore();
+    if (on) {
+      FX.beams.push(x + d * (L / 2 - 2), y + 3, d > 0 ? 0 : Math.PI);
+      addEmit(x + d * (L / 2 - 2), y - 2, 15, 0, 0.95);
+      addEmit(x - d * (L / 2 - 1), y - 2, braking ? 17 : 10, 2, braking ? 0.95 : 0.55);
+    }
+    if (FX.A && FX.A.wet > 0.08) {
+      FX.refl.push(x + d * (L / 2 - 2), y + 9, 0, 0.4, 16); FX.refl.push(x - d * (L / 2 - 1), y + 9, 2, braking ? 0.45 : 0.26, braking ? 15 : 10);
+    }
+  } else {
+    const x = p.x, y = p.y, L = k.len - 8, W = 26, d = k.lane.dir;
+    c.fillStyle = 'rgba(6,10,22,.12)'; rr(c, x - W / 2 + 1 + sd * 2.5, y - L / 2 + 5, W + 4, L + 2, 8); c.fill();
+    c.fillStyle = 'rgba(6,10,22,.26)'; rr(c, x - W / 2 + 2 + sd * 1.2, y - L / 2 + 5, W - 1, L, 7); c.fill();
+    c.save(); c.translate(x, y); c.scale(1, d);
+    const e = carSprite(c, k, kind, 'y', L, W, on, glint, sunny);
+    c.drawImage(e.cv, -e.ox, -e.oy, e.w, e.h);
     c.fillStyle = braking ? '#ff4a3c' : '#a83026'; rr(c, -W / 2 + 2.5, -L / 2 + 0.5, 6.4, 2.8, 1); c.fill(); rr(c, W / 2 - 8.9, -L / 2 + 0.5, 6.4, 2.8, 1); c.fill();
     if (braking) { c.fillStyle = 'rgba(255,215,200,.6)'; c.fillRect(-W / 2 + 3.2, -L / 2 + 1, 4.6, 0.8); c.fillRect(W / 2 - 8.2, -L / 2 + 1, 4.6, 0.8); }
     c.restore();

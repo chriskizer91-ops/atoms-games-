@@ -56,7 +56,7 @@ function atmoGlow(c, cv, m, A, vis, sky) {
     ga.setTransform(1, 0, 0, 1, 0, 0); ga.globalCompositeOperation = 'source-over'; ga.globalAlpha = 1; ga.clearRect(0, 0, aw, ah);
     const mq = m / 4; ga.setTransform(mq, 0, 0, mq, -CAM.x * mq, -CAM.y * mq); ga.globalCompositeOperation = 'lighter';
     ga.fillStyle = 'rgb(255,226,170)';
-    for (let i = 0; i < G2.length; i += 5) { ga.globalAlpha = G2[i + 2] * G2[i + 3] > 2400 ? 0.3 : 0.6; ga.fillRect(G2[i] - 1.5, G2[i + 1] - 1.5, G2[i + 2] + 3, G2[i + 3] + 3); }
+    for (let i = 0; i < G2.length; i += 5) { ga.globalAlpha = G2[i + 2] * G2[i + 3] > 2400 ? 0.12 : 0.55; ga.fillRect(G2[i] - 1.5, G2[i + 1] - 1.5, G2[i + 2] + 3, G2[i + 3] + 3); }
     for (let i = 0; i < E.length; i += 5) { ga.globalAlpha = Math.min(1, E[i + 4] * 0.42); ga.drawImage(GLOW[E[i + 3]], E[i] - E[i + 2] * 1.2, E[i + 1] - E[i + 2] * 1.2, E[i + 2] * 2.4, E[i + 2] * 2.4); }
     ga.setTransform(1, 0, 0, 1, 0, 0); ga.globalCompositeOperation = 'source-over'; ga.globalAlpha = 1;
     gb.imageSmoothingEnabled = true; gb.globalAlpha = Math.min(1, bloomK); gb.drawImage(GLW.a, 0, 0, aw, ah, 0, 0, bw, bh); gb.globalAlpha = 1;
