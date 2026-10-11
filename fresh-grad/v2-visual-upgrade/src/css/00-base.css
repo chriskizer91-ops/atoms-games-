@@ -1,4 +1,5 @@
-/* Layout: one full-height game shell. The town itself is the hero: a live canvas with a day and night cycle sits behind the title, and in play a slim glass HUD rides above it. Menus, the graduation cutscene and the degree picker are overlays. Committed single look: after-dark navy glass, marigold for money and primary actions, coral (the player's shirt) as the one warm accent. */
+/* Layout: one full-height game shell. The town itself is the hero: a live canvas with a day and night cycle sits behind the title, and in play a slim glass HUD rides above it. Menus, the graduation cutscene and the degree picker are overlays. Committed single look: after-dark navy glass, marigold for money and primary actions, coral (the player's shirt) as the one warm accent.
+   v2 design system: every surface = translucent navy gradient + sheen + grain + 1px inner top highlight + outer hairline + soft ambient shadow (see 00b-surfaces.css). */
 :root{
   --ink:#0b131e; --ink2:#121d2b; --ink3:#1c2b3d; --line:#2b4157;
   --text:#eaf1f6; --muted:#8fa5b6;
@@ -10,28 +11,101 @@
   --font-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
   --font-body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+  --font-serif:"Fraunces",Georgia,"Times New Roman",serif;
   color-scheme: dark;
+
+  /* v2: ink ramp, shadows are navy-violet never black */
+  --ink0:#070d15; --ink4:#27405a; --night:#0b1220; --night2:#1a1f3a; --shade:#05080f;
+  --cream:#fff3dc; --paper:#f3e9d2; --paper-ink:#3a2e1c;
+  --mood:#ff7eb6; --xp:#b79cff;
+  /* v2: marigold ramp */
+  --gold-hi:#ffdb85; --gold-mid:#ffc247; --gold-lo:#f2a92a; --gold-deep:#b9740d;
+  /* v2: radii 8 / 12 / 16 / 22 / 28 */
+  --r1:8px; --r2:12px; --r3:16px; --r4:22px; --r5:28px;
+  /* v2: spacing, 4-pt grid */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
+  /* v2: motion, 120 micro / 200 state / 320 entrance */
+  --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --t1:120ms; --t2:200ms; --t3:320ms;
+  /* v2: surface ingredients */
+  --glass-top:rgba(30,46,68,.86); --glass-bot:rgba(11,19,30,.92);
+  --glass-grad:linear-gradient(180deg,var(--glass-top) 0,var(--glass-bot) 100%);
+  --sheen:linear-gradient(180deg,rgba(255,255,255,.075) 0,rgba(255,255,255,.015) 34%,rgba(255,255,255,0) 60%);
+  --edge-hi:inset 0 1px 0 rgba(255,255,255,.10);
+  --edge-lo:inset 0 -1px 0 rgba(0,0,0,.35);
+  --hairline:0 0 0 1px rgba(255,255,255,.075);
+  --shadow-1:0 1px 2px rgba(6,10,22,.5),0 4px 10px rgba(6,10,22,.28);
+  --shadow-2:0 2px 4px rgba(6,10,22,.45),0 10px 24px rgba(6,10,22,.4);
+  --shadow-3:0 4px 10px rgba(6,10,22,.5),0 28px 64px rgba(4,7,18,.62);
+  --focus:0 0 0 2px var(--ink),0 0 0 4px var(--gold);
+  --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .075'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  --noise-lite:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .05'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  --paper-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .26 0 0 0 0 .12 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 [hidden]{display:none!important}
-body{background:var(--ink);color:var(--text);font:400 15px/1.4 var(--font-body);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+body{background:var(--ink);color:var(--text);font:400 15px/1.4 var(--font-body);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button:focus:not(:focus-visible){outline:none}
+::selection{background:rgba(255,194,71,.38);color:#fff}
 h1,h2,h3,p{margin:0}
 h1,h2{font-family:var(--font-display);text-wrap:balance}
 #app{position:relative;height:100%;overflow:hidden;background:var(--ink)}
 .screen{position:absolute;inset:0;animation:scr .45s ease-out}
 @keyframes scr{from{opacity:0}to{opacity:1}}
 
-/* buttons */
-.btn{position:relative;border:0;border-radius:14px;padding:13px 24px;font-weight:700;font-size:16px;color:var(--gold-ink);background:linear-gradient(180deg,#ffd778 0,var(--gold) 45%,#f2a92a 100%);box-shadow:0 1px 0 #fff6 inset,0 -2px 0 #0002 inset,0 8px 22px #ffb02433,0 2px 4px #0006;transition:transform .12s,filter .12s,box-shadow .12s}
-.btn:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
-.btn:active:not(:disabled){transform:translateY(1px);box-shadow:0 1px 0 #fff4 inset,0 2px 6px #0006}
-.btn:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
-.btn.ghost{background:rgba(255,255,255,.06);color:var(--text);box-shadow:0 0 0 1px var(--hair) inset;backdrop-filter:blur(6px)}
-.btn.ghost:hover:not(:disabled){box-shadow:0 0 0 1px var(--gold) inset;filter:none}
-.chip-btn{border:0;background:rgba(255,255,255,.07);box-shadow:0 0 0 1px var(--hair) inset;border-radius:10px;padding:7px 11px;font:500 12px var(--font-mono);color:var(--text);transition:background .12s,box-shadow .12s}
-.chip-btn:hover{background:rgba(255,194,71,.14);box-shadow:0 0 0 1px var(--gold) inset}
+/* thin themed scrollbars (never the white default) */
+*{scrollbar-width:thin;scrollbar-color:rgba(143,165,182,.38) transparent}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:rgba(143,165,182,.32);border-radius:99px;border:2px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,194,71,.5);background-clip:content-box}
+
+/* buttons. primary = marigold with a specular top edge, pressed state, focus ring and a sheen sweep on hover. ghost = glass. */
+.btn{position:relative;overflow:hidden;isolation:isolate;border:0;border-radius:14px;padding:13px 24px;min-height:46px;font-weight:700;font-size:16px;letter-spacing:.005em;color:var(--gold-ink);
+  background:linear-gradient(180deg,rgba(255,255,255,.34) 0,rgba(255,255,255,0) 48%),linear-gradient(180deg,#ffdc84 0,var(--gold) 46%,#f1a526 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 0 rgba(150,82,0,.34),0 0 0 1px rgba(150,82,0,.5),0 8px 22px rgba(255,176,36,.26),0 2px 5px rgba(8,10,22,.5);
+  text-shadow:0 1px 0 rgba(255,255,255,.35);
+  transition:transform var(--t1) var(--ease),filter var(--t1),box-shadow var(--t2) var(--ease)}
+.btn::after{content:"";position:absolute;z-index:-1;top:-20%;bottom:-20%;left:-60%;width:46%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(0) skewX(-18deg);opacity:0;pointer-events:none}
+.btn:hover:not(:disabled){filter:brightness(1.05) saturate(1.05);transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -2px 0 rgba(150,82,0,.34),0 0 0 1px rgba(150,82,0,.5),0 12px 28px rgba(255,176,36,.36),0 3px 6px rgba(8,10,22,.5)}
+.btn:hover:not(:disabled)::after{animation:sweep .7s var(--ease) 1}
+@keyframes sweep{0%{transform:translateX(0) skewX(-18deg);opacity:.9}100%{transform:translateX(470%) skewX(-18deg);opacity:0}}
+.btn:active:not(:disabled){transform:translateY(1px) scale(.992);filter:brightness(.97);box-shadow:inset 0 2px 4px rgba(120,60,0,.4),inset 0 -1px 0 rgba(255,255,255,.25),0 0 0 1px rgba(150,82,0,.5),0 2px 6px rgba(8,10,22,.5)}
+.btn:focus-visible{outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 2px var(--ink),0 0 0 4px var(--gold),0 8px 22px rgba(255,176,36,.3)}
+.btn:disabled{opacity:.42;cursor:not-allowed;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(150,82,0,.4);filter:saturate(.7)}
+.btn.ghost{color:var(--text);text-shadow:none;
+  background:var(--sheen),linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.1),0 4px 14px rgba(6,10,22,.35);
+  backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2)}
+.btn.ghost::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,.18),transparent)}
+.btn.ghost:hover:not(:disabled){filter:none;background:var(--sheen),linear-gradient(180deg,rgba(255,194,71,.16),rgba(255,194,71,.06));box-shadow:inset 0 1px 0 rgba(255,236,190,.25),0 0 0 1px var(--gold),0 8px 22px rgba(255,176,36,.16)}
+.btn.ghost:active:not(:disabled){box-shadow:inset 0 2px 4px rgba(0,0,0,.35),0 0 0 1px var(--gold)}
+.btn.ghost:focus-visible{box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--gold)}
+.btn.ghost:disabled{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px rgba(255,255,255,.08);filter:none}
+
+.chip-btn{position:relative;border:0;border-radius:11px;padding:8px 12px;min-height:34px;font:500 12px var(--font-mono);letter-spacing:.02em;color:var(--text);
+  background:var(--sheen),linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.09),0 2px 6px rgba(6,10,22,.35);
+  transition:background var(--t1),box-shadow var(--t1),transform var(--t1) var(--ease),color var(--t1)}
+.chip-btn:hover{background:var(--sheen),linear-gradient(180deg,rgba(255,194,71,.2),rgba(255,194,71,.08));box-shadow:inset 0 1px 0 rgba(255,236,190,.22),0 0 0 1px var(--gold),0 4px 14px rgba(255,176,36,.14);color:#fff}
+.chip-btn:active{transform:translateY(1px) scale(.97);box-shadow:inset 0 2px 4px rgba(0,0,0,.4),0 0 0 1px var(--gold)}
+.chip-btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--gold)}
 .eyebrow{font:500 12px var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
 
+/* key caps: used by the prompt, the hint and the menu */
+kbd,.kc{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 7px;border-radius:7px;font:600 11.5px/1 var(--font-mono);letter-spacing:.02em;color:#eaf1f6;
+  background:linear-gradient(180deg,#34465c 0,#1e2d41 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 0 0 1px rgba(5,8,15,.9),0 2px 0 1px #0a111b,0 3px 5px rgba(0,0,0,.45);
+  transform:translateY(-1px)}
+
+.ico{display:block;width:1.15em;height:1.15em;flex:none}
+
+@media (prefers-contrast:more){
+  :root{--muted:#b7c7d4;--hair:rgba(255,255,255,.28);--glass:rgba(8,14,22,.94);--glass-top:rgba(22,34,52,.96);--glass-bot:rgba(8,13,22,.98)}
+  .btn.ghost,.chip-btn{box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+}
+@media (forced-colors:active){.btn,.chip-btn{border:1px solid ButtonText}}
+@media (prefers-reduced-motion:reduce){.btn::after{display:none}}

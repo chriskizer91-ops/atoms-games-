@@ -1,0 +1,14 @@
+/* shared glass recipe for small floating surfaces (hint, toasts, closed prompt, delivery pill). Layers: base gradient, grain, sheen, 1px inner top highlight, outer hairline, ambient shadow. */
+.glass,#hint,.toast,#prompt.closed,#gig{
+  background:var(--sheen),var(--noise-lite),var(--glass-grad);
+  box-shadow:var(--edge-hi),var(--hairline),var(--shadow-2);
+  backdrop-filter:blur(12px) saturate(1.25);-webkit-backdrop-filter:blur(12px) saturate(1.25)
+}
+/* CSS-only glyphs: any element can wear an icon from the mask family (00c-icons.css) */
+.gi::before{content:"";display:inline-block;width:1.1em;height:1.1em;flex:none;background:currentColor;-webkit-mask:var(--gi,var(--i-dot)) center/contain no-repeat;mask:var(--gi,var(--i-dot)) center/contain no-repeat}
+/* tag pills used inside option rows, tiles and chips */
+.pill{display:inline-flex;align-items:center;gap:5px;font:500 11.5px/1 var(--font-mono);padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);color:var(--text)}
+.pill.gold{background:rgba(255,194,71,.13);box-shadow:inset 0 0 0 1px rgba(255,194,71,.34);color:var(--gold)}
+@media (prefers-reduced-transparency:reduce){
+  .glass,#hint,.toast,#prompt.closed,#gig{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--sheen),var(--glass-grad)}
+}
