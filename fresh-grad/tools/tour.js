@@ -40,6 +40,13 @@ let n = 0;
   const wait = ms => page.waitForTimeout(ms);
   const shot = async (name, ms = 350) => {
     stop = name; await wait(ms);
+    // stray XP level-ups, queued promotions and welcome toasts only clutter the frame (the 'ui' stops want them)
+    if (!/levelup|promo|recap|notice|gameover|phone|menu|toast/.test(name)) await ev(() => {
+      const t = document.getElementById('toasts'); if (t) t.innerHTML = '';
+      if (typeof S !== 'undefined' && S) { S.perkPicks = 0; if (S.queue) S.queue.length = 0; }
+      const l = document.getElementById('lvl'); if (l && !l.hidden && typeof closeLevelUp === 'function') closeLevelUp();
+      const r = document.getElementById('recap'); if (r && !r.hidden && typeof closeRecap === 'function') closeRecap();
+    });
     n++; await page.screenshot({ path: `${out}/${String(n).padStart(3, '0')}-${(tag ? tag + '-' : '')}${name}.png` });
   };
   const clearUI = () => ev(() => {
