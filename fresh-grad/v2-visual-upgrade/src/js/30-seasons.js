@@ -29,8 +29,8 @@ function seasonGround(c, x0, y0, x1, y1) {
     c.fillStyle = 'rgba(150,255,120,.05)'; c.fillRect(x0, ya, vw, Math.min(H, y1) - ya);
     wPetalScatter(c, x0, ya, x1, Math.min(H, y1), 0.1);
   } else {
-    c.fillStyle = 'rgba(255,230,120,.05)'; c.fillRect(x0, ya, vw, Math.min(H, y1) - ya);
-    c.fillStyle = 'rgba(10,70,40,.07)'; c.fillRect(x0, ya, vw, Math.min(H, y1) - ya);
+    c.fillStyle = 'rgba(40,170,70,.07)'; c.fillRect(x0, ya, vw, Math.min(H, y1) - ya);
+    c.fillStyle = 'rgba(255,230,120,.04)'; c.fillRect(x0, ya, vw, Math.min(H, y1) - ya);
   }
 }
 /* drawn every frame over the live ground: ice on the pond */

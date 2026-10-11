@@ -26,7 +26,7 @@ function wSlabs(c, ax, ay, aw, ah, vx0, vy0, vx1, vy1, sw, sh, bond, seed) {
       c.fillStyle = h < 0.5 ? 'rgba(70,58,40,' + (h * 0.12).toFixed(3) + ')' : 'rgba(255,252,240,' + ((h - 0.5) * 0.22).toFixed(3) + ')';
       c.fillRect(x, y, sw, sh);
       if (h4 < 0.35) { const q = c.createLinearGradient(x, y, x + sw, y + sh); q.addColorStop(0, 'rgba(255,255,255,.07)'); q.addColorStop(1, 'rgba(0,0,0,.05)'); c.fillStyle = q; c.fillRect(x, y, sw, sh); }
-      if (h3 < 0.22) { c.fillStyle = 'rgba(58,46,34,' + (0.05 + h * 0.08).toFixed(3) + ')'; c.beginPath(); c.ellipse(x + sw * (0.2 + h2 * 0.6), y + sh * (0.2 + h4 * 0.6), 5 + h * 12, 3 + h2 * 7, h * 3, 0, 7); c.fill(); }
+      if (h3 < 0.22) { c.fillStyle = 'rgba(58,46,34,' + (0.025 + h * 0.05).toFixed(3) + ')'; c.beginPath(); c.ellipse(x + sw * (0.2 + h2 * 0.6), y + sh * (0.2 + h4 * 0.6), 5 + h * 12, 3 + h2 * 7, h * 3, 0, 7); c.fill(); }
       if (h2 < 0.1) {
         c.strokeStyle = 'rgba(62,52,44,.4)'; c.lineWidth = 0.8; c.beginPath();
         let px = x + sw * (0.15 + h * 0.7), py = y; c.moveTo(px, py);
@@ -158,7 +158,7 @@ function wParkGrass(c, x0, y0, x1, y1) {
   for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
     const h = hash01(gx, gy, 81), h2 = hash01(gx, gy, 82), px = gx * 150 + h * 150, py = gy * 150 + h2 * 150, pr = 90 + hash01(gx, gy, 83) * 90;
     const dark = h2 < 0.5, q = c.createRadialGradient(px, py, 0, px, py, pr);
-    q.addColorStop(0, dark ? 'rgba(20,90,50,.13)' : 'rgba(200,240,130,.12)'); q.addColorStop(1, 'rgba(0,0,0,0)');
+    q.addColorStop(0, dark ? 'rgba(20,90,50,.07)' : 'rgba(200,240,130,.11)'); q.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = q; c.fillRect(px - pr, py - pr, pr * 2, pr * 2);
   }
   // mowing stripes with soft shoulders

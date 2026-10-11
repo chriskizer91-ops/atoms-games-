@@ -83,7 +83,7 @@ function drawGroundStatic(c, vx0, vy0, vx1, vy1) {
   // ---- the park ----
   const ya = Math.max(PARK_Y, vy0), yb = Math.min(H, vy1);
   if (yb > ya) {
-    const gg = c.createLinearGradient(0, PARK_Y, 0, H); gg.addColorStop(0, '#7bbd70'); gg.addColorStop(1, '#62a761');
+    const gg = c.createLinearGradient(0, PARK_Y, 0, H); gg.addColorStop(0, '#85c87a'); gg.addColorStop(1, '#6bb468');
     c.fillStyle = gg; c.fillRect(x0, ya, vw, yb - ya);
     wParkGrass(c, x0, ya, x1, yb);
   }

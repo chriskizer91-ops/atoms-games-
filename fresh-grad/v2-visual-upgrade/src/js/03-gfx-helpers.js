@@ -148,8 +148,8 @@ function makePat(name, size, scale, fn) {
     g.strokeStyle = 'rgba(255,255,255,.04)'; g.lineWidth = 1; for (let i = 0; i < 3; i++) { let x = r() * n, y = r() * n; g.beginPath(); g.moveTo(x + 1, y + 1); for (let k = 0; k < 5; k++) { x += (r() - 0.5) * 30; y += (r() - 0.3) * 20; g.lineTo(x + 1, y + 1); } g.stroke(); }
   });
   makePat('grass', 256, 0.5, (g, n, r) => {
-    for (let i = 0; i < 16; i++) { g.fillStyle = r() < 0.5 ? 'rgba(40,110,60,.07)' : 'rgba(190,235,120,.05)'; g.beginPath(); g.ellipse(r() * n, r() * n, 16 + r() * 26, 9 + r() * 14, r() * 3, 0, 7); g.fill(); }
-    for (let i = 0; i < 760; i++) {
+    for (let i = 0; i < 16; i++) { g.fillStyle = r() < 0.5 ? 'rgba(40,110,60,.045)' : 'rgba(190,235,120,.06)'; g.beginPath(); g.ellipse(r() * n, r() * n, 16 + r() * 26, 9 + r() * 14, r() * 3, 0, 7); g.fill(); }
+    for (let i = 0; i < 640; i++) {
       const x = r() * n, y = r() * n, l = 3 + r() * 7, v = r();
       g.strokeStyle = v < 0.4 ? 'rgba(30,90,45,' + (0.12 + v * 0.3).toFixed(3) + ')' : v < 0.75 ? 'rgba(190,235,140,' + (0.06 + (v - 0.4) * 0.3).toFixed(3) + ')' : 'rgba(110,170,70,.18)';
       g.lineWidth = 1.5; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 5, y - l); g.stroke();
@@ -231,6 +231,7 @@ function windowAt(c, x, y, w, h, lit, o) {
   wGlassPane(c, x, y, w, h, lit, v, ws, o && o.inside);
   if (!ws.fr) ws.fr = wspr('wf' + ws.qw + 'x' + ws.qh + 's' + sty + 'v' + (v & 3), ws.qw + P * 2, ws.qh + P + W_WIN_PB, g => wPaintWinFrame(g, ws.qw, ws.qh, sty, v));
   c.drawImage(ws.fr.cv, x - P + (w - ws.qw) / 2, y - P + (h - ws.qh) / 2, ws.fr.w, ws.fr.h);
+  if (sty !== 2 && w >= 26 && w <= 40 && h >= 30 && hash01(Math.round(x), Math.round(y), 19) > 0.9) { const ac = wspr('ac', 28, 36, wPaintAC); c.drawImage(ac.cv, x + w / 2 - 14, y + h - 17, 28, 36); }
   if (WINTER()) {
     c.fillStyle = 'rgba(246,250,253,.92)'; c.fillRect(x - 3.5, y + h + 2.2, w + 7, 1.8);
     if (!on) { c.fillStyle = 'rgba(240,248,255,.2)'; c.fillRect(x, y + h - 5, w, 5); c.fillRect(x, y, 3, h); }

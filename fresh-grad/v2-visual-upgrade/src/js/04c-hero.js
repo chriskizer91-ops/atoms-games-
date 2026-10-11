@@ -109,7 +109,8 @@ function wPaintGroceryWin(g, W, H, k) {
 function wGroceryIn(k) {
   return (c, x, y, w, h, on, px, py) => {
     wBlitInside(c, wInsideSprite('gro' + k, w, h, (g, W, H) => wPaintGroceryWin(g, W, H, k)), x, y, w, h, px * 1.6, py * 1.6, 0.94);
-    c.fillStyle = 'rgba(255,255,255,.94)'; c.font = '800 8px "Bricolage Grotesque","Trebuchet MS",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = 'rgba(26,84,58,.88)'; c.fillRect(x, y, w, h * 0.19); c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(x, y + h * 0.19 - 0.8, w, 0.8);
+    c.fillStyle = 'rgba(255,255,255,.96)'; c.font = '800 8px "Bricolage Grotesque","Trebuchet MS",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText(k ? 'FRESH DAILY' : 'LOCAL PRODUCE', x + w / 2, y + h * 0.1);
   };
 }

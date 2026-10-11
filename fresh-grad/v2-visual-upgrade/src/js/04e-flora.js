@@ -76,10 +76,10 @@ function wPaintBare(g, r, seed) {
     g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = Math.max(0.6, w * 0.3); g.beginPath(); g.moveTo(x, y - w * 0.3); g.quadraticCurveTo(mx, my - w * 0.3, x2, y2 - w * 0.3); g.stroke();
     // snow on the upper side
     g.strokeStyle = '#f6fafd'; g.lineWidth = Math.max(1, w * 0.7); g.lineCap = 'round'; g.beginPath(); g.moveTo(x + (x2 - x) * 0.2, y + (y2 - y) * 0.2 - w * 0.55); g.quadraticCurveTo(mx, my - w * 0.6, x + (x2 - x) * 0.85, y + (y2 - y) * 0.85 - w * 0.55); g.stroke(); g.lineCap = 'butt';
-    if (depth > 0) { limb(x2, y2, a - 0.45 - R() * 0.3, len * (0.62 + R() * 0.12), w * 0.66, depth - 1); limb(x2, y2, a + 0.45 + R() * 0.3, len * (0.62 + R() * 0.12), w * 0.66, depth - 1); if (R() < 0.5) limb(x + (x2 - x) * 0.55, y + (y2 - y) * 0.55, a + (R() < 0.5 ? -0.9 : 0.9), len * 0.5, w * 0.5, depth - 2); }
+    if (depth > 0) { limb(x2, y2, a - 0.45 - R() * 0.3, len * (0.68 + R() * 0.12), w * 0.68, depth - 1); limb(x2, y2, a + 0.45 + R() * 0.3, len * (0.68 + R() * 0.12), w * 0.68, depth - 1); if (R() < 0.5) limb(x + (x2 - x) * 0.55, y + (y2 - y) * 0.55, a + (R() < 0.5 ? -0.9 : 0.9), len * 0.5, w * 0.5, depth - 2); }
   };
-  limb(0, r * 0.95, -1.57, r * 0.7, 3.4, 3);
-  limb(0, r * 0.5, -2.3, r * 0.62, 2.4, 2); limb(0, r * 0.5, -0.84, r * 0.62, 2.4, 2);
+  limb(0, r * 0.95, -1.57, r * 0.82, 3.6, 4);
+  limb(0, r * 0.75, -2.25, r * 0.72, 2.8, 3); limb(0, r * 0.75, -0.89, r * 0.72, 2.8, 3); limb(0, r * 0.9, -2.75, r * 0.56, 2.2, 3); limb(0, r * 0.9, -0.4, r * 0.56, 2.2, 3);
   g.fillStyle = '#f6fafd'; g.beginPath(); g.ellipse(0, r * 0.95 - 1.5, 5, 2, 0, 0, 7); g.fill();
 }
 function wPaintPineTier(g, r, i, se, seed) {

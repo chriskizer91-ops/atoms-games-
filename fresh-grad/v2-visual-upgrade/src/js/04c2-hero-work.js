@@ -188,7 +188,7 @@ const W_WORK_DETAIL = {
     c.fillStyle = '#9a6a3c'; c.fillRect(hx + 18, b.y - 36, 16, 19); c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(hx + 18, b.y - 36, 3, 19); c.fillStyle = '#5a3a24'; c.fillRect(hx + 14, b.y - 39, 24, 4);
     wPaintRoofProp(c, 1, b.x + b.w - 70, b.y, r);
     // string lights and a copper pan sign
-    const ly = ft + 100;
+    const ly = b.y + 6;
     c.strokeStyle = 'rgba(30,22,16,.8)'; c.lineWidth = 1; c.beginPath(); c.moveTo(b.x + 12, ly - 4); c.quadraticCurveTo(cx, ly + 16, b.x + b.w - 12, ly - 4); c.stroke();
     for (let i = 0; i <= 14; i++) {
       const t = i / 14, bx = b.x + 12 + t * (b.w - 24), by = (1 - t) * (1 - t) * (ly - 4) + 2 * t * (1 - t) * (ly + 16) + t * t * (ly - 4) + 3;
@@ -231,6 +231,6 @@ function wWorkLive(c, b, d, lit) {
       const p = (t * 0.25 + i / 6) % 1;
       c.fillStyle = 'rgba(245,248,252,' + (0.34 * (1 - p)).toFixed(3) + ')'; c.beginPath(); c.arc(hx + Math.sin(p * 5 + i) * 5 + p * 26 * FX.wind, b.y - 40 - p * 52, 4 + p * 11, 0, 7); c.fill();
     }
-    if (FX.nf > 0.05 && lit) for (let i = 0; i <= 14; i += 2) { const tt = i / 14; addEmit(b.x + 12 + tt * (b.w - 24), ft + 103 + Math.sin(tt * 3.14) * 12, 9, 5, 0.5); }
+    if (FX.nf > 0.05 && lit) for (let i = 0; i <= 14; i += 2) { const tt = i / 14; addEmit(b.x + 12 + tt * (b.w - 24), b.y + 5 + 40 * tt * (1 - tt), 9, 5, 0.5); }
   }
 }

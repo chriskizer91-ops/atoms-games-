@@ -222,9 +222,9 @@ function wPaintWinFrame(g, w, h, sty, seed) {
   g.fillStyle = 'rgba(255,255,255,.2)'; g.fillRect(x - ct, y - ct, w + 2 * ct, 0.9); g.fillRect(x - ct, y - ct, 0.9, h + 2 * ct);
   g.fillStyle = 'rgba(0,0,0,.38)'; g.fillRect(x - ct, y + h + ct - 0.9, w + 2 * ct, 0.9); g.fillRect(x + w + ct - 0.9, y - ct, 0.9, h + 2 * ct);
   // reveal: sun is upper-left, so the top and left inner faces sit in shade
-  let q = g.createLinearGradient(0, y, 0, y + 9); q.addColorStop(0, 'rgba(8,14,30,.5)'); q.addColorStop(1, 'rgba(8,14,30,0)');
+  let q = g.createLinearGradient(0, y, 0, y + 9); q.addColorStop(0, 'rgba(8,14,30,.4)'); q.addColorStop(1, 'rgba(8,14,30,0)');
   g.fillStyle = q; g.fillRect(x, y, w, 9);
-  q = g.createLinearGradient(x, 0, x + 6, 0); q.addColorStop(0, 'rgba(8,14,30,.34)'); q.addColorStop(1, 'rgba(8,14,30,0)');
+  q = g.createLinearGradient(x, 0, x + 6, 0); q.addColorStop(0, 'rgba(8,14,30,.26)'); q.addColorStop(1, 'rgba(8,14,30,0)');
   g.fillStyle = q; g.fillRect(x, y, 6, h);
   g.fillStyle = 'rgba(255,255,255,.26)'; g.fillRect(x + w - 1, y + 1, 1, h - 1); g.fillRect(x + 1, y + h - 1, w - 1, 1);
   // muntins
@@ -280,7 +280,7 @@ function wGlassPane(c, x, y, w, h, lit, v, ws, inside) {
   c.fillStyle = FX.glassA; c.fillRect(x, y, w, h);
   c.fillStyle = FX.glassB; c.fillRect(x, y + h * 0.5, w, h * 0.5);
   const mixA = on ? clamp((nf - 0.05) * 3.4, 0, 1) : 0;
-  const dayA = on ? (1 - mixA) * 0.34 : ni ? 0.26 : 0.34;
+  const dayA = on ? (1 - mixA) * 0.3 : ni ? 0.26 : 0.3;
   if (dayA > 0.02) { c.globalAlpha = dayA; c.drawImage(ws.di.cv, (IM + px) * res, (IM + py) * res, sw * res, sh * res, x, y, w, h); }
   if (mixA > 0.01) {
     const n = wWinNight(ws, v);
@@ -412,13 +412,14 @@ function wSignSprite(text, size, col) {
   let s = W_SPR.m.get(k); if (s) return s;
   if (!W_SIGN_CTX) W_SIGN_CTX = document.createElement('canvas').getContext('2d');
   W_SIGN_CTX.font = font; const tw = W_SIGN_CTX.measureText(text).width;
+  const rgb = hexRgb(col), c2 = (rgb[0] * 0.3 + rgb[1] * 0.59 + rgb[2] * 0.11) < 125 ? shade(col, 0.42) : col;
   const W = Math.ceil(tw + 16), H = Math.ceil(size * 1.5 + 10);
   s = wspr(key, W, H, g => {
     g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const cx = W / 2, cy = H / 2;
     g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = Math.max(2, size * 0.14); g.strokeText(text, cx + 0.5, cy + 1.2);
-    g.fillStyle = shade(col, -0.62); g.globalAlpha = 0.7; g.fillText(text, cx + 0.9, cy + 1.7); g.fillText(text, cx + 0.45, cy + 0.85); g.globalAlpha = 1;
-    const lg = g.createLinearGradient(0, cy - size * 0.5, 0, cy + size * 0.5); lg.addColorStop(0, shade(col, 0.28)); lg.addColorStop(0.5, col); lg.addColorStop(1, shade(col, -0.16));
+    g.fillStyle = shade(c2, -0.62); g.globalAlpha = 0.7; g.fillText(text, cx + 0.9, cy + 1.7); g.fillText(text, cx + 0.45, cy + 0.85); g.globalAlpha = 1;
+    const lg = g.createLinearGradient(0, cy - size * 0.5, 0, cy + size * 0.5); lg.addColorStop(0, shade(c2, 0.28)); lg.addColorStop(0.5, c2); lg.addColorStop(1, shade(c2, -0.16));
     g.fillStyle = lg; g.fillText(text, cx, cy);
     g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(0, cy - size * 0.52, W, size * 0.16); g.globalCompositeOperation = 'source-over';
   });
