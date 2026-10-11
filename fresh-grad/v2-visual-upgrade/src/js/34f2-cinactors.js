@@ -174,7 +174,7 @@ function cinDiplomaStory(c, ct, rd, rg, dean, grad) {
     const clasp = shake > 0.02;
     const bob = Math.sin(ct * 13) * 1.6 * cnS5((ct - 7.4) / 0.3) * (1 - cnS5((ct - 8.5) / 0.3));
     // scroll position: gripped between both hands, then carried by the Graduate
-    const sx = lerp(lerp(wD[0] - 2, M[0] + 2, cnS5((ct - 6.2) / 0.5)), M[0] - 16, pass), sy = lerp(lerp(wD[1] - 2, M[1] - 4, cnS5((ct - 6.2) / 0.5)), M[1] - 16 + bob, pass);
+    const sx = lerp(lerp(wD[0] - 2, M[0] + 2, cnS5((ct - 6.2) / 0.5)), M[0] + 1, pass), sy = lerp(lerp(wD[1] - 2, M[1] - 4, cnS5((ct - 6.2) / 0.5)), M[1] - 9 + bob, pass);
     const ang = lerp(lerp(-1.0, -0.12, cnS5((ct - 6.2) / 0.5)), -0.82, pass);
     cinDiploma(c, sx, sy, ang, 1, detail);
     if (hs > 0.02) cinClasp(c, M[0], M[1] + bob, 1, ct, pass);
@@ -190,10 +190,18 @@ function cinDiplomaStory(c, ct, rd, rg, dean, grad) {
 function cinClasp(c, x, y, s, ct, pass) {
   c.save(); c.translate(x, y); c.scale(s, s);
   const skinG = '#e8b48f', skinD = '#e6b995';
-  // Graduate's hand (from the left): palm and wrapped fingers, thumb over the top
+  // Graduate's hand (from the left): palm, fingers wrapped around the scroll, thumb over the top
   c.lineCap = 'round'; c.lineJoin = 'round';
   c.fillStyle = cnShade(skinG, -0.12); cnRR(c, -13, -5, 20, 11, 4.4); c.fill();
   c.fillStyle = skinG; cnRR(c, -12, -5.6, 17, 9.4, 4); c.fill();
+  { // four fingers across the scroll, which runs up and to the right at about -0.82 rad
+    const ax = Math.cos(-0.82), ay = Math.sin(-0.82), nx = -ay, ny = ax, gx = -3.5, gy = -3.2;
+    for (let k = 0; k < 4; k++) {
+      const bx = gx + ax * (k * 2.9 - 4.4), by = gy + ay * (k * 2.9 - 4.4);
+      c.strokeStyle = cnShade(skinG, -0.3); c.lineWidth = 3.4; c.beginPath(); c.moveTo(bx - nx * 6.4, by - ny * 6.4); c.lineTo(bx + nx * 4.2, by + ny * 4.2); c.stroke();
+      c.strokeStyle = skinG; c.lineWidth = 2.6; c.beginPath(); c.moveTo(bx - nx * 6.4, by - ny * 6.4); c.lineTo(bx + nx * 4.2, by + ny * 4.2); c.stroke();
+    }
+  }
   c.strokeStyle = skinG; c.lineWidth = 3.3; c.beginPath(); c.moveTo(-6, -5.4); c.lineTo(2, -8.6); c.lineTo(8.6, -7.2); c.stroke();           // thumb on top
   c.strokeStyle = cnShade(skinG, -0.3); c.lineWidth = 0.8; c.beginPath(); c.moveTo(2, -8.6); c.lineTo(8.6, -7.2); c.stroke();
   // Dean's hand (from the right), over the Graduate's: back of the hand with knuckles, fingers wrapping under
