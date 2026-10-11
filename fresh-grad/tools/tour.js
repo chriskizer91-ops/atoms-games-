@@ -170,15 +170,15 @@ let n = 0;
       await newGame('cs'); await clearUI();
       const scenes = [
         { scene: 'cinema', kind: 'film', title: 'Night Train', sub: 'Action · Theater 1', film: 'Night Train', pal: ['#274', '#9bd'], popcorn: true, lines: ['The lights go down.', 'Previews end.'] },
-        { scene: 'salon', kind: 'salon', title: 'Fresh trim', sub: "Bianca's Salon", before: Object.assign({}, PLAYER_LOOK), after: Object.assign({}, PLAYER_LOOK, { hair: '#5a3a8a' }), lines: ['Snip snip.'] },
+        { scene: 'salon', kind: 'salon', title: 'Fresh trim', sub: "Bianca's Salon", lines: ['Snip snip.'] },
         { scene: 'laundry', kind: 'laundry', title: 'Wash and dry', sub: 'Suds Laundromat', lines: ['Quarters in. Soap in.'] },
-        { scene: 'music', kind: 'mic', title: 'Open mic night', sub: 'Cafe Luna', singer: (typeof NPC_LOOK !== 'undefined' ? NPC_LOOK[5] : null), lines: ['A shy poet.'] },
+        { scene: 'music', kind: 'mic', title: 'Open mic night', sub: 'Cafe Luna', lines: ['A shy poet.'] },
         { scene: 'dentist', kind: 'dental', title: 'Checkup', sub: 'Dr. Patel', lines: ['Open wide.'] },
         { scene: 'read', kind: 'read', title: 'A book', sub: 'Chapter 1', place: 'apartment', lines: ['Page one.'] },
       ];
       for (const o of scenes) {
         await clearUI();
-        await ev(o => { try { startSkip(Object.assign({ mins: 60, secs: 20, act: 'idle' }, o)); } catch (e) { console.error('scene ' + o.scene + ': ' + e.message); } }, o);
+        await ev(o => { try { if (o.scene === 'salon') { o.before = Object.assign({}, PLAYER_LOOK); o.after = Object.assign({}, PLAYER_LOOK, { hair: '#5a3a8a' }); } if (o.scene === 'music') o.singer = NPC_LOOK[5]; startSkip(Object.assign({ mins: 60, secs: 20, act: 'idle' }, o)); } catch (e) { console.error('scene ' + o.scene + ': ' + e.message); } }, o);
         await shot('scene-' + o.scene + '-a', 900);
         await ev(() => { if (G.skip && G.skip.scene && typeof SC !== 'undefined') SC.update(0.6); });
         await shot('scene-' + o.scene + '-b', 900);
