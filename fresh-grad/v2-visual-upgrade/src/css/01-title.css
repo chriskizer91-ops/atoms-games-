@@ -1,16 +1,58 @@
-/* title: the live town with the name set low and left */
-#title{background:#0b131e}
-#titleCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#title::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,12,20,.74) 0,rgba(7,12,20,.34) 36%,rgba(7,12,20,0) 62%),linear-gradient(0deg,rgba(7,12,20,.6) 0,rgba(7,12,20,0) 34%);pointer-events:none;z-index:1}
-.t-lock{z-index:2;position:absolute;left:clamp(20px,6vw,88px);bottom:clamp(28px,9vh,96px);right:20px;display:flex;flex-direction:column;align-items:flex-start;gap:14px;max-width:620px}
-.t-lock>*{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
-.t-lock>:nth-child(2){animation-delay:.06s}.t-lock>:nth-child(3){animation-delay:.12s}.t-lock>:nth-child(4){animation-delay:.18s}.t-lock>:nth-child(5){animation-delay:.24s}
-@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-#title .cap{width:64px;height:64px;color:var(--gold);filter:drop-shadow(0 6px 18px #ffb02455)}
-#title h1{font-weight:800;font-size:clamp(60px,12.5vw,148px);line-height:.84;letter-spacing:-.035em;text-shadow:0 2px 0 #0008,0 18px 60px #000a}
-#title h1 em{font-style:normal;color:var(--gold)}
-#title .sub{max-width:36ch;color:#d5e0e8;font-size:clamp(16px,2vw,19px);text-shadow:0 1px 12px #000c}
-#title .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-.t-clock{z-index:2;position:absolute;right:clamp(16px,3vw,32px);top:clamp(16px,3vh,28px);display:flex;align-items:center;gap:9px;padding:8px 13px;border-radius:99px;background:var(--glass);box-shadow:0 0 0 1px var(--hair) inset;backdrop-filter:blur(8px);font:500 12px var(--font-mono);letter-spacing:.06em;color:#d5e0e8}
-.t-clock i{width:8px;height:8px;border-radius:50%;background:var(--sky);box-shadow:0 0 10px var(--sky)}
-
+/* ============================ title: the live town with the name set low and left ============================
+   The canvas is the star. Around it: a warm grade, soft sun glint, drifting golden dust, vignette and a whisper of grain (all DOM layers,
+   so the compositor pays for them), then the lockup with real depth: chrome-white "Fresh", foil-marigold "Grad". */
+#title{background:#0b131e;overflow:hidden}
+#titleCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;transform:translate3d(var(--t-px,0px),var(--t-py,0px),0) scale(1.025);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.t-fx{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.t-fx i{position:absolute;inset:0;display:block}
+.t-grade{background:linear-gradient(180deg,rgba(255,176,96,.07) 0,rgba(255,176,96,0) 42%)}
+.t-sun{background:radial-gradient(520px 360px at 92% -4%,rgba(255,206,130,.34) 0,rgba(255,206,130,.1) 45%,rgba(255,206,130,0) 72%),linear-gradient(115deg,rgba(255,226,170,0) 38%,rgba(255,226,170,.08) 46%,rgba(255,226,170,0) 54%);animation:tSun 9s ease-in-out infinite alternate}
+@keyframes tSun{from{opacity:.75;transform:translateX(-1.5%)}to{opacity:1;transform:translateX(1.5%)}}
+.t-motes{background:radial-gradient(circle at 18% 78%,rgba(255,224,160,.9) 0 1.4px,transparent 2.6px),radial-gradient(circle at 34% 62%,rgba(255,224,160,.7) 0 1.1px,transparent 2.2px),radial-gradient(circle at 52% 84%,rgba(255,224,160,.8) 0 1.6px,transparent 2.8px),radial-gradient(circle at 66% 48%,rgba(255,224,160,.6) 0 1px,transparent 2px),radial-gradient(circle at 78% 72%,rgba(255,224,160,.85) 0 1.5px,transparent 2.7px),radial-gradient(circle at 88% 38%,rgba(255,224,160,.6) 0 1.2px,transparent 2.3px),radial-gradient(circle at 8% 40%,rgba(255,224,160,.6) 0 1px,transparent 2px);animation:tMotes 26s linear infinite;opacity:.8}
+@keyframes tMotes{from{transform:translateY(0)}to{transform:translateY(-12%)}}
+.t-vig{background:radial-gradient(ellipse 80% 78% at 56% 46%,rgba(5,8,18,0) 58%,rgba(5,8,18,.16) 82%,rgba(5,8,18,.5) 100%)}
+.t-grain{inset:-120px;background-image:var(--t-grain,none);background-size:160px 160px;opacity:.07;animation:tGrain .6s steps(1) infinite}
+@keyframes tGrain{0%{transform:translate(0,0)}25%{transform:translate(-44px,31px)}50%{transform:translate(37px,-52px)}75%{transform:translate(-21px,-17px)}}
+/* legibility wash behind the lockup */
+#title::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,12,20,.66) 0,rgba(7,12,20,.3) 34%,rgba(7,12,20,0) 58%),linear-gradient(0deg,rgba(7,12,20,.5) 0,rgba(7,12,20,0) 32%);pointer-events:none;z-index:1}
+.t-lock{z-index:2;position:absolute;left:clamp(20px,6vw,88px);bottom:clamp(28px,9vh,96px);right:20px;display:flex;flex-direction:column;align-items:flex-start;gap:14px;max-width:660px;transform:translate3d(calc(var(--t-px,0px) * -.5),calc(var(--t-py,0px) * -.5),0);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.t-lock>*{animation:rise .8s cubic-bezier(.2,.8,.2,1) both}
+.t-lock>:nth-child(2){animation-delay:.07s}.t-lock>:nth-child(3){animation-delay:.14s}.t-lock>:nth-child(4){animation-delay:.22s}.t-lock>:nth-child(5){animation-delay:.3s}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+/* the mortarboard mark with a tassel that swings on its own */
+#title .cap{width:68px;height:68px;color:var(--gold);filter:drop-shadow(0 6px 18px rgba(255,176,36,.38)) drop-shadow(0 1px 0 rgba(0,0,0,.4))}
+#title .cap .tassel{transform-box:view-box;transform-origin:53.5px 27.4px;animation:tTassel 3.4s ease-in-out infinite}
+@keyframes tTassel{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-9deg)}}
+/* eyebrow with hairlines */
+#title .eyebrow{display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:.24em;text-shadow:0 1px 10px rgba(0,0,0,.7)}
+#title .eyebrow::before{content:"";width:28px;height:1px;background:linear-gradient(90deg,rgba(255,194,71,0),var(--gold))}
+/* the lettering: layered extrusion, a chrome split in the fill, a rim line and a slow light sweep */
+#title h1{font-weight:800;font-size:clamp(64px,12.8vw,150px);line-height:.84;letter-spacing:-.04em;margin:2px 0 4px;filter:drop-shadow(0 1px 0 #22364d) drop-shadow(0 2px 0 #1a2b40) drop-shadow(0 3px 0 #132135) drop-shadow(0 4px 0 #0d1827) drop-shadow(0 22px 26px rgba(0,0,0,.55))}
+#title h1 .w{position:relative;display:inline-block;font-style:normal;color:#eaf1f7;-webkit-text-stroke:1px rgba(255,255,255,.24);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-repeat:no-repeat}
+#title h1 .w:not(em){background-image:linear-gradient(105deg,rgba(255,255,255,0) 40%,rgba(255,255,255,.85) 50%,rgba(255,255,255,0) 60%),linear-gradient(180deg,#ffffff 0,#f1f6fb 36%,#b6c6d8 50%,#8fa4bb 52%,#dce7f2 56%,#ffffff 100%);background-size:260% 100%,100% 100%;background-position:160% 0,0 0;animation:tSweep 7s ease-in-out 1.2s infinite}
+#title h1 em.w{color:var(--gold);-webkit-text-stroke:1px rgba(255,236,170,.4);background-image:linear-gradient(105deg,rgba(255,255,255,0) 40%,rgba(255,255,255,.9) 50%,rgba(255,255,255,0) 60%),linear-gradient(180deg,#fff0b0 0,#ffd351 30%,#ffc247 46%,#d98a12 54%,#ffd978 58%,#ffe9a8 100%);background-size:260% 100%,100% 100%;background-position:160% 0,0 0;animation:tSweep 7s ease-in-out 2.1s infinite;filter:drop-shadow(0 2px 0 #8a5206) drop-shadow(0 4px 0 #5e3704) drop-shadow(0 0 28px rgba(255,176,36,.35))}
+@keyframes tSweep{0%,55%{background-position:160% 0,0 0}85%,100%{background-position:-60% 0,0 0}}
+#title .sub{max-width:36ch;color:#dbe6ee;font-size:clamp(16px,2vw,19px);line-height:1.45;text-shadow:0 1px 12px rgba(0,0,0,.85)}
+#title .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+/* title buttons: marigold with a specular top edge and a sheen sweep, glass for the ghost */
+#title .btn{position:relative;overflow:hidden;min-height:48px;padding:13px 28px;border-radius:14px;font:700 16px var(--font-display);letter-spacing:.01em;isolation:isolate;transition:transform .14s cubic-bezier(.2,.8,.2,1),box-shadow .2s,filter .2s}
+#title .btn:not(.ghost){background:linear-gradient(180deg,#ffe08a 0,#ffc247 46%,#f0a21f 100%);box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 -2px 0 rgba(120,60,0,.28) inset,0 10px 28px rgba(255,176,36,.34),0 2px 4px rgba(0,0,0,.5)}
+#title .btn:not(.ghost)::after{content:"";position:absolute;top:0;bottom:0;left:-70%;width:50%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:skewX(-18deg);transition:left .7s cubic-bezier(.2,.8,.2,1);z-index:-1;pointer-events:none}
+#title .btn:not(.ghost):hover:not(:disabled)::after{left:130%}
+#title .btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.05)}
+#title .btn:active:not(:disabled){transform:translateY(1px);filter:brightness(.97)}
+#title .btn:focus-visible{outline:2px solid #fff;outline-offset:3px;box-shadow:0 0 0 5px rgba(255,194,71,.55),0 10px 28px rgba(255,176,36,.34)}
+#title .btn.ghost{background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.03));color:#eaf1f6;box-shadow:0 0 0 1px rgba(255,255,255,.16) inset,0 1px 0 rgba(255,255,255,.18) inset,0 8px 24px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#title .btn.ghost:hover:not(:disabled){box-shadow:0 0 0 1px var(--gold) inset,0 1px 0 rgba(255,255,255,.2) inset,0 8px 24px rgba(0,0,0,.35)}
+/* the clock pill */
+.t-clock{z-index:2;position:absolute;right:clamp(16px,3vw,32px);top:clamp(16px,3vh,28px);display:flex;align-items:center;gap:10px;padding:8px 15px 8px 12px;border-radius:99px;background:linear-gradient(180deg,rgba(26,40,60,.62),rgba(10,16,28,.72));box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 1px 0 rgba(255,255,255,.14) inset,0 8px 22px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(12px) saturate(1.2);backdrop-filter:blur(12px) saturate(1.2);font:500 12px var(--font-mono);letter-spacing:.07em;color:#dbe6ee;font-variant-numeric:tabular-nums}
+.t-clock i{width:8px;height:8px;border-radius:50%;background:var(--sky);box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 12px var(--sky);animation:tDot 3.2s ease-in-out infinite}
+@keyframes tDot{50%{transform:scale(.78);opacity:.8}}
+@media (max-width:600px){
+  .t-lock{bottom:clamp(24px,6vh,56px);gap:12px}
+  #title h1{font-size:clamp(68px,22vw,110px)}
+  #title .btn{min-height:50px;flex:1 1 150px}
+  #title .cap{width:56px;height:56px}
+  #title::before{background:linear-gradient(0deg,rgba(7,12,20,.86) 0,rgba(7,12,20,.55) 46%,rgba(7,12,20,0) 78%),linear-gradient(90deg,rgba(7,12,20,.5) 0,rgba(7,12,20,0) 70%)}
+}
+@media (prefers-reduced-motion:reduce){.t-sun,.t-motes,.t-grain,#title .cap .tassel,#title h1 .w,#title h1 em.w,.t-clock i,.t-lock>*{animation:none}#titleCanvas,.t-lock{transition:none}}
