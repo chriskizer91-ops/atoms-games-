@@ -172,6 +172,7 @@
 }
 @media (max-width:560px){
   #hud{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"clock money" "gauges gauges" "meals tools";gap:8px 12px}
+  .meals{justify-self:start}
   .meals span{width:25px;height:25px}
   .tools{justify-content:flex-end;gap:5px}
   #bSpeed::before,#bSound::before,#bMenu::before{display:none}
@@ -183,7 +184,6 @@
   #goalText{flex:1 1 150px}
   #chips{flex:1 1 100%;justify-content:flex-start}
   #chips:empty{display:none}
-  .money .delta{top:0;right:100%;margin:0 12px 0 0}
 }
 @media (pointer:coarse) and (max-width:700px){
   #pad{grid-template:repeat(3,52px)/repeat(3,52px)}
@@ -199,6 +199,7 @@
 /* four gauges need more room: drop the icons sooner and stack the bar on mid-size screens */
 @media (max-width:1360px){.phone-btn .pl{display:none}}
 @media (max-width:1180px){.gauges{gap:14px}#hud{column-gap:16px}}
+@media (max-width:1100px){.money .delta{top:0;right:100%;margin:0 12px 0 0}.meals{justify-self:end}}
 @media (max-width:1100px) and (min-width:561px){
   #hud{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"clock money tools" "gauges gauges meals";gap:8px 12px;padding:8px 16px 11px}
 }
