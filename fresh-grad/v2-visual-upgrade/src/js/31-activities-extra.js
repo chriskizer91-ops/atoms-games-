@@ -442,26 +442,7 @@ function hangCheck() {
     lines: [f.name + ' tells you about their week.', 'You both laugh way too loud.', 'You trade stories about work.', '"Same time next week?"'],
     onEnd() { S.friends[m.inv.fid] = (S.friends[m.inv.fid] || 0) + 2; S.stats.hangouts = (S.stats.hangouts || 0) + 1; addMood(16); lifeEv('fun'); gainXP(30); toast('A great time with ' + f.name + '. Mood +16, and you are closer friends now.', 'good'); } });
 }
-SCENES.hang = function (c, w, h, t, fr, o) {
-  const bg = { cafe: ['#3d2a22', '#8a5a3c'], pizza: ['#2f4f3a', '#c0392b'], diner: ['#4a1f1f', '#c46b5e'], books: ['#2c2433', '#6b4a7a'], park: ['#3f8a52', '#9bd17a'], bakery: ['#5a3d27', '#e0b070'], cinema: ['#2a0a14', '#7a1f33'] }[o.place] || ['#2d3a3a', '#46605a'];
-  const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, bg[0]); g.addColorStop(1, bg[1]); c.fillStyle = g; c.fillRect(0, 0, w, h);
-  c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.35; c.drawImage(GLOW[0], w * 0.2, -h * 0.3, w * 0.6, h); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
-  const s = h / 110, ty = h * 0.86;
-  drawPerson(c, w * 0.34, ty, Object.assign({}, PLAYER_LOOK, { s, face: 1, moving: false, me: false }));
-  drawPerson(c, w * 0.66, ty, Object.assign({}, o.friend, { s, face: -1, moving: false, me: false }));
-  // table with two mugs
-  c.fillStyle = '#6b4a30'; rr(c, w * 0.36, ty - 15 * s, w * 0.28, 8 * s, 4); c.fill();
-  c.fillStyle = '#5a3d27'; c.fillRect(w * 0.49, ty - 8 * s, w * 0.02, 10 * s);
-  [0.43, 0.57].forEach(x => { c.fillStyle = '#f6f1e7'; rr(c, w * x - 4 * s, ty - 22 * s, 8 * s, 8 * s, 2); c.fill(); });
-  // speech bubbles take turns
-  const turn = Math.floor(t / 1.6) % 2, bxp = turn ? w * 0.66 : w * 0.34, byp = ty - 52 * s;
-  c.fillStyle = '#ffffff'; rr(c, bxp - 34, byp - 22, 68, 34, 14); c.fill(); c.beginPath(); c.moveTo(bxp - 6, byp + 12); c.lineTo(bxp + 6, byp + 12); c.lineTo(bxp + (turn ? 10 : -10), byp + 22); c.fill();
-  const ic = Math.floor(t / 3.2) % 3;
-  c.fillStyle = ['#3a4a62', '#ff7eb6', '#ffc247'][ic];
-  if (ic === 0) { for (let i = -1; i <= 1; i++) { c.beginPath(); c.arc(bxp + i * 11, byp - 5, 3.6, 0, 7); c.fill(); } }
-  else if (ic === 1) { c.beginPath(); c.moveTo(bxp, byp + 4); c.bezierCurveTo(bxp - 12, byp - 4, bxp - 6, byp - 16, bxp, byp - 8); c.bezierCurveTo(bxp + 6, byp - 16, bxp + 12, byp - 4, bxp, byp + 4); c.fill(); }
-  else { c.font = '800 18px "Bricolage Grotesque",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('ha ha', bxp, byp - 5); }
-};
+SCENES.hang = function (c, w, h, t, fr, o) { scHang(c, w, h, t, fr, o); };
 
 /* Sal hires riders */
 (function () {

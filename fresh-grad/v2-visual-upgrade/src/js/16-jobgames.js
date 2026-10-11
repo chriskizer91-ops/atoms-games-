@@ -14,6 +14,29 @@ function csHighlight(s) {
   const e = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   return e.replace(CS_RX, (m, c, str, kw, num, fn) => '<i class="' + (c ? 'c' : str ? 's' : kw ? 'k' : num ? 'n' : 'f') + '">' + m + '</i>');
 }
+/* the editor dresses the plain highlighter output: punctuation gets its own colour, indent guides and a minimap */
+function csDress(h) {
+  return h.split(/(<[^>]+>)/).map((seg, i) => i % 2 ? seg : seg.replace(/(?:&(?:lt|gt|amp);|[{}()\[\];,.=!+\-*:?|])+/g, m => '<i class="p">' + m + '</i>')).join('');
+}
+function csMini(src) {
+  const ind = src.match(/^ */)[0].length;
+  let h = '';
+  src.trim().split(/(\s+)/).forEach(t => {
+    if (!/\S/.test(t)) return;
+    const k = /^(async|await|function|const|let|if|return)$/.test(t) ? 'k' : /^'/.test(t) ? 's' : /^(\d|true$|false$)/.test(t) ? 'n' : /\(/.test(t) ? 'f' : 'x';
+    h += '<s class="' + k + '" style="width:' + Math.max(2, Math.min(24, t.length * 1.7)) + 'px"></s>';
+  });
+  return '<span class="mm" style="padding-left:' + (ind * 2.6) + 'px">' + h + '</span>';
+}
+const CS_DEFS = '<svg class="cs-defs" width="0" height="0" aria-hidden="true" style="position:absolute"><defs>' +
+  '<linearGradient id="csShell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a7a"/><stop offset=".55" stop-color="#e0443f"/><stop offset="1" stop-color="#8f1d28"/></linearGradient>' +
+  '<linearGradient id="csBolt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6c4"/><stop offset="1" stop-color="#ffb21f"/></linearGradient></defs></svg>';
+const CS_BEETLE = '<svg viewBox="0 0 32 32" aria-hidden="true"><g stroke="#25090d" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M9.5 11 4.5 8M9 17H3.5M10 23l-4.5 3.5M22.5 11l5-3M23 17h5.5M22 23l4.5 3.5M13.5 6 11.5 2.5M18.5 6l2-3.5"/></g>' +
+  '<ellipse cx="16" cy="19.5" rx="8.5" ry="10" fill="url(#csShell)" stroke="#3a0f14" stroke-width="1"/><path d="M16 10.5V29.5" stroke="#3a0f14" stroke-width="1.1"/>' +
+  '<circle cx="12.2" cy="17" r="1.9" fill="#2a0d10" opacity=".8"/><circle cx="19.8" cy="17" r="1.9" fill="#2a0d10" opacity=".8"/><circle cx="12.4" cy="23.5" r="1.5" fill="#2a0d10" opacity=".8"/><circle cx="19.6" cy="23.5" r="1.5" fill="#2a0d10" opacity=".8"/>' +
+  '<path d="M10.5 15.5Q11.5 11.5 15 11.2" stroke="#fff" stroke-opacity=".55" stroke-width="1.7" stroke-linecap="round" fill="none"/>' +
+  '<ellipse cx="16" cy="9" rx="5" ry="3.8" fill="#3a1218" stroke="#25090d" stroke-width=".8"/><circle cx="14" cy="8.6" r="1.3" fill="#fff"/><circle cx="18" cy="8.6" r="1.3" fill="#fff"/><circle cx="14.3" cy="8.8" r=".6" fill="#25090d"/><circle cx="17.7" cy="8.8" r=".6" fill="#25090d"/></svg>';
+const CS_BOLT = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19 2.5 7.5 18.5H15l-2.5 11.5L25 13h-7.5z" fill="url(#csBolt)" stroke="#fff4b8" stroke-width="1.1" stroke-linejoin="round"/><path d="M4.5 8.5 8 11 6 14.5M27.5 22l-3.5-2.5 2-3.5M26 6l-3 1.5M6 25l3-1.5" stroke="#fff4b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".85"/></svg>';
 JA.games.cs = {
   name: 'Bug Hunt', glyph: JGLYPH.bug,
   goal: 'Production is live and bugs keep slipping in. Squash each one before its timer runs out.',
@@ -22,14 +45,20 @@ JA.games.cs = {
   quips: ['Zero-downtime hero. The pager stayed silent.', 'Clean deploys all day long.', 'A few bugs slipped through, but nothing fell over.', 'The pager went off more than once.', 'Prod is on fire. Again.'],
   start(J, host) {
     const g = { lines: [], bugs: [], spawn: 0.7, fixed: 0, miss: 0, wFix: 0, wMiss: 0, combo: 0, best: 0, health: 100, spawned: 0 };
-    host.innerHTML = '<div class="gm cs"><div class="cs-top"><span class="cs-file"><i></i>checkout.js</span><span class="cs-hb">Prod health<em><b></b></em></span><span class="cs-sk">Streak <b>0</b></span></div><div class="cs-code"></div></div>';
+    host.innerHTML = '<div class="gm cs">' + CS_DEFS + '<div class="cs-top"><span class="cs-hb">Prod health<em><b></b></em></span><span class="cs-sk">Streak <b>0</b></span></div>' +
+      '<div class="cs-win"><div class="cs-bar"><span class="cs-lights"><i></i><i></i><i></i></span><span class="cs-tabs"><span class="cs-file">checkout.js</span><span>cart.js</span><span>pay.js</span></span>' +
+      '<span class="br"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="4.5" cy="3.5" r="1.8"/><circle cx="4.5" cy="12.5" r="1.8"/><circle cx="11.5" cy="6.5" r="1.8"/><path d="M4.5 5.3v5.4M11.5 8.3c0 2.5-3 2.2-7 2.2"/></svg>main</span></div>' +
+      '<div class="cs-body"><div class="cs-code"></div><div class="cs-map"></div></div>' +
+      '<div class="cs-status"><span>JavaScript</span><span class="nb">No bugs</span><span class="sp"></span><span>UTF-8</span><span>LF</span></div></div></div>';
     g.host = host; g.hb = $('.cs-hb b', host); g.sk = $('.cs-sk b', host); g.hbw = $('.cs-hb', host);
-    const code = $('.cs-code', host);
+    g.win = $('.cs-win', host); g.nb = $('.cs-status .nb', host); g.nbT = '';
+    const code = $('.cs-code', host), mini = $('.cs-map', host);
     CS_CODE.forEach((src, i) => {
       const row = el('div', 'cl');
-      row.innerHTML = '<span class="ln">' + (i + 1) + '</span><code>' + csHighlight(src) + '</code>';
+      row.innerHTML = '<span class="ln">' + (i + 1) + '</span><span class="gut"></span><code><i class="ig" style="--n:' + src.match(/^ */)[0].length + '"></i>' + csDress(csHighlight(src)) + '</code>';
       code.appendChild(row);
-      g.lines.push({ row, bug: null, i });
+      const mr = el('div', 'mr'); mr.innerHTML = csMini(src); mini.appendChild(mr);
+      g.lines.push({ row, bug: null, i, mm: mr });
     });
     code.addEventListener('pointerdown', e => {
       const b = e.target.closest('.bug'); if (!b) return;
@@ -46,7 +75,7 @@ JA.games.cs = {
     const life = (crit ? 2.0 : 3.1 - J.frac * 0.9) * J.focus / J.diff;
     const b = el('button', 'bug' + (crit ? ' crit' : '')); b.type = 'button'; b.tabIndex = -1;
     b.setAttribute('aria-label', (crit ? 'Critical bug' : 'Bug') + ' on line ' + (ln.i + 1));
-    b.innerHTML = crit ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2 5 13.5h6L10 22l9-12h-6z"/></svg>' : JGLYPH.bug;
+    b.innerHTML = crit ? CS_BOLT : CS_BEETLE;
     ln.row.appendChild(b); ln.row.classList.add('hot');
     const bug = { ln, el: b, crit, life, t: life, w: crit ? 2 : 1 };
     ln.bug = bug; g.bugs.push(bug); g.spawned++;
@@ -62,6 +91,7 @@ JA.games.cs = {
     setTimeout(() => bug.ln.row.classList.remove('ok'), 380);
     jpop(g.host, bug.el, bug.crit ? '+2' : (g.combo >= 4 ? 'x' + g.combo : '+1'), bug.crit ? 'gold' : 'good');
     bug.el.classList.add('fixed'); setTimeout(() => bug.el.remove(), 260);
+    JFX.burst(bug.el, 'splat', { col: bug.crit ? ['#ffc247', '#fff3c4', '#ffffff'] : ['#ff6b6b', '#ff9d8a', '#ffd0d0'], n: bug.crit ? 18 : 11, r: bug.crit ? 52 : 40 });
     jtone(660 + Math.min(g.combo, 8) * 40, 0.08, 0.05);
   },
   tick(J, dt) {
@@ -75,12 +105,14 @@ JA.games.cs = {
       const b = g.bugs[i];
       b.t -= dt;
       b.el.style.setProperty('--p', Math.max(0, b.t / b.life).toFixed(3));
+      b.el.classList.toggle('urgent', b.t / b.life < 0.3);
       if (b.t <= 0) {
         g.bugs.splice(i, 1); b.ln.bug = null;
         g.miss++; g.wMiss += b.w; g.combo = 0; g.health = Math.max(0, g.health - 14);
         b.ln.row.classList.remove('hot'); b.ln.row.classList.add('bad');
         setTimeout(() => b.ln.row.classList.remove('bad'), 450);
         jpop(g.host, b.el, 'Incident', 'bad');
+        JFX.burst(b.el, 'ring', { col: '#ff6b6b', r: 60 }); g.win.classList.add('shake'); setTimeout(() => g.win.classList.remove('shake'), 400);
         b.el.remove();
         SFX.chime('bad');
       }
@@ -88,6 +120,9 @@ JA.games.cs = {
     g.hb.style.width = g.health + '%';
     g.hbw.classList.toggle('low', g.health < 40);
     g.sk.textContent = g.combo;
+    g.lines.forEach(l => l.mm.classList.toggle('hot', !!l.bug));
+    const nbT = g.bugs.length ? g.bugs.length + (g.bugs.length === 1 ? ' bug' : ' bugs') : 'No bugs';
+    if (nbT !== g.nbT) { g.nbT = nbT; g.nb.textContent = nbT; g.nb.classList.toggle('bad', g.bugs.length > 0); }
   },
   key(J, e) {
     const n = +e.key;
@@ -125,6 +160,25 @@ function enGenPath(cols, rows) {
   }
   return cols > 4 ? [[0, 1], [1, 1], [1, 2], [2, 2], [3, 2], [3, 1], [4, 1]] : [[0, 1], [1, 1], [1, 2], [2, 2], [2, 3], [3, 3]];
 }
+/* ---- pipe art: a tube shaded in layers, flanges at each end, fluid bubbles that flow along the run ---- */
+function enTileSvg(type) {
+  const d = EN_PATH[type];
+  const ends = type === 's' ? [[0, 50, 0], [100, 50, 0]] : [[50, 0, 90], [100, 50, 0]];
+  const fl = ends.map(e => '<g transform="rotate(' + e[2] + ' ' + e[0] + ' ' + e[1] + ')"><rect x="' + (e[0] - 3.5) + '" y="' + (e[1] - 18) + '" width="7" height="36" rx="1.5"/><circle cx="' + e[0] + '" cy="' + (e[1] - 12.5) + '" r="1.7"/><circle cx="' + e[0] + '" cy="' + (e[1] + 12.5) + '" r="1.7"/><path d="M' + (e[0] - 2) + ' ' + (e[1] - 16) + 'V' + (e[1] + 16) + '"/></g>').join('');
+  let p = '';
+  for (let i = 0; i < 6; i++) p += '<path class="p' + i + '" d="' + d + '"/>';
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">' + p + '<path class="p6" d="' + d + '"/><path class="p7" d="' + d + '"/><g class="fl">' + fl + '</g></svg>';
+}
+const EN_PUMP = '<ellipse cx="28" cy="51" rx="25" ry="3" fill="#000" opacity=".35"/><rect class="mt" x="3" y="46" width="40" height="5" rx="2"/>' +
+  '<rect class="body" x="4" y="19" width="17" height="27" rx="5"/><path d="M9 22v21M13 22v21M17 22v21" stroke="#0a1b30" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>' +
+  '<circle class="body" cx="30" cy="28" r="14.5"/><circle class="dk" cx="30" cy="28" r="10.5"/>' +
+  '<g class="imp">' + [0, 1, 2, 3, 4, 5].map(k => '<path d="M30 28V18.5Q35 20.500 33.500 26Z" fill="#9db2c8" transform="rotate(' + (k * 60) + ' 30 28)"/>').join('') + '</g><circle class="mt" cx="30" cy="28" r="2.4"/>' +
+  '<rect class="mt" x="42" y="22.5" width="12" height="11"/><rect class="mt" x="51" y="19" width="5" height="18" rx="1.5"/>' +
+  '<circle cx="30" cy="9.500" r="6.200" fill="#e8f1f8" stroke="#071220" stroke-width="1"/><path d="M26 11.500a4.200 4.200 0 0 1 8 0" stroke="#27384e" stroke-width="1" fill="none" opacity=".6"/><path class="nd" d="M30 9.500 34 7"/>';
+const EN_ACT = '<ellipse cx="29" cy="51" rx="19" ry="3" fill="#000" opacity=".35"/><rect class="mt" x="13" y="46" width="28" height="5" rx="2"/>' +
+  '<rect class="mt" x="0" y="19" width="5" height="18" rx="1.5"/><rect class="mt" x="3" y="22.500" width="12" height="11"/>' +
+  '<rect class="body" x="13" y="13" width="28" height="31" rx="6"/><path d="M20 15v27M26 15v27M32 15v27" stroke="#0a1b30" stroke-width="1.5" opacity=".6"/><rect x="15" y="15" width="3" height="27" rx="1.500" fill="#fff" opacity=".16"/>' +
+  '<g class="rod"><rect class="mt" x="41" y="25" width="10" height="6" rx="1.500"/><circle class="mt" cx="52.500" cy="28" r="3.600"/><circle class="dk" cx="52.500" cy="28" r="1.300"/></g><circle class="led" cx="27" cy="8.500" r="2.800"/>';
 JA.games.eng = {
   name: 'Pipe Fitter', glyph: JGLYPH.gear,
   goal: 'A hydraulic line has to run from the pump to the actuator. Turn the pipe sections until the fluid flows all the way through.',
@@ -134,7 +188,8 @@ JA.games.eng = {
   start(J, host) {
     const narrow = window.matchMedia && window.matchMedia('(max-width:520px)').matches;
     const g = { cols: narrow ? 4 : 5, rows: narrow ? 5 : 4, solved: 0, taps: 0, cells: [], path: [], wet: null, sealed: false, wait: 0, cur: null, total: 0, tiles: [] };
-    host.innerHTML = '<div class="gm en"><div class="en-top"><span>Blueprint <b class="n">1</b></span><span class="en-st">Line open</span><span>Sealed <b class="s">0</b></span></div><div class="pg"></div></div>';
+    host.innerHTML = '<div class="gm en"><div class="en-top"><span>Blueprint <b class="n">1</b></span><span class="en-st">Line open</span><span>Sealed <b class="s">0</b></span></div>' +
+      '<div class="en-sheet"><i class="en-rule"></i><div class="pg"></div><div class="en-tb" aria-hidden="true"><span>HYDRAULIC LINE</span><span>REV A</span><span>SHEET 1 / 1</span></div></div></div>';
     g.host = host; g.grid = $('.pg', host); g.grid.style.setProperty('--cols', g.cols); g.n = $('.en-top .n', host); g.s = $('.en-top .s', host); g.st = $('.en-st', host);
     g.grid.addEventListener('pointerdown', e => {
       const b = e.target.closest('.pt'); if (!b) return;
@@ -176,11 +231,11 @@ JA.games.eng = {
     g.n.textContent = g.total; g.st.textContent = 'Line open'; g.st.classList.remove('ok');
     // render
     const sr = g.path[0][1], er = g.path[g.path.length - 1][1];
-    const gr = g.grid; gr.innerHTML = ''; g.tiles = [];
+    const gr = g.grid; gr.innerHTML = ''; g.tiles = []; g.pw = null;
     gr.classList.remove('sealed'); gr.classList.add('fresh'); setTimeout(() => gr.classList.remove('fresh'), 360);
     const node = (col, row, cls, label) => {
       const d = el('div', 'pn ' + cls); d.style.gridColumn = col; d.style.gridRow = row;
-      d.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="9" width="36" height="22" rx="8"/><circle cx="20" cy="20" r="6"/>' + (cls === 'src' ? '<path d="M20 20 24 15"/>' : '<path d="M14 20h12M20 14v12"/>') + '</svg><small>' + label + '</small>';
+      d.innerHTML = '<svg viewBox="0 0 56 56" aria-hidden="true">' + (cls === 'src' ? EN_PUMP : EN_ACT) + '</svg><small>' + label + '</small>';
       return d;
     };
     for (let r = 0; r < g.rows; r++) {
@@ -188,7 +243,7 @@ JA.games.eng = {
         const cell = g.cells[r][c];
         const b = el('button', 'pt'); b.type = 'button'; b.tabIndex = -1; b.dataset.c = c; b.dataset.r = r;
         b.setAttribute('aria-label', 'Pipe section, column ' + (c + 1) + ' row ' + (r + 1));
-        b.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true"><path class="p0" d="' + EN_PATH[cell.type] + '"/><path class="p1" d="' + EN_PATH[cell.type] + '"/><path class="p2" d="' + EN_PATH[cell.type] + '"/></svg>';
+        b.innerHTML = enTileSvg(cell.type);
         b.firstChild.style.setProperty('--rot', (cell.rot * 90) + 'deg');
         cell.deg = cell.rot * 90; cell.el = b;
         b.style.gridColumn = c + 2; b.style.gridRow = r + 1;
@@ -227,6 +282,8 @@ JA.games.eng = {
   paint(J) {
     const g = J.g, f = JA.games.eng.flow(g);
     g.wet = f.wet;
+    const pw = g.pw; g.pw = f.wet;
+    if (pw) for (let r = 0; r < g.rows; r++) for (let c = 0; c < g.cols; c++) if (pw[c + ',' + r] && !f.wet[c + ',' + r]) JFX.burst(g.cells[r][c].el, 'steam', { n: 8, spread: 26, a: 0.55 });
     for (let r = 0; r < g.rows; r++) for (let c = 0; c < g.cols; c++) g.cells[r][c].el.classList.toggle('wet', !!f.wet[c + ',' + r]);
     const src = $('.pn.src', g.grid), snk = $('.pn.snk', g.grid);
     if (src) src.classList.toggle('wet', !!(enMask(g.cells[g.path[0][1]][g.path[0][0]]) & EN_W));
@@ -235,6 +292,7 @@ JA.games.eng = {
       g.sealed = true; g.solved++; g.wait = 0.75;
       g.grid.classList.add('sealed'); g.s.textContent = g.solved; g.st.textContent = 'Sealed!'; g.st.classList.add('ok');
       jpop(g.host, snk || g.grid, 'Sealed', 'good');
+      JFX.burst(snk || g.grid, 'spark', { col: ['#ffd27a', '#fff3c4', '#ffb347'], n: 16, v: 200 }); JFX.burst(snk || g.grid, 'ring', { col: '#ffb347', r: 80 });
       jtone(523, 0.1, 0.05); jtone(784, 0.18, 0.05);
       setTimeout(() => jtone(1046, 0.2, 0.04), 110);
     }
@@ -312,6 +370,25 @@ function nuEcg(ph) {
   const bump = (x, m, s) => Math.exp(-((x - m) * (x - m)) / (2 * s * s));
   return 0.14 * bump(ph, 0.14, 0.03) - 0.14 * bump(ph, 0.285, 0.008) + 1.0 * bump(ph, 0.31, 0.009) - 0.3 * bump(ph, 0.335, 0.009) + 0.24 * bump(ph, 0.56, 0.045);
 }
+/* the bedside monitor: a sweeping trace with a gap ahead of the beam, like the real thing */
+const NU_PLETH = ph => { const a = ph < 0.62 ? Math.pow(Math.sin(ph / 0.62 * Math.PI), 1.6) : 0; const b = 0.2 * Math.exp(-Math.pow((ph - 0.78) / 0.07, 2)); return a * 0.85 + b; };
+function nuTrace(cv, J, per, fn, col, top, amp) {
+  const c = cv.getContext('2d'), W = cv.width, H = cv.height, k = W / 300, sweep = 2.8, ph0 = (J.t % sweep) / sweep, base = J.t - ph0 * sweep, hx = ph0 * W, gap = W * 0.07;
+  c.clearRect(0, 0, W, H);
+  c.strokeStyle = 'rgba(120,255,190,.07)'; c.lineWidth = 1; c.beginPath();
+  for (let x = 0; x <= W; x += W / 15) { c.moveTo(x, 0); c.lineTo(x, H); }
+  for (let y = 0; y <= H; y += H / 4) { c.moveTo(0, y); c.lineTo(W, y); }
+  c.stroke();
+  const yAt = x => { const tt = x <= hx ? base + x / W * sweep : base - sweep + x / W * sweep; return H * top - fn((((tt % per) + per) % per) / per) * H * amp; };
+  const rgb = AK.rgb(col);
+  const path = (x0, x1) => { c.beginPath(); for (let x = x0; x <= x1; x += 2) { const y = yAt(x); if (x === x0) c.moveTo(x, y); else c.lineTo(x, y); } };
+  c.lineJoin = 'round'; c.lineCap = 'round';
+  const gr = c.createLinearGradient(Math.max(0, hx - W * 0.55), 0, hx, 0);
+  gr.addColorStop(0, 'rgba(' + rgb.join(',') + ',.22)'); gr.addColorStop(1, 'rgba(' + rgb.join(',') + ',1)');
+  path(0, hx); c.strokeStyle = 'rgba(' + rgb.join(',') + ',.16)'; c.lineWidth = 7 * k; c.stroke(); c.strokeStyle = gr; c.lineWidth = 2.4 * k; c.stroke();
+  if (hx + gap < W) { path(hx + gap, W); c.strokeStyle = 'rgba(' + rgb.join(',') + ',.2)'; c.lineWidth = 2.2 * k; c.stroke(); }
+  const hy = yAt(hx); c.fillStyle = '#fff'; c.beginPath(); c.arc(hx, hy, 2.6 * k, 0, 7); c.fill(); AK.light(c, hx, hy, 12 * k, col, 0.9);
+}
 JA.games.nurse = {
   name: 'Triage Rounds', glyph: JGLYPH.cross,
   goal: 'Patients keep arriving at the ward. Read each monitor and sort them fast: stable, monitor or urgent.',
@@ -335,14 +412,16 @@ JA.games.nurse = {
   },
   render(J) {
     const g = J.g, p = g.q[0], card = g.card;
-    g.ecg = null;
+    g.ecg = null; g.pleth = null;
     if (!p) { card.className = 'nu-card empty'; card.innerHTML = '<div class="nu-wait">The ward is quiet<small>Next patient is on the way…</small></div>'; return; }
     card.className = 'nu-card in';
     card.innerHTML = '<div class="nu-id"><b>Bed ' + p.bed + ' · ' + p.name + '</b><small>' + p.age + ' yrs</small><em></em></div>' +
-      '<div class="nu-vit"><div class="v hr"><small>HR bpm</small><b>' + p.hr + '</b><canvas width="150" height="46"></canvas></div>' +
-      '<div class="v sp"><small>SpO₂ %</small><b>' + p.sp + '</b></div>' +
-      '<div class="v tp"><small>TEMP °C</small><b>' + p.tp.toFixed(1) + '</b></div></div>';
-    g.ecg = $('canvas', card);
+      '<div class="nu-mon"><div class="nu-scr"><div class="nu-leds"><i class="hb"></i><span>LIVE</span><span class="al"><i></i><i></i></span></div>' +
+      '<div class="nu-vit"><div class="v hr"><small>HR bpm</small><b>' + p.hr + '</b><canvas width="300" height="92"></canvas></div>' +
+      '<div class="v sp"><small>SpO₂ %</small><b>' + p.sp + '</b><canvas width="300" height="92"></canvas></div>' +
+      '<div class="v tp"><small>TEMP °C</small><b>' + p.tp.toFixed(1) + '</b><div class="thm"><i style="width:' + (clamp((p.tp - 35) / 7, 0.05, 1) * 100).toFixed(0) + '%"></i></div></div></div></div></div>';
+    card.style.setProperty('--per', (60 / p.hr).toFixed(3) + 's');
+    g.ecg = $('canvas', card); g.pleth = $$('canvas', card)[1];
     JA.games.nurse.count(J);
   },
   count(J) {
@@ -357,6 +436,7 @@ JA.games.nurse = {
     const s = a === p.cat ? 1 : a > p.cat ? 0.35 : 0;
     g.w += p.w; g.got += s * p.w; g.seen++;
     const old = g.card.cloneNode(true);
+    { const oc = $$('canvas', old), sc = $$('canvas', g.card); oc.forEach((cv, i) => { try { cv.getContext('2d').drawImage(sc[i], 0, 0); } catch (e) { /* the copy is cosmetic */ } }); }
     old.className = 'nu-card out o' + a; g.main.appendChild(old); setTimeout(() => old.remove(), 340);
     if (s === 1) {
       g.ok++; g.streak++; g.best = Math.max(g.best, g.streak);
@@ -385,14 +465,9 @@ JA.games.nurse = {
     }
     if (g.fb > 0) { g.fb -= dt; if (g.fb <= 0) g.fbEl.classList.remove('on'); }
     if (g.ecg && g.q[0]) {
-      const c = g.ecg.getContext('2d'), W = g.ecg.width, H = g.ecg.height, per = 60 / g.q[0].hr;
-      c.clearRect(0, 0, W, H);
-      c.lineWidth = 1.8; c.lineJoin = 'round'; c.strokeStyle = '#59f0a0'; c.beginPath();
-      for (let x = 0; x <= W; x += 2) {
-        const T = J.t + x / W * 2.4, ph = (T % per) / per, y = H * 0.66 - nuEcg(ph) * H * 0.55;
-        if (x) c.lineTo(x, y); else c.moveTo(x, y);
-      }
-      c.stroke();
+      const per = 60 / g.q[0].hr;
+      nuTrace(g.ecg, J, per, nuEcg, '#59f0a0', 0.66, 0.55);
+      if (g.pleth) nuTrace(g.pleth, J, per, ph => NU_PLETH((ph + 0.82) % 1), '#5ad2ff', 0.86, 0.62);
     }
   },
   key(J, e) {
@@ -413,10 +488,52 @@ const BZ_CLIENTS = [['Priya Nair', 'Brightleaf Studio'], ['Marcus Cole', 'Cole &
 const BZ_TIER = [{ n: 'Startup', lo: 20, hi: 40 }, { n: 'Mid-size', lo: 40, hi: 70 }, { n: 'Enterprise', lo: 70, hi: 100 }];
 const BZ_MOOD = { eager: { t: 'Eager to buy', a: 0.62, b: 1, face: 'happy' }, steady: { t: 'Open to talk', a: 0.28, b: 0.72, face: 'flat' }, frugal: { t: 'Watching every dollar', a: 0, b: 0.4, face: 'hmm' } };
 const BZ_SKIN = ['#f1c9a5', '#d9a07a', '#a8714d', '#7a4a32', '#f6d5b8'], BZ_HAIR = ['#2a1f18', '#5a3a22', '#1a1a1f', '#b8862f', '#7c7c82', '#8a2f2f'];
+/* a client portrait: deterministic hair, glasses and jacket per name, and an expression per mood */
 function bzFace(c, mood) {
-  const mouth = { happy: 'M-11 8Q0 21 11 8', flat: 'M-9 12H9', hmm: 'M-9 13Q-2 9 9 14', bad: 'M-10 16Q0 6 10 16', glad: 'M-12 7Q0 24 12 7' }[mood];
-  const brow = { bad: 'M-17 -10-6 -6M17 -10 6 -6', hmm: 'M-17 -8-6 -11M6 -10 17 -7', glad: 'M-17 -11-6 -12M6 -12 17 -11' }[mood] || 'M-17 -9-6 -10M6 -10 17 -9';
-  return '<svg viewBox="-32 -32 64 64" aria-hidden="true"><circle r="26" fill="' + c.skin + '"/><path d="M-26 -3Q-30 -31 0 -31Q30 -31 26 -3Q21 -19 0 -19Q-21 -19 -26 -3Z" fill="' + c.hair + '"/><circle cx="-9" cy="-1" r="2.7" fill="#1b1410"/><circle cx="9" cy="-1" r="2.7" fill="#1b1410"/><g stroke="#1b1410" stroke-width="2" stroke-linecap="round" fill="none"><path d="' + brow + '"/><path d="' + mouth + '"/></g></svg>';
+  const hs = Array.from(c.name).reduce((q, ch) => q * 31 + ch.charCodeAt(0), 7) | 0, hv = k => hash01(hs, k, 11);
+  const style = Math.floor(hv(1) * 6), jacket = ['#2f4a6e', '#3b3b52', '#5a2f3a', '#2f5a4a', '#4a3a2a', '#394a66'][Math.floor(hv(2) * 6)], tie = ['#c0392b', '#e0b84a', '#3a7bd5', '#2f9e6e', '#8e44ad'][Math.floor(hv(3) * 5)], glasses = hv(4) > 0.62;
+  const sk = c.skin, skd = shade(sk, -0.14), skl = shade(sk, 0.12), hr = c.hair, hrl = shade(hr, 0.22), ink = '#1b1410';
+  const mouth = { happy: 'M-6 9.5Q0 14 6 9.5', flat: 'M-4.5 11H4.5', hmm: 'M-5 12Q-1 9.5 5 12.5', bad: 'M-6 13.5Q0 8.5 6 13.5', glad: 'M-7.5 8.5Q0 17 7.5 8.5Z' }[mood];
+  const brow = { bad: 'M-12.5 -8.5-5 -6M12.5 -8.5 5 -6', hmm: 'M-12.5 -7-5.5 -9.5M5.5 -9.5 12.5 -6', glad: 'M-12.5 -9-5.5 -10.5M5.5 -10.5 12.5 -9' }[mood] || 'M-12.5 -8.5-5.5 -9M5.5 -9 12.5 -8.5';
+  let back = '', front = '';
+  if (style === 3) back = '<path d="M-17 -6Q-21 14 -15 24L-9 22 -9 -4zM17 -6Q21 14 15 24L9 22 9 -4z" fill="' + hr + '"/>';
+  if (style === 5) back = '<circle cx="0" cy="-23" r="6.5" fill="' + hr + '"/><circle cx="-1.8" cy="-24.8" r="2" fill="' + hrl + '" opacity=".5"/>';
+  if (style === 0) front = '<path d="M-16.5 -4Q-19 -24 0 -23.5Q19 -24 16.5 -4Q14 -14 0 -15.5Q-14 -14 -16.5 -4Z" fill="' + hr + '"/><path d="M-9 -20Q-2 -23 5 -21" stroke="' + hrl + '" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".55"/>';
+  else if (style === 1) front = '<path d="M-16.5 -3Q-18 -25 2 -24Q19 -23 16.5 -3Q15 -12 8 -15Q-4 -12 -9 -17Q-14 -13 -16.5 -3Z" fill="' + hr + '"/><path d="M-6 -21Q2 -24 11 -20" stroke="' + hrl + '" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".55"/>';
+  else if (style === 2) front = '<g fill="' + hr + '"><circle cx="-10" cy="-17" r="7.5"/><circle cx="0" cy="-20.5" r="8"/><circle cx="10" cy="-17" r="7.5"/><circle cx="-15" cy="-9" r="5"/><circle cx="15" cy="-9" r="5"/></g><circle cx="-3" cy="-23" r="2.4" fill="' + hrl + '" opacity=".4"/>';
+  else if (style === 3) front = '<path d="M-16.5 0Q-19 -24 0 -23.5Q19 -24 16.5 0Q13 -15 2 -14Q-8 -14 -16.5 0Z" fill="' + hr + '"/><path d="M-8 -20Q0 -23 7 -20" stroke="' + hrl + '" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".5"/>';
+  else if (style === 4) front = '<path d="M-16 -2Q-17 -10 -13 -13Q-15 -6 -14 1zM16 -2Q17 -10 13 -13Q15 -6 14 1z" fill="' + hr + '"/><ellipse cx="-3" cy="-15" rx="6" ry="2" fill="#fff" opacity=".22"/>';
+  else front = '<path d="M-16.5 -4Q-19 -24 0 -23.5Q19 -24 16.5 -4Q14 -14 0 -16Q-14 -14 -16.5 -4Z" fill="' + hr + '"/><circle cx="0" cy="-27" r="0.01"/>';
+  let eyes;
+  if (mood === 'glad') eyes = '<path d="M-11.5 -2.5Q-8 -6.5 -4.5 -2.5M4.5 -2.5Q8 -6.5 11.5 -2.5" stroke="' + ink + '" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  else eyes = '<ellipse cx="-8" cy="-2" rx="3.7" ry="' + (mood === 'bad' ? 2.4 : 3) + '" fill="#fff"/><ellipse cx="8" cy="-2" rx="3.7" ry="' + (mood === 'bad' ? 2.4 : 3) + '" fill="#fff"/><circle cx="-7.6" cy="-1.8" r="2.1" fill="' + (hv(5) > 0.5 ? '#3a2a1c' : '#2a4a5a') + '"/><circle cx="8.4" cy="-1.8" r="2.1" fill="' + (hv(5) > 0.5 ? '#3a2a1c' : '#2a4a5a') + '"/><circle cx="-7.6" cy="-1.8" r="1" fill="' + ink + '"/><circle cx="8.4" cy="-1.8" r="1" fill="' + ink + '"/><circle cx="-6.7" cy="-2.8" r=".8" fill="#fff"/><circle cx="9.3" cy="-2.8" r=".8" fill="#fff"/>';
+  const gl = glasses ? '<g fill="rgba(200,230,255,.14)" stroke="#1c2430" stroke-width="1.4"><rect x="-13.5" y="-6.5" width="11" height="9" rx="3.5"/><rect x="2.5" y="-6.5" width="11" height="9" rx="3.5"/></g><path d="M-2.5 -3Q0 -4.5 2.5 -3M-13.5 -3-16.5 -4M13.5 -3 16.5 -4" stroke="#1c2430" stroke-width="1.2" fill="none"/>' : '';
+  return '<svg viewBox="-32 -32 64 64" aria-hidden="true">' +
+    '<path d="M-34 34Q-33 21 -15 18L-6 16 0 27 6 16 15 18Q33 21 34 34Z" fill="' + jacket + '"/><path d="M-34 34Q-33 21 -15 18L-12 24Q-25 26 -30 34Z" fill="#fff" opacity=".08"/>' +
+    '<path d="M-6 16 0 27 6 16 3.6 14.6 0 20.5-3.6 14.6Z" fill="#f4f6f8"/><path d="M-2.2 21H2.2L3.2 30.5 0 33.5-3.2 30.5Z" fill="' + tie + '"/><path d="M-15 18 -6 16 0 27-9 22Z" fill="#0000001f"/>' +
+    back + '<path d="M-5 9V17Q0 21.500 5 17V9Z" fill="' + skd + '"/><circle cx="-16" cy="1" r="3.4" fill="' + skd + '"/><circle cx="16" cy="1" r="3.4" fill="' + skd + '"/>' +
+    '<ellipse cx="0" cy="-3" rx="15.8" ry="18.2" fill="' + sk + '"/><path d="M-15 2Q-13 15 0 15.200Q13 15 15 2Q12 12 0 12.500Q-12 12 -15 2Z" fill="' + skd + '" opacity=".55"/><ellipse cx="-6" cy="-9" rx="7" ry="5" fill="' + skl + '" opacity=".32"/>' +
+    front + (mood === 'glad' ? '<circle cx="-10.500" cy="4.500" r="3" fill="#ff7a8a" opacity=".32"/><circle cx="10.500" cy="4.500" r="3" fill="#ff7a8a" opacity=".32"/>' : '') +
+    eyes + gl + '<g stroke="' + ink + '" stroke-width="1.9" stroke-linecap="round" fill="none"><path d="' + brow + '"/></g>' +
+    '<path d="M0 -1.500Q-2.800 5 -0.500 6.200Q1 6.800 2.500 5.600" stroke="' + skd + '" stroke-width="1.4" fill="none" stroke-linecap="round"/>' +
+    (mood === 'glad' ? '<path d="' + mouth + '" fill="#5a1c24"/><path d="M-5.500 9.500Q0 12 5.500 9.500" stroke="#fff" stroke-width="1.8" fill="none" opacity=".9"/>' : '<path d="' + mouth + '" stroke="#4a1f1f" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>') +
+    (mood === 'bad' ? '<path d="M19 -9Q22 -4 19 -1Q16 -4 19 -9Z" fill="#9fd8ff" opacity=".85"/>' : '') + '</svg>';
+}
+function bzDialSvg() {
+  const cx = 120, cy = 112, R = 80, pt = (v, r) => { const a = Math.PI * (1 - (v - 10) / 100); return [cx + Math.cos(a) * r, cy - Math.sin(a) * r]; };
+  let ticks = '';
+  for (let v = 10; v <= 110; v += 5) { const mj = v % 10 === 0, a = pt(v, mj ? 65 : 69), b = pt(v, 74); ticks += '<path class="dtk' + (mj ? ' mj' : '') + '" d="M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + 'L' + b[0].toFixed(1) + ' ' + b[1].toFixed(1) + '" stroke-width="' + (mj ? 1.6 : 1) + '" stroke-linecap="round"/>'; }
+  const arc = r => 'M' + (cx - r) + ' ' + cy + 'A' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy;
+  return '<svg class="bz-dial" viewBox="0 0 240 128" aria-hidden="true"><path class="dtrk" d="' + arc(R) + '" fill="none" stroke-width="12" stroke-linecap="round"/>' +
+    '<path class="dband" d="' + arc(R) + '" fill="none" stroke-width="12" pathLength="100" stroke-dasharray="0 200"/>' +
+    '<path class="dval" d="' + arc(92) + '" fill="none" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="0 200"/>' + ticks +
+    '<g class="nd"><path d="M120 112H40" stroke="#ffc247" stroke-width="3" stroke-linecap="round"/><path d="M120 112H40" stroke="#fff" stroke-opacity=".5" stroke-width="1" stroke-linecap="round" transform="translate(0 -.8)"/><circle cx="120" cy="112" r="7.500" fill="#ffc247" stroke="#0a121c" stroke-width="2.500"/><circle cx="118" cy="110" r="2" fill="#fff" opacity=".6"/></g></svg>';
+}
+function bzDial(g) {
+  if (!g.nd) return;
+  g.nd.style.transform = 'rotate(' + ((g.price - 10) / 100 * 180).toFixed(1) + 'deg)';
+  g.dv.setAttribute('stroke-dasharray', Math.max(0.001, g.price - 10) + ' 200');
+  if (g.c) { g.db.setAttribute('stroke-dasharray', (g.c.tier.hi - g.c.tier.lo) + ' 200'); g.db.setAttribute('stroke-dashoffset', String(-(g.c.tier.lo - 10))); }
 }
 JA.games.biz = {
   name: 'Close the Deal', glyph: JGLYPH.chart,
@@ -429,20 +546,22 @@ JA.games.biz = {
     host.innerHTML = '<div class="gm bz"><div class="bz-top"><span>Deals <b class="d">0</b></span><span>Closed <b class="r">$0K</b></span></div>' +
       '<div class="bz-call"><div class="bz-face"></div><div class="bz-who"><b class="nm">Incoming call…</b><small class="co"></small><div class="bz-chips"></div></div><div class="bz-hearts" aria-label="Patience"></div></div>' +
       '<div class="bz-say">Phone is ringing…</div><div class="bz-timer"><span></span></div>' +
-      '<div class="bz-offer"><button type="button" class="bz-st mn" aria-label="Lower offer">−</button><div class="bz-val"><small>Your offer</small><b>$60K</b></div><button type="button" class="bz-st pl" aria-label="Raise offer">+</button></div>' +
+      '<div class="bz-offer"><button type="button" class="bz-st mn" aria-label="Lower offer">−</button><div class="bz-val"><small>Your offer</small>' + bzDialSvg() + '<b>$60K</b></div><button type="button" class="bz-st pl" aria-label="Raise offer">+</button></div>' +
       '<div class="bz-track"><i class="band"></i><input type="range" min="10" max="110" step="1" value="60" aria-label="Offer in thousands of dollars"></div>' +
       '<button type="button" class="btn bz-go">Make offer</button></div>';
     g.host = host;
     g.face = $('.bz-face', host); g.nm = $('.nm', host); g.co = $('.co', host); g.chips = $('.bz-chips', host); g.hearts = $('.bz-hearts', host);
     g.say = $('.bz-say', host); g.val = $('.bz-val b', host); g.band = $('.band', host); g.go = $('.bz-go', host); g.timer = $('.bz-timer span', host);
     g.d = $('.bz-top .d', host); g.r = $('.bz-top .r', host); g.range = $('input', host);
+    g.nd = $('.bz-dial .nd', host); g.dv = $('.bz-dial .dval', host); g.db = $('.bz-dial .dband', host);
     g.range.addEventListener('input', () => JA.games.biz.setPrice(J, +g.range.value));
+    bzDial(g);
     $('.mn', host).addEventListener('pointerdown', e => { e.preventDefault(); JA.games.biz.setPrice(J, g.price - 1); });
     $('.pl', host).addEventListener('pointerdown', e => { e.preventDefault(); JA.games.biz.setPrice(J, g.price + 1); });
     g.go.addEventListener('pointerdown', e => { e.preventDefault(); JA.games.biz.offer(J); });
     return g;
   },
-  setPrice(J, v) { const g = J.g; g.price = clamp(Math.round(v), 10, 110); g.range.value = g.price; g.val.textContent = '$' + g.price + 'K'; },
+  setPrice(J, v) { const g = J.g; g.price = clamp(Math.round(v), 10, 110); g.range.value = g.price; g.val.textContent = '$' + g.price + 'K'; bzDial(g); },
   hearts(J) {
     const g = J.g, n = g.c ? 3 - g.c.strikes : 3;
     g.hearts.innerHTML = [0, 1, 2].map(i => '<svg viewBox="0 0 24 24" class="' + (i < n ? 'on' : '') + '"><path d="M12 21s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.8-8 11-8 11z"/></svg>').join('');
@@ -460,6 +579,7 @@ JA.games.biz = {
     g.chips.innerHTML = '<i>' + tier.n + '</i><i>Budget $' + tier.lo + '–' + tier.hi + 'K</i><i class="mood ' + mk + '">' + m.t + '</i>';
     g.band.style.left = 'calc(15px + (100% - 30px) * ' + ((tier.lo - 10) / 100).toFixed(3) + ')'; g.band.style.width = 'calc((100% - 30px) * ' + ((tier.hi - tier.lo) / 100).toFixed(3) + ')';
     g.face.innerHTML = bzFace(g.c, m.face);
+    bzDial(g);
     g.face.classList.remove('ring'); void g.face.offsetWidth; g.face.classList.add('ring');
     g.say.className = 'bz-say'; g.say.textContent = '“' + JPICK(['Thanks for calling back. What is your number?', 'We have been waiting on a quote. Go ahead.', 'Let us hear it. What will this cost us?', 'I have ten minutes. What is the price?']) + '”';
     g.go.disabled = false;
@@ -484,6 +604,7 @@ JA.games.biz = {
       JA.games.biz.finishCall(J, 'Deal at $' + p + 'K!' + (left > 2 ? ' They would have paid up to $' + c.max + 'K.' : ' Right at their ceiling.'), s >= 0.8 ? 'good' : s >= 0.5 ? 'warn' : 'bad', 'glad');
       jpop(g.host, g.val, s >= 0.8 ? 'Great deal' : s >= 0.5 ? 'Closed' : 'Cheap', s >= 0.5 ? 'good' : 'bad');
       jtone(660, 0.08, 0.05); jtone(880, 0.12, 0.05);
+      JFX.burst(g.val, 'confetti', { n: s >= 0.8 ? 46 : s >= 0.5 ? 22 : 8 }); if (s >= 0.8) JFX.burst(g.face, 'stars', { n: 8, col: ['#ffd778', '#fff3c4'] });
     } else {
       c.strikes++;
       JA.games.biz.hearts(J);
@@ -491,7 +612,7 @@ JA.games.biz = {
       if (c.strikes >= 3) {
         g.hang++;
         JA.games.biz.finishCall(J, 'They hung up. Too many lowball lines are fine, too many high ones are not.', 'bad', 'bad');
-        SFX.chime('bad');
+        SFX.chime('bad'); g.host.firstChild.classList.add('shake'); setTimeout(() => g.host.firstChild && g.host.firstChild.classList.remove('shake'), 400);
       } else {
         g.say.className = 'bz-say warn';
         g.say.textContent = '“' + (over <= 1.08 ? 'Hmm, that is a touch steep.' : over <= 1.25 ? 'That is over our budget.' : 'You must be joking.') + '”';
@@ -539,6 +660,32 @@ JA.games.biz = {
 /* ====================== Third Grade Teacher: Echo Clap ====================== */
 const EC_COL = ['#ff8fa3', '#74c0fc', '#ffd43b', '#8ce99a'];
 const EC_NOTE = [262, 330, 392, 523];
+/* four cartoon kids at their desks; hands meet and the mouth opens when a desk lights up */
+const EC_KID = [
+  { skin: '#f1c9a5', hair: '#5a3a22', style: 'pig' }, { skin: '#d9a07a', hair: '#1a1a1f', style: 'spike' },
+  { skin: '#7a4a32', hair: '#15151a', style: 'puff' }, { skin: '#f6d5b8', hair: '#8a2f2f', style: 'bob' }
+];
+function ecKid(i) {
+  const k = EC_KID[i], skd = shade(k.skin, -0.14), h = k.hair;
+  let back = '', front = '';
+  if (k.style === 'pig') { back = '<circle cx="23" cy="27" r="6.500" fill="' + h + '"/><circle cx="57" cy="27" r="6.500" fill="' + h + '"/><path d="M23 33 20 40M57 33 60 40" stroke="' + h + '" stroke-width="3.500" stroke-linecap="round"/>'; front = '<path d="M25 30Q25 15 40 15Q55 15 55 30Q51 22 40 22Q29 22 25 30Z" fill="' + h + '"/><circle cx="23" cy="27" r="2.600" fill="#ff8fa3"/><circle cx="57" cy="27" r="2.600" fill="#ff8fa3"/>'; }
+  else if (k.style === 'spike') front = '<path d="M25 30 26 16 31 21 34 11 39 19 44 10 48 19 53 14 55 30Q50 22 40 22Q30 22 25 30Z" fill="' + h + '"/>';
+  else if (k.style === 'puff') { back = '<circle cx="28" cy="19" r="8" fill="' + h + '"/><circle cx="40" cy="14" r="9" fill="' + h + '"/><circle cx="52" cy="19" r="8" fill="' + h + '"/><circle cx="24" cy="28" r="5" fill="' + h + '"/><circle cx="56" cy="28" r="5" fill="' + h + '"/>'; front = '<path d="M26 28Q27 20 40 20Q53 20 54 28Q48 23 40 23Q32 23 26 28Z" fill="' + h + '"/>'; }
+  else { back = '<path d="M24 28Q22 46 28 48L52 48Q58 46 56 28Z" fill="' + h + '"/>'; front = '<path d="M24 30Q24 14 40 14Q56 14 56 30Q54 25 49 24Q40 27 31 24Q26 25 24 30Z" fill="' + h + '"/>'; }
+  const wood = '<linearGradient id="ecWd' + i + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9a46a"/><stop offset="1" stop-color="#8a5a32"/></linearGradient>';
+  return '<svg viewBox="0 0 80 106" aria-hidden="true"><defs>' + wood + '</defs>' +
+    '<ellipse cx="40" cy="70" rx="34" ry="6" fill="#000" opacity=".25"/>' + back +
+    '<path d="M16 80Q15 54 40 51Q65 54 64 80Z" fill="var(--c)"/><path d="M16 80Q15 58 28 53Q22 66 24 80Z" fill="#fff" opacity=".18"/><path d="M33 51Q40 58 47 51" stroke="#fff" stroke-width="2.2" fill="none" opacity=".7" stroke-linecap="round"/>' +
+    '<rect x="35" y="43" width="10" height="9" rx="3" fill="' + skd + '"/><circle cx="25" cy="34" r="3.200" fill="' + skd + '"/><circle cx="55" cy="34" r="3.200" fill="' + skd + '"/><circle cx="40" cy="33" r="15.500" fill="' + k.skin + '"/><ellipse cx="34" cy="27" rx="6" ry="4" fill="#fff" opacity=".16"/>' +
+    front + '<circle cx="31" cy="40" r="3" fill="#ff7a8a" opacity=".3"/><circle cx="49" cy="40" r="3" fill="#ff7a8a" opacity=".3"/>' +
+    '<g class="ey" fill="#1b1410"><circle cx="34" cy="34" r="2"/><circle cx="46" cy="34" r="2"/><circle cx="34.700" cy="33.200" r=".7" fill="#fff"/><circle cx="46.700" cy="33.200" r=".7" fill="#fff"/></g>' +
+    '<g class="eh" fill="none" stroke="#1b1410" stroke-width="1.800" stroke-linecap="round"><path d="M31.500 34.500Q34 31 36.500 34.500M43.500 34.500Q46 31 48.500 34.500"/></g>' +
+    '<path class="mo" d="M35.500 40.500Q40 44 44.500 40.500" stroke="#7a2a2a" stroke-width="1.800" fill="none" stroke-linecap="round"/><ellipse class="mo2" cx="40" cy="41.500" rx="4.200" ry="3.200" fill="#7a2a2a"/>' +
+    '<g class="armr" stroke="var(--c)" stroke-width="7.500" stroke-linecap="round" fill="none"><path d="M20 62Q17 74 29 76"/><path d="M60 62Q63 74 51 76"/></g><circle class="armr" cx="30" cy="76" r="4.200" fill="' + k.skin + '"/><circle class="armr" cx="50" cy="76" r="4.200" fill="' + k.skin + '"/>' +
+    '<g class="armc" stroke="var(--c)" stroke-width="7.500" stroke-linecap="round" fill="none"><path d="M20 62Q22 66 35 61"/><path d="M60 62Q58 66 45 61"/></g><circle class="armc" cx="37" cy="60" r="4.400" fill="' + k.skin + '"/><circle class="armc" cx="43" cy="60" r="4.400" fill="' + k.skin + '"/>' +
+    '<g class="sk"><path d="M40 49V43M31 52 27 48M49 52 53 48"/></g><path class="nt" d="M60 22V8l8-2.500v13M60 20.500a3.200 2.400 0 1 1-.01 0M68 17.500a3.200 2.400 0 1 1-.01 0" fill="var(--c)" stroke="var(--c)" stroke-width="1.600" stroke-linejoin="round"/>' +
+    '<rect x="4" y="76" width="72" height="9" rx="3" fill="url(#ecWd' + i + ')"/><rect x="4" y="76" width="72" height="2.200" rx="1.100" fill="#fff" opacity=".4"/><rect x="9" y="85" width="62" height="21" fill="#6b432a"/><rect x="9" y="85" width="62" height="3" fill="#000" opacity=".25"/></svg>';
+}
 JA.games.edu = {
   name: 'Echo Clap', glyph: JGLYPH.star,
   bonus: p => Math.round(-2 + 8 * p),
@@ -549,7 +696,7 @@ JA.games.edu = {
     const g = { rounds: [base, base + 1], r: 0, seq: [], si: 0, lit: -1, idx: 0, state: 'ready', tm: 1.0, cred: [], perfect: 0, longest: 0 };
     let pads = '';
     for (let i = 0; i < 4; i++) {
-      pads += '<button type="button" class="ec-pad" data-i="' + i + '" style="--c:' + EC_COL[i] + '" aria-label="Desk ' + (i + 1) + '"><svg viewBox="0 0 60 70" aria-hidden="true"><circle cx="30" cy="20" r="11" class="hd"/><path d="M12 62Q12 36 30 34Q48 36 48 62Z" class="bd"/></svg><b>' + (i + 1) + '</b></button>';
+      pads += '<button type="button" class="ec-pad" data-i="' + i + '" style="--c:' + EC_COL[i] + '" aria-label="Desk ' + (i + 1) + '">' + ecKid(i) + '<b>' + (i + 1) + '</b></button>';
     }
     host.innerHTML = '<div class="gm ec"><div class="ec-top"><span class="ec-rd">Round 1 of ' + g.rounds.length + '</span><span class="ec-st">Get ready…</span></div><div class="ec-pads">' + pads + '</div><div class="ec-dots"></div></div>';
     g.host = host; g.pads = $$('.ec-pad', host); g.st = $('.ec-st', host); g.rd = $('.ec-rd', host); g.dots = $('.ec-dots', host);
@@ -586,7 +733,7 @@ JA.games.edu = {
     g.st.className = 'ec-st ' + (ok ? 'good' : 'bad');
     g.state = 'pause'; g.tm = 1.0;
     if (!ok) { SFX.chime('bad'); g.host.firstChild.classList.add('shake'); setTimeout(() => g.host.firstChild && g.host.firstChild.classList.remove('shake'), 400); }
-    else { jtone(523, 0.1, 0.05); jtone(784, 0.2, 0.05); }
+    else { jtone(523, 0.1, 0.05); jtone(784, 0.2, 0.05); JFX.burst($('.ec-pads', g.host), 'stars', { n: 10, col: ['#ffd43b', '#fff3c4', '#ff8fa3', '#74c0fc', '#8ce99a'] }); }
   },
   tick(J, dt) {
     const g = J.g;
@@ -641,12 +788,26 @@ function ckCol(f, pi, m) {
   return 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',') + ')';
 }
 const CK_SHAPE = {
-  patty: '<circle cx="60" cy="60" r="25" data-p="0"/><path d="M42 48 74 74M40 60 66 82M52 40 80 62" stroke="#0007" stroke-width="3" stroke-linecap="round" fill="none"/>',
-  egg: '<path d="M34 62Q31 38 58 37Q88 35 85 60Q82 86 56 83Q36 82 34 62Z" data-p="0"/><circle cx="60" cy="60" r="11" data-p="1"/><circle cx="56" cy="56" r="3" fill="#fff6" stroke="none"/>',
-  steak: '<path d="M36 58Q38 35 62 37Q88 39 85 63Q80 87 55 84Q34 80 36 58Z" data-p="0"/><path d="M44 46Q60 40 76 48" stroke="#fff5" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M45 66 70 76M42 56 66 64" stroke="#0006" stroke-width="3" stroke-linecap="round" fill="none"/>',
-  veg: '<circle cx="46" cy="52" r="11" data-p="0"/><circle cx="72" cy="50" r="10" data-p="1"/><circle cx="58" cy="73" r="11" data-p="2"/><circle cx="76" cy="72" r="6" data-p="0"/><circle cx="42" cy="72" r="6" data-p="1"/>',
-  shrimp: '<path d="M42 44Q78 30 80 62Q80 84 52 82" data-p="0" data-k="stroke" fill="none" stroke-width="13" stroke-linecap="round"/><path d="M52 82 44 90M52 82 58 91" stroke="#0005" stroke-width="3" stroke-linecap="round" fill="none"/>'
+  patty: '<circle data-p="0" cx="60" cy="60" r="26"/><circle cx="60" cy="60" r="26" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="2.4"/><g fill="#000" opacity=".16"><circle cx="48" cy="52" r="1.6"/><circle cx="62" cy="47" r="1.3"/><circle cx="71" cy="58" r="1.7"/><circle cx="52" cy="68" r="1.5"/><circle cx="66" cy="72" r="1.2"/><circle cx="57" cy="60" r="1.4"/><circle cx="44" cy="62" r="1.2"/></g><path class="grill" d="M42 46 74 78M38 58 62 82M52 38 82 66"/><ellipse class="glaze" cx="52" cy="50" rx="11" ry="5" transform="rotate(-30 52 50)"/><circle class="char" cx="60" cy="60" r="26"/>',
+  egg: '<path data-p="0" d="M34 62Q31 38 58 37Q88 35 85 60Q82 86 56 83Q36 82 34 62Z"/><path d="M34 62Q31 38 58 37Q88 35 85 60Q82 86 56 83Q36 82 34 62Z" fill="none" stroke="#b86a2a" stroke-width="3.4" style="opacity:calc(var(--m,0)*1.1)"/><circle data-p="1" cx="60" cy="60" r="11"/><ellipse cx="56" cy="55.5" rx="4.2" ry="2.6" fill="#fff" opacity=".6" transform="rotate(-25 56 55.5)"/><g fill="#fff" opacity=".4"><circle cx="42" cy="50" r="2"/><circle cx="76" cy="70" r="2.4"/><circle cx="48" cy="74" r="1.6"/></g><ellipse class="glaze" cx="48" cy="46" rx="9" ry="3.4" transform="rotate(-20 48 46)"/><path class="char" d="M34 62Q31 38 58 37Q88 35 85 60Q82 86 56 83Q36 82 34 62Z"/>',
+  steak: '<path data-p="0" d="M36 58Q38 35 62 37Q88 39 85 63Q80 87 55 84Q34 80 36 58Z"/><path d="M39 55Q40 41 58 39" stroke="#f1d2bf" stroke-width="3.6" fill="none" stroke-linecap="round" opacity=".55"/><path d="M44 46Q60 40 76 48" stroke="#fff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round" fill="none"/><path class="grill" d="M45 66 70 76M42 56 66 64M52 78 76 86"/><ellipse class="glaze" cx="56" cy="48" rx="12" ry="4.5" transform="rotate(-12 56 48)"/><path class="char" d="M36 58Q38 35 62 37Q88 39 85 63Q80 87 55 84Q34 80 36 58Z"/>',
+  veg: '<circle data-p="0" cx="45" cy="53" r="10"/><circle data-p="0" cx="39" cy="48" r="5.6"/><circle data-p="0" cx="51" cy="46" r="6"/><rect data-p="0" x="42.500" y="58" width="5" height="7" rx="2"/><circle data-p="1" cx="73" cy="52" r="9.600"/><circle cx="70.500" cy="48.500" r="2.800" fill="#fff" opacity=".5"/><path data-p="2" d="M52 71Q58 62 68 68Q73 77 62 81Q51 81 52 71Z"/><circle data-p="0" cx="78" cy="72" r="6"/><circle data-p="1" cx="42" cy="73" r="6.200"/><circle cx="40.500" cy="71" r="1.600" fill="#fff" opacity=".5"/><circle class="char" cx="60" cy="62" r="24"/>',
+  shrimp: '<path data-p="0" data-k="stroke" d="M42 44Q78 30 80 62Q80 84 52 82" fill="none" stroke-width="13" stroke-linecap="round"/><path d="M50 40q4 8 4 16M60 38q5 10 4 20M70 40q4 10 3 21" stroke="#000" stroke-opacity=".22" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M52 82 44 90M52 82 58 91" stroke="#0005" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M44 40Q76 28 79 56" stroke="#fff" stroke-opacity=".32" stroke-width="2.6" fill="none" stroke-linecap="round"/><path class="charS" d="M42 44Q78 30 80 62Q80 84 52 82" stroke-width="13" stroke-linecap="round"/>'
 };
+const CK_DEFS = '<svg class="ck-defs" width="0" height="0" aria-hidden="true" style="position:absolute"><defs>' +
+  '<radialGradient id="ckRim" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="#9aa5b0"/><stop offset=".55" stop-color="#4b535c"/><stop offset="1" stop-color="#1c2025"/></radialGradient>' +
+  '<radialGradient id="ckIn" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#2d3239"/><stop offset=".8" stop-color="#171a1f"/><stop offset="1" stop-color="#0d0f12"/></radialGradient></defs></svg>';
+let CK_FLAMES = '<circle cx="60" cy="60" r="48.500" fill="none" stroke="#ff8a3d" stroke-width="7" opacity=".26"/>';
+for (let i = 0; i < 28; i++) { const a = i / 28 * 6.2832, x = 60 + Math.cos(a) * 45.500, y = 60 + Math.sin(a) * 45.500; CK_FLAMES += '<g class="fg" transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + (a * 57.2958 + 90).toFixed(1) + ')"><path class="fo" d="M-3 0Q-3.500 -4.500 0 -9Q3.500 -4.500 3 0Z"/><path class="fi" d="M-1.600 0Q-1.800 -2.600 0 -5Q1.800 -2.600 1.600 0Z"/></g>'; }
+let CK_SIZZLE = '';
+for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832 + 0.3, r = 33 + (i % 2) * 2; CK_SIZZLE += '<circle cx="' + (60 + Math.cos(a) * r).toFixed(1) + '" cy="' + (60 + Math.sin(a) * r).toFixed(1) + '" r="2.600"/>'; }
+const CK_PAN = '<g class="grate"><circle cx="60" cy="60" r="50"/><path d="M10 60H110M60 10V110" stroke-opacity=".6"/></g><g class="fl">' + CK_FLAMES + '</g>' +
+  '<circle class="o0" cx="60" cy="60" r="43"/><circle class="o1" cx="60" cy="60" r="37"/>' +
+  '<path class="shn" d="M38 48Q42 38 54 34Q44 38 41 50Z"/><ellipse class="oil" cx="72" cy="74" rx="9" ry="4" transform="rotate(-30 72 74)"/><circle class="oil" cx="45" cy="76" r="2.400"/>' +
+  '<g class="sz">' + CK_SIZZLE + '</g><g class="food" transform="translate(60 60) scale(.98) translate(-60 -60)"></g>' +
+  '<g transform="rotate(-90 60 60)" fill="none" stroke-width="4.500"><circle class="trk" cx="60" cy="60" r="56.500" pathLength="100"/><circle class="sw" cx="60" cy="60" r="56.500" pathLength="100" stroke-dasharray="17 100" stroke-dashoffset="-66"/><circle class="pr" cx="60" cy="60" r="56.500" pathLength="100" stroke-dasharray="0 100" stroke-linecap="round"/></g>' +
+  '<g transform="rotate(40 60 60)"><rect class="hd" x="96" y="55.500" width="23" height="9" rx="4.500"/><rect class="hdh" x="98" y="57" width="19" height="2.200" rx="1.100"/><circle cx="115" cy="60" r="1.500" fill="#0a0c10"/></g>';
+const CK_BELL = '<svg class="bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1.500 1.500 0 0 1 1.500 1.500 6 6 0 0 1 4.500 5.800V15l2 3H4l2-3v-4.700a6 6 0 0 1 4.500-5.800A1.500 1.500 0 0 1 12 3z" fill="currentColor"/><path d="M10 19.500a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.600" fill="none" stroke-linecap="round"/></svg>';
 JA.games.cook = {
   name: 'The Line', glyph: JGLYPH.flame,
   goal: 'Orders are firing. Keep the pans moving and plate each item right when it is perfectly cooked.',
@@ -655,13 +816,15 @@ JA.games.cook = {
   quips: ['Every plate was perfect. The pass is clear.', 'Hot, fast and on time.', 'A few overdone plates went out.', 'Smoke alarm got a workout.', 'The kitchen is a disaster. Grab a fire blanket.'],
   start(J, host) {
     const g = { pans: [], sum: 0, n: 0, perfect: 0, plated: 0, burnt: 0, th: [0, 0, 0.06, 0.18] };
-    host.innerHTML = '<div class="gm ck"><div class="ck-top"><span>Plated <b class="p">0</b></span><span class="ck-st">Fire!</span><span>Burnt <b class="b">0</b></span></div><div class="ck-pans"></div></div>';
+    let rail = '';
+    for (let i = 0; i < 4; i++) rail += '<div class="tk off" style="--r:' + ((i % 2 ? 1.4 : -1.2) + (i - 1.5) * 0.4).toFixed(1) + 'deg"><div class="tk-p"><b>Pan off</b><small><span>Ticket</span><i>' + (i + 1) + '</i></small></div></div>';
+    host.innerHTML = CK_DEFS + '<div class="gm ck"><div class="ck-top"><span>Plated <b class="p">0</b></span><span class="ck-st">Fire!</span><span>Burnt <b class="b">0</b></span></div><div class="ck-rail">' + rail + '</div><div class="ck-pans"></div></div>';
     g.host = host; g.pEl = $('.ck-top .p', host); g.bEl = $('.ck-top .b', host); g.stEl = $('.ck-st', host);
+    g.tks = $$('.tk', host).map(e => ({ el: e, b: $('b', e), sp: $('small span', e) }));
     const box = $('.ck-pans', host);
     for (let i = 0; i < 4; i++) {
       const b = el('button', 'pan cold'); b.type = 'button'; b.tabIndex = -1; b.dataset.i = i; b.setAttribute('aria-label', 'Pan ' + (i + 1));
-      b.innerHTML = '<svg viewBox="0 0 120 120" aria-hidden="true"><rect x="53" y="92" width="14" height="26" rx="6" class="hd"/><circle cx="60" cy="60" r="45" class="o0"/><circle cx="60" cy="60" r="38" class="o1"/><g class="food"></g>' +
-        '<g transform="rotate(-90 60 60)" fill="none" stroke-width="7"><circle class="trk" cx="60" cy="60" r="54" pathLength="100"/><circle class="sw" cx="60" cy="60" r="54" pathLength="100" stroke-dasharray="17 100" stroke-dashoffset="-66"/><circle class="pr" cx="60" cy="60" r="54" pathLength="100" stroke-dasharray="0 100" stroke-linecap="round"/></g></svg><span class="nm">Cold</span><span class="key">' + (i + 1) + '</span>';
+      b.innerHTML = '<svg class="pv" viewBox="0 0 120 120" aria-hidden="true">' + CK_PAN + '</svg><span class="nm">Cold</span><span class="key">' + (i + 1) + '</span>' + CK_BELL;
       box.appendChild(b);
       g.pans.push({ el: b, food: $('.food', b), pr: $('.pr', b), nm: $('.nm', b), st: 'idle', type: null, m: 0, wait: 0.5 + i * 0.5, on: false, fx: 0, parts: [] });
     }
@@ -678,6 +841,7 @@ JA.games.cook = {
     s.parts.forEach(p => { p.dataset.k === 'stroke' ? null : p.setAttribute('stroke', 'none'); });
     s.nm.textContent = f.name;
     s.el.classList.remove('hot', 'burnt', 'done'); s.el.classList.add('cook');
+    s.no = (g.no = (g.no || 0) + 1);
     JA.games.cook.paint(s);
   },
   paint(s) {
@@ -687,8 +851,19 @@ JA.games.cook = {
       if (p.dataset.k === 'stroke') p.style.stroke = col; else p.style.fill = col;
     });
     s.pr.setAttribute('stroke-dasharray', (Math.min(1, s.m) * 100).toFixed(1) + ' 100');
+    s.el.style.setProperty('--m', Math.min(1, s.m).toFixed(3));
     s.el.classList.toggle('sweet', s.m > 0.66 && s.m <= 0.83);
     s.el.classList.toggle('late', s.m > 0.83);
+  },
+  rail(J) {
+    const g = J.g;
+    g.pans.forEach((s, i) => {
+      const k = g.tks[i]; if (!k) return;
+      const nm = s.st === 'cook' && s.type ? CK_FOOD[s.type].name : '', key = (s.on ? 'o' : 'x') + nm + (nm ? s.no : '');
+      if (s.tkK === key) return; s.tkK = key;
+      k.b.textContent = nm || (s.on ? 'Waiting' : 'Pan off'); k.sp.textContent = nm ? 'No. ' + s.no : 'Ticket';
+      k.el.classList.toggle('hot', !!nm); k.el.classList.toggle('off', !nm);
+    });
   },
   grade(m) {
     if (m < 0.3) return null;
@@ -708,6 +883,7 @@ JA.games.cook = {
     jpop(g.host, s.el, r[1], r[0] === 1 ? 'good' : r[0] >= 0.65 ? 'warn' : 'bad');
     s.st = 'rest'; s.wait = JR(0.35, 0.8); s.type = null;
     s.el.classList.remove('cook', 'sweet', 'late'); s.el.classList.add('done');
+    s.el.classList.remove('ding'); void s.el.offsetWidth; s.el.classList.add('ding'); JFX.burst(s.el, r[0] === 1 ? 'stars' : 'spark', { n: r[0] === 1 ? 7 : 6, col: r[0] === 1 ? ['#ffd778', '#fff3c4'] : ['#ffb347', '#ffd08a'], fy: 0.4 });
     s.nm.textContent = 'Order up!';
     g.pEl.textContent = g.plated;
   },
@@ -733,6 +909,7 @@ JA.games.cook = {
           s.st = 'burnt'; s.fx = 0.95; s.type = null;
           s.el.classList.remove('cook', 'sweet', 'late'); s.el.classList.add('burnt');
           s.nm.textContent = 'Burnt!'; jpop(g.host, s.el, 'Burnt!', 'bad'); SFX.chime('bad');
+          JFX.burst(s.el, 'smoke', { col: '#8a8a8a', n: 9, spread: 50, fy: 0.45, a: 0.55 });
         } else JA.games.cook.paint(s);
       } else if (s.st === 'burnt') {
         s.fx -= dt;
@@ -740,6 +917,7 @@ JA.games.cook = {
       }
       if (s.st === 'rest' && s.wait < 0.25 && s.food.firstChild) { s.food.innerHTML = ''; s.pr.setAttribute('stroke-dasharray', '0 100'); s.nm.textContent = 'Hot'; s.el.classList.remove('done'); }
     });
+    JA.games.cook.rail(J);
   },
   key(J, e) {
     const i = { '1': 0, '2': 1, '3': 2, '4': 3 }[e.key];
