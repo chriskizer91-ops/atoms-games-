@@ -37,6 +37,11 @@ Six navy-glass cards with an emblem tile each (code brackets, gear, cross, chart
 - A shared `FX.sh`-like light vector would let the cutscene reuse it; the cast uses its own `CIN_LIGHT` (upper left).
 - If the UI pass restyles `.btn`, the `#title .btn` and `#degree .btn` overrides can be deleted.
 
+## Performance (software-rendered headless Chromium, same machine, interleaved runs; only ratios mean anything)
+- Cutscene frame interval vs the old scene (about 17 ms): walk 31 ms, handshake close-up 29 ms, whip down to the crowd 49 ms (worst, 0.7 s long), hats and confetti 35 ms, black cards 19 ms. Script time per frame 8-12 ms (old: 0.6 ms). On a GPU canvas this is light.
+- Title: 27 ms vs 21 ms. Town `render()` (tools/perf.js) is unchanged: street 2.0-2.6 ms, interiors 0.7-1.4 ms, same as baseline.
+- What keeps it cheap: everything static is baked once (stage, backdrop, tiers, costumes, head sprites), the far backdrop is painted at half resolution and skipped when the camera is inside the set, layers are blitted only for the visible rectangle, off-screen figures/tiers/confetti are culled, grade/vignette/grain/bars are DOM, the render scale is capped (about 1.4 MP, 1600 px long side) and drops by itself if frames stay slow.
+
 ## Known limitations
 - The cutscene is vector-heavy; in a software-rendered headless browser it costs about 1.1x to 1.9x of the old scene's frame time (see the summary); on a GPU canvas it is light. The scene renders at the display ratio capped to ~1600 px on the long side and quietly drops resolution if frames stay slow for several seconds.
 - Stills are drawn with `ART.cover` straight from the PNG; very large stills cost a few ms per frame in software canvases.

@@ -140,9 +140,9 @@ function cinCastDraw(c, V, ct) {
   const A = typeof cinArtActors === 'function' ? cinArtActors(c, V, ct, cls, dean, grad) : null;
   const rets = {};
   // classmates, back to front; each holds a rolled diploma in the right hand
-  const vw = CN.cur, eff = V.k * (1 + (V.z - 1)), clsLod = eff * 0.8 < 0.7 ? 2 : eff * 0.8 < 1.15 ? 1 : 0;
+  const vw = CN.cur, eff = V.k * (1 + (V.z - 1)), clsLod = eff * 0.8 < 0.7 ? 2 : eff * 0.8 < 1.3 ? 1 : 0;
   for (let i = 0; i < 8; i++) {
-    const st = cls[i]; st.o.lod = clsLod;
+    const st = cls[i]; st.o.lod = clsLod; st.o.cacheHead = eff < 1.5;
     if (A && A.skipClass) break;
     if (vw && (st.x + 70 * st.s < vw.x0 || st.x - 70 * st.s > vw.x1 || st.y - 200 * st.s > vw.y1 || st.y + 20 < vw.y0)) continue;
     const r = cinFigure(c, st.x, st.y, st.s, st.o);

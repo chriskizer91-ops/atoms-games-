@@ -175,6 +175,7 @@ function cinCrowdDraw(c, V, ct) {
   for (let t = 0; t < S.tiers.length; t++) {
     const tr = S.tiers[t], T = tr.T;
     cinSet(c, V, T.depth);
+    if (T.y - 130 * T.s > CN.cur.y1) continue;      // this tier is entirely below the frame
     cnBlit(c, tr.body);
     if (t === 1) cinBalloons(c, ct);
     cinTierPeople(c, tr, ct, cheer);

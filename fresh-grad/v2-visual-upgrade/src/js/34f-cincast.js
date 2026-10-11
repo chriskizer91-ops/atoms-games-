@@ -419,7 +419,7 @@ function cinFigure(c, x, y, s, o) {
   ret.hands.L = aL; ret.hands.R = aR;
   // head
   c.save(); c.translate(0, bob * 0.8);
-  if (lod >= 2) cinHeadCached(c, o, ct); else cinHead(c, o, ct);
+  if (lod >= 2 || o.cacheHead) cinHeadCached(c, o, ct); else cinHead(c, o, ct);
   c.restore();
   c.restore();
   // world-space results
