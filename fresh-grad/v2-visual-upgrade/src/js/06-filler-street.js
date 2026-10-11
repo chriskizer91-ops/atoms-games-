@@ -17,6 +17,7 @@ function drawDeco(c, b) {
       const wx = b.x + 14 + i * cw + 4;
       windowAt(c, wx, y, cw - 14, tower ? 26 : 32, lit, { style: sty, room: tower ? [1, 4, 3, 2][Math.floor(hash01(b.seed, r, i) * 4)] : null });
       if (!tower && !shop && hash01(b.seed, r * 7 + i, 4) > 0.6) flowerBox(c, wx - 3, y + 35, cw - 8, i + r);
+      else if (!tower && !shop && hash01(b.seed, r * 7 + i, 4) < 0.22) { const rw = Math.round(cw - 14), rl = wspr('rl' + rw, rw + 10, 22, g => wPaintRail(g, rw)); c.drawImage(rl.cv, wx - 5, y + 32 - 13, rl.w, rl.h); }
     }
   }
   if (shop) {
@@ -30,6 +31,8 @@ function drawDeco(c, b) {
     if (!tower) { sconce(c, cx - 34, bot - 38); sconce(c, cx + 34, bot - 38); }
   }
   if (b.place) placeFacade(c, b);
+  if (shop && open) { wWetGlow(c, b.x + 14 + (b.w / 2 - 40) / 2, bot + 4, 70, 44, 0, 0.18); wWetGlow(c, b.x + b.w / 2 + 28 + (b.w / 2 - 42) / 2, bot + 4, 70, 44, 0, 0.18); }
+  else if (night && (b.place ? open : false)) wWetGlow(c, cx, bot + 4, 56, 46, 0, 0.16);
 }
 function drawBusStop(c, s) {
   const on = FX.nf > 0.05;

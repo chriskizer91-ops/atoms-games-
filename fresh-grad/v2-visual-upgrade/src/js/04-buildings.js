@@ -48,6 +48,7 @@ function drawApartment(c, b) {
   for (let i = 0; i < 5; i++) if (i !== 2) windowAt(c, b.x + 22 + i * 49, bot - 68, 31, 38, hash01(i, 9, 12 + day) > p, { style: 1 });
   doorAt(c, cx, bot, 38, 58, '#5a3b2a', { lit: true });
   sconce(c, cx - 32, bot - 46); sconce(c, cx + 32, bot - 46);
+  wWetGlow(c, cx, bot + 4, 70, 46, 0, 0.2);
 }
 function drawWork(c, b) {
   const d = job(); const wb = { id: 'work_' + d.id, x: b.x, y: b.y, w: b.w, h: b.h, wall: d.wall, roof: d.roof };
@@ -63,6 +64,7 @@ function drawWork(c, b) {
   if (!hv.noRight) windowAt(c, b.x + b.w - 90, bot - 62, 70, 44, lit, { style: 2, room: hv.room, inside: hv.lobby });
   doorAt(c, cx, bot, 46, 60, '#2a3b4a', { glass: true, lit });
   wWorkLive(c, b, d, lit);
+  if (lit) { wWetGlow(c, cx, bot + 4, 80, 46, 1, 0.2); wWetGlow(c, b.x + 55, bot + 4, 70, 40, 0, 0.14); wWetGlow(c, b.x + b.w - 55, bot + 4, 70, 40, 0, 0.14); }
   planter(c, cx - 44, bot + 2, 0); planter(c, cx + 44, bot + 2, 1);
 }
 function drawShop(c, b) {
@@ -74,6 +76,7 @@ function drawShop(c, b) {
   doorAt(c, cx, bot, 40, 62, '#2f4f40', { glass: true, lit });
   if (open) wPlaque(c, cx, bot - 38.2, 26, 11, 'OPEN', '#f4f7f2', '#2f6b4c');
   sconce(c, cx - 30, bot - 50); sconce(c, cx + 30, bot - 50);
+  if (open) { wWetGlow(c, b.x + 53, bot + 4, 74, 46, 3, 0.2); wWetGlow(c, b.x + b.w - 53, bot + 4, 74, 46, 3, 0.2); wWetGlow(c, cx, bot + 4, 36, 46, 0, 0.18); }
 }
 function drawDiner(c, b) {
   const rh = 40; baseBuilding(c, b, rh, { mat: 'siding', matA: 0.5, roofMat: 'seam', board: false, spout: false, hero: wHeroDiner });
@@ -85,6 +88,7 @@ function drawDiner(c, b) {
   doorAt(c, cx, bot, 38, 58, '#6a2b2b', { lit });
   wPlaque(c, cx, ft + 15.5, 44, 18, open ? 'OPEN' : 'CLOSED', open ? '#ff4d6d' : '#4a252d', open ? '#fff' : '#9a6a75', 10);
   if (open && FX.nf > 0.05) { litRect(cx - 22, ft + 6, 44, 18); addEmit(cx, ft + 15, 34, 4, 0.5); }
+  if (open) { wWetGlow(c, cx, bot + 4, 96, 52, 4, 0.3); wWetGlow(c, b.x + 54, bot + 4, 80, 44, 0, 0.16); wWetGlow(c, b.x + b.w - 54, bot + 4, 80, 44, 0, 0.16); }
 }
 function drawClinic(c, b) {
   const rh = 46; baseBuilding(c, b, rh, { mat: 'panel', matA: 0.7, roofMat: 'seam', rp: 53, hero: wHeroClinic });
@@ -94,4 +98,5 @@ function drawClinic(c, b) {
   windowAt(c, b.x + 22, bot - 66, 70, 44, true, { style: 2, inside: wClinicWaiting }); windowAt(c, b.x + b.w - 92, bot - 66, 70, 44, true, { style: 2, inside: wClinicWaiting });
   if (FX.nf > 0.05) { litRect(cx - 19, ft + 66, 38, 38); addEmit(cx, ft + 85, 40, 2, 0.4); addLight(cx, bot + 6, 120, 60, 1, 0.6); }
   doorAt(c, cx, bot, 40, 46, '#9ec3d6', { glass: true, lit: true });
+  wWetGlow(c, cx, bot + 4, 56, 52, 2, 0.24); wWetGlow(c, b.x + 57, bot + 4, 74, 44, 1, 0.16); wWetGlow(c, b.x + b.w - 57, bot + 4, 74, 44, 1, 0.16);
 }

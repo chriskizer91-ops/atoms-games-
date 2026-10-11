@@ -146,6 +146,16 @@ function drawGround(c, m, vx0, vy0, vx1, vy1) {
 function drawGroundLive(c, tm, vx0, vy0, vx1, vy1) {
   const A = FX.A, x0 = vx0 - 4, x1 = vx1 + 4;
   if (POND.x + POND.rx + 20 > x0 && POND.x - POND.rx - 20 < x1 && POND.y + POND.ry + 30 > vy0 && POND.y - POND.ry - 40 < vy1) wPondLive(c, tm, A);
+  // winter: steam drifting out of the manholes
+  if (WINTER() && !REDUCED) {
+    for (let i = 0; i < MANHOLES.length; i += 2) {
+      const mh = MANHOLES[i]; if (mh.x < x0 - 30 || mh.x > x1 + 30 || mh.y < vy0 - 60 || mh.y > vy1 + 20) continue;
+      for (let k = 0; k < 5; k++) {
+        const p = (tm * 0.3 + k / 5 + i * 0.13) % 1;
+        c.fillStyle = 'rgba(240,246,252,' + (0.3 * (1 - p)).toFixed(3) + ')'; c.beginPath(); c.arc(mh.x + Math.sin(p * 6 + i) * 4 + p * 14 * FX.wind, mh.y - 2 - p * 34, 3 + p * 8, 0, 7); c.fill();
+      }
+    }
+  }
   // puddles after rain
   if (A.wet > 0.03) {
     const pc = rgbaS(mix3(A.top, [70, 86, 110], 0.5), 0.55 * A.wet);

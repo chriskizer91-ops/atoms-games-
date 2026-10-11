@@ -252,6 +252,7 @@ function doorAt(c, cx, bottom, w, h, col, o) {
   }
   const s = wDoorSprite(w, h, col, glass);
   c.drawImage(s.cv, cx - w / 2 - W_DOOR_OX, bottom - h - W_DOOR_OY, s.w, s.h);
+  if (!glass && WINTER()) { const wr = wspr('wreath', 16, 18, wPaintWreath); c.drawImage(wr.cv, cx - 8, bottom - h * 0.62 - 8, 16, 18); }
   if (glassLit) litRect(cx - w / 2 + 3, bottom - h + 4, w - 6, glass ? h - 12 : h * 0.42, 1);
 }
 /* a wall lantern beside a door */
@@ -277,7 +278,7 @@ function nameSign(c, text, cx, y, size, col, glow, kind) {
 }
 /* striped shop awning with a fabric valance and a soft shadow on the wall below */
 function awning(c, x, y, w, h, colA, colB) {
-  const iw = Math.round(w), s = wspr('aw' + iw + 'x' + h + colA + colB, iw, h + 26, g => wPaintAwning(g, iw, h, colA, colB, iw + h));
+  const iw = Math.round(w), win = WINTER(), s = wspr('aw' + iw + 'x' + h + colA + colB + (win ? 'w' : ''), iw, h + 26, g => { wPaintAwning(g, iw, h, colA, colB, iw + h); if (win) wSnowAwning(g, iw, h); });
   c.drawImage(s.cv, x, y, w, s.h);
 }
 function roofProps(c, b, seed) {

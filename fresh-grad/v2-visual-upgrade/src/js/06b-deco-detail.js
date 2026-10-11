@@ -173,7 +173,15 @@ function wShopInside(name, k) {
   const key = name + k; let f = W_SHOP_FN.get(key);
   if (!f) {
     const painter = W_SHOPS[name] || W_SHOPS._;
-    f = (c, x, y, w, h, on, px, py) => wBlitInside(c, wInsideSprite('shp' + name + k, w, h, (g, W, H) => painter(g, W, H, k)), x, y, w, h, px * 1.6, py * 1.6, 0.95);
+    const nm = name.toUpperCase();
+    f = (c, x, y, w, h, on, px, py) => {
+      wBlitInside(c, wInsideSprite('shp' + name + k, w, h, (g, W, H) => painter(g, W, H, k)), x, y, w, h, px * 1.6, py * 1.6, 0.95);
+      if (k === 0) {
+        // gold lettering on the glass
+        let s = wSignSprite(nm, 7.5, '#f6e3a0'); if (s.tw > w - 8) s = wSignSprite(nm, 6, '#f6e3a0');
+        c.globalAlpha = 0.92; c.drawImage(s.cv, x + w / 2 - s.w / 2 + px * 1.6, y + h * 0.17 - s.h / 2 + py * 1.6, s.w, s.h); c.globalAlpha = 1;
+      }
+    };
     W_SHOP_FN.set(key, f);
   }
   return f;
@@ -219,6 +227,7 @@ function wHeroDeco(c, b, rh) {
     } else {
       // shop: a hours plate by the door and a lit bulkhead under the windows
       c.fillStyle = '#e9e2d3'; c.fillRect(cx + 22, bot - 38, 12, 9); c.fillStyle = 'rgba(0,0,0,.2)'; c.fillRect(cx + 22, bot - 29, 12, 1); c.fillStyle = 'rgba(60,70,80,.6)'; for (let k = 0; k < 3; k++) c.fillRect(cx + 24, bot - 36 + k * 2.4, 5 + (k % 2) * 3, 0.8);
+      if (season() === 'autumn' && b.seed % 2 === 0) { const pk = wspr('pk', 28, 18, wPaintPumpkins); c.drawImage(pk.cv, cx - 60, bot - 13, 28, 18); }
       c.fillStyle = shade(b.wall, -0.3); c.fillRect(b.x + 12, bot - 15, b.w / 2 - 36, 5); c.fillRect(b.x + b.w / 2 + 26, bot - 15, b.w / 2 - 38, 5);
       c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(b.x + 12, bot - 15, b.w / 2 - 36, 1); c.fillRect(b.x + b.w / 2 + 26, bot - 15, b.w / 2 - 38, 1);
     }

@@ -81,6 +81,7 @@ function wHeroApartment(c, b, rh) {
   // brass door-bell panel and mail slots by the steps
   c.fillStyle = '#c9a24a'; c.fillRect(cx + 22, bot - 36, 5, 9); c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(cx + 22, bot - 36, 5, 1);
   c.fillStyle = 'rgba(60,40,10,.7)'; for (let k = 0; k < 3; k++) c.fillRect(cx + 23.2, bot - 34 + k * 2.7, 2.6, 1.2);
+  if (se === 'autumn') { const pk = wspr('pk', 28, 18, wPaintPumpkins); c.drawImage(pk.cv, cx + 34, bot - 13, 28, 18); }
   // stoop railings
   c.strokeStyle = '#1d242b'; c.lineWidth = 1.4; [cx - 30, cx + 30].forEach(px => { c.beginPath(); c.moveTo(px, bot - 12); c.lineTo(px, bot - 24); c.stroke(); });
 }
