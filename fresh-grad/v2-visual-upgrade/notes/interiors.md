@@ -57,6 +57,13 @@ frame cost across all 22 rooms is 0.2 to 0.9 ms (the school is the highest). Bui
 80 ms of raster time (behind the fade-in); an occasional 400 to 700 ms spike shows up in headless runs every few
 rebuilds and moves around with the order of visits, so it is allocator/GC noise of the software renderer, not content.
 
+## Parity
+
+`node tools/parity.js` against v1: REMOVED (0). Three `LOGIC?` entries, all presentation: `LAYER` (extra cache fields
+`rec`, `live`, `clocks`), `roomLights` (the room lighting hook: per-room lamp pools and night ambience colour instead of
+an even grid; it returns an ambient colour and queues lights, nothing else) and `WORK_CFG` (added `signX` and `wins`,
+where the employer sign and windows are painted).
+
 ## Intentionally untouched
 
 Spots, markers (`drawSpotMarkers`), people, speech bubbles and name tags (pass 3), the town exteriors, UI, the

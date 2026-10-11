@@ -236,10 +236,13 @@ const FURN = {
     c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(cx - rx * 0.2, cy - ry * 0.25, rx * 0.4, ry * 0.18, -0.25, 0, 7); c.fill();
     // table settings: a menu stand, shakers, or a little vase
     const k = sd & 3;
-    if (k === 0) { PROP.shaker(c, cx - 4, cy - 2); PROP.shaker(c, cx + 1, cy - 1, '#e9c46a'); PROP.napkins(c, cx + 8, cy - 4, 6, 4); }
-    else if (k === 1) PROP.vase(c, cx, cy - 1, '#8ecae6');
-    else if (k === 2) { PROP.cup(c, cx - 8, cy - 1); PROP.plate(c, cx + 6, cy + 1, 4.6, '#d9a05b'); }
-    else PROP.candle(c, cx, cy - 1);
+    const sc = Math.min(1.5, rx / 34);
+    c.save(); c.translate(cx, cy); c.scale(sc, sc); c.translate(-cx, -cy);
+    if (k === 0) { PROP.napkins(c, cx - 11, cy - 7, 8, 6); PROP.on.sauce(c, cx + 5, cy + 1); PROP.shaker(c, cx - 3, cy + 6); }
+    else if (k === 1) { PROP.vase(c, cx - 2, cy - 2, '#8ecae6'); PROP.paper(c, cx + 5, cy + 1, 8, 10, 0.3, 3); }
+    else if (k === 2) { PROP.plate(c, cx - 5, cy - 1, 6.4, '#d9a05b'); PROP.cup(c, cx + 8, cy + 4); }
+    else { PROP.candle(c, cx - 4, cy - 2); PROP.on.menu(c, cx + 6, cy + 1); }
+    c.restore();
   },
   desk(c, f) {
     const x = f.x, y = f.y, w = f.w, h = f.h, col = f.c || '#b98a55', sd = fsd(f);
@@ -263,6 +266,10 @@ const FURN = {
         else PROP.plantSm(c, x + w - 12, y + 18, 0.9);
         PROP.paper(c, x + 6, y + 6, 12, 15, -0.12, 4);
       }
+    }
+    else if (w > 60) {   // a desk without a computer: papers, a mug and a pen pot
+      PROP.paper(c, x + 8, y + 4, 12, 15, -0.12, 4); PROP.paper(c, x + 12, y + 5, 12, 15, 0.1, 4); PROP.mug(c, x + w - 18, y + h * 0.4);
+      if (w > 90) { c.fillStyle = '#3a414a'; rr(c, x + w * 0.5, y + 5, 6, 8, 1.4); c.fill(); c.fillStyle = '#e63946'; c.fillRect(x + w * 0.5 + 1, y + 2, 1, 4); c.fillStyle = '#2a6f97'; c.fillRect(x + w * 0.5 + 3.4, y + 3, 1, 3); PROP.book(c, x + w * 0.66, y + 6, 15, 11, '#3d5a80'); }
     }
     lbl(c, f);
   },
