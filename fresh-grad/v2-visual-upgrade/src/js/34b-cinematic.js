@@ -280,7 +280,8 @@ function cinRender(c, cv, ct) {
   }
   CN.lastT = nowT;
   // render size: the device ratio, capped so a huge screen never costs more than ~1600px across
-  const sc = Math.min(window.devicePixelRatio || 1, CN.res, 1600 / Math.max(w, h, 1));
+  // render scale: the device ratio, limited to ~1.4 megapixels and ~1600 px on the long side, times the adaptive factor
+  const sc = Math.min(window.devicePixelRatio || 1, Math.sqrt(1.4e6 / Math.max(1, w * h)), 1600 / Math.max(w, h, 1)) * CN.res;
   const pw = Math.max(2, Math.round(w * sc)), ph = Math.max(2, Math.round(h * sc));
   if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
   const V = cinView(pw, ph, ct);
