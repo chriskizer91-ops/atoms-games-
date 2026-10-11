@@ -1,6 +1,6 @@
-/* ============================ v2 sky: volumetric clouds, richer skyline, sun, moon, stars, rare sights ============================
-   Everything here is painted by drawSky() (08-camera-sky.js). Clouds are small cached sprites that are re-tinted
-   when the time of day moves on (one per frame), the skyline uses cached window patterns, nothing allocates per frame. */
+// ============================ v2 sky: volumetric clouds, richer skyline, sun, moon, stars, rare sights ============================
+// Everything here is painted by drawSky() (08-camera-sky.js). Clouds are small cached sprites that are re-tinted
+// when the time of day moves on (one per frame), the skyline uses cached window patterns, nothing allocates per frame.
 const SKYPOS = { x: 0, y: 0, low: 0 };
 function skySunPos(A, vx0, vw) {
   SKYPOS.x = vx0 + vw * (0.5 + A.sunX * 0.4); SKYPOS.y = TOP_Y - 34 - A.el * 250; SKYPOS.low = 1 - A.el;
@@ -118,8 +118,8 @@ const SKY3 = SKY_LAYERS.map((L, li) => {
   }
   return out;
 });
-/* window patterns on a 13 x 15 grid, 8 x 8 windows to a tile, drawn at double density: pale glass for the day, dark glass at night,
-   and two disjoint sets of lit rooms that switch on one after the other at dusk, in clusters */
+// window patterns on a 13 x 15 grid, 8 x 8 windows to a tile, drawn at double density: pale glass for the day, dark glass at night,
+// and two disjoint sets of lit rooms that switch on one after the other at dusk, in clusters
 const SKY_WIN = (function () {
   const PW = 13, PH = 15, N = 8, out = {};
   const make = (fn, a) => {
@@ -198,6 +198,7 @@ function skyLayerDraw(c, A, li, vx0, vx1, af) {
 
 /* ---------- rare sights: a plane, a blimp, shooting stars, a rainbow after the rain ---------- */
 function skyPlane(c, A, vx0, vx1) {
+  if (REDUCED) return;
   const per = 170, ph = (FX.time + 40) % per, dur = 62, vw = vx1 - vx0;
   if (ph > dur) return;
   const lap = Math.floor((FX.time + 40) / per), dir = lap % 2 ? -1 : 1, p = ph / dur;
@@ -216,6 +217,7 @@ function skyPlane(c, A, vx0, vx1) {
   c.restore();
 }
 function skyBlimp(c, A, vx0, vx1) {
+  if (REDUCED) return;
   const per = 520, ph = (FX.time + 210) % per, dur = 150;
   if (ph > dur) return;
   const vw = vx1 - vx0, p = ph / dur, x = vx1 + 90 - p * (vw + 180), y = CAM.y + (TOP_Y - CAM.y) * 0.3 + Math.sin(FX.time * 0.3) * 3;
@@ -230,6 +232,7 @@ function skyBlimp(c, A, vx0, vx1) {
   c.restore();
 }
 function skyShooting(c, A, vx0, vx1) {
+  if (REDUCED) return;
   const per = 17, t = FX.time % per, dur = 0.85;
   if (t > dur) return;
   const cyc = Math.floor(FX.time / per), p = t / dur, vw = vx1 - vx0;
@@ -312,22 +315,26 @@ function skyBody(c, A, vx0, vx1) {
       c.drawImage(SKY_RAYS, -240, -240, 480, 480); c.restore();
     }
     c.globalCompositeOperation = 'source-over'; c.globalAlpha = a;
-    const rd = 23 + low * 7, core = mix3([255, 252, 232], [255, 176, 100], clamp(low * 1.3 - 0.3, 0, 1));
-    const sg = c.createRadialGradient(sp.x - rd * 0.2, sp.y - rd * 0.2, rd * 0.1, sp.x, sp.y, rd);
-    sg.addColorStop(0, '#ffffff'); sg.addColorStop(0.55, rgbS(core)); sg.addColorStop(1, rgbS(mix3(core, [255, 120, 60], 0.45)));
-    c.fillStyle = sg; c.beginPath(); c.arc(sp.x, sp.y, rd, 0, 7); c.fill(); c.globalAlpha = 1;
+    const rd = 20 + low * 6, core = mix3([255, 252, 236], [255, 200, 130], clamp(low * 1.2 - 0.2, 0, 1));
+    const sg = c.createRadialGradient(sp.x, sp.y, rd * 0.05, sp.x, sp.y, rd);
+    sg.addColorStop(0, '#ffffff'); sg.addColorStop(0.7, rgbS(mix3(core, [255, 255, 255], 0.55))); sg.addColorStop(1, rgbS(mix3(core, [255, 255, 255], 0.2)));
+    c.fillStyle = sg; c.beginPath(); c.arc(sp.x, sp.y, rd, 0, 7); c.fill();
+    // a hot bloom over the disc itself
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.55 * a; c.drawImage(GLOW[0], sp.x - 46, sp.y - 46, 92, 92);
+    c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
   } else if (A.mf >= 0) {
     const mx = vx0 + vw * (0.86 - A.mf * 0.72), my = TOP_Y - 60 - Math.sin(Math.PI * A.mf) * 210, a = 1 - A.cloud * 0.75;
-    const ph = ((S ? S.day : 1) % 29.5) / 29.5;
-    c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.34 * a; c.drawImage(GLOW[1], mx - 150, my - 150, 300, 300);
-    c.globalAlpha = 0.25 * a; c.drawImage(GLOW[1], mx - 56, my - 56, 112, 112);
+    const ph = ((S ? S.day : 1) % 29.5) / 29.5, frac = (1 - Math.cos(ph * 6.2832)) / 2;
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = (0.08 + 0.3 * frac) * a; c.drawImage(GLOW[1], mx - 150, my - 150, 300, 300);
+    c.globalAlpha = (0.05 + 0.22 * frac) * a; c.drawImage(GLOW[1], mx - 56, my - 56, 112, 112);
     c.globalCompositeOperation = 'source-over'; c.globalAlpha = a;
     c.save(); c.beginPath(); c.arc(mx, my, 17, 0, 7); c.clip();
     c.drawImage(SKY_MOON, mx - 17, my - 17, 34, 34);
-    // phase: a shadow disc slides across; at full it sits out of the way
+    // phase: a shadow disc, the colour of the sky behind, slides across; at full it sits out of the way
     const k = Math.abs(ph - 0.5) * 2, off = (1 - Math.min(1, k * 1.15)) * 30 * (ph < 0.5 ? -1 : 1);
-    if (k > 0.08) {
-      c.fillStyle = rgbaS(mix3(A.top, [20, 26, 56], 0.45), 0.93); c.beginPath(); c.arc(mx + off, my - 1, 17, 0, 7); c.fill();
+    if (k > 0.04) {
+      const sc2 = mix3(A.top, A.bot, clamp(((my - (TOP_Y - 330)) / 330), 0, 1) * 0.5);
+      c.fillStyle = rgbaS(sc2, 0.97); c.beginPath(); c.arc(mx + off, my - 1, 17.6, 0, 7); c.fill();
     }
     c.restore(); c.globalAlpha = 1;
   }

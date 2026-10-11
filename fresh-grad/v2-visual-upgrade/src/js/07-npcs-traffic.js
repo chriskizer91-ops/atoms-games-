@@ -125,8 +125,8 @@ function carKind(k) {
   }
   return k.kind;
 }
-/* ---------- v2 cars: body gradients and highlights, wheel arches with turning hubcaps, glass that reflects the sky,
-   lamps with glow, taxi sign and delivery van. Same footprint and lamp/beam hooks as before. ---------- */
+// ---------- v2 cars: body gradients and highlights, wheel arches with turning hubcaps, glass that reflects the sky,
+// lamps with glow, taxi sign and delivery van. Same footprint and lamp/beam hooks as before. ----------
 function carWheel(c, wx, wy, r, pos, spd) {
   c.fillStyle = '#0c0f13'; c.beginPath(); c.arc(wx, wy, r + 1.3, Math.PI, 0); c.fill();
   c.fillStyle = '#16191f'; c.beginPath(); c.arc(wx, wy, r, 0, 7); c.fill();
@@ -144,8 +144,8 @@ function carGlass(c, x0, y0, x1, y1) {
   const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, FX.glassA); g.addColorStop(1, FX.glassB);
   c.fillStyle = g;
 }
-/* The static body of each car (colour, kind, view, time-of-day glass) is painted once into a small sprite and blitted;
-   wheels, tail lamps, shadows and the light hooks stay live. */
+// The static body of each car (colour, kind, view, time-of-day glass) is painted once into a small sprite and blitted;
+// wheels, tail lamps, shadows and the light hooks stay live.
 const CAR_SPR = new Map();
 function carSideStatic(c, k, kind, L, on, glint, sunny) {
   const dark = shade(k.col, -0.3), lite = shade(k.col, 0.32), mid = shade(k.col, -0.12);

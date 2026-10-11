@@ -5,14 +5,14 @@ function lookStyle(o) {
   return (a.charCodeAt(1) + a.charCodeAt(3) * 3 + b.charCodeAt(2) * 5 + b.charCodeAt(5)) % 5;
 }
 
-/* ---- v2 figures -------------------------------------------------------------------------------------------------
-   Everything is drawn in a local frame: feet at (0,0), +y down, the figure about 41 units tall, then scaled by `s`.
-   The footprint (feet position, ~40 px height, 15 px shoulders) matches the v1 chibi sprite so collision, name tags,
-   speech bubbles, click targets and interaction rings keep lining up. Palettes (tints, shades, garment, shoes) are
-   worked out once per look and cached. */
+// ---- v2 figures -------------------------------------------------------------------------------------------------
+// Everything is drawn in a local frame: feet at (0,0), +y down, the figure about 41 units tall, then scaled by `s`.
+// The footprint (feet position, ~40 px height, 15 px shoulders) matches the v1 chibi sprite so collision, name tags,
+// speech bubbles, click targets and interaction rings keep lining up. Palettes (tints, shades, garment, shoes) are
+// worked out once per look and cached.
 const PP_PAL = new Map();
-/* garment by exact shirt colour for the things the clothes shop sells, otherwise picked from the colour so a person
-   always wears the same thing: 0 tee, 1 button-down, 2 sweater, 3 polo, 5 flannel */
+// garment by exact shirt colour for the things the clothes shop sells, otherwise picked from the colour so a person
+// always wears the same thing: 0 tee, 1 button-down, 2 sweater, 3 polo, 5 flannel
 const PP_GARM = { '#ff7a59': 0, '#2a9d8f': 0, '#3d5a80': 1, '#e9c46a': 2, '#f6f1e7': 1, '#7b6fd0': 3, '#c0392b': 5, '#2b2f36': 0 };
 const PP_SHOES = [['#f3efe6', '#c8c2b4', 0], ['#2c3038', '#9aa1a9', '#4a525e'], ['#7a5236', '#2a1c12', '#9a6c46'], ['#1e2229', '#6d747d', '#39404a'], ['#c9573f', '#efe8d8', '#f2c65a']];
 function ppHash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return h >>> 0; }
@@ -368,8 +368,8 @@ function ppBody(c, o, P, style, st) {
   c.restore();
 }
 
-/* Standing and walking figures are cached as small sprites (one per look, facing, walk-cycle step and idle state) and
-   blitted, so a crowd costs a handful of canvas calls each. Kids at other sizes, riders and the big salon/mic scenes draw directly. */
+// Standing and walking figures are cached as small sprites (one per look, facing, walk-cycle step and idle state) and
+// blitted, so a crowd costs a handful of canvas calls each. Kids at other sizes, riders and the big salon/mic scenes draw directly.
 const PP_SPR = new Map(), PP_ST = { mv: false, ph: 0, face: 1, back: false, rd: false, bob: 0, lean: 0, sway: 0, breathe: 0, blink: false, glance: 0, rim: 0, rimSide: 1 };
 const PP_W = 30, PP_H = 47, PP_OX = 15, PP_OY = 44;
 function drawPerson(c, x, y, o) {

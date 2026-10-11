@@ -1,7 +1,7 @@
-/* ============================ v2 atmosphere passes ============================
-   Bloom, golden-hour light shafts and dust, lens flare, the wet-street look, soft shadows and the CSS post layers.
-   Heavy passes work on small offscreen canvases that are allocated once and resized only when the view changes, and
-   every one of them is skipped when it cannot be seen (time of day, weather) or when the quality tuner steps down. */
+// ============================ v2 atmosphere passes ============================
+// Bloom, golden-hour light shafts and dust, lens flare, the wet-street look, soft shadows and the CSS post layers.
+// Heavy passes work on small offscreen canvases that are allocated once and resized only when the view changes, and
+// every one of them is skipped when it cannot be seen (time of day, weather) or when the quality tuner steps down.
 FX.refl = [];
 function atmoTier() { return REDUCED ? 1 : (QUAL.cap < 0.8 ? 0 : 2); }
 /* stand-ins for passes that run indoors, where there is no weather and no street to light */
@@ -119,12 +119,12 @@ function atmoFlare(c, cv, m, A) {
   const sp = skySunPos(A, CAM.x, CAM.vw), px = (sp.x - CAM.x) * m, py = (sp.y - CAM.y) * m, W = cv.width, H = cv.height;
   if (px < -W * 0.2 || px > W * 1.2 || py < -H * 0.2 || py > H * 1.1) return;
   // strongest when the sun is well inside the picture, fading at the borders
-  const ex = 1 - clamp(Math.max(Math.abs(px / W - 0.5) - 0.38, Math.abs(py / H - 0.4) - 0.4) * 5, 0, 1), k = ex * (1 - A.cloud) * 0.8;
+  const ex = 1 - clamp(Math.max(Math.abs(px / W - 0.5) - 0.38, Math.abs(py / H - 0.4) - 0.4) * 5, 0, 1), k = ex * (1 - A.cloud) * 0.8 * clamp((TOP_Y - 120 - sp.y) / 50, 0, 1);
   if (k < 0.03) return;
   const sc = FX.sunc || [255, 230, 190], cx = W / 2, cy = H / 2, vx = cx - px, vy = cy - py;
   c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'lighter';
   const col = [[255, 190, 120], [160, 210, 255], [255, 150, 200], [255, 240, 190], [140, 255, 200]];
-  c.globalAlpha = 0.5 * k; c.drawImage(FLARE.streak, px - 340 * m * 0.5, py - 12 * m * 0.5, 680 * m * 0.5, 24 * m * 0.5);
+  c.globalAlpha = 0.34 * k; c.drawImage(FLARE.streak, px - 230 * m * 0.5, py - 10 * m * 0.5, 460 * m * 0.5, 20 * m * 0.5);
   const T = [0.32, 0.55, 0.9, 1.25, 1.65], R = [26, 14, 36, 18, 44];
   for (let i = 0; i < T.length; i++) {
     const x = px + vx * T[i], y = py + vy * T[i], r = R[i] * Math.max(1, m * 0.7);
@@ -182,6 +182,17 @@ function atmoWetReflect(c, m, A, vis) {
   for (const p of vis.poles) { if (p.h !== 58) continue; c.globalAlpha = 0.34 * on; c.drawImage(GLOW[0], p.x - 8, p.y + 6, 16, 110); c.globalAlpha = 0.16 * on; c.drawImage(GLOW[0], p.x - 20, p.y + 8, 40, 60); }
   for (let i = 0; i < R.length; i += 5) { c.globalAlpha = Math.min(1, R[i + 3] * on); c.drawImage(GLOW[R[i + 2]], R[i] - R[i + 4] * 0.5, R[i + 1], R[i + 4], R[i + 4] * 3.4); }
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over'; c.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+/* drips fall from the lamp heads in steady rain */
+function atmoDrips(c, m, A, vis) {
+  if (A.rain < 0.1 || REDUCED) return;
+  c.setTransform(m, 0, 0, m, -CAM.x * m, -CAM.y * m); c.fillStyle = 'rgba(214,232,255,.8)';
+  for (const p of vis.poles) {
+    if (p.h !== 58) continue;
+    for (let k = 0; k < 2; k++) { const ph = (FX.time * 1.5 + p.x * 0.013 + k * 0.5) % 1; c.globalAlpha = (1 - ph) * 0.8 * A.rain; c.beginPath(); c.ellipse(p.x + (k ? 4.5 : -4.5), p.y - 52 + ph * ph * 40, 0.7, 1.5, 0, 0, 7); c.fill(); }
+  }
+  c.globalAlpha = 1; c.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 /* ---------- drifting cloud shadows and dappled leaf shade ---------- */

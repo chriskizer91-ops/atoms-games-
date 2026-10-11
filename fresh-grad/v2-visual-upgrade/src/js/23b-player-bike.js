@@ -1,6 +1,6 @@
 /* ---------- the player on a bike, with an umbrella in the rain ---------- */
-/* a bicycle seen from the side: fenders, frame tubes, turning spokes, chain and crank, saddle, bars and a lamp.
-   x, y is the point on the ground between the wheels (footprint as before); `face` is the way it points; `ph` turns wheels and cranks. */
+// a bicycle seen from the side: fenders, frame tubes, turning spokes, chain and crank, saddle, bars and a lamp.
+// x, y is the point on the ground between the wheels (footprint as before); `face` is the way it points; `ph` turns wheels and cranks.
 function drawBike(c, x, y, col, face, ph) {
   const f = face || 1, tire = '#171a20', rim = '#c9d1d8', tm = FX.time;
   const dk = shade(col, -0.32), lt = shade(col, 0.38), turn = (ph || 0);

@@ -1,5 +1,5 @@
-/* every sun shadow goes into one path and is filled once, so overlaps never stack up. A wide faint stroke and a tighter one
-   give the soft penumbra (it grows with the length of the shadow), and a second, shorter path deepens the contact core. */
+// every sun shadow goes into one path and is filled once, so overlaps never stack up. A wide faint stroke and a tighter one
+// give the soft penumbra (it grows with the length of the shadow), and a second, shorter path deepens the contact core.
 function shadowPass(c, vis) {
   const sh = FX.sh;
   if (sh.a < 0.02) return;
@@ -297,6 +297,7 @@ function paintTown(c, cv, sz, k, dt) {
   if (A.fog > 0.1 && FX.nf > 0.05) for (const p of vis.poles) { if (p.h === 58) addEmit(p.x, p.y - 57, 62, 0, 0.5 * A.fog); }
   lightPass(c, cv, m, { sky: true });
   atmoWetReflect(c, m, A, vis);
+  atmoDrips(c, m, A, vis);
   atmoGlow(c, cv, m, A, vis, true);
   atmoFlare(c, cv, m, A);
   runOver(c, m);
