@@ -1,13 +1,15 @@
 /* ============================ graduation cutscene ============================
-   Controller + timeline. The picture itself is shot by a virtual camera over a layered, pre-baked set:
-     34b-cinematic.js  camera, render loop, grade / grain / bars, optional illustrated stills
-     34c-cinbackdrop.js sky, clouds, hills, campus, trees (baked once, parallax layers)
-     34d-cinstage.js   the stage set: curtains, valance, banner, floor, podium, bunting
-     34e-cincrowd.js   audience tiers, balloons, foreground heads
-     34f-cincast.js    the Graduate, the Dean, the classmates (figure rig, faces, hands, tassels)
-     34g-cinfx.js      diploma, mortarboards, confetti, spot beams, dust, flare, title cards
-     34h-cinaudio.js   score, crowd and foley built on SFX.ctx
-     34i-cinart.js     optional plates / poses / paper-doll parts from assets/
+   Controller + timeline. The picture is shot by a virtual camera over a layered, pre-baked set:
+     34b-cinematic.js   camera path, render loop, DOM grade / vignette / grain / bars / flash, optional illustrated stills
+     34c-cinbackdrop.js sky, sun, clouds, hills, campus with a clock tower, oaks, lamp-posts (baked once, parallax layers)
+     34d-cinstage.js    the stage set: curtains, valance, banner, plank floor, podium, flowers, bunting
+     34e-cincrowd.js    audience tiers, balloons, foreground heads
+     34f-cincast.js     figure rig for the Graduate, Dean and classmates (IK arms, faces, hair, mortarboard, tassel pendulum)
+     34f2-cinactors.js  who is where and doing what at time ct, diploma and handshake choreography
+     34g-cinfx.js       diploma, mortarboards, confetti, spot beams, dust, flashes, lens flare, the two black cards
+     34h-cinaudio.js    score, crowd and foley built on SFX.ctx
+     34i-cinart.js      optional plates / poses from assets/ (silent no-ops when the files are missing)
+     34j-cindegree.js   degree picker helpers (emblems, deckle, optional diploma art)
    drawCutScene(ct) is a pure function of ct (seeded RNG only), so jumping CUT.t or skipping at any time is safe. */
 const CUT = { t: 0, cv: null, c: null, hats: [], conf: [], seeded: false, ended: false };
 const CUT_END = 19.6;

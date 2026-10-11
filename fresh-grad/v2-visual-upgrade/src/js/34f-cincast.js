@@ -140,7 +140,13 @@ function cinHead(c, o, ct) {
   c.fillStyle = cnRG(c, 0, 12, 1, 0, 14, 8, [[0, 'rgba(0,0,0,.34)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(-7, 9, 14, 12);
   // hair behind the head
   const hs = o.hairStyle || 'short', hair = o.hair, hairD = cnShade(hair, -0.38), hairL = cnShade(hair, 0.32);
-  if (hs === 'long') { c.fillStyle = hair; c.beginPath(); c.moveTo(-15, -6); c.quadraticCurveTo(-23, 24, -16, 44); c.lineTo(16, 44); c.quadraticCurveTo(23, 24, 15, -6); c.closePath(); c.fill(); c.fillStyle = hairD; c.fillRect(-12, 20, 24, 24); }
+  if (hs === 'long') {      // two locks falling over the shoulders (the mass behind the neck is drawn before the gown, see cinHairBack)
+    [-1, 1].forEach(sd => {
+      c.fillStyle = hair; c.beginPath(); c.moveTo(sd * 12.5, -6); c.bezierCurveTo(sd * 21, 6, sd * 22.5, 26, sd * 17.5, 42); c.lineTo(sd * 9.5, 42); c.bezierCurveTo(sd * 13.5, 26, sd * 11.5, 10, sd * 10.5, 0); c.closePath(); c.fill();
+      c.strokeStyle = hairL; c.globalAlpha = 0.4; c.lineWidth = 1.2; c.beginPath(); c.moveTo(sd * 14, 4); c.quadraticCurveTo(sd * 19, 18, sd * 15.5, 36); c.stroke(); c.globalAlpha = 1;
+      c.fillStyle = hairD; c.beginPath(); c.ellipse(sd * 13.5, 42, 4.2, 1.8, 0, 0, CN_TAU); c.fill();
+    });
+  }
   if (hs === 'pony') { c.fillStyle = hair; c.beginPath(); c.moveTo(12, -3); c.quadraticCurveTo(30, 6, 24, 36); c.quadraticCurveTo(18, 20, 10, 8); c.closePath(); c.fill(); c.fillStyle = hairL; c.beginPath(); c.ellipse(14, -2, 3, 5, 0.4, 0, CN_TAU); c.fill(); }
   // ears (the far one is hidden when the head is turned)
   const ex = look * 1.3;
@@ -253,12 +259,17 @@ function cinMortar(c, o, ct) {
   c.fillStyle = '#f0b429'; c.beginPath(); c.arc(0, -0.6, 2.4, 0, CN_TAU); c.fill(); c.fillStyle = '#fff3b8'; c.beginPath(); c.arc(-0.7, -1.4, 0.9, 0, CN_TAU); c.fill();
   const th0 = (o.tassel || 0);
   c.strokeStyle = '#f0b429'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, -0.6); c.quadraticCurveTo(hw * 0.5, hh * 0.1, hw - 3, 0.6); c.stroke();
-  c.save(); c.translate(hw - 3, 0.6); c.rotate(th0);
+  if (!o.noTassel) { c.save(); c.translate(hw - 3, 0.6); cinTasselDraw(c, th0); c.restore(); }
+  c.restore();
+  c.restore();
+}
+/* the tassel as a pendulum hanging from the board corner (origin), th0 radians of swing */
+function cinTasselDraw(c, th0) {
+  c.save(); c.rotate(th0);
   c.strokeStyle = '#f0b429'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 7); c.stroke();
   c.fillStyle = cnLG(c, -2.6, 0, 2.6, 0, [[0, '#fff0a8'], [0.5, '#f0b429'], [1, '#b9811b']]); cnRR(c, -2.8, 6, 5.6, 5.4, 2); c.fill();
   c.fillStyle = '#d99b1b'; c.fillRect(-3, 10.2, 6, 1.2);
   for (let i = -4; i <= 4; i++) { c.strokeStyle = i % 2 ? '#f6c750' : '#c58f1f'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(i * 0.7, 11); c.quadraticCurveTo(i * 1.2 + th0 * 3, 17, i * 1.35 + th0 * 6, 23.5 + (Math.abs(i) % 2) * 1.2); c.stroke(); }
-  c.restore();
   c.restore();
 }
 
@@ -334,20 +345,31 @@ const CIN_HEADS = { map: new Map(), n: 0 };
 function cinHeadCached(c, o, ct) {
   const em = o.emote || {}, q = (v, st) => Math.round((v || 0) / st) * st;
   const blinkQ = cinBlink(ct, o.seed) < 0.6 ? 0.12 : 1;
-  const k = { look: q(o.look, 0.25), tilt: q(o.tilt, 0.015), tassel: q(o.tassel, 0.1), messy: o.messy ? 1 : 0 };
-  const eq = { smile: q(em.smile != null ? em.smile : 0.35, 0.34), open: q(em.open, 0.34), brow: q(em.brow, 0.5), worry: q(em.worry, 0.5), blush: 0.28, eyes: em.eyes === 'happy' ? 'happy' : 'open' };
-  const key = [o.skin, o.hair, o.hairStyle, o.glasses ? 1 : 0, o.tears ? 1 : 0, o.cap === false ? 0 : 1, o.capCol, o.seed, k.look, k.tilt, k.tassel, k.messy, eq.smile, eq.open, eq.brow, eq.worry, eq.eyes, blinkQ, o.headDy || 0].join('|');
+  const k = { look: q(o.look, 0.5), tilt: q(o.tilt, 0.03), messy: o.messy ? 1 : 0 };
+  const eq = { smile: q(em.smile != null ? em.smile : 0.35, 0.5), open: q(em.open, 0.5), brow: q(em.brow, 0.5), worry: q(em.worry, 1), blush: 0.28, eyes: em.eyes === 'happy' ? 'happy' : 'open' };
+  const key = [o.skin, o.hair, o.hairStyle, o.glasses ? 1 : 0, o.cap === false ? 0 : 1, o.capCol, o.seed, k.look, k.tilt, k.messy, eq.smile, eq.open, eq.brow, eq.worry, eq.eyes, blinkQ, o.headDy || 0].join('|');
   let h = CIN_HEADS.map.get(key);
   if (!h) {
-    const X0 = -46, Y0 = -60, W = 92, H = 108, sc = 1.7, cv = cnMk(W * sc, H * sc), g = cv.getContext('2d');
+    const X0 = -46, Y0 = -60, W = 92, H = 108, sc = 1.6, cv = cnMk(W * sc, H * sc), g = cv.getContext('2d');
     g.scale(sc, sc); g.translate(-X0, -Y0);
-    const oq = Object.assign({}, o, { look: k.look, tilt: k.tilt, tassel: k.tassel, emote: eq, bakeHead: true, blinkQ, lod: 1, t: 0, tears: false });
+    const oq = Object.assign({}, o, { look: k.look, tilt: k.tilt, tassel: 0, noTassel: true, emote: eq, bakeHead: true, blinkQ, lod: 1, t: 0, tears: false });
     cinHead(g, oq, 0);
     h = { cv, x: X0, y: Y0, w: W, h: H };
-    if (CIN_HEADS.n > 320) { CIN_HEADS.map.clear(); CIN_HEADS.n = 0; }
+    if (CIN_HEADS.n > 400) { CIN_HEADS.map.clear(); CIN_HEADS.n = 0; }
     CIN_HEADS.map.set(key, h); CIN_HEADS.n++;
   }
   c.drawImage(h.cv, h.x, CIN_HEAD_Y + h.y, h.w, h.h);
+  if (o.cap !== false) {      // the tassel swings live
+    c.save(); c.translate(0, CIN_HEAD_Y + (o.headDy || 0)); c.rotate(o.tilt || 0); c.translate(30, -16.6 + 0.6 + (o.capDy || 0)); cinTasselDraw(c, o.tassel || 0); c.restore();
+  }
+}
+
+/* hair that hangs behind the neck: drawn before the gown so the shoulders overlap it */
+function cinHairBack(c, o, bob) {
+  if (o.hairStyle !== 'long') return;
+  const hy = CIN_HEAD_Y + bob * 0.8, hair = o.hair;
+  c.fillStyle = cnShade(hair, -0.3); c.beginPath(); c.moveTo(-16.5, hy - 8); c.bezierCurveTo(-25, hy + 10, -23.5, hy + 34, -18, hy + 52); c.lineTo(18, hy + 52); c.bezierCurveTo(23.5, hy + 34, 25, hy + 10, 16.5, hy - 8); c.closePath(); c.fill();
+  c.strokeStyle = cnShade(hair, 0.25); c.globalAlpha = 0.35; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-14, hy + 4); c.quadraticCurveTo(-18, hy + 24, -13, hy + 44); c.stroke(); c.globalAlpha = 1;
 }
 
 /* ====================================================================================
@@ -381,6 +403,7 @@ function cinFigure(c, x, y, s, o) {
     c.fillStyle = o.shoes || '#10131b'; c.beginPath(); c.moveTo(fx - 7.6, fy - 1.8); c.quadraticCurveTo(fx - 7, fy - 8, fx - 1.6, fy - 8.4); c.lineTo(fx + 3.6, fy - 6.6); c.quadraticCurveTo(fx + 10, fy - 4.6, fx + 9.8, fy - 1.8); c.closePath(); c.fill();
     c.fillStyle = 'rgba(255,255,255,.28)'; c.beginPath(); c.ellipse(fx - 2, fy - 6, 3.2, 1.1, -0.2, 0, CN_TAU); c.fill();
   });
+  cinHairBack(c, o, bob);
   // gown body + stole + collar come from a baked sprite (drawn once per costume); the cloth lag is a skew about the shoulders
   const spr = cinGownSprite(o);
   c.save(); c.translate(0, bob * 0.6);

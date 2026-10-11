@@ -9,7 +9,7 @@ function cinBuildBackdrop() {
   L.sky = cnLayer(-2600, -1500, 6400, 2100, 0.12, g => {
     g.fillStyle = cnLG(g, 0, -1500, 0, 600, [[0, '#17479f'], [0.45, '#2f78d2'], [0.7, '#5fa6e8'], [0.86, '#a6d2f2'], [1, '#fbe0bc']]);
     g.fillRect(-2600, -1500, 6400, 2100);
-    g.fillStyle = cnRG(g, CIN_SUN.x, CIN_SUN.y, 0, CIN_SUN.x, CIN_SUN.y, 760, [[0, 'rgba(255,244,210,.5)'], [0.25, 'rgba(255,236,190,.22)'], [0.6, 'rgba(255,226,170,.06)'], [1, 'rgba(255,226,170,0)']]);
+    g.fillStyle = cnRG(g, CIN_SUN.x, CIN_SUN.y, 0, CIN_SUN.x, CIN_SUN.y, 620, [[0, 'rgba(255,244,210,.34)'], [0.25, 'rgba(255,236,190,.15)'], [0.6, 'rgba(255,226,170,.04)'], [1, 'rgba(255,226,170,0)']]);
     g.fillRect(-2600, -1500, 6400, 2100);
     // soft crepuscular rays fanning out from the sun
     for (let i = 0; i < 7; i++) {
@@ -73,8 +73,8 @@ function cinSky(c, V, ct) { cnBlit(c, CN.L.sky); }
 function cinSun(c, V, ct) {
   const S = CN.S, sx = CIN_SUN.x, sy = CIN_SUN.y;
   c.globalCompositeOperation = 'lighter';
-  c.globalAlpha = 0.3; c.drawImage(S.glowW, sx - 300, sy - 300, 600, 600);
-  c.globalAlpha = 0.7; c.drawImage(S.glowW, sx - 110, sy - 110, 220, 220);
+  c.globalAlpha = 0.2; c.drawImage(S.glowW, sx - 280, sy - 280, 560, 560);
+  c.globalAlpha = 0.5; c.drawImage(S.glowW, sx - 90, sy - 90, 180, 180);
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   c.fillStyle = cnRG(c, sx, sy, 0, sx, sy, 42, [[0, '#ffffff'], [0.72, '#fffbe8'], [1, 'rgba(255,248,214,0)']]);
   c.beginPath(); c.arc(sx, sy, 42, 0, CN_TAU); c.fill();
@@ -91,7 +91,7 @@ function cinCloudSprite(seed, w, h) {
   g.globalCompositeOperation = 'destination-out';
   g.fillStyle = cnLG(g, 0, h * 0.74, 0, h * 0.98, [[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,.95)']]); g.fillRect(0, h * 0.74, w, h * 0.26);
   g.globalCompositeOperation = 'source-atop';
-  g.fillStyle = cnLG(g, 0, 0, w * 0.4, h, [[0, 'rgba(255,248,226,0)'], [0.55, 'rgba(176,200,232,.30)'], [1, 'rgba(110,142,196,.62)']]); g.fillRect(0, 0, w, h);
+  g.fillStyle = cnLG(g, 0, 0, w * 0.4, h, [[0, 'rgba(255,248,226,0)'], [0.5, 'rgba(160,186,226,.38)'], [1, 'rgba(84,116,184,.8)']]); g.fillRect(0, 0, w, h);
   puffs.forEach(p => { g.fillStyle = cnRG(g, p[0] - p[2] * 0.3, p[1] - p[2] * 0.35, 0, p[0] - p[2] * 0.3, p[1] - p[2] * 0.35, p[2] * 0.8, [[0, 'rgba(255,252,238,.85)'], [1, 'rgba(255,252,238,0)']]); g.fillRect(p[0] - p[2], p[1] - p[2], p[2] * 2, p[2] * 2); });
   g.globalCompositeOperation = 'source-over';
   return cv;
