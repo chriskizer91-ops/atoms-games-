@@ -95,17 +95,27 @@ function drawNpcTag(c, n) {
   if (pd >= 340 || (pd >= 90 && !fresh)) return;
   FX.over.push(() => {
   if (pd < 90) {
+    // a glass name plate: soft shadow, navy gradient, a lit top edge, a marigold hairline and a little tail toward the head
     c.font = '700 11.5px "DM Sans", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    const w = c.measureText(n.name).width + 16, y = n.y - 60;
-    c.fillStyle = 'rgba(0,0,0,.25)'; rr(c, n.x - w / 2 + 1, y - 8, w, 18, 9); c.fill();
-    c.fillStyle = 'rgba(15,27,37,.92)'; rr(c, n.x - w / 2, y - 9.5, w, 18, 9); c.fill();
-    c.strokeStyle = 'rgba(255,194,71,.7)'; c.lineWidth = 1; c.stroke();
+    const w = c.measureText(n.name).width + 16, y = n.y - 60, x0 = n.x - w / 2, y0 = y - 9.5;
+    c.fillStyle = 'rgba(0,0,0,.1)'; rr(c, x0 - 2, y0 + 0.5, w + 4, 22, 11); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.2)'; rr(c, x0 - 0.5, y0 + 2, w + 1, 19, 9.5); c.fill();
+    const g = c.createLinearGradient(0, y0, 0, y0 + 18); g.addColorStop(0, 'rgba(31,46,64,.96)'); g.addColorStop(1, 'rgba(13,23,33,.96)');
+    c.fillStyle = g; rr(c, x0, y0, w, 18, 9); c.fill();
+    c.beginPath(); c.moveTo(n.x - 3.4, y0 + 17.6); c.lineTo(n.x + 3.4, y0 + 17.6); c.lineTo(n.x, y0 + 22); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(255,194,71,.72)'; c.lineWidth = 1; rr(c, x0, y0, w, 18, 9); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,.2)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(x0 + 7, y0 + 1.4); c.lineTo(x0 + w - 7, y0 + 1.4); c.stroke();
+    c.fillStyle = 'rgba(0,0,0,.45)'; c.fillText(n.name, n.x, y + 0.7);
     c.fillStyle = '#ffe9b0'; c.fillText(n.name, n.x, y - 0.2);
   } else if (fresh && pd < 340) {
+    // a speech bubble with a gentle bob, a curved tail and three breathing dots
     const bob = REDUCED ? 0 : Math.sin(FX.time * 3 + n.phase) * 2, y = n.y - 58 + bob;
-    c.fillStyle = 'rgba(0,0,0,.2)'; rr(c, n.x - 10, y - 7, 22, 16, 7); c.fill();
-    c.fillStyle = '#ffffff'; rr(c, n.x - 11, y - 9, 22, 16, 7); c.fill();
-    c.beginPath(); c.moveTo(n.x - 3, y + 6.5); c.lineTo(n.x + 3, y + 6.5); c.lineTo(n.x, y + 11.5); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.1)'; rr(c, n.x - 12.5, y - 8, 25, 20, 9); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.18)'; rr(c, n.x - 10.5, y - 6, 22, 16, 7); c.fill();
+    const g = c.createLinearGradient(0, y - 9, 0, y + 7); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#e9eef5');
+    c.fillStyle = g; rr(c, n.x - 11, y - 9, 22, 16, 7); c.fill();
+    c.beginPath(); c.moveTo(n.x - 3.4, y + 6.4); c.quadraticCurveTo(n.x - 0.6, y + 7.4, n.x - 0.4, y + 11.6); c.quadraticCurveTo(n.x + 1.4, y + 8, n.x + 3.4, y + 6.4); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(n.x - 6, y - 8.4); c.lineTo(n.x + 6, y - 8.4); c.stroke();
     c.fillStyle = '#3a4a62';
     for (let i = -1; i <= 1; i++) { c.beginPath(); c.arc(n.x + i * 4.6, y - 1 + (REDUCED ? 0 : Math.sin(FX.time * 5 + i) * 0.9), 1.6, 0, 6.2832); c.fill(); }
   }

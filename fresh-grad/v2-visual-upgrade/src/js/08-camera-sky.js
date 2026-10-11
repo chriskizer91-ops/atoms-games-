@@ -20,16 +20,16 @@ function sizeCanvas(cv) {
 /* ---------- sky, sun and weather ----------
    Each key: hour, zenith colour, horizon colour, ambient light (multiplied over the scene),
    night factor (how much the lamps matter), sun-shadow strength, golden-hour warmth. */
-const NIGHT_KEY = [[8, 12, 34], [24, 34, 78], [98, 112, 180], 1, 0, 0];
+const NIGHT_KEY = [[8, 12, 34], [24, 34, 78], [90, 104, 178], 1, 0, 0];
 const SKY_KEYS = [
   [0, ...NIGHT_KEY], [4.6, ...NIGHT_KEY],
-  [5.5, [44, 58, 112], [236, 150, 130], [170, 152, 192], 0.7, 0, 0.3],
-  [6.4, [104, 160, 222], [255, 214, 170], [255, 228, 204], 0.15, 0.55, 0.8],
+  [5.5, [44, 58, 112], [240, 150, 134], [176, 150, 196], 0.7, 0, 0.3],
+  [6.4, [104, 160, 222], [255, 214, 170], [255, 226, 202], 0.15, 0.55, 0.8],
   [8, [84, 160, 232], [206, 232, 248], [255, 255, 255], 0, 1, 0],
   [16.2, [84, 160, 232], [206, 232, 248], [255, 255, 255], 0, 1, 0],
-  [17.8, [92, 140, 214], [255, 208, 140], [255, 230, 194], 0.06, 0.9, 1],
-  [18.9, [62, 76, 150], [255, 138, 92], [238, 174, 154], 0.5, 0.5, 0.8],
-  [19.8, [30, 38, 92], [130, 78, 128], [152, 136, 190], 0.88, 0.1, 0.2],
+  [17.8, [92, 140, 214], [255, 208, 140], [255, 228, 192], 0.06, 0.9, 1],
+  [18.9, [62, 76, 150], [255, 138, 92], [240, 168, 144], 0.5, 0.5, 0.8],
+  [19.8, [30, 38, 92], [136, 76, 132], [150, 122, 188], 0.88, 0.1, 0.2],
   [21, ...NIGHT_KEY], [24.01, ...NIGHT_KEY]
 ];
 const mix3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
@@ -70,7 +70,7 @@ function skyAt(t, day) {
   return {
     top, bot, amb, nf, sh, warm, cloud: W.cloud, rain: W.rain, wet: W.wet, snow: W.snow, storm: W.storm, fog: W.fog,
     el: up ? Math.sin(Math.PI * sf) : 0, sunX: Math.cos(Math.PI * clamp(sf, 0, 1)), sunUp: up, sf, mf,
-    star: clamp((nf - 0.4) / 0.6, 0, 1) * (1 - W.cloud)
+    star: clamp((nf - 0.4) / 0.6, 0, 1) * (1 - W.cloud), hour: h
   };
 }
 /* kept for older callers: night darkness and warmth as plain numbers */
@@ -78,7 +78,7 @@ function dayLight(t) { const A = skyAt(t, S ? S.day : 1); return { a: 0.58 * A.n
 
 function beginFrame(A) {
   FX.A = A; FX.nf = clamp(A.nf, 0, 1);
-  FX.glows.length = 0; FX.lights.length = 0; FX.emit.length = 0; FX.beams.length = 0; FX.over.length = 0;
+  FX.glows.length = 0; FX.lights.length = 0; FX.emit.length = 0; FX.beams.length = 0; FX.over.length = 0; FX.refl.length = 0;
   FX.wind = 0.3 + A.rain * 0.7 + A.cloud * 0.2 + (A.snow || 0) * 0.3;
   const L = lerp(1.5, 0.42, A.el);
   FX.sh.a = 0.3 * A.sh; FX.sh.dx = -A.sunX * L * 1.15; FX.sh.dy = 0.34 + L * 0.5;
@@ -86,6 +86,9 @@ function beginFrame(A) {
   FX.glassA = rgbS(mix3(mix3(A.top, [255, 255, 255], 0.3), [30, 44, 72], n));
   FX.glassB = rgbS(mix3(mix3(A.bot, A.top, 0.45), [20, 30, 54], n));
   FX.glint = (0.34 * (1 - n)).toFixed(2);
+  // visual only: shadows are cool teal-navy at noon and warm violet near sunrise and sunset
+  FX.shc = mix3([14, 40, 74], [72, 30, 72], clamp(A.warm * 1.1, 0, 1));
+  FX.sunc = mix3([255, 244, 214], [255, 150, 84], clamp(A.warm * 1.05, 0, 1));
 }
 
 /* ---------- the far skyline ---------- */
@@ -105,87 +108,8 @@ const STARS = [];
 (function () { const r = mulberry32(77); for (let i = 0; i < 150; i++) STARS.push({ x: r(), y: r() * r(), s: 0.6 + r() * 1.3, p: r() * 6.28 }); })();
 
 function drawSky(c, A, vx0, vx1) {
-  const tm = FX.time, vw = vx1 - vx0;
-  const g = c.createLinearGradient(0, 0, 0, TOP_Y);
-  g.addColorStop(0, rgbS(A.top)); g.addColorStop(0.62, rgbS(mix3(A.top, A.bot, 0.55))); g.addColorStop(1, rgbS(A.bot));
-  c.fillStyle = g; c.fillRect(vx0 - 4, -600, vw + 8, TOP_Y + 600);
-  // stars
-  if (A.star > 0.02) {
-    c.fillStyle = '#ffffff';
-    for (const s of STARS) {
-      const tw = REDUCED ? 0.8 : 0.55 + 0.45 * Math.sin(tm * 1.7 + s.p);
-      c.globalAlpha = A.star * tw; c.fillRect(vx0 + s.x * vw, s.y * (TOP_Y - 70), s.s, s.s);
-    }
-    c.globalAlpha = 1;
-  }
-  // sun and moon ride an arc across whatever part of the sky is on screen
-  if (A.sunUp) {
-    const sx = vx0 + vw * (0.5 + A.sunX * 0.4), sy = TOP_Y - 34 - A.el * 250;
-    const low = 1 - A.el, a = (1 - A.cloud * 0.8);
-    c.globalAlpha = 0.55 * a; c.drawImage(GLOW[low > 0.6 ? 5 : 0], sx - 190, sy - 190, 380, 380);
-    c.globalAlpha = a; c.fillStyle = rgbS(mix3([255, 250, 224], [255, 170, 96], clamp(low * 1.3 - 0.3, 0, 1)));
-    c.beginPath(); c.arc(sx, sy, 24, 0, 7); c.fill(); c.globalAlpha = 1;
-  } else if (A.mf >= 0) {
-    const mx = vx0 + vw * (0.86 - A.mf * 0.72), my = TOP_Y - 60 - Math.sin(Math.PI * A.mf) * 210, a = 1 - A.cloud * 0.75;
-    c.globalAlpha = 0.4 * a; c.drawImage(GLOW[1], mx - 110, my - 110, 220, 220);
-    c.globalAlpha = a; c.fillStyle = '#f2f5ff'; c.beginPath(); c.arc(mx, my, 17, 0, 7); c.fill();
-    c.fillStyle = rgbS(mix3(A.top, [200, 208, 235], 0.25)); c.beginPath(); c.arc(mx + 7, my - 4, 14, 0, 7); c.fill();
-    c.globalAlpha = 1;
-  }
-  // clouds
-  const cc = mix3(mix3([255, 255, 255], A.bot, 0.3 + 0.4 * A.warm), [70, 80, 122], clamp(A.nf * 0.9, 0, 1));
-  const cd = mix3(cc, A.top, 0.4), n = 9 + Math.round(A.cloud * 8);
-  for (let i = 0; i < n; i++) {
-    const sp = 5 + (i % 4) * 3, span = WORLD.w + 1400;
-    const x = ((i * 431.7 + (REDUCED ? 0 : tm) * sp) % span) - 500 + CAM.x * 0.22, y = 34 + ((i * 67) % 190), s = 0.8 + ((i * 37) % 10) / 9;
-    if (x + 150 * s < vx0 || x - 150 * s > vx1) continue;
-    c.globalAlpha = 0.86;
-    c.fillStyle = rgbS(cd);
-    c.beginPath(); c.ellipse(x, y + 9 * s, 78 * s, 15 * s, 0, 0, 7); c.fill();
-    c.fillStyle = rgbS(cc);
-    c.beginPath(); c.arc(x - 38 * s, y, 22 * s, 0, 7); c.arc(x - 8 * s, y - 13 * s, 30 * s, 0, 7); c.arc(x + 28 * s, y - 5 * s, 25 * s, 0, 7); c.arc(x + 54 * s, y + 3 * s, 16 * s, 0, 7); c.fill();
-  }
-  c.globalAlpha = 1;
-  if (A.cloud > 0.02) { c.fillStyle = rgbaS(mix3(A.bot, [120, 128, 142], 0.5), A.cloud * 0.5); c.fillRect(vx0 - 4, 0, vw + 8, TOP_Y); }
-  // two layers of distant towers, drifting slower than the street
-  const af = [A.amb[0] / 255, A.amb[1] / 255, A.amb[2] / 255];
-  [0, 1].forEach(layer => {
-    const par = layer ? 0.26 : 0.46, base = layer ? [92, 108, 136] : [128, 146, 172];
-    const col = mix3(A.bot, [base[0] * af[0], base[1] * af[1], base[2] * af[2]], layer ? 0.6 : 0.26);
-    const colS = rgbS(col), colL = rgbS(mix3(col, A.bot, 0.3));
-    for (const s of SKYLINE[layer]) {
-      const x = s.x + CAM.x * par;
-      if (x > vx1 || x + s.w < vx0) continue;
-      const ty = TOP_Y - s.h;
-      c.fillStyle = colS; c.fillRect(x, ty, s.w, s.h);
-      if (s.top === 1) c.fillRect(x + s.w * 0.25, ty - 12, s.w * 0.5, 12);
-      else if (s.top === 2) { c.fillRect(x + s.w / 2 - 1.5, ty - 26, 3, 26); c.fillRect(x + s.w * 0.3, ty - 7, s.w * 0.4, 7); }
-      else if (s.top === 3) { c.beginPath(); c.moveTo(x, ty); c.lineTo(x + s.w * 0.5, ty - 16); c.lineTo(x + s.w, ty); c.closePath(); c.fill(); }
-      c.fillStyle = colL; c.fillRect(x, ty, 4, s.h);
-      if (layer) {
-        // windows: a pale grid by day, a scatter of lit rooms after dark
-        const lit = A.nf > 0.25;
-        c.fillStyle = lit ? 'rgba(255,214,140,' + (0.9 * A.nf).toFixed(3) + ')' : 'rgba(255,255,255,.08)';
-        let ry = 0;
-        for (let yy = ty + 9; yy < TOP_Y - 14; yy += 15, ry++) {
-          let rx = 0;
-          for (let xx = x + 7; xx < x + s.w - 9; xx += 13, rx++) if (!lit || hash01(s.seed, ry, rx) > 0.62) c.fillRect(xx, yy, 6, 8);
-        }
-      }
-    }
-  });
-  // tree line and the wall at the edge of town
-  c.fillStyle = '#3c7550';
-  c.beginPath();
-  for (let x = Math.floor(vx0 / 34) * 34 - 34; x < vx1 + 34; x += 34) { const r = 17 + hash01(x, 3, 9) * 9; c.moveTo(x + r, TOP_Y - 12); c.arc(x, TOP_Y - 12, r, 0, 7); }
-  c.fill();
-  c.fillStyle = '#4c8a5c';
-  c.beginPath();
-  for (let x = Math.floor(vx0 / 34) * 34 - 17; x < vx1 + 34; x += 34) { const r = 11 + hash01(x, 5, 9) * 6; c.moveTo(x + r, TOP_Y - 9); c.arc(x, TOP_Y - 9, r, 0, 7); }
-  c.fill();
-  c.fillStyle = '#5a6570'; c.fillRect(vx0 - 4, TOP_Y - 10, vw + 8, 14);
-  c.fillStyle = '#7b8791'; c.fillRect(vx0 - 4, TOP_Y - 10, vw + 8, 3);
-  c.fillStyle = 'rgba(0,0,0,.2)'; for (let x = Math.floor(vx0 / 60) * 60; x < vx1; x += 60) c.fillRect(x, TOP_Y - 7, 1.5, 11);
+  skyBody(c, A, vx0, vx1);
+  skyHorizon(c, A, vx0, vx1);
 }
 
 function inCross(x0, x1) { return STREETS_X.some(cx => x1 > cx - STREET_W / 2 && x0 < cx + STREET_W / 2); }
