@@ -240,7 +240,7 @@ function cinBokeh(c, ct) {
   for (let i = 0; i < 9; i++) {
     const x = -300 + i * 250 + Math.sin(i * 3.1) * 60, y = 870 + (i % 3) * 42 + Math.sin(ct * 0.8 + i) * 4;
     const tw = 0.5 + 0.5 * Math.sin(ct * (1.2 + i * 0.13) + i * 2);
-    const flash = (ct > 9.8 && ct < 14.6) ? Math.max(0, Math.sin(ct * 7.3 + i * 5.1)) ** 6 : 0;
+    const flash = (ct > 9.8 && ct < 14.6 && !REDUCED) ? Math.max(0, Math.sin(ct * 7.3 + i * 5.1)) ** 6 : 0;
     c.globalAlpha = 0.10 + tw * 0.07 + flash * 0.5 * cheer;
     c.drawImage(i % 2 ? CN.S.glowB : CN.S.glowW, x - 34, y - 34, 68, 68);
   }

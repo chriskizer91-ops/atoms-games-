@@ -155,7 +155,8 @@ function cinCastDraw(c, V, ct) {
   const rg = (A && A.grad) ? A.grad : cinFigure(c, grad.x, grad.y, grad.s, grad.o);
   // the diploma travels: Dean's hand -> between the hands -> the Graduate's hand -> overhead
   const wD = rd.hands.L.world, wG = rg.hands.R.world;
-  cinDiplomaStory(c, ct, rd, rg, dean, grad);
+  // with illustrated poses the diploma is already in the picture for most beats; the procedural scroll only fills the gaps
+  if (!A || !A.grad || A.story) cinDiplomaStory(c, ct, rd, rg, dean, grad);
   return { rd, rg, cls: rets };
 }
 

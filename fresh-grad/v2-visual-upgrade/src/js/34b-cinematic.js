@@ -272,6 +272,13 @@ function cinRender(c, cv, ct) {
   if (!CN.built) cinBuild();
   if (CN.dirty) { CN.dirty = false; cinBuildStage(); }
   const w = cv.clientWidth || 1280, h = cv.clientHeight || 720;
+  // adaptive resolution: if the machine cannot keep up, quietly draw fewer pixels (the canvas is stretched by CSS); never goes back up mid-scene
+  const nowT = performance.now();
+  if (CN.lastT && nowT - CN.lastT < 400) {
+    CN.frameMs = CN.frameMs * 0.92 + (nowT - CN.lastT) * 0.08; CN.slow++;
+    if (CN.slow > 90 && CN.frameMs > 55 && CN.res > 0.6) { CN.res = Math.max(0.6, CN.res * 0.8); CN.slow = 0; CN.frameMs = 30; }
+  }
+  CN.lastT = nowT;
   // render size: the device ratio, capped so a huge screen never costs more than ~1600px across
   const sc = Math.min(window.devicePixelRatio || 1, CN.res, 1600 / Math.max(w, h, 1));
   const pw = Math.max(2, Math.round(w * sc)), ph = Math.max(2, Math.round(h * sc));
@@ -289,11 +296,11 @@ function cinRender(c, cv, ct) {
 }
 /* the scene proper: sky, set, cast, audience, particles, light */
 function cinScene(c, V, ct) {
-  const L = CN.L;
+  const L = CN.L, PL = cinArtPlates();
   // when the camera is deep inside the opaque set (the handshake close-up) nothing behind it can be seen, so skip it all
   cinSet(c, V, 1);
   const q = CN.cur, covered = q.x0 > 172 && q.x1 < 1108 && q.y0 > 84 && q.y1 < 604;
-  if (!covered) {
+  if (!covered && !PL.stage) {
     // the far scenery is soft anyway (depth of field), so it is painted at half resolution and upscaled once
     const hw = Math.max(2, Math.round(V.pw * 0.5)), hh = Math.max(2, Math.round(V.ph * 0.5));
     if (!CN.bd || CN.bd.width !== hw || CN.bd.height !== hh) { CN.bd = cnMk(hw, hh); CN.bdc = CN.bd.getContext('2d'); }
@@ -315,11 +322,11 @@ function cinScene(c, V, ct) {
   }
   // the stage and the action
   cinSet(c, V, 1);
-  cinStageLive(c, V, ct);
+  if (PL.stage) cinStagePlate(c, V, ct, PL); else cinStageLive(c, V, ct);
   cinCastDraw(c, V, ct);
   cinStageFront(c, V, ct);
   // audience tiers, balloons, foreground
-  cinCrowdDraw(c, V, ct);
+  if (PL.stage && (PL.back || PL.front)) cinCrowdPlates(c, V, ct, PL); else cinCrowdDraw(c, V, ct);
   cinParticles(c, V, ct);
   cinLight(c, V, ct);
 }
