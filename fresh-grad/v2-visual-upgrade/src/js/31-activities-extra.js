@@ -187,7 +187,7 @@ function catchFish() {
   if (f.r > 0) { S.stats.fish = (S.stats.fish || 0) + 1; lifeEv('fish'); gainXP(5 + f.r * 8 + (isNew ? 10 : 0)); addMood(2 + f.r); }
   SFX.fanfare();
   const res = $('#fishResult'); res.hidden = false;
-  const cv = $('#fishPic'), g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); drawFishPic(g, f, cv.width / 2, cv.height / 2, 2.2);
+  const cv = $('#fishPic'), g = cv.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height); res.dataset.r = f.r; drawFishPic(g, f, cv.width / 2, cv.height / 2, cv.width / 240 * 3.4);
   $('#fishName').textContent = f.n + (isNew ? ' · New!' : '');
   $('#fishInfo').textContent = f.r === 0 ? 'Well, it is a boot. Somebody lost it years ago.' : RARITY[f.r] + ' · ' + size + ' cm' + (size >= rec.best && rec.n > 1 ? ' · personal best' : '');
   $('#fishKeep').hidden = f.r === 0; $('#fishSell').hidden = f.r === 0;
@@ -202,124 +202,8 @@ function fishChoice(k) {
   $('#fishResult').hidden = true; FS.phase = 'cast'; FS.t = 0; setFishMsg('Tap to cast');
 }
 function endFishing() { FS.on = false; $('#fishing').hidden = true; G.menu = false; updateHud(); }
-function drawFishPic(c, f, x, y, s) {
-  c.save(); c.translate(x, y); c.scale(s, s);
-  if (f.id === 'boot') {
-    c.fillStyle = f.col; c.beginPath(); c.moveTo(-14, -14); c.lineTo(-2, -14); c.lineTo(-2, 2); c.lineTo(16, 4); c.quadraticCurveTo(20, 12, 14, 14); c.lineTo(-14, 14); c.closePath(); c.fill();
-    c.fillStyle = '#3a2a1a'; c.fillRect(-14, 10, 30, 4); c.restore(); return;
-  }
-  c.fillStyle = f.col; c.beginPath(); c.ellipse(-2, 0, 18, 8, 0, 0, 7); c.fill();
-  c.beginPath(); c.moveTo(13, 0); c.lineTo(24, -9); c.lineTo(22, 0); c.lineTo(24, 9); c.closePath(); c.fill();
-  c.fillStyle = shade(f.col, -0.25); c.beginPath(); c.moveTo(-6, -7); c.quadraticCurveTo(0, -15, 8, -7); c.closePath(); c.fill();
-  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(-4, -3, 11, 2.6, 0, 0, 7); c.fill();
-  if (f.id === 'trout') { c.fillStyle = '#e04a6a'; c.fillRect(-16, -1, 26, 2.4); }
-  if (f.id === 'moonfin') { c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(200,180,255,.5)'; c.beginPath(); c.arc(-2, 0, 14, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; }
-  c.fillStyle = '#fff'; c.beginPath(); c.arc(-13, -2, 2.6, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(-13.5, -2, 1.4, 0, 7); c.fill();
-  c.restore();
-}
-function drawFishing() {
-  const cv = $('#fishCv'); if (!cv) return;
-  const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
-  const W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
-  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-  const c = cv.getContext('2d'), w = r.width, h = r.height, tm = REDUCED ? 0 : FX.time, ice = WINTER(), se = season();
-  c.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const A = FX.A || skyAt(S.t, S.day), hz = h * 0.34;
-  // sky, clouds, sun or moon
-  const sky = c.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, rgbS(A.top)); sky.addColorStop(1, rgbS(A.bot));
-  c.fillStyle = sky; c.fillRect(0, 0, w, hz);
-  const night = A.nf > 0.45, sx = w * 0.74, sy = h * 0.1;
-  if (night) { c.fillStyle = '#f4f1dc'; c.beginPath(); c.arc(sx, sy, 13, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 30; i++) c.fillRect(hash01(i, 1, 2) * w, hash01(i, 3, 4) * hz * 0.8, 1.4, 1.4); }
-  else { c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.5; c.drawImage(GLOW[0], sx - 70, sy - 70, 140, 140); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over'; c.fillStyle = '#fff6d0'; c.beginPath(); c.arc(sx, sy, 11, 0, 7); c.fill(); }
-  c.fillStyle = night ? 'rgba(160,170,200,.25)' : 'rgba(255,255,255,.75)';
-  for (let i = 0; i < 4; i++) { const cx = ((i * 0.31 + tm * 0.004) % 1.3 - 0.15) * w, cy = h * (0.06 + (i % 2) * 0.07); c.beginPath(); c.ellipse(cx, cy, 34, 9, 0, 0, 7); c.ellipse(cx + 20, cy - 6, 22, 9, 0, 0, 7); c.fill(); }
-  // the far bank: a line of trees in season colours
-  const tc = ice ? ['#c9d6e2', '#e3ebf3'] : se === 'autumn' ? ['#c0502a', '#e7b24a', '#d9822b'] : se === 'spring' ? ['#3f8a52', '#e58aa6', '#4fa565'] : ['#2f7d4f', '#3f8a52', '#4fa565'];
-  for (let i = 0; i < 16; i++) {
-    const x = i * w / 14 - 10, rr2 = 22 + hash01(i, 2, 3) * 18;
-    c.fillStyle = night ? 'rgba(20,30,40,.85)' : '#5a3d27'; c.fillRect(x - 2, hz - 14, 4, 14);
-    c.fillStyle = night ? '#1d2a2c' : tc[i % tc.length]; c.beginPath(); c.arc(x, hz - 14 - rr2 * 0.5, rr2, 0, 7); c.fill();
-  }
-  c.fillStyle = night ? '#152022' : ice ? '#e8eef4' : '#5a9a4a'; c.fillRect(0, hz - 4, w, 6);
-  // water or ice
-  const wg = c.createLinearGradient(0, hz, 0, h);
-  if (ice) { wg.addColorStop(0, '#dcecf5'); wg.addColorStop(1, '#a9cbe0'); }
-  else { wg.addColorStop(0, rgbS(mix3(A.bot, [70, 150, 195], 0.55))); wg.addColorStop(1, rgbS(mix3(A.top, [18, 62, 110], 0.7))); }
-  c.fillStyle = wg; c.fillRect(0, hz + 2, w, h - hz);
-  if (!ice) {
-    // reflection of the sun or moon and gentle ripples
-    c.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 9; i++) { const y = hz + 8 + i * 9, ww = 30 - i * 2 + Math.sin(tm * 2 + i) * 6; c.fillStyle = night ? 'rgba(230,230,200,.18)' : 'rgba(255,240,200,.22)'; c.fillRect(sx - ww / 2 + Math.sin(tm + i) * 4, y, ww, 2); }
-    c.globalCompositeOperation = 'source-over';
-    c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = 1.4;
-    for (let i = 0; i < 16; i++) { const y = hz + 20 + (i % 8) * (h - hz) / 9, x = ((i * 97 + tm * 12) % (w + 80)) - 40; c.beginPath(); c.moveTo(x - 18, y); c.quadraticCurveTo(x, y - 3, x + 18, y); c.stroke(); }
-    // lily pads
-    [[0.15, 0.55], [0.62, 0.46], [0.85, 0.7], [0.48, 0.82]].forEach((p, i) => {
-      const lx = w * p[0], ly = h * p[1] + Math.sin(tm + i) * 1.5, lr = 14 + i * 3;
-      c.fillStyle = 'rgba(10,40,60,.25)'; c.beginPath(); c.ellipse(lx + 2, ly + 3, lr, lr * 0.4, 0, 0, 7); c.fill();
-      c.fillStyle = i % 2 ? '#4fae62' : '#63c074'; c.beginPath(); c.moveTo(lx, ly); c.ellipse(lx, ly, lr, lr * 0.4, 0, 0.4, 6.0); c.closePath(); c.fill();
-      if (i === 1 && se !== 'autumn') { c.fillStyle = '#ffd6e4'; c.beginPath(); c.arc(lx + 4, ly - 3, 4, 0, 7); c.fill(); }
-    });
-    if (se === 'autumn') { ['#d9822b', '#c0502a', '#e7b24a', '#a8432a'].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.ellipse(((i * 230 + tm * 7) % (w + 40)) - 20, h * (0.5 + i * 0.1), 5, 2.4, i, 0, 7); c.fill(); }); }
-  } else {
-    c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1.2;
-    for (let i = 0; i < 6; i++) { c.beginPath(); c.moveTo(w * hash01(i, 1, 1), hz + 20 + hash01(i, 2, 1) * (h - hz - 40)); c.lineTo(w * hash01(i, 3, 1), hz + 20 + hash01(i, 4, 1) * (h - hz - 40)); c.stroke(); }
-    c.fillStyle = '#f6fafd'; [[0.1, 0.9], [0.9, 0.86], [0.5, 0.96]].forEach(p => { c.beginPath(); c.ellipse(w * p[0], h * p[1], 70, 18, 0, 0, 7); c.fill(); });
-  }
-  // the bobber
-  const bx = w * (0.34 + FS.dist * 0.38), by = h * (0.66 - FS.dist * 0.2);
-  if (ice) { c.fillStyle = '#20313d'; c.beginPath(); c.ellipse(bx, by + 4, 30, 10, 0, 0, 7); c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.stroke(); c.strokeStyle = 'rgba(120,160,190,.6)'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(bx, by + 6, 24, 7, 0, 0, 7); c.stroke(); }
-  const showBob = FS.phase !== 'cast';
-  let dip = 0;
-  if (FS.phase === 'wait') { dip = Math.sin(tm * 2) * 1.5; if (FS.nib > 0) { dip += Math.sin(FS.nib * 30) * 4; FS.nib -= 0.016; } }
-  else if (FS.phase === 'bite') dip = 10 + Math.sin(tm * 30) * 3;
-  else if (FS.phase === 'reel') dip = 6 + Math.sin(tm * 20) * 3;
-  // rod and line
-  const tipX = w * 0.1, tipY = h * 0.22;
-  c.strokeStyle = '#2b1d12'; c.lineWidth = 6; c.lineCap = 'round'; c.beginPath(); c.moveTo(-10, h * 1.02); c.lineTo(tipX, tipY); c.stroke();
-  c.strokeStyle = '#c47a3a'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(-10, h * 1.02); c.lineTo(tipX * 0.45, h * 0.62); c.stroke();
-  c.fillStyle = '#9aa7ad'; c.beginPath(); c.arc(tipX * 0.28, h * 0.78, 7, 0, 7); c.fill();
-  if (showBob) {
-    // ripples spread from the bobber
-    if (!ice) { c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 1.3; for (let i = 0; i < 3; i++) { const k = ((tm * (FS.phase === 'bite' ? 1.6 : 0.6)) + i / 3) % 1; c.globalAlpha = 1 - k; c.beginPath(); c.ellipse(bx, by + 6, 8 + k * 36, (8 + k * 36) * 0.3, 0, 0, 7); c.stroke(); } c.globalAlpha = 1; }
-    if (FS.phase === 'reel' && FS.fish) { const fx = bx + Math.sin(tm * 3) * 24 + (FS.fy - 0.5) * 60; c.fillStyle = 'rgba(10,30,50,.35)'; c.beginPath(); c.ellipse(fx, by + 26, 26, 8, 0, 0, 7); c.fill(); }
-    c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(tipX, tipY); c.quadraticCurveTo((tipX + bx) / 2, Math.min(tipY, by) + (FS.phase === 'reel' ? 10 : 70), bx, by + dip - 8); c.stroke();
-    c.fillStyle = '#e63946'; c.beginPath(); c.arc(bx, by + dip - 3, 8, Math.PI, 0); c.fill();
-    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx, by + dip - 3, 8, 0, Math.PI); c.fill();
-    c.fillStyle = '#2b2f36'; c.fillRect(bx - 1, by + dip - 15, 2, 5);
-    if (FS.phase === 'bite') { c.fillStyle = '#ffc247'; c.font = '800 40px "Bricolage Grotesque",sans-serif'; c.textAlign = 'center'; c.fillText('!', bx, by - 30); }
-  }
-  // reeds in the foreground
-  if (!ice) {
-    c.strokeStyle = night ? '#1d3a26' : '#3f7a3f'; c.lineWidth = 2.4;
-    for (let i = 0; i < 14; i++) { const x = w - 10 - i * 11 - (i > 7 ? w * 0.72 : 0), sw = Math.sin(tm * 1.4 + i) * 3; if (x < 0) continue; c.beginPath(); c.moveTo(x, h); c.quadraticCurveTo(x + sw * 0.5, h - 30, x + sw, h - 50 - (i % 4) * 12); c.stroke(); if (i % 3 === 0) { c.fillStyle = '#6b4a30'; rr(c, x + sw - 2, h - 64 - (i % 4) * 12, 4, 12, 2); c.fill(); } }
-  }
-  // cast power meter
-  if (FS.phase === 'cast') {
-    const mx = w * 0.3, my = h * 0.88, mw = w * 0.4;
-    c.fillStyle = 'rgba(8,12,22,.6)'; rr(c, mx - 4, my - 4, mw + 8, 18, 9); c.fill();
-    const g2 = c.createLinearGradient(mx, 0, mx + mw, 0); g2.addColorStop(0, '#6fd1ff'); g2.addColorStop(1, '#ffc247');
-    c.fillStyle = g2; rr(c, mx, my, Math.max(6, mw * FS.pow), 10, 5); c.fill();
-    c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '600 11px "DM Sans",sans-serif'; c.textAlign = 'center'; c.fillText('Further out = rarer fish', w / 2, my - 10);
-  }
-  // the reel bar
-  if (FS.phase === 'reel') {
-    const bx2 = w - 64, top = h * 0.12, bh = h * 0.72, half = (hasPerk('angler') ? 0.15 : 0.12) * (FS.fish.r >= 3 ? 0.85 : 1);
-    c.fillStyle = 'rgba(8,12,22,.75)'; rr(c, bx2 - 10, top - 10, 52, bh + 20, 14); c.fill();
-    c.fillStyle = '#0d2a3a'; rr(c, bx2, top, 26, bh, 8); c.fill();
-    const zy = top + bh * (1 - FS.zone);
-    c.fillStyle = 'rgba(138,201,38,.8)'; rr(c, bx2 + 2, zy - bh * half, 22, bh * half * 2, 6); c.fill();
-    const fy = top + bh * (1 - FS.fy);
-    drawFishPic(c, FS.fish.r === 0 ? FISH[0] : FS.fish, bx2 + 13, fy, 0.6);
-    c.fillStyle = '#0d2a3a'; rr(c, bx2 + 32, top, 9, bh, 4); c.fill();
-    const pg = c.createLinearGradient(0, top + bh, 0, top); pg.addColorStop(0, '#e63946'); pg.addColorStop(0.5, '#ffc247'); pg.addColorStop(1, '#8ac926');
-    c.fillStyle = pg; rr(c, bx2 + 32, top + bh * (1 - FS.prog), 9, bh * FS.prog, 4); c.fill();
-  }
-  if (A.rain > 0.05 || A.snow > 0.05) {
-    c.fillStyle = A.snow > 0 ? 'rgba(255,255,255,.8)' : 'rgba(210,225,255,.45)';
-    for (let i = 0; i < 60; i++) { const x = (i * 53.7 + tm * (A.snow ? 20 : 60)) % w, y = (i * 91.3 + tm * (A.snow ? 50 : 500)) % h; if (A.snow) { c.beginPath(); c.arc(x, y, 1.8, 0, 7); c.fill(); } else c.fillRect(x, y, 1, 9); }
-  }
-}
+function drawFishPic(c, f, x, y, s) { fishArt(c, f, x, y, s); }
+function drawFishing(dt) { fishView(dt); }
 function bindFishing() {
   const cv = $('#fishCv');
   cv.addEventListener('pointerdown', e => { e.preventDefault(); fishTap(true); });
