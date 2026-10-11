@@ -299,6 +299,9 @@ function cinCards(c, V, ct) {
     c.fillStyle = 'rgba(4,6,14,' + (0.38 + breath * 0.08) + ')'; c.fillRect(0, 0, pw, ph);
   } else {
     c.fillStyle = cnRG(c, pw * 0.5, ph * 0.62, 0, pw * 0.5, ph * 0.62, Math.max(pw, ph) * 0.62, [[0, '#1a2a4a'], [0.45, '#0d1628'], [1, '#02030a']]); c.fillRect(0, 0, pw, ph);
+    // optional navy velvet-paper texture (ui/paper-navy-card.png) under the glow
+    const paper = ART.on ? ART.get('ui/paper-navy-card') : null;
+    if (paper) { try { if (!CN.S.paperPat || CN.S.paperPat.i !== paper) CN.S.paperPat = { i: paper, p: c.createPattern(paper, 'repeat') }; c.globalAlpha = 0.55; c.fillStyle = CN.S.paperPat.p; c.fillRect(0, 0, pw, ph); c.globalAlpha = 1; } catch (e) { /* ignore */ } }
     c.globalCompositeOperation = 'lighter';
     c.fillStyle = cnRG(c, pw * 0.5, ph * 0.5, 0, pw * 0.5, ph * 0.5, Math.max(pw, ph) * 0.4, [[0, 'rgba(240,180,41,' + (0.10 + breath * 0.03) + ')'], [1, 'rgba(240,180,41,0)']]); c.fillRect(0, 0, pw, ph);
     // slow golden motes rising

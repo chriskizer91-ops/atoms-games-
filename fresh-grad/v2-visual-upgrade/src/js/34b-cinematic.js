@@ -236,7 +236,7 @@ function cinArtKeys() {
   ks.push('chars/grad/pose-idle', 'chars/grad/pose-walk-a', 'chars/grad/pose-walk-b', 'chars/grad/pose-handshake', 'chars/grad/pose-diploma-up', 'chars/grad/pose-cap-toss', 'chars/grad/pose-wave', 'chars/grad/pose-nervous');
   ks.push('chars/dean/pose-idle', 'chars/dean/pose-handshake', 'chars/dean/pose-clap', 'chars/dean/pose-point-announce');
   ks.push('chars/ch-05-classmates-stand', 'chars/ch-05-classmates-cheer', 'chars/ch-05-classmates-toss');
-  ks.push('chars/grad/parts-sheet', 'chars/dean/parts-sheet', 'chars/classmate/parts-sheet');
+  ks.push('ui/paper-navy-card');
   return ks;
 }
 
