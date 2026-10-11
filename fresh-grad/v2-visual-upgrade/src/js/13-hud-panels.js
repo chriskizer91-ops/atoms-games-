@@ -85,27 +85,33 @@ function closedSpec(id) {
 }
 /* v2 presentation helpers: which glyph a panel header or an option row wears, and how a tag splits into price and time pills */
 const OPT_ICONS = [
-  [/\bbed\b|sleep|lie-in/i, 'bed', '#a393ff'], [/\bnap\b/i, 'zz', '#a393ff'], [/rent|lease|landlord/i, 'key', '#ffc247'],
-  [/shift|clock in|clock-in|office|desk/i, 'brief', '#ffc247'], [/coffee|latte|espresso|\btea\b|milkshake|cocoa|cappuccino/i, 'cup', '#ff9a3d'],
-  [/pack|grocer|pantry|coupon/i, 'basket', '#ff9a3d'], [/water|fountain|juice|soda|drink|energy drink|lemonade/i, 'drop', '#47b8ff'],
-  [/cook|breakfast|lunch|dinner|plate|meal|snack|fries|pie\b|special|burger|stew|soup|salad|sandwich|bowl/i, 'plate', '#ff9a3d'],
-  [/bread|bakery|pastry|muffin|croissant|cookie|cake|donut|bun\b|loaf|treat/i, 'bread', '#ff9a3d'],
-  [/bench|sit\b|duck|stroll|walk around/i, 'tree', '#5be3a0'], [/\bbus\b|ride to/i, 'bus', '#47b8ff'],
-  [/movie|film|ticket|\bshow\b|theat/i, 'film', '#ff7eb6'], [/hair|trim|cut\b|style|dye|shave/i, 'scissors', '#ff7eb6'],
-  [/laundry|wash|dryer|\bdry\b|detergent|load\b/i, 'washer', '#47b8ff'], [/bike|helmet|spoke|tire|tyre/i, 'bike', '#5be3a0'],
-  [/pizza|slice|pie\b/i, 'pizza', '#ff9a3d'], [/pill|medicine|relief|vitamin|bandage|cough|ointment|remedy|pharm/i, 'pill', '#5be3a0'],
-  [/deposit|withdraw|saving|bank|interest|autopay|account|\bloan\b/i, 'dollar', '#ffc247'], [/tooth|dental|filling|floss|brace/i, 'tooth', '#47b8ff'],
-  [/book|read|chapter|novel|library|magazine/i, 'book', '#ff7eb6'], [/music|mic\b|song|sing|perform|record|guitar|piano/i, 'note', '#ff7eb6'],
+  [/\bbus\b|ride to/i, 'bus', '#47b8ff'],
+  [/rent\b|lease|landlord/i, 'key', '#ffc247'], [/deposit|withdraw|saving|\bbank|interest|autopay|account|loan/i, 'dollar', '#ffc247'],
+  [/\bbed\b|sleep|lie-in|mattress/i, 'bed', '#a393ff'], [/\bnap\b/i, 'zz', '#a393ff'],
+  [/shift|clock in|clock-in|office|desk/i, 'brief', '#ffc247'], [/movie|film|trailer|\bshow\b|theat|ticket|\d\s*[ap]m\s*·/i, 'film', '#ff7eb6'],
+  [/coffee|latte|espresso|\btea\b|milkshake|cocoa|chocolate|cappuccino|\bcup\b|\bmug\b/i, 'cup', '#ff9a3d'],
+  [/pill|medicine|reliev|vitamin|bandage|cough|ointment|remedy|pharm/i, 'pill', '#5be3a0'],
+  [/water|fountain|juice|soda|drink|lemonade|electrolyte|umbrella/i, 'drop', '#47b8ff'],
+  [/pack\b|grocer|pantry|coupon/i, 'basket', '#ff9a3d'], [/pizza|cheese slice/i, 'pizza', '#ff9a3d'],
+  [/bread|bakery|pastry|muffin|croissant|cookie|cake|donut|\bbun\b|loaf|roll\b/i, 'bread', '#ff9a3d'],
+  [/cook|breakfast|lunch|dinner|plate|meal|snack|fries|\bpie\b|special|burger|stew|soup|salad|sandwich|bowl|chips|candy|popcorn|knots|panini|\bbar\b|toast|mint/i, 'plate', '#ff9a3d'],
+  [/bike|helmet|cycl|spoke|tire|tyre|wheel/i, 'bike', '#5be3a0'],
+  [/\bhair|trim|\bcut\b|style|dye|shave|top knot|crop|shampoo/i, 'scissors', '#ff7eb6'],
+  [/\btee\b|shirt|sweater|polo|flannel|chino|slack|trouser|khaki|jeans|jacket|hoodie|blazer|button-down/i, 'shirt', '#47b8ff'],
+  [/laundry|wash|dryer|\bdry\b|detergent|\bload\b/i, 'washer', '#47b8ff'],
+  [/rug|curtain|chair|lamp|plant|couch|shelf|furnit/i, 'home', '#ffc247'],
+  [/book|read|chapter|novel|library|magazine|field guide/i, 'book', '#ff7eb6'], [/music|\bmic\b|song|sing|perform|record|guitar|piano|stage|jukebox/i, 'note', '#ff7eb6'],
   [/\bfish|\brod\b|bait|tackle|lure/i, 'fish', '#47b8ff'], [/deliver|courier|rider|scooter/i, 'scooter', '#ffc247'],
-  [/lesson|teach|class|school|student|homework|lecture/i, 'school', '#ffc247'], [/clinic|doctor|nurse|checkup|check-up|treat(?:ment)?/i, 'cross', '#ff6b6b'],
-  [/chat|talk|ask|say\b|hello|greet|gossip|hang|friend|coffee with/i, 'chat', '#ff7eb6'], [/hammer|tool|drill|paint|lamp|plant|chair|mattress|curtain|shelf|furnit|buy|purchase/i, 'hammer', '#ffc247'],
-  [/play|game|claw|arcade|prize|ticket/i, 'star', '#ffc247'], [/plan|goal|mission|goals/i, 'flag', '#ffc247']
+  [/lesson|teach|class|school|student|homework|lecture/i, 'school', '#ffc247'], [/clinic|doctor|nurse|checkup|check-up|treatment/i, 'cross', '#ff6b6b'],
+  [/chat|talk|ask|\bsay\b|hello|greet|gossip|hang|friend/i, 'chat', '#ff7eb6'],
+  [/hammer|tool|drill|paint|buy|purchase/i, 'hammer', '#ffc247'], [/play|game|claw|arcade|prize/i, 'star', '#ffc247'], [/plan|goal|mission/i, 'flag', '#ffc247'],
+  [/\bbench|\bsit\b|duck|stroll|walk around/i, 'tree', '#5be3a0']
 ];
-function optIcon(it) {
+function optIcon(it, dflt) {
   for (const r of OPT_ICONS) if (r[0].test(it.t || '')) return [r[1], r[2]];
   const txt = (it.t || '') + ' ' + (it.d || '');
   for (const r of OPT_ICONS) if (r[0].test(txt)) return [r[1], r[2]];
-  return ['sparkle', '#8fa5b6'];
+  return dflt ? [dflt, '#ff7eb6'] : ['sparkle', '#8fa5b6'];
 }
 function panelGlyph(id, spec) {
   if (id === 'notice') return 'alert';
@@ -150,7 +156,7 @@ function renderPanel() {
     sec.items.forEach(it => {
       const b = el('button', 'opt' + (it.off ? ' locked' : '')); b.type = 'button';
       b.dataset.i = PANEL_ITEMS.length; PANEL_ITEMS.push(it);
-      const oi = optIcon(it), ic = el('span', 'oi'); ic.style.setProperty('--oc', it.off ? '#8fa5b6' : oi[1]); ic.innerHTML = uiIcon(it.off ? 'lock' : oi[0]); ic.setAttribute('aria-hidden', 'true');
+      const oi = optIcon(it, id.startsWith('npc:') ? 'chat' : ''), ic = el('span', 'oi'); ic.style.setProperty('--oc', it.off ? '#8fa5b6' : oi[1]); ic.innerHTML = uiIcon(it.off ? 'lock' : oi[0]); ic.setAttribute('aria-hidden', 'true');
       b.appendChild(ic);
       b.appendChild(el('b', '', it.t));
       b.appendChild(el('small', it.off ? 'why' : '', it.off || it.d || ''));

@@ -19,3 +19,12 @@
 .lvcard{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
 .recard{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
 .rc-goals,.rc-ev,.ph-ev{padding:0;margin:0}
+
+/* reduced motion: every continuous or entrance animation added in v2 has a still fallback */
+@media (prefers-reduced-motion:reduce){
+  .toast.trophy{animation:none;background-position:-60% 0,0 0,0 0,0 0}
+  .phone-btn[data-n]::after,.ph-tabs button[data-n]::after{animation:none}
+  .btn,.chip-btn,.opt,.opt .oi,.perk,.ph-tabs .ti,.ph-pin,.card .x{transition:none}
+  .disc,.disc::before,.tod::before,.tod::after{transition:none}
+  .btn:hover:not(:disabled)::after{animation:none}
+}
