@@ -34,6 +34,7 @@ function wSlabs(c, ax, ay, aw, ah, vx0, vy0, vx1, vy1, sw, sh, bond, seed) {
         c.strokeStyle = 'rgba(255,255,255,.18)'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(x + sw * (0.15 + h * 0.7) + 0.8, y); c.lineTo(px + 0.8, py); c.stroke();
       }
       if (h4 > 0.9) { c.fillStyle = 'rgba(96,86,86,.55)'; for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(x + 6 + hash01(col, row, seed + 7 + k) * (sw - 12), y + 6 + hash01(col, row, seed + 9 + k) * (sh - 12), 0.7 + k * 0.25, 0, 7); c.fill(); } }
+      if (h4 > 0.952 && h4 < 0.972 && sw >= 40) wChalk(c, x + sw * 0.5, y + sh * 0.5, h2, h3);
       if (h2 > 0.93) { c.fillStyle = 'rgba(80,120,70,.5)'; c.fillRect(x + sw * h, y, 1.2, 2.4); c.fillRect(x + sw * h + 1.6, y, 1, 1.8); }
     }
     for (let col = col0; col <= col1; col++) {
@@ -43,6 +44,17 @@ function wSlabs(c, ax, ay, aw, ah, vx0, vy0, vx1, vy1, sw, sh, bond, seed) {
     }
     c.fillStyle = 'rgba(80,70,56,.34)'; c.fillRect(x0, y - 0.7, x1 - x0, 1.4); c.fillStyle = 'rgba(255,255,255,.28)'; c.fillRect(x0, y + 0.7, x1 - x0, 0.9);
   }
+  c.restore();
+}
+/* faded chalk drawings left on the pavement by kids: hopscotch, a sun, a heart */
+function wChalk(c, cx, cy, a, b) {
+  c.save(); c.translate(cx, cy); c.rotate((a - 0.5) * 0.6); c.lineWidth = 1.5; c.lineCap = 'round';
+  const col = ['rgba(255,150,190,.5)', 'rgba(255,225,120,.55)', 'rgba(140,200,255,.5)', 'rgba(170,240,170,.5)'][Math.floor(b * 4) % 4];
+  c.strokeStyle = col;
+  const t = Math.floor(a * 3);
+  if (t === 0) { for (let i = 0; i < 5; i++) c.strokeRect(-4.4 + (i === 3 ? -9 : i === 4 ? 0 : 0), -17 + i * 8.4, 8.8, 8.4); c.strokeRect(4.4, 8.6, 8.8, 8.4); }
+  else if (t === 1) { c.beginPath(); c.arc(0, 0, 5, 0, 7); c.stroke(); for (let i = 0; i < 9; i++) { const an = i / 9 * 6.283; c.beginPath(); c.moveTo(Math.cos(an) * 7.5, Math.sin(an) * 7.5); c.lineTo(Math.cos(an) * 11.5, Math.sin(an) * 11.5); c.stroke(); } }
+  else { c.beginPath(); c.moveTo(0, 8); c.bezierCurveTo(-14, -2, -6, -12, 0, -4); c.bezierCurveTo(6, -12, 14, -2, 0, 8); c.stroke(); }
   c.restore();
 }
 function wStripe(c, x, y, w, h, seed) {

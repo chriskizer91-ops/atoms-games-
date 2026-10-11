@@ -116,7 +116,7 @@ const W_WORK_DETAIL = {
     c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(bx - 4, by - 6, bw + 8, 1.2); c.fillStyle = '#d63b4b'; c.fillRect(bx - 4, by + 8, bw + 8, 3);
     const ig = c.createLinearGradient(0, by + 11, 0, bot); ig.addColorStop(0, '#2a323a'); ig.addColorStop(1, '#14181d');
     c.fillStyle = ig; c.fillRect(bx, by + 11, bw, bot - by - 11);
-    c.font = '800 6.5px "Bricolage Grotesque","Trebuchet MS",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#fff'; c.fillText('EMERGENCY', bx + bw / 2, by + 20);
+    c.font = '800 6.5px "Bricolage Grotesque","Trebuchet MS",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#b52b3a'; rr(c, bx + bw / 2 - 25, by - 3.6, 50, 9.4, 2.4); c.fill(); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 0.8; c.stroke(); c.fillStyle = '#fff'; c.fillText('EMERGENCY', bx + bw / 2, by + 1.4);
     // ambulance, nose on
     const ax = bx + bw / 2, ay = bot - 8;
     c.fillStyle = 'rgba(0,0,0,.45)'; c.beginPath(); c.ellipse(ax, ay + 2, 30, 3.4, 0, 0, 7); c.fill();

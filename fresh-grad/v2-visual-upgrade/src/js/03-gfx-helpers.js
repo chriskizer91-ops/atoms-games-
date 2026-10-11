@@ -232,6 +232,7 @@ function windowAt(c, x, y, w, h, lit, o) {
   if (!ws.fr) ws.fr = wspr('wf' + ws.qw + 'x' + ws.qh + 's' + sty + 'v' + (v & 3), ws.qw + P * 2, ws.qh + P + W_WIN_PB, g => wPaintWinFrame(g, ws.qw, ws.qh, sty, v));
   c.drawImage(ws.fr.cv, x - P + (w - ws.qw) / 2, y - P + (h - ws.qh) / 2, ws.fr.w, ws.fr.h);
   if (sty !== 2 && w >= 26 && w <= 40 && h >= 30 && hash01(Math.round(x), Math.round(y), 19) > 0.9) { const ac = wspr('ac', 28, 36, wPaintAC); c.drawImage(ac.cv, x + w / 2 - 14, y + h - 17, 28, 36); }
+  if (sty !== 2 && w >= 26 && w <= 40 && h >= 30) { const hc = hash01(Math.round(x), Math.round(y), 23); if (hc > 0.955) { const col = ['#e8883a', '#6a6f78', '#1f2228', '#e9e2d3'][Math.floor(hc * 100) % 4], ct = wspr('cat' + col, 16, 14, g => wPaintCat(g, col)); c.drawImage(ct.cv, x + w * 0.3, y + h - 11, 16, 14); } }
   if (WINTER()) {
     c.fillStyle = 'rgba(246,250,253,.92)'; c.fillRect(x - 3.5, y + h + 2.2, w + 7, 1.8);
     if (!on) { c.fillStyle = 'rgba(240,248,255,.2)'; c.fillRect(x, y + h - 5, w, 5); c.fillRect(x, y, 3, h); }

@@ -48,6 +48,7 @@ function drawGroundStatic(c, vx0, vy0, vx1, vy1) {
     c.fillStyle = 'rgba(0,0,0,.24)'; c.fillRect(x0, r.y + 1.5, vw, 3); c.fillRect(x0, r.y + r.h - 2.5, vw, 2.5);
     c.fillStyle = '#f1ede4'; c.fillRect(x0, r.y + r.h, vw, 3.5);
     c.fillStyle = '#b5afa3'; c.fillRect(x0, r.y + r.h + 3.5, vw, 1.5);
+    wFadeV(c, x0, r.y - 13, vw, 8, 0, 0.13, '60,50,40'); wFadeV(c, x0, r.y + r.h + 5, vw, 8, 0.13, 0, '60,50,40');
     c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(x0, r.y - 5, vw, 0.9); c.fillRect(x0, r.y + r.h, vw, 0.9);
     c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x0, r.y - 2, vw, 0.9); c.fillRect(x0, r.y + r.h + 3.5, vw, 0.9);
   });

@@ -426,6 +426,13 @@ function wSignSprite(text, size, col) {
   s.tw = tw; return s;
 }
 
+/* a cat sitting on a window sill, seen from behind */
+function wPaintCat(g, col) {
+  g.fillStyle = col; g.beginPath(); g.ellipse(7, 9, 4.6, 4.4, 0, 0, 7); g.fill();
+  g.beginPath(); g.arc(7, 4.2, 3, 0, 7); g.fill(); g.beginPath(); g.moveTo(4.4, 2.8); g.lineTo(4.6, -0.4); g.lineTo(6.6, 1.4); g.fill(); g.beginPath(); g.moveTo(9.6, 2.8); g.lineTo(9.4, -0.4); g.lineTo(7.4, 1.4); g.fill();
+  g.strokeStyle = col; g.lineWidth = 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(11, 11); g.quadraticCurveTo(15, 11, 14, 6); g.stroke(); g.lineCap = 'butt';
+  g.fillStyle = 'rgba(255,255,255,.2)'; g.beginPath(); g.ellipse(5.4, 7.4, 1.2, 2.6, 0.3, 0, 7); g.fill();
+}
 /* ---------- wall lantern ---------- */
 function wPaintSconce(g, on) {
   // origin at the lamp's mount point (x, y of the original call) = (16, 16)
@@ -473,7 +480,7 @@ function wPaintFlowerBox(g, w, seed, se) {
 }
 
 /* ---------- roof furniture ---------- */
-const W_ROOF_KINDS = 8;
+const W_ROOF_KINDS = 9;
 function wPaintRoofProp(g, kind, px, y, r) {
   const metal = '#9aa3aa', dark = '#5d666d', mid = '#7b848b';
   const hi = (x, yy, w, h) => { g.fillStyle = 'rgba(255,255,255,.34)'; g.fillRect(x, yy, w, Math.min(h, 1.6)); g.fillStyle = 'rgba(255,255,255,.16)'; g.fillRect(x, yy, 1.6, h); };
@@ -539,6 +546,14 @@ function wPaintRoofProp(g, kind, px, y, r) {
       g.beginPath(); g.moveTo(x0 + 1.5, y - 12.5); g.lineTo(x0 + 15.5, y - 12.5); g.stroke();
       g.fillStyle = 'rgba(255,255,255,.3)'; g.beginPath(); g.moveTo(x0 + 3, y - 18); g.lineTo(x0 + 8, y - 18); g.lineTo(x0 + 4, y - 7); g.lineTo(x0, y - 7); g.fill();
     }
+  } else if (kind === 8) {     // brick chimney with a pot
+    sh(px - 2, 18);
+    const bg = g.createLinearGradient(px, 0, px + 14, 0); bg.addColorStop(0, '#b8684a'); bg.addColorStop(1, '#7a3f2e');
+    g.fillStyle = bg; g.fillRect(px, y - 24, 14, 24);
+    g.fillStyle = 'rgba(40,16,10,.3)'; for (let k = 0; k < 6; k++) g.fillRect(px, y - 22 + k * 4, 14, 0.8); for (let k = 0; k < 6; k++) g.fillRect(px + 3 + (k % 2) * 6, y - 22 + k * 4, 0.8, 4);
+    g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(px, y - 24, 1.6, 24);
+    g.fillStyle = '#8a8f94'; g.fillRect(px - 2, y - 27, 18, 3.4); g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(px - 2, y - 27, 18, 0.9);
+    g.fillStyle = '#b8683f'; g.fillRect(px + 3, y - 33, 8, 6.4); g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(px + 4, y - 33.4, 6, 1.6);
   } else {                     // stair bulkhead with a service door
     sh(px - 2, 34);
     const bg = g.createLinearGradient(px, 0, px + 30, 0); bg.addColorStop(0, '#c9c1b2'); bg.addColorStop(1, '#9a9282');

@@ -22,6 +22,11 @@ Scope: streets, building facades, ground, park, props, trees, seasons. Drawing o
 
 **Seasons (`30`, `30c`)**: autumn leaf piles, petal drifts under blossom, summer dappled shade, winter snow banks, drifts, boot tracks, packed paths, snow roofs with icicles (cached), cracked pond ice with glitter.
 
+**Small touches**: window AC units, Juliet balconies, a cat on a sill here and there, chalk drawings on the pavement, painted kerb and drain grates, wreaths on doors in winter, pumpkins in autumn, snow on awnings, steaming manholes in winter, reflected light under lit shop fronts on wet nights.
+
+## Numbers (headless, 1280x720)
+`perf.js` render avg, v1 -> v2: street-noon 2.0 -> 2.1 ms, street-night 2.9 -> 2.6, park-winter 1.7 -> 1.4, street-rain 2.9 -> 3.7. A smooth walk across town averages 3.1 ms (v1 3.2 ms); first-time shell, sprite and chunk painting is the only extra cost. `parity.js`: REMOVED (0), 0 LOGIC? entries (31 changed blocks, all drawing).
+
 ## Intentionally untouched
 `BLD`, `DECO`, `BOXES`, `TREES`, `solidAt`, door positions, `PROPS` placement. Lighting maps, sky, weather, people, cars (pass 3), interiors (pass 4), UI (pass 5), bandstand and market stalls (activities). `placeIcon` keeps its look because the minimap and passport share it.
 
