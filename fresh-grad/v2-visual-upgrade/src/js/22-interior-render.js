@@ -125,7 +125,7 @@ function intSpec(spotId) {
 function roomLights(w, h, step) {
   const A = FX.A, st = ROOMCTX.st;
   if (FX.nf <= 0.05) return [255, 255, 255];
-  const L = st && !ROOMCTX.sc && st.lamps;
+  const L = st && st.lamps;
   if (L) for (let i = 0; i < L.length; i++) { const l = L[i]; addLight(l[0], l[1], l[2], l[3], l[4] || 0, l[5] == null ? 0.9 : l[5]); }
   else for (let y = 150; y < h - 40; y += step * 0.8) for (let x = step * 0.5; x < w; x += step) {
     if (x < CAM.x - 200 || x > CAM.x + CAM.vw + 200 || y < CAM.y - 160 || y > CAM.y + CAM.vh + 160) continue;

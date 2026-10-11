@@ -54,7 +54,6 @@ ROOM_STYLE.apartment = {
     W.frame(c, 668, 14, 40, 30, 'sea', '#5a3b2a', 7); W.frame(c, 866, 12, 28, 36, 'abstract', '#2b2f36', 9); W.frame(c, 902, 12, 28, 36, 'portrait', '#2b2f36', 11);
     W.sconce(c, 848, 56, 0);
   },
-  over(c, d) { W.pendant(c, 448, 272, 8, '#c9a45c', 0); }
 };
 ROOM_STYLE.grocery = {
   neon: false, night: NIGHT_COOL, fridge: 'steel',
@@ -348,4 +347,12 @@ ROOM_STYLE.work_cook = {
     c.fillStyle = 'rgba(' + IM.INK + ',.35)'; rr(c, 290, 330, 40, 26, 3); c.fill(); c.strokeStyle = '#7a8791'; c.lineWidth = 1; for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(294 + k * 6, 333); c.lineTo(294 + k * 6, 353); c.stroke(); }
     W.floorStripe(c, 52, 190, 300, 3, '#f4c20d', 8);
   }
+};
+
+/* the school: pools of light in every room and along the hallway */
+ROOM_STYLE.school = {
+  night: [148, 138, 164],
+  lamps: [[310, 230, 260, 190, 0, 0.8], [804, 230, 260, 190, 0, 0.8], [1204, 230, 240, 190, 0, 0.8], [1584, 230, 240, 190, 0, 0.8], [1974, 230, 250, 190, 0, 0.75]]
+    .concat([260, 480, 700, 920, 1140, 1360, 1580, 1800, 2020].map(x => [x, 540, 230, 120, 1, 0.8]))
+    .concat([[240, 880, 250, 220, 0, 0.7], [584, 880, 200, 220, 0, 0.7], [1048, 760, 340, 190, 0, 0.8], [1048, 960, 340, 190, 0, 0.8], [1600, 800, 300, 200, 0, 0.8], [1950, 800, 300, 200, 0, 0.8], [1780, 980, 360, 150, 0, 0.7]])
 };

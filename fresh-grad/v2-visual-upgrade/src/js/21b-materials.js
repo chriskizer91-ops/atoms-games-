@@ -262,8 +262,8 @@ IM.floors.carpet = function (c, x, y, w, h, col, col2, o) {
   c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
   IM.pat(c, 'iw_carpet', x, y, w, h, 1);
   // broad pile direction bands, like a freshly vacuumed floor
-  for (let yy = y + 6; yy < y + h; yy += 18) { c.fillStyle = (yy / 18 | 0) % 2 ? 'rgba(255,255,255,.035)' : 'rgba(0,0,0,.05)'; c.fillRect(x, yy, w, 9); }
-  if (col2) { c.fillStyle = col2; for (let yy = y + 8; yy < y + h; yy += 18) c.fillRect(x, yy, w, 1.2); }
+  for (let yy = y + 6; yy < y + h; yy += 18) { c.fillStyle = (yy / 18 | 0) % 2 ? 'rgba(255,255,255,.018)' : 'rgba(0,0,0,.026)'; c.fillRect(x, yy, w, 9); }
+  if (col2) { c.fillStyle = col2; for (let yy = y + 8; yy < y + h; yy += 36) c.fillRect(x, yy, w, 1); }
   if (o.motif) {   // the repeating pattern of a theatre carpet
     const s = 56;
     for (let j = 0; j * s < h + s; j++) for (let i = 0; i * s < w + s; i++) {

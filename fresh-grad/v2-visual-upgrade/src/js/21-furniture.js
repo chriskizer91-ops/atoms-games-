@@ -59,7 +59,7 @@ const FURN = {
     c.strokeStyle = 'rgba(255,240,214,.5)'; c.lineWidth = 1; rr(c, x + 10, y + 10, w - 20, h - 20, 3); c.stroke();
     const ix = x + 12, iy = y + 12, iw = w - 24, ih = h - 24;
     c.fillStyle = IM.grad(c, ix, iy, ix + iw, iy + ih, [[0, shade(col, 0.1)], [1, shade(col, -0.06)]]); c.fillRect(ix, iy, iw, ih);
-    const cx = x + w / 2, cy = y + h / 2, d = Math.min(iw, ih) * 0.42, k = sd & 3;
+    const cx = x + w / 2, cy = y + h / 2, d = Math.min(iw / 3.5, ih / 2) * 0.92, k = sd & 3;
     if (k < 2) {   // a nested diamond medallion
       [1, 0.72, 0.46].forEach((s, i) => { c.fillStyle = i % 2 ? shade(col, -0.18) : shade(col, 0.3 - i * 0.04); c.beginPath(); c.moveTo(cx, cy - d * s); c.lineTo(cx + d * s * 1.7, cy); c.lineTo(cx, cy + d * s); c.lineTo(cx - d * s * 1.7, cy); c.closePath(); c.fill(); });
       c.fillStyle = shade(col, 0.5); c.beginPath(); c.arc(cx, cy, d * 0.12, 0, 7); c.fill();

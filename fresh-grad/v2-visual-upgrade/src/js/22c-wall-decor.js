@@ -138,9 +138,9 @@ W.pendant = function (c, x, y, r, col, kind) {
   IM.shadow(c, x - r, y - r, r * 2, r * 2, r, 6, 0.3, 2, 5);
   c.fillStyle = IM.grad(c, x - r, y - r, x + r, y + r, [[0, shade(col, 0.25)], [1, shade(col, -0.3)]]); c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
   c.fillStyle = 'rgba(255,255,255,.28)'; c.beginPath(); c.arc(x - r * 0.3, y - r * 0.34, r * 0.5, Math.PI * 0.9, Math.PI * 1.7); c.lineTo(x - r * 0.3, y - r * 0.34); c.fill();
-  c.fillStyle = '#fff1c4'; c.beginPath(); c.arc(x, y, r * 0.42, 0, 7); c.fill();
+  c.fillStyle = '#f1dca0'; c.beginPath(); c.arc(x, y, r * 0.4, 0, 7); c.fill();
   c.fillStyle = '#8a8f96'; c.beginPath(); c.arc(x, y, r * 0.14, 0, 7); c.fill();
-  addLight(x, y + 6, r * 6, r * 4.4, kind || 0, 0.85); addEmit(x, y, r * 2.6, kind || 0, 0.6);
+  addLight(x, y + 6, r * 6, r * 4.4, kind || 0, 0.85); addEmit(x, y, r * 1.6, kind || 0, 0.3);
 };
 W.sconce = function (c, x, y, kind) {
   IM.shadow(c, x - 4, y - 7, 8, 14, 2, 4, 0.34, 1, 2);
