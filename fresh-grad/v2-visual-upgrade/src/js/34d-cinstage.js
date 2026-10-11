@@ -327,8 +327,8 @@ function cinFocusAmt(ct) {
 }
 function cinStageLive(c, V, ct) {
   const L = CN.L, f = cinFocusAmt(ct);
-  cnBlit(c, L.stage);
-  if (f > 0.01) cnBlit(c, L.stageSoft, f);
+  if (f > 0.92) cnBlit(c, L.stageSoft);
+  else { cnBlit(c, L.stage); if (f > 0.02) cnBlit(c, L.stageSoft, f); }
   // light sweeping over the banner every few seconds
   const ph = ((ct * 0.16) % 1), sx = 380 - 120 + ph * 760, a = Math.sin(ph * Math.PI);
   if (a > 0.02) {

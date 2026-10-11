@@ -57,7 +57,18 @@ function cnSoften(src, px) {
 }
 function cnSoftLayer(L, px) { return { cv: cnSoften(L.cv, px * (L.cv.width / L.w)), x: L.x, y: L.y, w: L.w, h: L.h }; }
 function cnBlit(c, L, a) {
-  if (a != null && a < 1) { c.globalAlpha = a; c.drawImage(L.cv, L.x, L.y, L.w, L.h); c.globalAlpha = 1; } else c.drawImage(L.cv, L.x, L.y, L.w, L.h);
+  // draw only the part of the layer that is inside the current view (cheap in software canvases)
+  const v = CN.cur;
+  let x0 = L.x, y0 = L.y, x1 = L.x + L.w, y1 = L.y + L.h;
+  if (v) { x0 = Math.max(x0, v.x0); y0 = Math.max(y0, v.y0); x1 = Math.min(x1, v.x1); y1 = Math.min(y1, v.y1); if (x1 <= x0 || y1 <= y0) return; }
+  const fx = L.cv.width / L.w, fy = L.cv.height / L.h;
+  let sx = Math.floor((x0 - L.x) * fx), sy = Math.floor((y0 - L.y) * fy);
+  const ex = Math.min(L.cv.width, Math.ceil((x1 - L.x) * fx)), ey = Math.min(L.cv.height, Math.ceil((y1 - L.y) * fy));
+  const sw = ex - sx, sh = ey - sy;
+  if (sw <= 0 || sh <= 0) return;
+  if (a != null && a < 1) c.globalAlpha = a;
+  c.drawImage(L.cv, sx, sy, sw, sh, L.x + sx / fx, L.y + sy / fy, sw / fx, sh / fy);
+  if (a != null && a < 1) c.globalAlpha = 1;
 }
 /* radial glow sprite (white, additive friendly) */
 function cnGlowSprite(col, size) {
@@ -187,6 +198,9 @@ function cinSet(c, V, depth) {
   if (V.roll) c.rotate(V.roll);
   c.scale(s, s);
   c.translate(-ex, -ey);
+  // visible world rectangle on this layer (used to blit only what is on screen)
+  const rm = Math.abs(Math.sin(V.roll)) * (V.pw + V.ph) / s + 6 / s;
+  CN.cur = { x0: ex - V.ox / s - rm, x1: ex + (V.pw - V.ox) / s + rm, y0: ey - V.oy / s - rm, y1: ey + (V.ph - V.oy) / s + rm, s, ex, ey };
 }
 /* world point on a layer -> screen px (for flares and HTML-free overlays) */
 function cinToScreen(V, depth, wx, wy) {
@@ -207,6 +221,7 @@ function cinBuild() {
   cinBuildStage();
   cinBuildCrowd();
   cinBuildPost();
+  cinGrainUrl();
   if (typeof cinBuildCast === 'function') cinBuildCast();
   CN.built = true;
   try { ART.preload(cinArtKeys()); } catch (e) { /* art is optional */ }
@@ -225,12 +240,16 @@ function cinArtKeys() {
 function cinBuildPost() {
   const S = CN.S;
   S.vig = cnMk(320, 180);
-  { const g = S.vig.getContext('2d'); g.fillStyle = cnRG(g, 160, 92, 40, 160, 92, 230, [[0, 'rgba(4,6,16,0)'], [0.55, 'rgba(4,6,16,0.10)'], [0.82, 'rgba(4,6,16,0.46)'], [1, 'rgba(4,6,16,0.82)']]); g.fillRect(0, 0, 320, 180); }
+  { const g = S.vig.getContext('2d'); g.fillStyle = cnRG(g, 160, 92, 40, 160, 92, 230, [[0, 'rgba(4,6,16,0)'], [0.55, 'rgba(4,6,16,0.10)'], [0.82, 'rgba(4,6,16,0.46)'], [1, 'rgba(4,6,16,0.82)']]); g.fillRect(0, 0, 320, 180);
+    // a hair of chromatic fringe baked into the vignette: cool on the left edge, warm on the right
+    g.globalCompositeOperation = 'screen';
+    g.fillStyle = cnLG(g, 0, 0, 30, 0, [[0, 'rgba(90,170,255,.10)'], [1, 'rgba(90,170,255,0)']]); g.fillRect(0, 0, 30, 180);
+    g.fillStyle = cnLG(g, 320, 0, 290, 0, [[0, 'rgba(255,120,90,.10)'], [1, 'rgba(255,120,90,0)']]); g.fillRect(290, 0, 30, 180); }
   S.grain = [];
   const rnd = mulberry32(777);
   for (let i = 0; i < 4; i++) {
     const cv = cnMk(192, 192), g = cv.getContext('2d'), id = g.createImageData(192, 192), d = id.data;
-    for (let p = 0; p < d.length; p += 4) { const v = 128 + (rnd() - 0.5) * 255 * 0.9; d[p] = d[p + 1] = d[p + 2] = v; d[p + 3] = 255; }
+    for (let p = 0; p < d.length; p += 4) { const v = (rnd() - 0.5) * 2; d[p] = d[p + 1] = d[p + 2] = v > 0 ? 255 : 0; d[p + 3] = Math.abs(v) * 150; }
     g.putImageData(id, 0, 0);
     S.grain.push(cv);
   }
@@ -262,36 +281,38 @@ function cinRender(c, cv, ct) {
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   c.fillStyle = '#05070d'; c.fillRect(0, 0, pw, ph);
-  if (ct >= 15.4) { cinCards(c, V, ct); cinBarsAndFade(c, V, ct); cinCssVars(V); return; }
+  if (ct >= 15.4) { cinCards(c, V, ct); cinFxDom(V, ct); return; }
   cinScene(c, V, ct);
   cinStills(c, V, ct);
   cinPost(c, V, ct);
-  cinBarsAndFade(c, V, ct);
-  cinCssVars(V);
+  cinFxDom(V, ct);
 }
-/* keep the DOM caption plate in the lower letterbox bar */
-function cinCssVars(V) {
-  const root = $('#cut');
-  if (!root) return;
-  const px = Math.round(V.bar * (V.ph ? (root.clientHeight || V.ph) / V.ph : 1));
-  if (CN.barPx !== px) { CN.barPx = px; root.style.setProperty('--cut-bar', px + 'px'); }
-}
-
 /* the scene proper: sky, set, cast, audience, particles, light */
 function cinScene(c, V, ct) {
   const L = CN.L;
-  // sky + sun + far scenery
-  cinSet(c, V, 0.08); cinSky(c, V, ct);
-  cinSet(c, V, 0.35); cinSun(c, V, ct);
-  cinSet(c, V, 0.28); cinClouds(c, ct, 0);
-  cinSet(c, V, 0.34); cnBlit(c, L.hillFar);
-  cinSet(c, V, 0.46); cnBlit(c, L.hillMid);
-  cinSet(c, V, 0.62); cnBlit(c, L.campus);
-  cinSet(c, V, 0.52); cinClouds(c, ct, 1);
-  cinBirds(c, V, ct);
-  cinSet(c, V, 0.76); cnBlit(c, L.hillNear);
-  cinSet(c, V, 0.9); cnBlit(c, L.trees);
-  cinSet(c, V, 0.96); cnBlit(c, L.lawn);
+  // when the camera is deep inside the opaque set (the handshake close-up) nothing behind it can be seen, so skip it all
+  cinSet(c, V, 1);
+  const q = CN.cur, covered = q.x0 > 172 && q.x1 < 1108 && q.y0 > 84 && q.y1 < 604;
+  if (!covered) {
+    // the far scenery is soft anyway (depth of field), so it is painted at half resolution and upscaled once
+    const hw = Math.max(2, Math.round(V.pw * 0.5)), hh = Math.max(2, Math.round(V.ph * 0.5));
+    if (!CN.bd || CN.bd.width !== hw || CN.bd.height !== hh) { CN.bd = cnMk(hw, hh); CN.bdc = CN.bd.getContext('2d'); }
+    const g = CN.bdc, fx = hw / V.pw, fy = hh / V.ph;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    const V2 = Object.assign({}, V, { pw: hw, ph: hh, k: V.k * fx, ox: V.ox * fx, oy: V.oy * fy });
+    cinSet(g, V2, 0.08); cinSky(g, V2, ct);
+    cinSet(g, V2, 0.35); cinSun(g, V2, ct);
+    cinSet(g, V2, 0.28); cinClouds(g, ct, 0);
+    cinSet(g, V2, 0.34); cnBlit(g, L.hillFar);
+    cinSet(g, V2, 0.46); cnBlit(g, L.hillMid);
+    cinSet(g, V2, 0.62); cnBlit(g, L.campus);
+    cinSet(g, V2, 0.52); cinClouds(g, ct, 1);
+    cinBirds(g, V2, ct);
+    cinSet(g, V2, 0.76); cnBlit(g, L.hillNear);
+    cinSet(g, V2, 0.9); cnBlit(g, L.trees);
+    cinSet(g, V2, 0.96); cnBlit(g, L.lawn);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(CN.bd, 0, 0, V.pw, V.ph);
+  }
   // the stage and the action
   cinSet(c, V, 1);
   cinStageLive(c, V, ct);
@@ -336,46 +357,36 @@ function cinGrade(ct) {
   return warm;
 }
 function cinPost(c, V, ct) {
-  const pw = V.pw, ph = V.ph, S = CN.S;
+  // the canvas only gets the lens flare; grade, vignette, grain, bars and fades are DOM layers (cinFxDom)
   c.setTransform(1, 0, 0, 1, 0, 0);
-  const warm = cinGrade(ct);
-  // grade: a tinted multiply for the overall mood, then an overlay for contrast and colour in the highlights (cool -> warm)
-  const coolM = [208, 224, 250], warmM = [255, 236, 206];
-  const m = [lerp(coolM[0], warmM[0], warm), lerp(coolM[1], warmM[1], warm), lerp(coolM[2], warmM[2], warm)].map(Math.round);
-  c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgb(' + m.join(',') + ')'; c.fillRect(0, 0, pw, ph);
-  c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.2 + warm * 0.08;
-  c.fillStyle = cnLG(c, 0, 0, 0, ph, [[0, warm > 0.5 ? 'rgb(255,200,140)' : 'rgb(110,150,230)'], [0.55, 'rgb(128,128,140)'], [1, warm > 0.5 ? 'rgb(255,170,110)' : 'rgb(70,70,150)']]); c.fillRect(0, 0, pw, ph);
-  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
-  // lens flare when the sun is in frame
   cinFlare(c, V, ct);
-  // vignette (breathes a little)
-  const vb = 0.8 + Math.sin(ct * 0.9) * 0.05 + (ct > 11.5 ? 0 : 0.06);
-  c.globalAlpha = clamp(vb, 0, 1); c.drawImage(S.vig, 0, 0, pw, ph); c.globalAlpha = 1;
-  // chromatic fringe: a hair of cyan on the left edge and warm on the right
-  c.globalCompositeOperation = 'screen';
-  c.fillStyle = cnLG(c, 0, 0, pw * 0.1, 0, [[0, 'rgba(90,170,255,.07)'], [1, 'rgba(90,170,255,0)']]); c.fillRect(0, 0, pw * 0.1, ph);
-  c.fillStyle = cnLG(c, pw, 0, pw * 0.9, 0, [[0, 'rgba(255,120,90,.07)'], [1, 'rgba(255,120,90,0)']]); c.fillRect(pw * 0.9, 0, pw * 0.1, ph);
-  c.globalCompositeOperation = 'source-over';
-  // film grain: a pre-made tile, jumped around 24 times a second
-  const gi = REDUCED ? 0 : Math.floor(ct * 24), tile = S.grain[gi % 4];
-  const ox = REDUCED ? 0 : (hash01(gi, 7, 1) * 192) | 0, oy = REDUCED ? 0 : (hash01(gi, 9, 2) * 192) | 0;
-  c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.07;
-  if (!S.grainPat || S.grainPat.t !== tile) { S.grainPat = { t: tile, p: c.createPattern(tile, 'repeat') }; }
-  c.save(); c.translate(-ox, -oy); c.fillStyle = S.grainPat.p; c.fillRect(0, 0, pw + 192, ph + 192); c.restore();
-  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
 }
-function cinBarsAndFade(c, V, ct) {
-  const pw = V.pw, ph = V.ph;
-  c.setTransform(1, 0, 0, 1, 0, 0);
-  if (V.bar > 0.5) { c.fillStyle = '#020306'; c.fillRect(0, 0, pw, V.bar); c.fillRect(0, ph - V.bar, pw, V.bar); }
+/* post layers as CSS: set a handful of custom properties per frame, only when they change */
+function cinFxDom(V, ct) {
+  if (!CN.dom) CN.dom = { root: $('#cut'), flash: $('#cutFlash'), last: {} };
+  const D = CN.dom, st = D.last, root = D.root, set = (k, v) => { if (st[k] !== v) { st[k] = v; root.style.setProperty(k, v); } };
+  if (!root) return;
+  const warm = cinGrade(ct);
+  // grade: cool and anticipatory -> warm and triumphant, as a multiply tint
+  const coolM = [206, 222, 250], warmM = [255, 238, 210];
+  set('--cut-mul', 'rgb(' + [0, 1, 2].map(i => Math.round(lerp(coolM[i], warmM[i], warm))).join(',') + ')');
+  set('--cut-vig', (clamp(0.8 + Math.sin(ct * 0.9) * 0.05 + (ct > 11.5 ? 0 : 0.06), 0, 1)).toFixed(2));
+  const px = Math.round(V.bar * ((root.clientHeight || V.ph) / V.ph));
+  set('--cut-bar', px + 'px');
   // fade up from black, then the white flash into black
-  let fade = 0;
-  if (ct < 1.1) fade = 1 - ct / 1.1;
-  if (fade > 0) { c.fillStyle = 'rgba(0,0,0,' + fade.toFixed(3) + ')'; c.fillRect(0, 0, pw, ph); }
-  if (ct > 14.4 && ct < 15.7) {
+  let a = 0, col = '0,0,0';
+  if (ct < 1.1) a = 1 - ct / 1.1;
+  if (ct > 14.4 && ct < 15.75) {
     const f = clamp((ct - 14.4) / 0.9, 0, 1), b = clamp((ct - 15.3) / 0.35, 0, 1);
-    const fl = REDUCED ? f * 0.6 : f;
-    c.fillStyle = 'rgba(255,250,238,' + (fl * (1 - b)).toFixed(3) + ')'; c.fillRect(0, 0, pw, ph);
-    if (b > 0) { c.fillStyle = 'rgba(0,0,0,' + b.toFixed(3) + ')'; c.fillRect(0, 0, pw, ph); }
+    if (b < 1) { a = (REDUCED ? f * 0.55 : f) * (1 - b); col = '255,250,238'; }
+    if (b > 0) { a = Math.max(a, b); col = b > 0.5 ? '0,0,0' : col; }
   }
+  a = Math.round(a * 100) / 100;
+  if (st.fa !== a) { st.fa = a; D.flash.style.opacity = a; }
+  if (st.fc !== col) { st.fc = col; D.flash.style.background = 'rgb(' + col + ')'; }
+}
+/* the grain tile as an image for the CSS layer */
+function cinGrainUrl() {
+  const S = CN.S;
+  try { const root = $('#cut'); if (root && S.grain) root.style.setProperty('--cut-grain', 'url(' + S.grain[0].toDataURL('image/png') + ')'); } catch (e) { /* tainted or unavailable: no grain */ }
 }

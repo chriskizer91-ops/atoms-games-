@@ -136,16 +136,19 @@ function cinCastDraw(c, V, ct) {
   const cls = [];
   for (let i = 0; i < 8; i++) cls.push(cinClassState(i, ct));
   const dean = cinDeanState(ct), grad = cinGradState(ct);
+  { const e2 = V.k * V.z, l2 = e2 < 0.7 ? 1 : 0; dean.o.lod = l2; grad.o.lod = l2; }
   const A = typeof cinArtActors === 'function' ? cinArtActors(c, V, ct, cls, dean, grad) : null;
   const rets = {};
   // classmates, back to front; each holds a rolled diploma in the right hand
+  const vw = CN.cur, eff = V.k * (1 + (V.z - 1)), clsLod = eff * 0.8 < 0.7 ? 2 : eff * 0.8 < 1.15 ? 1 : 0;
   for (let i = 0; i < 8; i++) {
-    const st = cls[i];
+    const st = cls[i]; st.o.lod = clsLod;
     if (A && A.skipClass) break;
+    if (vw && (st.x + 70 * st.s < vw.x0 || st.x - 70 * st.s > vw.x1 || st.y - 200 * st.s > vw.y1 || st.y + 20 < vw.y0)) continue;
     const r = cinFigure(c, st.x, st.y, st.s, st.o);
     rets['c' + i] = r;
-    if (!(st.o.armR.k === 'clap' || (st.o.armR.k !== 'hold' && st.o.armR.k !== 'wave'))) { const w = r.hands.R.world; cinDiploma(c, w[0] + 2 * st.s, w[1] - 7 * st.s, -0.35 + (st.o.armR.k === 'wave' ? -0.3 : 0), 0.62 * st.s / 0.8, 0); }
-    else if (st.o.armR.k === 'wave') { const w = r.hands.R.world; cinDiploma(c, w[0] + 2, w[1] - 12 * st.s, -0.3, 0.55, 0); }
+    if (!(st.o.armR.k === 'clap' || (st.o.armR.k !== 'hold' && st.o.armR.k !== 'wave'))) { const w = r.hands.R.world; cinDiploma(c, w[0] + 2 * st.s, w[1] - 7 * st.s, -0.35 + (st.o.armR.k === 'wave' ? -0.3 : 0), 0.62 * st.s / 0.8, clsLod >= 2 ? -1 : 0); }
+    else if (st.o.armR.k === 'wave') { const w = r.hands.R.world; cinDiploma(c, w[0] + 2, w[1] - 12 * st.s, -0.3, 0.55, clsLod >= 2 ? -1 : 0); }
   }
   // Dean, then the Graduate (nearer the camera)
   const rd = (A && A.dean) ? A.dean : cinFigure(c, dean.x, dean.y, dean.s, dean.o);

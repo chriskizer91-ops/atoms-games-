@@ -2,9 +2,9 @@
    Three seated tiers seen from behind, then a blurred foreground row. Bodies (shoulders, shirts, chairs) are baked per tier;
    heads are pre-blurred sprites drawn with a bounce, so the crowd can ripple and then erupt without per-frame vector work. */
 const CIN_TIERS = [
-  { depth: 1.04, y: 640, s: 0.58, dx: 40, x0: -560, n: 58, blur: 1.5, haze: 0.40, bounce: 1.0, seed: 301 },
-  { depth: 1.12, y: 698, s: 0.82, dx: 58, x0: -600, n: 42, blur: 0.9, haze: 0.22, bounce: 1.3, seed: 302 },
-  { depth: 1.26, y: 782, s: 1.12, dx: 80, x0: -640, n: 32, blur: 0.6, haze: 0.08, bounce: 1.7, seed: 303 }
+  { depth: 1.04, y: 640, s: 0.58, dx: 50, x0: -560, n: 47, blur: 1.5, haze: 0.40, bounce: 1.0, seed: 301 },
+  { depth: 1.12, y: 698, s: 0.82, dx: 70, x0: -600, n: 35, blur: 0.9, haze: 0.22, bounce: 1.3, seed: 302 },
+  { depth: 1.26, y: 782, s: 1.12, dx: 96, x0: -640, n: 27, blur: 0.6, haze: 0.08, bounce: 1.7, seed: 303 }
 ];
 const CIN_SKIN = ['#e0ac86', '#f2c9a5', '#8f5d3d', '#d99d77', '#c48a64', '#6b4430', '#f6d6b8'];
 const CIN_HAIR = ['#2b2118', '#7a4a2a', '#1a1a1a', '#d8c27a', '#9a9aa2', '#4a2e1c', '#c9c0b4', '#8a3b22'];

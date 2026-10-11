@@ -11,6 +11,12 @@ function cinBuildBackdrop() {
     g.fillRect(-2600, -1500, 6400, 2100);
     g.fillStyle = cnRG(g, CIN_SUN.x, CIN_SUN.y, 0, CIN_SUN.x, CIN_SUN.y, 760, [[0, 'rgba(255,244,210,.5)'], [0.25, 'rgba(255,236,190,.22)'], [0.6, 'rgba(255,226,170,.06)'], [1, 'rgba(255,226,170,0)']]);
     g.fillRect(-2600, -1500, 6400, 2100);
+    // soft crepuscular rays fanning out from the sun
+    for (let i = 0; i < 7; i++) {
+      const a = 0.12 + i * 0.2, w = 0.05 + (i % 3) * 0.02;
+      g.fillStyle = cnLG(g, CIN_SUN.x, CIN_SUN.y, CIN_SUN.x + Math.cos(a) * 1500, CIN_SUN.y + Math.sin(a) * 1500, [[0, 'rgba(255,240,200,.14)'], [1, 'rgba(255,240,200,0)']]);
+      g.beginPath(); g.moveTo(CIN_SUN.x, CIN_SUN.y); g.lineTo(CIN_SUN.x + Math.cos(a - w) * 1600, CIN_SUN.y + Math.sin(a - w) * 1600); g.lineTo(CIN_SUN.x + Math.cos(a + w) * 1600, CIN_SUN.y + Math.sin(a + w) * 1600); g.closePath(); g.fill();
+    }
     // a warm haze band along the horizon
     g.fillStyle = cnLG(g, 0, 300, 0, 560, [[0, 'rgba(255,214,160,0)'], [1, 'rgba(255,214,160,.5)']]); g.fillRect(-2600, 300, 6400, 260);
   });
@@ -67,15 +73,9 @@ function cinSky(c, V, ct) { cnBlit(c, CN.L.sky); }
 function cinSun(c, V, ct) {
   const S = CN.S, sx = CIN_SUN.x, sy = CIN_SUN.y;
   c.globalCompositeOperation = 'lighter';
-  // slow crepuscular shafts fanning out from the sun
-  for (let i = 0; i < 7; i++) {
-    const a = 0.12 + i * 0.2 + Math.sin(ct * 0.15 + i) * 0.015, w = 0.05 + (i % 3) * 0.02;
-    c.fillStyle = cnLG(c, sx, sy, sx + Math.cos(a) * 1500, sy + Math.sin(a) * 1500, [[0, 'rgba(255,240,200,.15)'], [1, 'rgba(255,240,200,0)']]);
-    c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx + Math.cos(a - w) * 1600, sy + Math.sin(a - w) * 1600); c.lineTo(sx + Math.cos(a + w) * 1600, sy + Math.sin(a + w) * 1600); c.closePath(); c.fill();
-  }
-  c.globalAlpha = 0.34; c.drawImage(S.glowW, sx - 340, sy - 340, 680, 680);
-  c.globalAlpha = 0.7; c.drawImage(S.glowW, sx - 120, sy - 120, 240, 240);
-  c.globalCompositeOperation = 'source-over';
+  c.globalAlpha = 0.3; c.drawImage(S.glowW, sx - 300, sy - 300, 600, 600);
+  c.globalAlpha = 0.7; c.drawImage(S.glowW, sx - 110, sy - 110, 220, 220);
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   c.fillStyle = cnRG(c, sx, sy, 0, sx, sy, 42, [[0, '#ffffff'], [0.72, '#fffbe8'], [1, 'rgba(255,248,214,0)']]);
   c.beginPath(); c.arc(sx, sy, 42, 0, CN_TAU); c.fill();
 }

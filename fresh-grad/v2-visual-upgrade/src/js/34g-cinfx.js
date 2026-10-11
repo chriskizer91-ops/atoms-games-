@@ -5,6 +5,13 @@
 /* ---------- the diploma ---------- */
 function cinDiploma(c, x, y, ang, s, detail) {
   const L = 58, R = 6.8, d = detail || 0;
+  if (d < 0) {      // far away: a cream roll with a red band
+    c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s);
+    c.fillStyle = '#efe6cc'; cnRR(c, -L / 2, -R, L, R * 2, R * 0.5); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(-L / 2 + 3, -R + 1.2, L - 6, 2);
+    c.fillStyle = '#c9402f'; c.fillRect(0, -R - 0.4, 7, R * 2 + 0.8);
+    c.restore(); return;
+  }
   c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s);
   // soft shadow
   c.fillStyle = 'rgba(6,8,28,.22)'; c.beginPath(); c.ellipse(1.5, R + 1.2, L * 0.46, 2.4, 0, 0, CN_TAU); c.fill();
@@ -98,7 +105,7 @@ function cinDrawHat(c, h, tw, alpha, trail) {
 }
 function cinMakeConfetti() {
   const rnd = mulberry32(21), out = [], cols = ['#ffc247', '#ff6b6b', '#5bd39b', '#47b8ff', '#a393ff', '#ffffff', '#ff9ac0', '#ff7a59'];
-  const N = 280;
+  const N = 230;
   for (let i = 0; i < N; i++) {
     const kind = i % 3;          // 0 left cannon, 1 right cannon, 2 overhead shower
     const z = 0.9 + rnd() * 0.85;
@@ -134,6 +141,7 @@ function cinParticles(c, V, ct) {
       if (p.z < bounds[b][0] || p.z >= bounds[b][1]) continue;
       const pos = cinConfPos(p, ct);
       if (!pos || pos[1] > 1100) continue;
+      if (pos[0] < CN.cur.x0 - 30 || pos[0] > CN.cur.x1 + 30 || pos[1] < CN.cur.y0 - 30 || pos[1] > CN.cur.y1 + 30) continue;
       const flip = Math.cos(pos[2] * p.fr + p.ph), sc = near ? 1.9 : b ? 1.25 : 0.9;
       c.save(); c.translate(pos[0], pos[1]); c.rotate(p.rot + p.vr * pos[2] * 0.5);
       c.globalAlpha = near ? 0.62 : 0.95; c.fillStyle = p.col;
@@ -164,7 +172,7 @@ function cinParticles(c, V, ct) {
     if (tt <= 0) continue;
     const p0 = cinHatPos(h, tt);
     if (p0[1] > 960) continue;
-    if (tt < 0.9 && !REDUCED) for (let k = 3; k >= 1; k--) { const ti = Math.max(0, tt - k * 0.06); cinDrawHat(c, h, ti, 0.07 + (3 - k) * 0.04, true); }
+    if (tt < 0.7 && !REDUCED) for (let k = 2; k >= 1; k--) { const ti = Math.max(0, tt - k * 0.06); cinDrawHat(c, h, ti, 0.07 + (3 - k) * 0.04, true); }
     cinDrawHat(c, h, tt, 1, false);
   }
 }
@@ -187,6 +195,7 @@ function cinSpotTarget(ct, which) {
 function cinLight(c, V, ct) {
   const S = CN.S;
   cinSet(c, V, 1);
+  const q = CN.cur, tight = V.z > 2;
   c.globalCompositeOperation = 'lighter';
   const wash = ct < 3 ? cnS5((ct - 0.6) / 1.2) : 1;
   const spots = [[300, -70, 0], [990, -70, 1]];
@@ -194,40 +203,45 @@ function cinLight(c, V, ct) {
   for (let k = 0; k < 2; k++) {
     const sp = spots[k], t = cinSpotTarget(ct, k), ox = sp[0], oy = sp[1], tx = t[0], ty = t[1], wB = 118;
     const warm = k ? '255,236,200' : '255,244,214';
-    c.fillStyle = cnLG(c, ox, oy, tx, ty, [[0, 'rgba(' + warm + ',' + (0.22 * wash) + ')'], [0.7, 'rgba(' + warm + ',' + (0.10 * wash) + ')'], [1, 'rgba(' + warm + ',' + (0.04 * wash) + ')']]);
+    // one fill per beam: a hot core fading to a soft edge is faked by the gradient along its length
+    c.fillStyle = cnLG(c, ox, oy, tx, ty, [[0, 'rgba(' + warm + ',' + ((tight ? 0.1 : 0.2) * wash) + ')'], [0.7, 'rgba(' + warm + ',' + ((tight ? 0.06 : 0.11) * wash) + ')'], [1, 'rgba(' + warm + ',' + ((tight ? 0.04 : 0.07) * wash) + ')']]);
     c.beginPath(); c.moveTo(ox - 10, oy); c.lineTo(ox + 10, oy); c.lineTo(tx + wB, ty + 4); c.lineTo(tx - wB, ty + 4); c.closePath(); c.fill();
-    // brighter core and soft edges
-    c.fillStyle = cnLG(c, ox, oy, tx, ty, [[0, 'rgba(' + warm + ',0)'], [1, 'rgba(' + warm + ',' + (0.1 * wash) + ')']]);
-    c.beginPath(); c.moveTo(ox - 3, oy); c.lineTo(ox + 3, oy); c.lineTo(tx + wB * 0.45, ty + 4); c.lineTo(tx - wB * 0.45, ty + 4); c.closePath(); c.fill();
-    // light pool on the planks, with a little polish
-    c.save(); c.translate(tx, ty + 6); c.scale(1, 0.18);
-    c.fillStyle = cnRG(c, 0, 0, 0, 0, 0, 150, [[0, 'rgba(' + warm + ',' + (0.2 * wash) + ')'], [0.5, 'rgba(' + warm + ',' + (0.09 * wash) + ')'], [1, 'rgba(' + warm + ',0)']]); c.beginPath(); c.arc(0, 0, 150, 0, CN_TAU); c.fill();
-    c.restore();
+    // light pool on the planks
+    if (ty + 40 > q.y0 && ty - 20 < q.y1) {
+      c.save(); c.translate(tx, ty + 6); c.scale(1, 0.18);
+      c.fillStyle = cnRG(c, 0, 0, 0, 0, 0, 150, [[0, 'rgba(' + warm + ',' + (0.2 * wash) + ')'], [0.5, 'rgba(' + warm + ',' + (0.09 * wash) + ')'], [1, 'rgba(' + warm + ',0)']]); c.beginPath(); c.arc(0, 0, 150, 0, CN_TAU); c.fill();
+      c.restore();
+    }
     pools.push([tx, ty, ox, oy, wB]);
   }
   // dust motes drifting in the beams
-  const nm = REDUCED ? 14 : 46;
+  const nm = REDUCED ? 14 : (tight ? 30 : 46);
   for (let i = 0; i < nm; i++) {
     const k = i & 1, p = pools[k], u = hash01(i, 11, 3), sd = hash01(i, 12, 4) * 2 - 1;
     const t = (u + ct * (0.012 + hash01(i, 13, 5) * 0.012)) % 1, w = lerp(8, p[4], t) * sd;
     const x = lerp(p[2], p[0], t) + w + Math.sin(ct * 0.7 + i) * 6, y = lerp(p[3], p[1], t) + Math.sin(ct * 0.5 + i * 2) * 8;
+    if (x < q.x0 || x > q.x1 || y < q.y0 || y > q.y1) continue;
     c.globalAlpha = (0.25 + 0.35 * Math.sin(ct * 1.3 + i * 1.7) ** 2) * Math.min(1, t * 3) * wash;
     const r = 1.6 + hash01(i, 14, 6) * 2.4; c.drawImage(S.glowW, x - r, y - r, r * 2, r * 2);
   }
   c.globalAlpha = 1;
-  // long sun shafts raking across the whole set (warm, very soft)
-  const sa = 0.05 + cinGrade(ct) * 0.05;
-  for (let i = 0; i < 3; i++) {
-    const x0 = -200 + i * 360 + Math.sin(ct * 0.12 + i * 2) * 40;
-    c.fillStyle = cnLG(c, x0, -80, x0 + 520, 760, [[0, 'rgba(255,236,190,' + sa + ')'], [1, 'rgba(255,236,190,0)']]);
-    c.beginPath(); c.moveTo(x0, -80); c.lineTo(x0 + 110, -80); c.lineTo(x0 + 700, 780); c.lineTo(x0 + 460, 780); c.closePath(); c.fill();
+  // long sun shafts raking across the set (warm, very soft) - only worth the fill in wide shots
+  if (V.z < 1.6) {
+    const sa = 0.05 + cinGrade(ct) * 0.05;
+    for (let i = 0; i < 2; i++) {
+      const x0 = -60 + i * 520 + Math.sin(ct * 0.12 + i * 2) * 40;
+      c.fillStyle = cnLG(c, x0, -80, x0 + 520, 760, [[0, 'rgba(255,236,190,' + sa + ')'], [1, 'rgba(255,236,190,0)']]);
+      c.beginPath(); c.moveTo(x0, -80); c.lineTo(x0 + 110, -80); c.lineTo(x0 + 700, 780); c.lineTo(x0 + 460, 780); c.closePath(); c.fill();
+    }
   }
   // footlight glow along the stage lip
-  c.globalAlpha = 0.34 * wash;
-  for (let x = CIN_FLOOR.x0 + 26; x < CIN_FLOOR.x1 - 10; x += 52) c.drawImage(S.glowA, x - 14, 596, 28, 22);
-  c.globalAlpha = 1;
-  // rim-lit flickers and camera flashes in the audience once the cheering starts
-  if (ct > 9.8 && ct < 14.7 && !REDUCED) {
+  if (q.y1 > 590 && q.y0 < 625) {
+    c.globalAlpha = 0.34 * wash;
+    for (let x = CIN_FLOOR.x0 + 26; x < CIN_FLOOR.x1 - 10; x += 52) { if (x < q.x0 - 20 || x > q.x1 + 20) continue; c.drawImage(S.glowA, x - 14, 596, 28, 22); }
+    c.globalAlpha = 1;
+  }
+  // camera flashes in the audience once the cheering starts
+  if (ct > 9.8 && ct < 14.7 && !REDUCED && V.z < 1.7) {
     cinSet(c, V, 1.16);
     const tick = Math.floor(ct * 9), f = 1 - ((ct * 9) % 1);
     for (let i = 0; i < 6; i++) {
@@ -238,10 +252,12 @@ function cinLight(c, V, ct) {
     c.globalAlpha = 1;
   }
   // bloom on the street lamps
-  cinSet(c, V, 0.9);
-  c.globalAlpha = 0.5;
-  [[76, 254], [116, 254], [1170, 254], [1210, 254], [-320, 278], [-280, 278], [1480, 278], [1520, 278]].forEach(p => c.drawImage(S.glowW, p[0] - 40, p[1] - 40, 80, 80));
-  c.globalAlpha = 1;
+  if (V.z < 1.4) {
+    cinSet(c, V, 0.9);
+    c.globalAlpha = 0.5;
+    [[76, 254], [116, 254], [1170, 254], [1210, 254], [-320, 278], [-280, 278], [1480, 278], [1520, 278]].forEach(p => c.drawImage(S.glowW, p[0] - 40, p[1] - 40, 80, 80));
+    c.globalAlpha = 1;
+  }
   c.globalCompositeOperation = 'source-over';
 }
 
@@ -300,11 +316,6 @@ function cinCards(c, V, ct) {
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = (0.2 + glow * 0.1) * dk; c.drawImage(S.glowA, cx - 130 * sc, cy - 90 * sc, 260 * sc, 180 * sc); c.globalCompositeOperation = 'source-over';
     c.globalAlpha = dk; cinDiploma(c, cx, cy, -0.35 + Math.sin(ct * 0.7) * 0.05, sc, 0.4); c.globalAlpha = 1;
   }
-  // vignette and grain
-  c.globalAlpha = 0.9; c.drawImage(S.vig, 0, 0, pw, ph); c.globalAlpha = 1;
-  const gi = REDUCED ? 0 : Math.floor(ct * 24), tile = S.grain[gi % 4], ox = (hash01(gi, 7, 1) * 192) | 0, oy = (hash01(gi, 9, 2) * 192) | 0;
-  if (!S.grainPat || S.grainPat.t !== tile) S.grainPat = { t: tile, p: c.createPattern(tile, 'repeat') };
-  c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.09; c.save(); c.translate(-ox, -oy); c.fillStyle = S.grainPat.p; c.fillRect(0, 0, pw + 192, ph + 192); c.restore(); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   // fade in from the white-out/black
   const f = 1 - cnS5(u / 0.5); if (f > 0) { c.fillStyle = 'rgba(0,0,0,' + f.toFixed(3) + ')'; c.fillRect(0, 0, pw, ph); }
 }
