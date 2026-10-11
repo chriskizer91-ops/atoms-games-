@@ -113,8 +113,10 @@
   </div>
 
   <div id="job" class="overlay" hidden>
+    <div class="jbg" aria-hidden="true"><i class="jb1"></i><i class="jb2"></i><i class="jb3"></i></div>
     <div class="jcard" role="dialog" aria-modal="true" aria-labelledby="jTitle">
       <header class="jhead">
+        <i class="jh-pat" aria-hidden="true"></i><i class="jh-shine" aria-hidden="true"></i>
         <div class="jid"><span class="jmark" id="jMark" aria-hidden="true"></span><div><b id="jTitle"></b><small id="jSub"></small></div></div>
         <div class="jclock"><b id="jClock">8:00 AM</b><small id="jLeft"></small></div>
         <div class="jperf"><small>Performance</small><b id="jPerf">&ndash;</b></div>
@@ -163,14 +165,17 @@
 
   <div id="fishing" class="overlay" hidden>
     <div class="fcard" role="dialog" aria-modal="true" aria-labelledby="fishTitle">
-      <div class="fhead"><b id="fishTitle">Fishing</b><span>Tap or Space: cast, hook, hold to reel</span><button class="chip-btn" id="fishLeave" type="button">Done fishing</button></div>
+      <div class="fhead"><span class="fh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-5 8-6.5 12-3.5l3.5-2.5v12L15 15.500C11 18.500 6 17 3 12z" fill="currentColor" fill-opacity=".14"/><circle cx="8" cy="11" r=".9" fill="currentColor"/><path d="M11.500 9.500c1 1.500 1 3.500 0 5"/></svg></span><b id="fishTitle">Fishing</b><span>Tap or Space: cast, hook, hold to reel</span><button class="chip-btn" id="fishLeave" type="button">Done fishing</button></div>
       <div class="fstage">
         <canvas id="fishCv"></canvas>
         <p id="fishMsg"></p>
         <div id="fishResult" hidden>
-          <canvas id="fishPic" width="240" height="120"></canvas>
-          <b id="fishName"></b><small id="fishInfo"></small>
-          <div class="row"><button class="btn" id="fishKeep" type="button">Keep for dinner</button><button class="btn ghost" id="fishSell" type="button">Sell</button><button class="btn ghost" id="fishAgain" type="button">Let it go</button></div>
+          <div class="fr-card">
+            <i class="fr-rays" aria-hidden="true"></i>
+            <canvas id="fishPic" width="480" height="240"></canvas>
+            <b id="fishName"></b><small id="fishInfo"></small>
+            <div class="row"><button class="btn" id="fishKeep" type="button">Keep for dinner</button><button class="btn ghost" id="fishSell" type="button">Sell</button><button class="btn ghost" id="fishAgain" type="button">Let it go</button></div>
+          </div>
         </div>
       </div>
     </div>
@@ -178,8 +183,10 @@
 
   <div id="scene" class="overlay" hidden>
     <div class="scard" role="dialog" aria-modal="true" aria-labelledby="sceneTitle">
-      <canvas id="sceneCv" aria-hidden="true"></canvas>
-      <p id="sceneLine"></p>
+      <div class="sview">
+        <canvas id="sceneCv" aria-hidden="true"></canvas>
+        <p id="sceneLine"></p>
+      </div>
       <div class="sinfo"><div><b id="sceneTitle"></b><small id="sceneSub"></small></div><span id="sceneClock">0:00</span></div>
       <div class="sbar"><span id="sceneBar"></span></div>
     </div>
@@ -187,6 +194,7 @@
 
   <div id="dream" class="overlay" hidden data-mood="calm">
     <canvas id="dreamCanvas"></canvas>
+    <div class="dream-veil" aria-hidden="true"></div>
     <div class="dream-ui">
       <p class="dream-kind" id="dreamKind">Dreaming</p>
       <h2 id="dreamTitle"></h2>

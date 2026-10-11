@@ -1,0 +1,6 @@
+/* reduced motion: still pictures instead of looping ones for every shift game, the receipt and the medallion */
+@media (prefers-reduced-motion:reduce){
+  .jcard,.jhero,.jhow li,.jstats div,.jpay,.jrank,.jrank .m-prog,.jrank .m-gloss::before,.jrank .m-spk,.jp-stamp,.jpop,.bug,.bug svg,.pt svg,.pt .p6,.pt .p7,.pn .imp,.nu-card.in,.nu-leds .hb,.nu-leds .al i,.nu-mon::before,.bz-face.ring::after,.bz-call::before,.bz-hearts svg:not(.on),#jfx,.pg.fresh .pt,.shake,.pan .fo,.pan .fi,.pan .sz circle,.pan.cook::before,.pan.burnt::after,.pan.ding,.pan.ding .bell,.ec-pad.on::before,.ec-pad.on .nt,.cs-code .cl:last-child code::after,.cs-hb.low em,.jres.kS .jres-mid h2{animation:none!important}
+  .pt svg,.ec-pad,.pn .nd,.pn .rod,.bz-dial .nd,.bz-dial .dband,.bz-track .band,.jbar span,.pan{transition:none}
+  .jpay{clip-path:none}
+}

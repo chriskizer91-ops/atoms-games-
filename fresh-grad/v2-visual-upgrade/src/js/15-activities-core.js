@@ -5,14 +5,19 @@ const JR = (a, b) => a + Math.random() * (b - a);
 const JI = (a, b) => Math.floor(JR(a, b + 1));
 const JPICK = a => a[Math.floor(Math.random() * a.length)];
 const JSHUF = a => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = r[i]; r[i] = r[j]; r[j] = t; } return r; };
-const JGLYPH = {
-  bug: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 8.5a3.5 3.5 0 0 1 7 0V15a3.5 3.5 0 0 1-7 0z"/><path d="M12 8v11.5M3.5 12.5h5M15.5 12.5h5M5 6.5l3.5 2M19 6.5l-3.5 2M5 19l3.5-2.2M19 19l-3.5-2.2M10 4.2 9 2.5M14 4.2l1-1.7"/></svg>',
-  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.4"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
-  cross: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 3h5.6v6.2H21v5.6h-6.2V21H9.2v-6.2H3V9.2h6.2z"/></svg>',
-  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-7M12 20V5M19 20v-10M3 20.5h18"/><path d="m4 9 5-4 4 3 7-5"/></svg>',
-  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
-  flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8c.9 4 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.2 1.1-3.6 2.3-4.7.3 1.5 1 2.3 2 2.5-.5-3.2-.2-5.6.9-8.2z"/></svg>'
-};
+const JGLYPH = (function () {
+  const wrap = body => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  // an eight-tooth gear traced as one outline
+  let teeth = ''; for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, c = Math.cos(a), s2 = Math.sin(a), px = -s2, py = c; const p = (r, w) => (12 + c * r + px * w).toFixed(2) + ' ' + (12 + s2 * r + py * w).toFixed(2); teeth += (i ? 'L' : 'M') + p(7.2, -2.5) + 'L' + p(9.7, -1.6) + 'L' + p(9.7, 1.6) + 'L' + p(7.2, 2.5); }
+  return {
+    bug: wrap('<path d="M8.5 8.5a3.5 3.5 0 0 1 7 0V15a3.5 3.5 0 0 1-7 0z" fill="currentColor" fill-opacity=".16"/><path d="M12 8v11.5M3.5 12.5h5M15.5 12.5h5M5 6.5l3.5 2M19 6.5l-3.5 2M5 19l3.5-2.2M19 19l-3.5-2.2M10 4.2 9 2.5M14 4.2l1-1.7"/>'),
+    gear: wrap('<path d="' + teeth + 'Z" fill="currentColor" fill-opacity=".16" transform="rotate(11.25 12 12)"/><circle cx="12" cy="12" r="7.3" fill="currentColor" fill-opacity=".1"/><circle cx="12" cy="12" r="3"/>'),
+    cross: wrap('<path d="M9.2 3h5.6v6.2H21v5.6h-6.2V21H9.2v-6.2H3V9.2h6.2z" fill="currentColor" fill-opacity=".16"/><path d="M12 8.5v7M8.5 12h7" stroke-width="1.5" opacity=".7"/>'),
+    chart: wrap('<path d="M5 20v-7M12 20V5M19 20v-10M3 20.5h18" /><path d="M4.2 9.5 9 5.2l4 3 7-5" /><path d="M5 20v-7h0M12 20V5" stroke-width="3.2" opacity=".18"/>'),
+    star: wrap('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor" fill-opacity=".18"/>'),
+    flame: wrap('<path d="M12 2.8c.9 4 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.2 1.1-3.6 2.3-4.7.3 1.5 1 2.3 2 2.5-.5-3.2-.2-5.6.9-8.2z" fill="currentColor" fill-opacity=".16"/><path d="M12 20a2.500 2.500 0 0 1-2.500-2.500c0-1.400 1-2.200 1.600-3.300.6.800 1 1 1.400 1 .6.6 2 1.400 2 2.800A2.500 2.500 0 0 1 12 20z" stroke-width="1.400" fill="currentColor" fill-opacity=".35"/>')
+  };
+})();
 JA.rank = p => p >= 0.92 ? 'S' : p >= 0.8 ? 'A' : p >= 0.62 ? 'B' : p >= 0.4 ? 'C' : 'D';
 JA.RANKS = ['S', 'A', 'B', 'C', 'D'];
 JA.mult = p => Math.round((0.9 + (hasPerk('workhorse') ? 0.35 : 0.3) * clamp(p, 0, 1)) * 1000) / 1000;
@@ -47,22 +52,24 @@ JA.open = function (k, o) {
   $('#jClock').textContent = clockStr(S.t);
   $('#jLeft').textContent = beat ? '' : hoursStr(k.total) + ' shift';
   $('#jBarFill').style.width = '0%';
-  $('#jPerf').textContent = '–';
+  $('#jPerf').textContent = '–'; $('#jPerf').dataset.rk = '';
   $('#jStage').innerHTML = ''; $('#jFoot').textContent = '';
+  JFX.clear();
   root.hidden = false;
   if (beat) JA.begin(); else JA.intro(J);
 };
 JA.intro = function (J) {
-  const st = $('#jStage'), d = J.def;
+  const st = $('#jStage'), d = J.def, jb = job();
   st.innerHTML = '';
   const box = el('div', 'jintro');
+  const hero = el('div', 'jhero'); hero.innerHTML = JART[J.id] ? JART[J.id](jb.roof, jb.accent) : ''; box.appendChild(hero);
   const gl = el('div', 'jglyph'); gl.innerHTML = d.glyph; box.appendChild(gl);
   box.appendChild(el('p', 'jeye', 'Today’s shift'));
   box.appendChild(el('h2', '', d.name));
   box.appendChild(el('p', 'jgoal', d.goal));
   const ul = el('ul', 'jhow'); d.how.forEach(t => ul.appendChild(el('li', '', t))); box.appendChild(ul);
   const rec = S.ja && S.ja[J.id];
-  if (rec) box.appendChild(el('p', 'jbest', 'Your best: ' + JA.rank(rec.best) + ' (' + Math.round(rec.best * 100) + '%) · played ' + rec.plays + (rec.plays === 1 ? ' time' : ' times')));
+  if (rec) { const bp = el('p', 'jbest'), brk = JA.rank(rec.best); bp.appendChild(el('span', 'jb-rk r' + brk, brk)); bp.appendChild(el('span', '', 'Your best: ' + brk + ' (' + Math.round(rec.best * 100) + '%) · played ' + rec.plays + (rec.plays === 1 ? ' time' : ' times'))); box.appendChild(bp); }
   const row = el('div', 'jrow');
   const go = el('button', 'btn', 'Clock in'); go.type = 'button';
   const au = el('button', 'btn ghost', 'Autopilot · 90% pay'); au.type = 'button';
@@ -100,7 +107,7 @@ JA.hud = function (J) {
   if (cl !== J.shownClock) { J.shownClock = cl; $('#jClock').textContent = cl; }
   const p = J.def.perf(J);
   const txt = p == null ? '–' : JA.rank(p) + ' · ' + Math.round(p * 100) + '%';
-  if (txt !== J.shown) { J.shown = txt; $('#jPerf').textContent = txt; }
+  if (txt !== J.shown) { J.shown = txt; $('#jPerf').textContent = txt; $('#jPerf').dataset.rk = p == null ? '' : JA.rank(p); }
 };
 /* called every frame from stepSkip while an activity is on screen */
 JA.frame = function (dt) {
@@ -130,15 +137,14 @@ JA.finish = function () {
   if (!J.beat) { k.perfMult = JA.mult(J.perf); k.rank = 'rank ' + rk; }
   $('#jBarFill').style.width = '100%'; $('#jClock').textContent = clockStr(S.t);
   const pt = rk + ' · ' + Math.round(J.perf * 100) + '%';
-  $('#jPerf').textContent = pt; J.shown = pt;
+  $('#jPerf').textContent = pt; J.shown = pt; $('#jPerf').dataset.rk = rk;
   JA.showResult(J, r, rk);
   SFX.chime(J.perf >= 0.62 ? 'pay' : 'door');
 };
 JA.showResult = function (J, r, rk) {
   const st = $('#jStage'); st.innerHTML = '';
-  const box = el('div', 'jres ' + (J.beat ? 'beat' : ''));
-  const ring = el('div', 'jrank r' + rk); ring.style.setProperty('--p', J.perf.toFixed(3));
-  ring.appendChild(el('b', '', rk)); box.appendChild(ring);
+  const box = el('div', 'jres k' + rk + ' r' + rk + (J.beat ? ' beat' : ''));
+  const ring = JA.medal(rk, J.perf); box.appendChild(ring);
   const mid = el('div', 'jres-mid');
   mid.appendChild(el('h2', '', r.head || ['Flawless shift', 'Great shift', 'Solid shift', 'Rough shift', 'Rocky shift'][JA.RANKS.indexOf(rk)]));
   mid.appendChild(el('p', 'jq', J.def.quips[JA.RANKS.indexOf(rk)]));
@@ -153,9 +159,11 @@ JA.showResult = function (J, r, rk) {
     const base = Math.round(S.pending * 100) / 100, mult = JA.mult(J.perf), tot = Math.round(S.pending * mult * 100) / 100;
     const bonus = Math.round((tot - base) * 100) / 100, pc = Math.round((mult - 1) * 100);
     const pay = el('div', 'jpay');
+    const hd = el('div', 'jp-head'); hd.appendChild(el('span', '', job().employer)); hd.appendChild(el('b', '', 'Shift slip')); pay.appendChild(hd);
     [['Base pay', fmt(base)], ['Performance ' + (pc >= 0 ? '+' : '−') + Math.abs(pc) + '%', (bonus >= 0 ? '+' : '−') + fmt(Math.abs(bonus))], ['Take-home', fmt(tot)]].forEach((x, i) => {
       const d = el('div', i === 2 ? 'tot' : ''); d.appendChild(el('span', '', x[0])); d.appendChild(el('b', '', x[1])); pay.appendChild(d);
     });
+    const ft = el('div', 'jp-foot'); ft.appendChild(el('i', 'jp-bar')); ft.appendChild(el('i', 'jp-stamp', rk)); pay.appendChild(ft);
     box.appendChild(pay);
   }
   const btn = el('button', 'btn', J.beat ? 'Continue' : 'Clock out'); btn.type = 'button';
@@ -165,6 +173,7 @@ JA.showResult = function (J, r, rk) {
   J.auto = 1.7;
   $('#jFoot').textContent = J.beat ? '' : 'Pay lands in your wallet when you clock out';
   try { btn.focus({ preventScroll: true }); } catch (e) { /* focus is a nicety */ }
+  if (J.perf >= 0.8) { JFX.burst(ring, 'stars', { n: rk === 'S' ? 16 : 8, col: ['#ffd778', '#fff3c4', '#ffffff'] }); if (rk === 'S') JFX.burst(ring, 'confetti', { n: 40 }); }
 };
 /* the skip is ending (normally, early, or by a blackout): settle the multiplier and clean up */
 JA.leave = function (k) {
@@ -177,6 +186,7 @@ JA.leave = function (k) {
   } else if (J.phase === 'intro' && !J.beat) { k.perfMult = 0.9; }
   try { if (J.def.stop) J.def.stop(J); } catch (e) { console.error(e); }
   k.job = null;
+  JFX.clear();
   $('#job').hidden = true; $('#jStage').innerHTML = '';
 };
 window.addEventListener('keydown', e => {
