@@ -381,9 +381,9 @@ function cinFxDom(V, ct) {
   const D = CN.dom, st = D.last, root = D.root, set = (k, v) => { if (st[k] !== v) { st[k] = v; root.style.setProperty(k, v); } };
   if (!root) return;
   const warm = cinGrade(ct);
-  // grade: cool and anticipatory -> warm and triumphant, as a plain tinted wash (blend modes are costly for a compositor)
-  const coolM = [86, 136, 232], warmM = [255, 164, 84];
-  set('--cut-mul', 'rgba(' + [0, 1, 2].map(i => Math.round(lerp(coolM[i], warmM[i], warm))).join(',') + ',' + (0.14 + warm * 0.02).toFixed(3) + ')');
+  // grade: cool and anticipatory -> warm and triumphant, as a multiply tint (keeps the blacks black; the cards get none of it)
+  const coolM = [226, 238, 255], warmM = [255, 244, 224], g = ct >= 15.4 ? 1 : 0;
+  set('--cut-mul', 'rgb(' + [0, 1, 2].map(i => g ? 255 : Math.round(lerp(coolM[i], warmM[i], warm))).join(',') + ')');
   set('--cut-vig', (clamp(0.8 + Math.sin(ct * 0.9) * 0.05 + (ct > 11.5 ? 0 : 0.06), 0, 1)).toFixed(2));
   const px = Math.round(V.bar * ((root.clientHeight || V.ph) / V.ph));
   set('--cut-bar', px + 'px');
