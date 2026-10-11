@@ -12,7 +12,8 @@ A small life-sim about your first real job: pick a degree, rent a place, eat thr
 | `v2-visual-upgrade/assets/` | Drop zone for optional illustrated art (see below). |
 | `IMAGE_PROMPTS.md` | Prompts for an image-generation agent: cutscene stills, character sheets and paper-doll parts, title/diploma art, reference boards, backdrops, icons. |
 | `reference-art/` | Reference boards produced from those prompts (looked at while polishing, not loaded by the game). |
-| `tools/` | `build.js`, `tour.js` (drives every screen headlessly and captures screenshots + errors), `parity.js` (proves the game logic is unchanged vs v1), `perf.js` (frame cost). |
+| `v2-visual-upgrade/CHANGELOG.md` | What changed in v2, per area, and known limitations. |
+| `tools/` | `build.js`, `tour.js` (drives every screen headlessly and captures screenshots + errors), `playthrough.js` (real clicks/keys through the core loop; run on v1 and v2 for identical results), `parity.js` (proves the game logic is unchanged vs v1), `perf.js` (frame cost). |
 
 ## Rules the upgrade follows
 No new features, no new things to do, nothing removed, save format unchanged. Only drawing and presentation code changes; `tools/parity.js` compares every top-level function against v1 and must report nothing removed and every logic-looking change explained.
@@ -26,5 +27,6 @@ export NODE_PATH=/opt/node22/lib/node_modules:/opt/node-tools/node_modules   # p
 node tools/build.js                                  # src/ -> v2-visual-upgrade/index.html
 node tools/tour.js v2-visual-upgrade/index.html out/ # screenshots of every screen + error report
 node tools/parity.js v1-original/Fresh_Grad_Seasons.html v2-visual-upgrade/index.html --all
+node tools/playthrough.js v2-visual-upgrade/index.html   # and on v1-original: results must match
 node tools/perf.js v2-visual-upgrade/index.html
 ```

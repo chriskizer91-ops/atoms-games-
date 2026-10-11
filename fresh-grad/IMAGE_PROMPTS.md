@@ -337,20 +337,20 @@ Drop PNGs into `fresh-grad/v2-visual-upgrade/assets/` using these relative keys.
 | CS-07 | `cutscene/still-07-hats.png` | USE |
 | CS-08 | `cutscene/still-08-face.png` | USE |
 | CS-09 | `cutscene/still-09-sunset.png` | USE |
-| CS-10 | `cutscene/still-10-family.png` | USE |
+| CS-10 | `cutscene/still-10-family.png` | optional — not wired yet (tell me and I add the cutaway) |
 | PL-01 | `cutscene/plate-stage-empty.png` | USE |
 | PL-02 | `cutscene/plate-crowd-front.png` | USE |
 | PL-03 | `cutscene/plate-crowd-back.png` | USE |
 | PL-04 | `cutscene/plate-podium.png` | USE |
 | PL-05 | `cutscene/sprites-hats-confetti.png` | USE |
-| CH-03 | `chars/grad/pose-idle.png`, `pose-walk-a.png`, `pose-walk-b.png`, `pose-handshake.png`, `pose-diploma-up.png`, `pose-cap-toss.png`, `pose-wave.png`, `pose-nervous.png` | RIG |
+| CH-03 | (wired) `chars/grad/pose-idle.png`, `pose-walk-a.png`, `pose-walk-b.png`, `pose-handshake.png`, `pose-diploma-up.png`, `pose-cap-toss.png`, `pose-wave.png`, `pose-nervous.png` | RIG |
 | CH-04 | `chars/dean/pose-idle.png`, `pose-handshake.png`, `pose-clap.png`, `pose-point-announce.png` | RIG |
 | CH-05 | `chars/ch-05-classmates-stand.png`, `-cheer.png`, `-toss.png` | RIG |
-| PD-01–04 | `chars/grad/parts-sheet.png`, `chars/dean/parts-sheet.png`, `chars/classmate/parts-sheet.png`, `chars/grad/parts-everyday-sheet.png` | RIG |
+| PD-01–04 | `chars/grad/parts-sheet.png`, `chars/dean/parts-sheet.png`, `chars/classmate/parts-sheet.png`, `chars/grad/parts-everyday-sheet.png` | RIG — **not wired yet**: a page opened from `file://` cannot read pixels back to slice a sheet, so the pose files (CH-03/04) are what the cutscene uses today. If you want skeletal animation, deliver each part as its own PNG (`chars/grad/part-head.png`, `part-torso.png`, `part-upper-arm-L.png` …) and I wire a paper-doll renderer. |
 | UI-01 | `title/hero-wide.png` | USE |
 | UI-02 | `title/hero-tall.png` | USE |
 | UI-03 | `ui/diploma.png` | USE |
-| UI-04 | `ui/paper-cream.png`, `ui/paper-kraft.png`, `ui/paper-navy-card.png` | USE |
+| UI-04 | `ui/paper-cream.png`, `ui/paper-navy-card.png` (wired); `ui/paper-kraft.png` (not wired yet) | USE |
 | UI-05 | `ui/phone-wallpaper.png` | LATER |
 | §9 | `bg/dream-*.png` (12), `bg/scene-*.png`, `bg/fishing-*.png`, `bg/job-*.png`, `bg/levelup.png`, `bg/promotion.png`, `bg/recap.png`, `bg/blackout.png`, `bg/evicted.png`, `posters/*.png` | LATER |
 | CH-08 | `portraits/<slug>.png` (conversation faces) | USE (wired into talk panels in a later pass) |
