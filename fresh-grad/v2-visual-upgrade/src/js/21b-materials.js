@@ -1,7 +1,7 @@
-/* ============================ interior materials and light helpers (v2) ============================
-   Everything here is drawing-only. It paints into the cached room layer (once per room), so it may be as detailed as
-   it likes: no Math.random (seeded hash01 / mulberry32 only), no time or night dependence. Key light is the sun from
-   the upper left: highlights sit on top/left edges, shadows fall to the lower right. */
+// interior materials and light helpers (v2)
+// Everything here is drawing-only. It paints into the cached room layer (once per room), so it may be as detailed as
+// it likes: no Math.random (seeded hash01 / mulberry32 only), no time or night dependence. Key light is the sun from
+// the upper left: highlights sit on top/left edges, shadows fall to the lower right.
 const IM = {};
 IM.rgba = (col, a) => { const q = hexRgb(col); return 'rgba(' + (q[0] | 0) + ',' + (q[1] | 0) + ',' + (q[2] | 0) + ',' + (+a).toFixed(3) + ')'; };
 IM.lum = col => { const q = hexRgb(col); return (q[0] * 0.3 + q[1] * 0.59 + q[2] * 0.11) / 255; };
@@ -90,7 +90,7 @@ IM.screen = function (c, x, y, w, h, tint) {
 };
 
 /* ---------- repeating surface textures ---------- */
-(function initInteriorPatterns() {
+function initInteriorPatterns() {
   const speck = (g, n, r, count, cols, s0, s1) => { for (let i = 0; i < count; i++) { g.fillStyle = cols[Math.floor(r() * cols.length)]; const s = s0 + r() * (s1 - s0); g.fillRect(r() * n, r() * n, s, s); } };
   makePat('iw_noise', 128, 0.5, (g, n, r) => speck(g, n, r, 1000, ['rgba(255,255,255,.05)', 'rgba(0,0,0,.06)'], 1, 1.7));
   makePat('iw_weave', 8, 0.5, (g) => {
@@ -141,7 +141,8 @@ IM.screen = function (c, x, y, w, h, tint) {
     g.strokeStyle = 'rgba(255,255,255,.07)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(0, 16); g.lineTo(16, 0); g.lineTo(32, 16); g.lineTo(16, 32); g.closePath(); g.stroke();
     g.fillStyle = 'rgba(255,255,255,.1)'; g.beginPath(); g.arc(16, 16, 1.2, 0, 7); g.fill();
   });
-})();
+}
+initInteriorPatterns();
 
 /* ---------- floors ---------- */
 IM.floors = {};

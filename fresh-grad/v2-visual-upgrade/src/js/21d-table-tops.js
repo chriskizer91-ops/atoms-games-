@@ -1,4 +1,4 @@
-/* ---------- label-aware table tops: produce stand, bakery table, folding table, drafting table ... (v2) ---------- */
+// ---------- label-aware table tops: produce stand, bakery table, folding table, drafting table ... (v2) ----------
 const TBL = {};
 TBL.plate = function (c, f, text, th) {   // a small cream placard at the front edge of the top
   const w = Math.min(f.w - 12, text.length * (f.fs || 9) * 0.66 + 12), x = f.x + f.w / 2 - w / 2, y = f.y + th - 13;

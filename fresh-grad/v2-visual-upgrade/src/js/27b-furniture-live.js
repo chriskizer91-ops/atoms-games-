@@ -1,7 +1,7 @@
-/* ============================ live overlays for furniture (v2) ============================
-   Painted every frame on top of the cached room: lit screens, blinking LEDs, flames, fish, tumbling washers.
-   Each one repaints a small rectangle that the static painter left dark or neutral, and registers its own light.
-   They are cheap on purpose (a handful of fills each) and fall back to a still frame under prefers-reduced-motion. */
+// live overlays for furniture (v2)
+// Painted every frame on top of the cached room: lit screens, blinking LEDs, flames, fish, tumbling washers.
+// Each one repaints a small rectangle that the static painter left dark or neutral, and registers its own light.
+// They are cheap on purpose (a handful of fills each) and fall back to a still frame under prefers-reduced-motion.
 const LT = () => (REDUCED ? 0 : FX.time);
 /* the lit face of a screen: a gradient, rows of pretend text that scroll, a blinking cursor, and a glow when it is dark */
 function liveScreen(c, x, y, w, h, col, seed, glow) {

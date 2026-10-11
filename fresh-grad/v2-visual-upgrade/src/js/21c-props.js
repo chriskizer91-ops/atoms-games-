@@ -1,5 +1,5 @@
-/* ============================ small props: things that sit on furniture and shelves (v2) ============================
-   All front or top views, a few pixels big, painted once into the cached room. Nothing here is solid. */
+// small props: things that sit on furniture and shelves (v2)
+// All front or top views, a few pixels big, painted once into the cached room. Nothing here is solid.
 const PROP = {};
 PROP.mug = function (c, x, y, col, r) {
   r = r || 3.6;

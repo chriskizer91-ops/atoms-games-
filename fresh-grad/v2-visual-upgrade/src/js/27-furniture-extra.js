@@ -1,4 +1,4 @@
-/* ---------- furniture for the new rooms (v2) ---------- */
+// ---------- furniture for the new rooms (v2) ----------
 Object.assign(FURN_FLAT, { stage: 1, runner: 1 });
 function bottle(c, x, y, col) { PROP.bottle(c, x, y, 5, 11, col); }
 Object.assign(FURN, {

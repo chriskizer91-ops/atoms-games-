@@ -1,7 +1,7 @@
-/* ============================ school drawing (v2) ============================
-   The school is painted once into the cached layer: hallway lino, lockers with vents and stickers, classrooms with
-   boards and kids' art, a library, a cafeteria and a gym with a painted court. Window glass and the front door glass
-   are punched out of the layer and filled live with the sky; clocks keep their hands live. */
+// school drawing (v2)
+// The school is painted once into the cached layer: hallway lino, lockers with vents and stickers, classrooms with
+// boards and kids' art, a library, a cafeteria and a gym with a painted court. Window glass and the front door glass
+// are punched out of the layer and filled live with the sky; clocks keep their hands live.
 function lockerRun(c, x0, x1, y) {
   const pal = ['#3f7cac', '#4f9d7a', '#b9703f'];
   const n = Math.max(1, Math.round((x1 - x0) / 42)), w = (x1 - x0) / n;

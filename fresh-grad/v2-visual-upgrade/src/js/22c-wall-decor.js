@@ -1,6 +1,6 @@
-/* ============================ wall and ceiling decor (v2) ============================
-   Everything here is decoration painted into the cached room layer: frames, shelves, clocks, neon, string lights,
-   pendants, sconces. None of it is solid. Positions are on the back wall (y 0-84) unless it says otherwise. */
+// wall and ceiling decor (v2)
+// Everything here is decoration painted into the cached room layer: frames, shelves, clocks, neon, string lights,
+// pendants, sconces. None of it is solid. Positions are on the back wall (y 0-84) unless it says otherwise.
 const W = {};
 /* tiny procedural pictures for frames */
 W.art = function (c, x, y, w, h, kind, seed) {

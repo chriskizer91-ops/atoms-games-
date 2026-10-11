@@ -1,7 +1,7 @@
-/* ============================ the room shell: walls, doors, windows, light (v2) ============================
-   The whole static room (floor, walls, fixtures, furniture) is painted once into LAYER. Window glass and the door glass
-   are punched out of that layer and filled live with the sky, so a room follows the time of day without a repaint.
-   Light that moves or depends on the hour (sun pools, door spill, dust, lamp pools) is drawn live and kept cheap. */
+// the room shell: walls, doors, windows, light (v2)
+// The whole static room (floor, walls, fixtures, furniture) is painted once into LAYER. Window glass and the door glass
+// are punched out of that layer and filled live with the sky, so a room follows the time of day without a repaint.
+// Light that moves or depends on the hour (sun pools, door spill, dust, lamp pools) is drawn live and kept cheap.
 const ROOM_STYLE = {};
 const ROOMCTX = { d: null, st: null, sc: false };
 /* defaults for every room, so a new room still looks designed */

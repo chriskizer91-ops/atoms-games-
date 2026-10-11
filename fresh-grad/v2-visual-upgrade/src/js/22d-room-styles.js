@@ -1,7 +1,7 @@
-/* ============================ per-room looks (v2) ============================
-   Each room gets a style: wall material, window dressing, floor refinements, night ambience and lamp pools, plus an
-   `extra` painter for wall art and floor decals and an optional `live` painter for small moving things.
-   Nothing here touches furniture footprints, spots, doors or any gameplay data. */
+// per-room looks (v2)
+// Each room gets a style: wall material, window dressing, floor refinements, night ambience and lamp pools, plus an
+// `extra` painter for wall art and floor decals and an optional `live` painter for small moving things.
+// Nothing here touches furniture footprints, spots, doors or any gameplay data.
 /* a few shapes only a couple of rooms need */
 W.chandelier = function (c, x, y, r) {
   IM.shadow(c, x - r, y - r, r * 2, r * 2, r, 7, 0.32, 3, 6);

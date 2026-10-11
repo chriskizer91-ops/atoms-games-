@@ -1,7 +1,7 @@
-/* ============================ furniture drawing (v2) ============================
-   Each painter draws the static look of one piece into the cached room layer: a top face, a lit front face, a soft
-   contact shadow, material (wood grain, fabric weave, brushed steel, glass) and props. Footprints (f.x, f.y, f.w, f.h)
-   are the collision boxes and are never changed. Anything that moves or glows by the hour lives in FURN_LIVE. */
+// furniture drawing (v2)
+// Each painter draws the static look of one piece into the cached room layer: a top face, a lit front face, a soft
+// contact shadow, material (wood grain, fabric weave, brushed steel, glass) and props. Footprints (f.x, f.y, f.w, f.h)
+// are the collision boxes and are never changed. Anything that moves or glows by the hour lives in FURN_LIVE.
 const FURN_FLAT = { rug: 1, mat: 1, notice: 1 };
 /* live overlays (screens, flames, LEDs, tumbling washers): drawn every frame over the cached room, kept cheap */
 const FURN_LIVE = {};
