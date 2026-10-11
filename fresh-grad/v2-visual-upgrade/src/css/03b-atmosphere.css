@@ -1,12 +1,11 @@
 /* v2 atmosphere layers over the world canvas (pass 3). #vig and #warm keep their ids and their --vig / --warm inputs;
-   --wc is the sun's warm colour (r,g,b) set by finishFrame. The grain and the soft top and bottom edges are made in 10b2-atmo-post.js. */
+   --wc is the sun's warm colour (r,g,b) set by finishFrame. The film grain tile is made in 10b2-atmo-post.js.
+   Everything here is a plain alpha layer (no blend modes, no backdrop filters) so it stays cheap on weak GPUs;
+   the soft top/bottom edge blur is drawn into the canvas by atmoTilt(). */
 #vig{background:radial-gradient(ellipse 125% 105% at 50% 46%,rgba(8,10,30,0) 40%,rgba(10,12,34,.26) 70%,rgba(8,10,28,.72) 100%)}
-#warm{background:linear-gradient(115deg,rgba(var(--wc,255,170,90),.72) 0,rgba(var(--wc,255,170,90),.22) 38%,rgba(var(--wc,255,170,90),0) 68%);mix-blend-mode:soft-light}
-#stage[data-sun=r] #warm{background:linear-gradient(245deg,rgba(var(--wc,255,170,90),.72) 0,rgba(var(--wc,255,170,90),.22) 38%,rgba(var(--wc,255,170,90),0) 68%)}
-#atmoGrain{position:absolute;inset:0;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background-size:128px 128px;animation:atmoGrain .9s steps(1) infinite}
+#warm{background:linear-gradient(115deg,rgba(var(--wc,255,170,90),.46) 0,rgba(var(--wc,255,170,90),.14) 40%,rgba(var(--wc,255,170,90),0) 70%)}
+#stage[data-sun=r] #warm{background:linear-gradient(245deg,rgba(var(--wc,255,170,90),.46) 0,rgba(var(--wc,255,170,90),.14) 40%,rgba(var(--wc,255,170,90),0) 70%)}
+#atmoGrain{position:absolute;inset:0;pointer-events:none;opacity:.8;background-size:128px 128px;animation:atmoGrain .9s steps(1) infinite}
+#stage[data-q=lo] #atmoGrain{display:none}
 @keyframes atmoGrain{0%{background-position:0 0}14%{background-position:-23px 41px}28%{background-position:57px -18px}42%{background-position:-64px -52px}57%{background-position:19px 73px}71%{background-position:-41px 12px}85%{background-position:38px -69px}}
-#atmoTiltT,#atmoTiltB{position:absolute;left:0;right:0;pointer-events:none;-webkit-backdrop-filter:blur(1.1px);backdrop-filter:blur(1.1px)}
-#atmoTiltT{top:0;height:7%;-webkit-mask-image:linear-gradient(to bottom,#000 0,transparent 100%);mask-image:linear-gradient(to bottom,#000 0,transparent 100%)}
-#atmoTiltB{bottom:0;height:10%;-webkit-mask-image:linear-gradient(to top,#000 0,transparent 100%);mask-image:linear-gradient(to top,#000 0,transparent 100%)}
-#stage[data-sc=i] #atmoTiltT,#stage[data-sc=i] #atmoTiltB,#stage[data-q=lo] #atmoTiltT,#stage[data-q=lo] #atmoTiltB{display:none}
 @media (prefers-reduced-motion:reduce){#atmoGrain{animation:none}}

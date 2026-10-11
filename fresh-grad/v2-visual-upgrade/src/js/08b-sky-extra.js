@@ -320,7 +320,7 @@ function skyBody(c, A, vx0, vx1) {
     sg.addColorStop(0, '#ffffff'); sg.addColorStop(0.7, rgbS(mix3(core, [255, 255, 255], 0.55))); sg.addColorStop(1, rgbS(mix3(core, [255, 255, 255], 0.2)));
     c.fillStyle = sg; c.beginPath(); c.arc(sp.x, sp.y, rd, 0, 7); c.fill();
     // a hot bloom over the disc itself
-    c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.55 * a; c.drawImage(GLOW[0], sp.x - 46, sp.y - 46, 92, 92);
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.3 * a; c.drawImage(GLOW[0], sp.x - 46, sp.y - 46, 92, 92);
     c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
   } else if (A.mf >= 0) {
     const mx = vx0 + vw * (0.86 - A.mf * 0.72), my = TOP_Y - 60 - Math.sin(Math.PI * A.mf) * 210, a = 1 - A.cloud * 0.75;

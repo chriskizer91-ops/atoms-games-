@@ -222,19 +222,38 @@ function atmoDapple(c, vis, A) {
   c.fill();
 }
 
-/* ---------- CSS post layers: grain and a very light tilt-shift on the top and bottom edges ---------- */
+// ---------- soft top and bottom edges (a hint of tilt-shift), drawn into the canvas ----------
+const TILT = { a: document.createElement('canvas') };
+TILT.g = TILT.a.getContext('2d');
+function atmoTiltStrip(c, cv, y, h, top) {
+  const t = TILT, w = Math.max(1, Math.ceil(cv.width / 2)), hh = Math.max(1, Math.ceil(h / 2));
+  if (t.a.width !== w || t.a.height !== hh) { t.a.width = w; t.a.height = hh; }
+  const g = t.g; g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, w, hh);
+  g.imageSmoothingEnabled = true; g.drawImage(cv, 0, y, cv.width, h, 0, 0, w, hh);
+  g.globalCompositeOperation = 'destination-in';
+  const gr = g.createLinearGradient(0, 0, 0, hh); gr.addColorStop(0, top ? 'rgba(0,0,0,1)' : 'rgba(0,0,0,0)'); gr.addColorStop(1, top ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,1)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, hh); g.globalCompositeOperation = 'source-over';
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over'; c.imageSmoothingEnabled = true;
+  c.drawImage(t.a, 0, 0, w, hh, 0, y, cv.width, h);
+}
+function atmoTilt(c, cv) {
+  if (atmoTier() < 2 || cv.height < 200) return;
+  atmoTiltStrip(c, cv, 0, Math.round(cv.height * 0.06), true);
+  atmoTiltStrip(c, cv, cv.height - Math.round(cv.height * 0.09), Math.round(cv.height * 0.09), false);
+}
+
+// ---------- CSS post layer: a tile of fine film grain (the vignette and the sun wash are plain CSS) ----------
 const ATMO_DOM = (function () {
   try {
     const st = document.getElementById('stage'), vig = document.getElementById('vig');
     if (!st || !vig) return null;
-    const mk = id => { const d = document.createElement('div'); d.id = id; d.setAttribute('aria-hidden', 'true'); st.insertBefore(d, vig.nextSibling); return d; };
-    const tb = mk('atmoTiltB'), tt = mk('atmoTiltT'), gr = mk('atmoGrain');
-    // a small tile of fine noise, made once
+    const gr = document.createElement('div'); gr.id = 'atmoGrain'; gr.setAttribute('aria-hidden', 'true'); st.insertBefore(gr, vig.nextSibling);
+    // speckles of white and black at very low alpha, so the grain needs no blend mode
     const cv = document.createElement('canvas'); cv.width = cv.height = 128;
     const g = cv.getContext('2d'), im = g.createImageData(128, 128), r = mulberry32(2024);
-    for (let i = 0; i < im.data.length; i += 4) { const v = 96 + Math.floor(r() * 64); im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+    for (let i = 0; i < im.data.length; i += 4) { const v = r() < 0.5 ? 255 : 0; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = Math.floor(r() * 15); }
     g.putImageData(im, 0, 0);
     gr.style.backgroundImage = 'url(' + cv.toDataURL('image/png') + ')';
-    return { st, tb, tt, gr };
+    return { st, gr };
   } catch (e) { return null; }
 })();

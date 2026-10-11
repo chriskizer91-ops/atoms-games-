@@ -371,7 +371,7 @@ function ppBody(c, o, P, style, st) {
 // Standing and walking figures are cached as small sprites (one per look, facing, walk-cycle step and idle state) and
 // blitted, so a crowd costs a handful of canvas calls each. Kids at other sizes, riders and the big salon/mic scenes draw directly.
 const PP_SPR = new Map(), PP_ST = { mv: false, ph: 0, face: 1, back: false, rd: false, bob: 0, lean: 0, sway: 0, breathe: 0, blink: false, glance: 0, rim: 0, rimSide: 1 };
-const PP_W = 30, PP_H = 47, PP_OX = 15, PP_OY = 44;
+const PP_W = 30, PP_H = 53, PP_OX = 15, PP_OY = 50;
 function drawPerson(c, x, y, o) {
   const s = o.s || 1, mv = !!o.moving, face = o.face || 1, back = !!o.back;
   const P = ppPal(o), style = lookStyle(o), A = FX.A, tm = FX.time;

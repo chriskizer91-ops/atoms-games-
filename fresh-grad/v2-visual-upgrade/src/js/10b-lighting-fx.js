@@ -303,6 +303,7 @@ function paintTown(c, cv, sz, k, dt) {
   runOver(c, m);
   drawWeather(c, cv, A, sz.dpr);
   drawWeatherPlus(c, cv, A, sz.dpr, dt);
+  atmoTilt(c, cv);
   finishFrame(c, cv, dt, 0.5 + A.nf * 0.2, A.sh > 0.04 ? A.warm : 0, A.sunX > 0);
 }
 
