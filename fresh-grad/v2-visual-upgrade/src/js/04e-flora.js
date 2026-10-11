@@ -3,10 +3,11 @@
    (shadowed mass behind, sunlit leaves in front) that sway by different amounts, which makes the whole crown feel soft. */
 function wTreeSeed(t) { return ((t.x * 13 + t.y * 7) | 0) & 0xffff; }
 function wTreePal(k, se) {
-  if (se === 'autumn') { const p = [['#9a3b22', '#c8552a', '#e98a3a'], ['#a8641c', '#d98f22', '#f2bf4a'], ['#7a2f2a', '#b0402f', '#dc6a3c'], ['#6b6a28', '#9a8f2c', '#c9b54a']][Math.floor(k * 4) % 4]; return { dk: p[0], md: p[1], lt: p[2], kind: 'autumn' }; }
-  if ((se === 'spring' && k < 0.28) || k < 0.07) return { dk: '#b85c7c', md: '#e58aa6', lt: '#ffc3d4', kind: 'blossom' };
-  if (k > 0.93) return { dk: '#b5762a', md: '#e0a23c', lt: '#f6cf6a', kind: 'autumn' };
-  return { dk: mix('#22633f', '#2f7a45', k), md: mix('#338a52', '#55a556', k), lt: mix('#5cb46c', '#8fce6a', k), kind: 'green' };
+  if (se === 'autumn') { const i = Math.floor(k * 4) % 4, p = [['#9a3b22', '#c8552a', '#e98a3a'], ['#a8641c', '#d98f22', '#f2bf4a'], ['#7a2f2a', '#b0402f', '#dc6a3c'], ['#6b6a28', '#9a8f2c', '#c9b54a']][i]; return { dk: p[0], md: p[1], lt: p[2], kind: 'autumn', id: 'a' + i }; }
+  if ((se === 'spring' && k < 0.28) || k < 0.07) return { dk: '#b85c7c', md: '#e58aa6', lt: '#ffc3d4', kind: 'blossom', id: 'b' };
+  if (k > 0.93) return { dk: '#b5762a', md: '#e0a23c', lt: '#f6cf6a', kind: 'autumn', id: 'y' };
+  const kq = Math.round(k * 8) / 8;
+  return { dk: mix('#22633f', '#2f7a45', kq), md: mix('#338a52', '#55a556', kq), lt: mix('#5cb46c', '#8fce6a', kq), kind: 'green', id: 'g' + Math.round(k * 8) };
 }
 function wPaintTrunk(g, v, se) {
   // origin at the foot of the tree
@@ -100,26 +101,29 @@ function wPaintPineTier(g, r, i, se, seed) {
     g.beginPath(); g.moveTo(-w * 0.98, -1); g.quadraticCurveTo(-w * 0.8, -6, -w * 0.6, -3); g.quadraticCurveTo(-w * 0.4, -7, -w * 0.2, -3); g.lineTo(-w * 0.25, 1); g.lineTo(-w * 0.98, 1); g.fill();
   }
 }
+/* sprites are shared between trees of the same size class, palette and variant, so scrolling into a new stretch of park
+   mostly reuses what is already painted */
 function wCanopySprites(t, se, pal) {
-  const r = Math.round(t.r), seed = wTreeSeed(t), W = Math.ceil(r * 2.9), H = Math.ceil(r * 2.8), ox = W / 2, oy = H * 0.5;
-  const mk = layer => wspr('tc' + seed + se + r + 'L' + layer, W, H, g => { g.translate(ox, oy); wPaintCanopy(g, r, pal, seed, layer); });
-  return { b: mk(0), f: mk(1), ox, oy };
+  const rq = 2 * Math.round(t.r / 2), v = wTreeSeed(t) & 3, W = Math.ceil(rq * 2.9), H = Math.ceil(rq * 2.8), ox = W / 2, oy = H * 0.5;
+  const key = 'tc' + se + pal.id + '_' + rq + 'v' + v;
+  const mk = layer => wspr(key + 'L' + layer, W, H, g => { g.translate(ox, oy); wPaintCanopy(g, rq, pal, 1000 + v * 77 + pal.id.charCodeAt(0) * 13, layer); });
+  return { b: mk(0), f: mk(1), ox, oy, k: t.r / rq };
 }
 function wDrawCanopy(c, t, cx, cy, pal) {
-  const s = wCanopySprites(t, season(), pal), sw = cx - t.x;
-  c.drawImage(s.b.cv, cx - s.ox - sw * 0.35, cy - s.oy, s.b.w, s.b.h);
-  c.drawImage(s.f.cv, cx - s.ox + sw * 0.25, cy - s.oy, s.f.w, s.f.h);
+  const s = wCanopySprites(t, season(), pal), sw = cx - t.x, k = s.k;
+  c.drawImage(s.b.cv, cx - s.ox * k - sw * 0.35, cy - s.oy * k, s.b.w * k, s.b.h * k);
+  c.drawImage(s.f.cv, cx - s.ox * k + sw * 0.25, cy - s.oy * k, s.f.w * k, s.f.h * k);
 }
 function wDrawBare(c, t, cx, cy) {
-  const r = Math.round(t.r), seed = wTreeSeed(t), W = Math.ceil(r * 2.9), H = Math.ceil(r * 2.8), ox = W / 2, oy = H * 0.5;
-  const s = wspr('tb' + seed + r, W, H, g => { g.translate(ox, oy); wPaintBare(g, r, seed); });
-  c.drawImage(s.cv, cx - ox, cy - oy, W, H);
+  const rq = 2 * Math.round(t.r / 2), v = wTreeSeed(t) & 3, W = Math.ceil(rq * 2.9), H = Math.ceil(rq * 2.8), ox = W / 2, oy = H * 0.5, k = t.r / rq;
+  const s = wspr('tb' + rq + 'v' + v, W, H, g => { g.translate(ox, oy); wPaintBare(g, rq, 500 + v * 53); });
+  c.drawImage(s.cv, cx - ox * k, cy - oy * k, W * k, H * k);
 }
 function wDrawPine(c, t, sway, se) {
-  const r = Math.round(t.r), seed = wTreeSeed(t);
+  const rq = 2 * Math.round(t.r / 2), v = wTreeSeed(t) & 3, k = t.r / rq;
   for (let i = 0; i < 3; i++) {
-    const w = r * (1.25 - i * 0.28), h = r * 1.12, ty = t.y - 16 - i * r * 0.62, sx = sway * (0.4 + i * 0.3);
-    const s = wspr('tp' + seed + se + r + 'i' + i, w * 2 + 10, h + 12, g => { g.translate(w + 5, h + 4); wPaintPineTier(g, r, i, se, seed); });
-    c.drawImage(s.cv, t.x + sx * 0.4 - w - 5, ty - h - 4, s.w, s.h);
+    const w = rq * (1.25 - i * 0.28), h = rq * 1.12, ty = t.y - 16 - i * t.r * 0.62, sx = sway * (0.4 + i * 0.3);
+    const s = wspr('tp' + se + rq + 'v' + v + 'i' + i, w * 2 + 10, h + 12, g => { g.translate(w + 5, h + 4); wPaintPineTier(g, rq, i, se, 300 + v * 41); });
+    c.drawImage(s.cv, t.x + sx * 0.4 - (w + 5) * k, ty - (h + 4) * k, s.w * k, s.h * k);
   }
 }

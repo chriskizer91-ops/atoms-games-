@@ -47,8 +47,9 @@ function wSlabs(c, ax, ay, aw, ah, vx0, vy0, vx1, vy1, sw, sh, bond, seed) {
 }
 function wStripe(c, x, y, w, h, seed) {
   c.fillStyle = 'rgba(255,255,255,.88)'; c.fillRect(x, y, w, h);
-  const n = Math.max(3, Math.floor(w * h / 14));
-  for (let i = 0; i < n; i++) { c.fillStyle = 'rgba(66,74,84,' + (0.25 + hash01(seed, i, 3) * 0.4).toFixed(3) + ')'; c.fillRect(x + hash01(seed, i, 1) * w, y + hash01(seed, i, 2) * h, 0.8 + hash01(seed, i, 4) * 1.6, 0.8 + hash01(seed, i, 5) * 1.4); }
+  const r = mulberry32(seed * 977 + (x | 0) * 31 + (y | 0) * 7), n = Math.max(3, Math.floor(w * h / 20));
+  c.fillStyle = 'rgba(66,74,84,.5)';
+  for (let i = 0; i < n; i++) c.fillRect(x + r() * w, y + r() * h, 0.8 + r() * 1.6, 0.8 + r() * 1.3);
   c.fillStyle = 'rgba(30,34,40,.16)'; c.fillRect(x, y + h - 0.8, w, 0.8); c.fillRect(x + w - 0.8, y, 0.8, h);
 }
 function wArrow(c, x, y, dir) {
@@ -88,8 +89,8 @@ function wRoadWear(c, r, x0, x1, vy0, vy1) {
     if (inCross(bx - 40, bx + 90)) continue;
     if (h2 < 0.34) {
       const pw = 34 + h3 * 40, ph = 14 + h * 12, py = r.y + 12 + h2 * 3 * (r.h - 48);
-      c.fillStyle = h3 < 0.5 ? 'rgba(0,0,0,.09)' : 'rgba(255,255,255,.035)'; c.fillRect(bx, py, pw, ph);
-      c.strokeStyle = 'rgba(16,18,22,.38)'; c.lineWidth = 1; c.strokeRect(bx + 0.5, py + 0.5, pw - 1, ph - 1);
+      c.fillStyle = h3 < 0.5 ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.03)'; c.fillRect(bx, py, pw, ph);
+      c.strokeStyle = 'rgba(16,18,22,.2)'; c.lineWidth = 1; c.strokeRect(bx + 0.5, py + 0.5, pw - 1, ph - 1);
       c.strokeStyle = 'rgba(255,255,255,.06)'; c.beginPath(); c.moveTo(bx + 1, py + ph + 1); c.lineTo(bx + pw, py + ph + 1); c.stroke();
     }
     if (h3 < 0.5) {
@@ -103,7 +104,9 @@ function wRoadWear(c, r, x0, x1, vy0, vy1) {
 function wDash(c, x, y, w, h, seed) {
   c.fillStyle = 'rgba(236,214,140,.92)'; c.fillRect(x, y, w, h);
   c.fillStyle = 'rgba(255,248,210,.25)'; c.fillRect(x, y, w, 1);
-  for (let i = 0; i < Math.floor(w * h / 16); i++) { c.fillStyle = 'rgba(64,72,82,' + (0.3 + hash01(seed, i, 3) * 0.4).toFixed(3) + ')'; c.fillRect(x + hash01(seed, i, 1) * w, y + hash01(seed, i, 2) * h, 0.8 + hash01(seed, i, 4) * 1.5, 0.8 + hash01(seed, i, 5) * 1.2); }
+  const r = mulberry32(seed * 613 + (x | 0) * 17 + (y | 0) * 3), n = Math.floor(w * h / 18);
+  c.fillStyle = 'rgba(64,72,82,.55)';
+  for (let i = 0; i < n; i++) c.fillRect(x + r() * w, y + r() * h, 0.8 + r() * 1.5, 0.8 + r() * 1.2);
 }
 function wTactile(c, x, y, w, h) {
   c.fillStyle = '#e8b830'; c.fillRect(x, y, w, h); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x, y + h - 0.8, w, 0.8);
@@ -260,7 +263,7 @@ function wPlaza(c, x0, y0, x1, y1) {
   for (let i = 0; i < 16; i++) { const a = i / 16 * 6.2832, h = hash01(i, 5, 34); c.fillStyle = h < 0.5 ? 'rgba(80,66,44,.1)' : 'rgba(255,252,238,.16)'; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 78, a, a + 0.3927); c.closePath(); c.fill(); }
   if (PAT.paver) { c.globalAlpha = 0.35; c.fillStyle = PAT.paver; c.beginPath(); c.arc(0, 0, 150, 0, 7); c.fill(); c.globalAlpha = 1; }
   // inlay bands in a darker stone
-  [[78, 3.4], [112, 3], [150, 3.6], [96, 1.2]].forEach(b => { c.strokeStyle = 'rgba(70,62,50,.55)'; c.lineWidth = b[1]; c.beginPath(); c.arc(0, 0, b[0], 0, 7); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = 0.9; c.beginPath(); c.arc(0, 0, b[0] - b[1] / 2 - 0.6, 3.5, 5.5); c.stroke(); });
+  [[78, 3.4], [112, 3], [150, 3.6], [96, 1.2]].forEach(b => { c.strokeStyle = 'rgba(70,62,50,.4)'; c.lineWidth = b[1]; c.beginPath(); c.arc(0, 0, b[0], 0, 7); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = 0.9; c.beginPath(); c.arc(0, 0, b[0] - b[1] / 2 - 0.6, 3.5, 5.5); c.stroke(); });
   c.restore();
 }
 /* mulch beds with real flowers: a border along the park gate side and crescents around the plaza */
