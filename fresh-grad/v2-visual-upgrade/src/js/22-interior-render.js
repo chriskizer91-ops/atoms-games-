@@ -6,6 +6,7 @@ function drawFloor(c, f, o) {
   if (o.seed == null) o.seed = (Math.round(x) * 7 + Math.round(y) * 3) % 97;
   const fn = IM.floors[o.kind || type] || IM.floors.plain;
   fn(c, x, y, w, h, o.col || col, o.col2 !== undefined ? o.col2 : col2, o);
+  IM.mottle(c, x, y, w, h, o.seed, o.mottle == null ? (type === 'carpet' ? 0.05 : 0.075) : o.mottle);
   // the wall above casts a soft shadow onto the floor
   if (!o.noShadow) {
     const sg = c.createLinearGradient(0, y, 0, y + 26); sg.addColorStop(0, 'rgba(' + IM.INK + ',.34)'); sg.addColorStop(0.45, 'rgba(' + IM.INK + ',.12)'); sg.addColorStop(1, 'rgba(' + IM.INK + ',0)');

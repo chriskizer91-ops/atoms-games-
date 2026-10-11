@@ -74,6 +74,17 @@ IM.grain = function (c, x, y, w, h, seed, a, vertical) {
 };
 IM.brushed = function (c, x, y, w, h, a, r) { IM.pat(c, 'iw_brush', x, y, w, h, a == null ? 1 : a, r); };
 IM.weave = function (c, x, y, w, h, a, r) { IM.pat(c, 'iw_weave', x, y, w, h, (a == null ? 1 : a) * 0.7, r); };
+/* large soft patches of slightly lighter and darker floor, so no big surface is ever one flat tone */
+IM.mottle = function (c, x, y, w, h, seed, a) {
+  const r = IM.rng(seed, Math.round(x), Math.round(y)), n = Math.max(6, Math.round(w * h / 16000));
+  c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
+  for (let i = 0; i < n; i++) {
+    const cx = x + r() * w, cy = y + r() * h, rad = 50 + r() * 120, dk = r() < 0.55, g = c.createRadialGradient(cx, cy, 0, cx, cy, rad);
+    g.addColorStop(0, dk ? 'rgba(' + IM.INK + ',' + (a * (0.5 + r() * 0.5)).toFixed(3) + ')' : 'rgba(' + IM.CREAM + ',' + (a * 0.9 * (0.5 + r() * 0.5)).toFixed(3) + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
+  }
+  c.restore();
+};
 /* a small round-ended light screw / bolt / rivet */
 IM.rivet = function (c, x, y, col) { c.fillStyle = col || 'rgba(255,255,255,.5)'; c.beginPath(); c.arc(x, y, 0.9, 0, 7); c.fill(); c.fillStyle = 'rgba(' + IM.INK + ',.3)'; c.beginPath(); c.arc(x + 0.5, y + 0.6, 0.7, 0, 7); c.fill(); };
 /* knob / dial: dark rim, bright face, highlight */
@@ -215,7 +226,7 @@ IM.floors.tile = function (c, x, y, w, h, col, col2, o) {
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
     const tx = x + i * s, ty = y + j * s, v = hash01(i, j, seed);
     if (col2 && (i + j) % 2) { c.fillStyle = col2; c.fillRect(tx, ty, s, s); }
-    c.fillStyle = v < 0.5 ? 'rgba(' + IM.INK + ',' + (v * 0.09).toFixed(3) + ')' : 'rgba(255,255,255,' + ((v - 0.5) * 0.13).toFixed(3) + ')';
+    c.fillStyle = v < 0.5 ? 'rgba(' + IM.INK + ',' + (v * 0.15).toFixed(3) + ')' : 'rgba(255,255,255,' + ((v - 0.5) * 0.22).toFixed(3) + ')';
     c.fillRect(tx, ty, s, s);
     // glazed face: lighter toward the upper left of every tile
     c.fillStyle = IM.grad(c, tx, ty, tx + s, ty + s, [[0, 'rgba(255,255,255,.14)'], [0.5, 'rgba(255,255,255,0)'], [1, 'rgba(' + IM.INK + ',.06)']]); c.fillRect(tx, ty, s, s);
@@ -223,6 +234,9 @@ IM.floors.tile = function (c, x, y, w, h, col, col2, o) {
     c.fillStyle = 'rgba(' + IM.INK + ',.12)'; c.fillRect(tx + 1, ty + s - 2.3, s - 2, 1.2); c.fillRect(tx + s - 2.3, ty + 1, 1.2, s - 2);
     if (v > 0.93) { c.strokeStyle = 'rgba(' + IM.INK + ',.16)'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(tx + s * 0.2, ty + s * 0.8); c.lineTo(tx + s * 0.45, ty + s * 0.55); c.lineTo(tx + s * 0.4, ty + s * 0.4); c.stroke(); }
   }
+  const rs = IM.rng(seed, 3, 9); c.lineCap = 'round';
+  for (let i = 0; i < Math.round(w * h / 9000); i++) { const sx = x + rs() * w, sy = y + rs() * h, a = rs() * 3.1; c.strokeStyle = rs() < 0.6 ? 'rgba(' + IM.INK + ',.09)' : 'rgba(255,255,255,.16)'; c.lineWidth = 1 + rs() * 1.2; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx + Math.cos(a) * (6 + rs() * 12), sy + Math.sin(a) * (3 + rs() * 5)); c.stroke(); }
+  c.lineCap = 'butt';
   c.fillStyle = o.grout || 'rgba(70,60,56,.34)';
   for (let i = 1; i < nx; i++) c.fillRect(x + i * s - 0.8, y, 1.6, h);
   for (let j = 1; j < ny; j++) c.fillRect(x, y + j * s - 0.8, w, 1.6);

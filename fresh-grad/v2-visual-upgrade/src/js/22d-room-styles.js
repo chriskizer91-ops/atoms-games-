@@ -120,10 +120,9 @@ ROOM_STYLE.bank = {
   floors: [{ kind: 'marble', size: 74, col: '#efe9dc' }],
   lamps: [[480, 330, 280, 190, 0, 0.9], [480, 480, 260, 170, 0, 0.8], [150, 380, 200, 160, 0, 0.7], [800, 340, 200, 160, 0, 0.7], [480, 190, 280, 150, 0, 0.6]],
   extra(c, d) {
-    W.clock(c, 330, 30, 14, '#fbf3df'); W.frame(c, 610, 14, 38, 46, 'portrait', '#c9a45c', 2); W.frame(c, 664, 14, 38, 46, 'portrait', '#c9a45c', 8);
+    W.clock(c, 330, 30, 14, '#fbf3df'); W.frame(c, 610, 14, 38, 46, 'portrait', '#c9a45c', 2); W.frame(c, 664, 14, 38, 46, 'portrait', '#c9a45c', 8); W.sconce(c, 270, 40, 0); W.sconce(c, 560, 40, 0);
     W.inlay(c, 60, 120, 840, 410, '#c9a45c', 1.6, 8);
   },
-  over(c, d) { W.chandelier(c, 480, 320, 13); W.chandelier(c, 480, 470, 11); }
 };
 ROOM_STYLE.books = {
   night: [150, 130, 150],
@@ -134,9 +133,8 @@ ROOM_STYLE.books = {
   extra(c, d) {
     W.frame(c, 56, 16, 30, 38, 'portrait', '#c9a45c', 2); W.frame(c, 244, 16, 52, 36, 'land', '#5a3b2a', 4); W.frame(c, 322, 16, 36, 36, 'botanical', '#5a3b2a', 5);
     W.frame(c, 600, 16, 36, 36, 'sea', '#5a3b2a', 6); W.frame(c, 650, 16, 28, 38, 'portrait', '#c9a45c', 7);
-    W.shelf(c, 840, 40, 70, 'books');
+    W.shelf(c, 840, 40, 70, 'books'); W.sconce(c, 100, 40, 0); W.sconce(c, 582, 40, 0);
   },
-  over(c, d) { [[200, 330], [480, 300], [790, 420]].forEach(p => W.pendant(c, p[0], p[1], 7.4, '#1f5a46', 0)); }
 };
 ROOM_STYLE.bakery = {
   night: [152, 132, 148],
@@ -148,7 +146,6 @@ ROOM_STYLE.bakery = {
     W.clock(c, 585, 28, 12, '#fff8e8'); W.shelf(c, 700, 40, 100, 'kitchen');
     W.frame(c, 830, 14, 22, 30, 'bread', '#a8642a', 2);
   },
-  over(c, d) { [[300, 200], [520, 200], [750, 205]].forEach(p => W.pendant(c, p[0], p[1], 6.4, '#c47a3a', 0)); },
   live(c, d) {   // flour hanging in the warm air
     if (REDUCED) return; const t = FX.time;
     c.fillStyle = 'rgba(255,250,236,.55)';
@@ -168,7 +165,6 @@ ROOM_STYLE.hardware = {
     W.floorStripe(c, 596, 246, 348, 4, '#f4c20d', 6); W.floorStripe(c, 596, 550, 348, 4, '#f4c20d', 6); W.floorStripe(c, 596, 246, 4, 308, '#f4c20d', 6); W.floorStripe(c, 940, 246, 4, 308, '#f4c20d', 6);
     W.floorStripe(c, 400, 500, 200, 4, '#f4c20d', 8);
   },
-  over(c, d) { [[170, 220], [520, 230], [850, 200]].forEach(p => W.pendant(c, p[0], p[1], 6.4, '#4a545c', 0)); }
 };
 ROOM_STYLE.cinema = {
   neon: true, neonKind: 0, night: [124, 100, 124], sofa: 'leather', cprops: ['bucket', 'cups', 'jar', 'box', 'bucket'],
@@ -223,7 +219,6 @@ ROOM_STYLE.bikes = {
     c.fillStyle = 'rgba(' + IM.INK + ',.1)'; c.beginPath(); c.ellipse(700, 190, 22, 9, 0.2, 0, 7); c.fill(); c.beginPath(); c.ellipse(760, 330, 14, 6, -0.3, 0, 7); c.fill();
     c.strokeStyle = 'rgba(' + IM.INK + ',.12)'; c.lineWidth = 5; c.beginPath(); c.moveTo(520, 520); c.quadraticCurveTo(560, 430, 640, 400); c.stroke();
   },
-  over(c, d) { [[200, 190], [480, 260], [760, 200]].forEach(p => W.pendant(c, p[0], p[1], 6.4, '#2b2f36', 0)); }
 };
 ROOM_STYLE.cafe = {
   neon: true, neonKind: 0, night: [146, 122, 140], cprops: ['dome', 'mugs', 'jar', 'dome', 'cups'],
@@ -236,7 +231,6 @@ ROOM_STYLE.cafe = {
     W.frame(c, 312, 14, 28, 30, 'coffee', '#3d5a80', 3);
     W.shelf(c, 350, 56, 56, 'kitchen');
   },
-  over(c, d) { [[125, 325], [295, 425], [495, 325]].forEach(p => W.pendant(c, p[0], p[1], 7, '#e8c46a', 0)); },
   live(c, d) {   // steam off the espresso machine
     if (REDUCED) return; const t = FX.time;
     for (let i = 0; i < 5; i++) { const p = (t * 0.25 + i / 5) % 1; c.fillStyle = 'rgba(245,248,252,' + (0.3 * (1 - p)).toFixed(3) + ')'; c.beginPath(); c.arc(362 + Math.sin(p * 6 + i) * 3, 100 - p * 26, 2 + p * 5, 0, 7); c.fill(); }
@@ -252,7 +246,6 @@ ROOM_STYLE.pizza = {
     W.bunting(c, 250, 380, 8, ['#2f7d4f', '#f6f1e7', '#c0392b'], 9); W.frame(c, 250, 22, 40, 28, 'pizza', '#2f7d4f', 5); W.clock(c, 590, 30, 11, '#fff8e8');
     W.shelf(c, 100, 38, 120, 'bottles');
   },
-  over(c, d) { [[450, 220], [200, 400], [640, 360]].forEach(p => W.pendant(c, p[0], p[1], 6.6, '#c0392b', 0)); }
 };
 ROOM_STYLE.dentist = {
   night: NIGHT_COOL, bench: '#3aa6b9', cprops: ['clipboard', 'brochures', 'bell', 'plant'],
@@ -334,7 +327,6 @@ ROOM_STYLE.work_biz = {
  W.frame(c, 1014, 14, 36, 36, 'abstract', '#4a3560', 4);
     W.inlay(c, 450, 104, 240, 110, 'rgba(201,164,92,.5)', 1.4, 6);
   },
-  over(c, d) { W.pendant(c, 570, 156, 9, '#2f3a4a', 0); }
 };
 ROOM_STYLE.work_cook = {
   night: [150, 134, 140], fridge: 'steel', bench: '#a83a3a',

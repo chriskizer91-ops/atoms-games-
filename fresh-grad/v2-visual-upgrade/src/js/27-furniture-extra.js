@@ -264,6 +264,10 @@ Object.assign(FURN, {
     box(c, x, y, w, h, col, null, { fh, r: 2.5 });
     IM.clip(c, x, y, w, h, 2.5, () => {
       c.fillStyle = 'rgba(' + IM.INK + ',.3)'; c.fillRect(x + 3, y + 3, w - 6, h - fh - 4);   // the open top: dark inside
+      if (/LOST/.test(lab)) {   // odd socks, a glove and a lonely hat
+        const cl = ['#ff7a59', '#2a9d8f', '#e9c46a', '#6f7bd4', '#c05d8a', '#f6f1e7'];
+        for (let i = 0; i < 7; i++) { const sx = x + 8 + i * ((w - 20) / 6), sy = y + 6 + (i % 3) * 2.6; c.fillStyle = cl[i % 6]; if (i % 3 === 0) { rr(c, sx - 2.4, sy, 5, 8, 2); c.fill(); c.fillRect(sx - 2.4, sy + 5, 8, 3.4); c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(sx - 2.4, sy, 5, 1.4); } else if (i % 3 === 1) { c.beginPath(); c.arc(sx, sy + 4, 4, Math.PI, 0); c.fill(); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(sx - 4, sy + 4, 8, 1.4); } else { rr(c, sx - 3, sy + 1, 6, 6, 3); c.fill(); c.fillStyle = 'rgba(' + IM.INK + ',.2)'; c.fillRect(sx - 3, sy + 5, 6, 1.4); } }
+      }
       if (fill) {
         const th = h - fh - 6;
         for (let xx = x + 6, i = 0; xx < x + w - 6; xx += 8, i++) {
@@ -313,6 +317,12 @@ Object.assign(FURN, {
     IM.floors.wood(c, x, y, w, h - fh, col, null, { ph: 14, pl: 120, seed: 8 });
     c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x, y, w, 1.4); c.fillRect(x, y, 1.4, h - fh);
     c.fillStyle = 'rgba(' + IM.INK + ',.3)'; c.fillRect(x + w - 1.6, y, 1.6, h - fh);
+    // a velvet backdrop curtain along the back edge, gold trim, and the footlight strip along the front
+    c.fillStyle = IM.grad(c, x, 0, x + w, 0, [[0, '#3a1426'], [0.5, '#5e2140'], [1, '#3a1426']]); c.fillRect(x + 1.4, y + 1.4, w - 2.8, 20);
+    for (let k = 0; k < w; k += 9) { c.fillStyle = k % 18 ? 'rgba(255,200,220,.14)' : 'rgba(0,0,0,.28)'; c.fillRect(x + 2 + k, y + 1.4, 3.4, 20); }
+    c.fillStyle = '#d4a017'; c.fillRect(x + 1.4, y + 21, w - 2.8, 2); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(x + 1.4, y + 21, w - 2.8, 0.8);
+    c.fillStyle = IM.grad(c, 0, y + 23, 0, y + 36, [[0, 'rgba(' + IM.INK + ',.3)'], [1, 'rgba(' + IM.INK + ',0)']]); c.fillRect(x + 1.4, y + 23, w - 2.8, 13);
+    c.fillStyle = '#fff3c4'; for (let k = 0; k < 9; k++) c.fillRect(x + 12 + k * ((w - 24) / 8) - 1.4, y + h - fh - 3.4, 2.8, 1.8);
     // gaffer tape marks, a coiled cable, a worn spot centre stage
     c.fillStyle = 'rgba(255,255,255,.7)'; c.fillRect(x + w * 0.46, y + h * 0.4, 8, 1.6); c.fillRect(x + w * 0.46 + 3.2, y + h * 0.4 - 3.2, 1.6, 8);
     c.strokeStyle = '#20262d'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x + w * 0.42, y + h * 0.35); c.bezierCurveTo(x + w * 0.3, y + h * 0.1, x + w * 0.2, y + h * 0.5, x + 10, y + h * 0.4); c.stroke();

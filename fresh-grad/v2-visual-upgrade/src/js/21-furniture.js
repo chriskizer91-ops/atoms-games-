@@ -60,6 +60,7 @@ const FURN = {
     const ix = x + 12, iy = y + 12, iw = w - 24, ih = h - 24;
     c.fillStyle = IM.grad(c, ix, iy, ix + iw, iy + ih, [[0, shade(col, 0.1)], [1, shade(col, -0.06)]]); c.fillRect(ix, iy, iw, ih);
     const cx = x + w / 2, cy = y + h / 2, d = Math.min(iw / 3.5, ih / 2) * 0.92, k = sd & 3;
+    c.save(); c.beginPath(); c.rect(ix, iy, iw, ih); c.clip();
     if (k < 2) {   // a nested diamond medallion
       [1, 0.72, 0.46].forEach((s, i) => { c.fillStyle = i % 2 ? shade(col, -0.18) : shade(col, 0.3 - i * 0.04); c.beginPath(); c.moveTo(cx, cy - d * s); c.lineTo(cx + d * s * 1.7, cy); c.lineTo(cx, cy + d * s); c.lineTo(cx - d * s * 1.7, cy); c.closePath(); c.fill(); });
       c.fillStyle = shade(col, 0.5); c.beginPath(); c.arc(cx, cy, d * 0.12, 0, 7); c.fill();
@@ -69,6 +70,7 @@ const FURN = {
     } else {   // a lattice of small diamonds
       for (let yy = iy + 8; yy < iy + ih - 4; yy += 14) for (let xx = ix + 10 + ((yy - iy) % 28 ? 7 : 0); xx < ix + iw - 6; xx += 14) { c.fillStyle = 'rgba(255,240,214,.3)'; c.beginPath(); c.moveTo(xx, yy - 4); c.lineTo(xx + 4, yy); c.lineTo(xx, yy + 4); c.lineTo(xx - 4, yy); c.closePath(); c.fill(); }
     }
+    c.restore();
     IM.weave(c, x, y, w, h, 0.9, r); IM.pat(c, 'iw_carpet', x, y, w, h, 0.9, r);
     c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(x + r, y, w - 2 * r, 1); c.fillRect(x, y + r, 1, h - 2 * r);
     c.fillStyle = 'rgba(' + IM.INK + ',.25)'; c.fillRect(x + r, y + h - 1.2, w - 2 * r, 1.2);
