@@ -227,7 +227,7 @@ function cinLight(c, V, ct) {
   c.globalAlpha = 1;
   // long sun shafts raking across the set (warm, very soft) - only worth the fill in wide shots
   if (V.z < 1.6) {
-    const sa = 0.05 + cinGrade(ct) * 0.05;
+    const sa = 0.032 + cinGrade(ct) * 0.04;
     for (let i = 0; i < 2; i++) {
       const x0 = -60 + i * 520 + Math.sin(ct * 0.12 + i * 2) * 40;
       c.fillStyle = cnLG(c, x0, -80, x0 + 520, 760, [[0, 'rgba(255,236,190,' + sa + ')'], [1, 'rgba(255,236,190,0)']]);
@@ -268,7 +268,7 @@ function cinFlare(c, V, ct) {
   const sx = sp[0], sy = sp[1];
   const mx = pw * 0.15, my = ph * 0.15;
   const vis = clamp((sx + pw * 0.2) / (pw * 0.3), 0, 1) * clamp((pw * 1.2 - sx) / (pw * 0.3), 0, 1) * clamp((sy + ph * 0.2) / (ph * 0.3), 0, 1) * clamp((ph * 1.1 - sy) / (ph * 0.3), 0, 1);
-  const flare = vis * (ct < 0.8 ? 0 : 1) * (REDUCED ? 0.5 : 1);
+  const flare = vis * (ct < 0.8 ? 0 : 1) * (REDUCED ? 0.5 : 1) * (1 - (CN.stillA || 0));
   if (flare < 0.02) return;
   const k = V.k, cx = pw / 2, cy = ph / 2;
   c.globalCompositeOperation = 'lighter';

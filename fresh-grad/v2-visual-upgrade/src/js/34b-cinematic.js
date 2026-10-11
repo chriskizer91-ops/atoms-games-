@@ -326,6 +326,7 @@ function cinScene(c, V, ct) {
 
 /* ---------- optional stills, cross-faded over the procedural scene ---------- */
 function cinStills(c, V, ct) {
+  CN.stillA = 0;
   if (!ART.on) return;
   const bar = V.bar, top = bar, hgt = V.ph - bar * 2;
   for (let i = 0; i < CUT_SHOTS.length; i++) {
@@ -336,6 +337,7 @@ function cinStills(c, V, ct) {
     const u = clamp((ct - s.a) / (s.b - s.a), 0, 1), f = Math.min(0.2, (s.b - s.a) * 0.3);
     const al = Math.min(cnS5((ct - s.a) / f), 1 - cnS5((ct - (s.b - f)) / f));
     if (al <= 0.003) continue;
+    CN.stillA = Math.max(CN.stillA, al);
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.save(); c.beginPath(); c.rect(0, top, V.pw, hgt); c.clip();
     c.globalAlpha = al;
@@ -368,7 +370,7 @@ function cinFxDom(V, ct) {
   if (!root) return;
   const warm = cinGrade(ct);
   // grade: cool and anticipatory -> warm and triumphant, as a multiply tint
-  const coolM = [206, 222, 250], warmM = [255, 238, 210];
+  const coolM = [226, 238, 255], warmM = [255, 244, 224];
   set('--cut-mul', 'rgb(' + [0, 1, 2].map(i => Math.round(lerp(coolM[i], warmM[i], warm))).join(',') + ')');
   set('--cut-vig', (clamp(0.8 + Math.sin(ct * 0.9) * 0.05 + (ct > 11.5 ? 0 : 0.06), 0, 1)).toFixed(2));
   const px = Math.round(V.bar * ((root.clientHeight || V.ph) / V.ph));

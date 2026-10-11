@@ -1,0 +1,63 @@
+/* ============================ the diploma, the offer letter and the CTA bar ============================
+   Parchment with paper fibre and a deckled edge, an engraved navy double border with corner flourishes, a faint crest, an embossed
+   institution line, a calligraphic typed field, a gold wax seal with ribbon. The offer is a cream job-offer letter on the job's colours. */
+.dg-side{grid-area:side;display:flex;flex-direction:column;gap:18px;align-self:start;position:sticky;top:8px;animation:dgRise .65s .12s cubic-bezier(.2,.8,.2,1) both}
+.diploma{position:relative;isolation:isolate;padding:26px 30px 42px;text-align:center;color:#1b2a4a;font-family:"Fraunces","Iowan Old Style","Palatino Linotype",Georgia,serif;transform:rotate(-.9deg);transform-origin:50% 60%;filter:drop-shadow(0 28px 28px rgba(0,0,0,.5)) drop-shadow(0 3px 3px rgba(0,0,0,.35));transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.diploma.pop{transform:rotate(.4deg) scale(1.012)}
+.dp-paper{position:absolute;inset:0;z-index:-3;background:radial-gradient(130% 100% at 28% 0,#fffbee 0,#f5ebcf 46%,#e6d6ab 100%);clip-path:var(--deckle,none)}
+.dp-paper::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .16 0 0 0 .42 -.14'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .62 0 0 0 0 .44 0 0 0 0 .18 0 0 0 1.1 -.42'/%3E%3C/filter%3E%3Crect width='400' height='300' filter='url(%23s)'/%3E%3C/svg%3E");background-size:240px 240px,100% 100%;mix-blend-mode:multiply;opacity:.55}
+.dp-paper::after{content:"";position:absolute;left:0;top:0;width:54px;height:54px;background:linear-gradient(135deg,rgba(0,0,0,0) 50%,rgba(70,48,12,.28) 50%,rgba(255,250,236,.95) 58%,#e8d9b0 100%);box-shadow:3px 3px 8px rgba(0,0,0,.22);border-bottom-right-radius:6px}
+.dp-frame{position:absolute;inset:14px;z-index:-2;border:3px solid #1b2a4a;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.55),inset 0 0 0 1px rgba(255,255,255,.3)}
+.dp-frame::before{content:"";position:absolute;inset:5px;border:1px solid #1b2a4a}
+.dp-frame::after{content:"";position:absolute;inset:9px;border:1px dashed rgba(27,42,74,.4)}
+.dp-c{position:absolute;width:46px;height:46px;z-index:-2;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%231b2a4a' stroke-linecap='round'%3E%3Cpath d='M2 46V15C2 7.5 7.5 2 15 2h31' stroke-width='1.8'/%3E%3Cpath d='M8 46V19c0-6 5-11 11-11h27' stroke-width='.9'/%3E%3Cpath d='M15 27c0-7 5-12 12-12 4 0 6 3 4 6s-6 2-6-1' stroke-width='1.2'/%3E%3Cpath d='M15 27c-3 5-1 10 4 11' stroke-width='1.2'/%3E%3Ccircle cx='15' cy='15' r='2.4' stroke-width='1.2'/%3E%3C/svg%3E") no-repeat center/contain;opacity:.9}
+.dp-c.tl{left:20px;top:20px}.dp-c.tr{right:20px;top:20px;transform:scaleX(-1)}.dp-c.bl{left:20px;bottom:20px;transform:scaleY(-1)}.dp-c.br{right:20px;bottom:20px;transform:scale(-1,-1)}
+.dp-crest{position:absolute;left:50%;top:51%;width:168px;height:168px;transform:translate(-50%,-50%);color:#1b2a4a;opacity:.1;z-index:-2;pointer-events:none}
+.diploma small{display:block;font-size:10.5px;line-height:1.5;letter-spacing:.3em;text-transform:uppercase;font-weight:600;color:#34456d}
+.diploma small:first-of-type{font-size:12px;letter-spacing:.34em;color:#1b2a4a;text-shadow:0 1px 0 rgba(255,255,255,.85),0 -1px 0 rgba(27,42,74,.22)}
+.diploma small:first-of-type::after{content:"";display:block;width:130px;height:1px;margin:10px auto 0;background:linear-gradient(90deg,transparent,#1b2a4a,transparent)}
+.diploma h3{font:600 22px/1.25 "Fraunces","Iowan Old Style","Palatino Linotype",Georgia,serif;font-variation-settings:"opsz" 72;margin:11px 0 13px;letter-spacing:.005em;color:#1b2a4a}
+.diploma .field{display:inline-block;min-width:11ch;max-width:100%;padding:0 8px 3px;min-height:36px;font:italic 600 25px/1.25 "Fraunces","Iowan Old Style","Palatino Linotype",Georgia,serif;font-variation-settings:"opsz" 144;color:#1b2a4a;border-bottom:1.5px solid #1b2a4a;background:linear-gradient(100deg,#1b2a4a 0,#1b2a4a 40%,#4967b8 50%,#1b2a4a 60%,#1b2a4a 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:dpInk 4.5s linear infinite;text-shadow:none}
+.diploma .field.typing::after{content:"";display:inline-block;width:2px;height:.9em;margin-left:2px;vertical-align:-.1em;background:#1b2a4a;-webkit-text-fill-color:initial;animation:cutCaret .6s steps(1) infinite}
+@keyframes dpInk{from{background-position:130% 0}to{background-position:-130% 0}}
+.diploma .seal{position:absolute;right:30px;bottom:24px;width:68px;height:68px;z-index:1;filter:drop-shadow(0 6px 6px rgba(70,40,0,.5))}
+.diploma .seal::before{content:"";position:absolute;left:50%;top:66%;width:38px;height:46px;transform:translateX(-50%) rotate(-6deg);background:linear-gradient(180deg,#e0574a,#a82f22);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);z-index:-1}
+.diploma .seal::after{content:"";position:absolute;left:50%;top:66%;width:38px;height:46px;transform:translateX(-10%) rotate(10deg);background:linear-gradient(180deg,#c9402f,#8d241a);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);z-index:-2}
+.diploma .seal span{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 33% 26%,#fff6c4 0,#f6cc55 30%,#d9a025 60%,#a8730f 100%);clip-path:polygon(100.0% 50.0%,94.8% 57.9%,97.0% 67.1%,89.4% 72.8%,88.3% 82.1%,79.2% 84.9%,75.0% 93.3%,65.6% 92.8%,58.7% 99.2%,50.0% 95.5%,41.3% 99.2%,34.4% 92.8%,25.0% 93.3%,20.8% 84.9%,11.7% 82.1%,10.6% 72.8%,3.0% 67.1%,5.2% 57.9%,0.0% 50.0%,5.2% 42.1%,3.0% 32.9%,10.6% 27.2%,11.7% 17.9%,20.8% 15.1%,25.0% 6.7%,34.4% 7.2%,41.3% 0.8%,50.0% 4.5%,58.7% 0.8%,65.6% 7.2%,75.0% 6.7%,79.2% 15.1%,88.3% 17.9%,89.4% 27.3%,97.0% 32.9%,94.8% 42.1%)}
+.diploma .seal span::before{content:"";position:absolute;inset:11px;border-radius:50%;border:1.5px solid rgba(120,76,0,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 0 rgba(255,255,255,.45);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4l2.2 5 5.4.5-4.1 3.6 1.2 5.3L12 15.6 7.3 18.4l1.2-5.3L4.4 9.5 9.8 9z' fill='%23a8730f' fill-opacity='.75'/%3E%3C/svg%3E") no-repeat center/62%}
+.diploma .seal span::after{content:"";position:absolute;left:12%;top:8%;width:42%;height:26%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);transform:rotate(-28deg)}
+.diploma .seal.stamped span{animation:dpStamp .5s cubic-bezier(.2,1.5,.3,1) both}
+@keyframes dpStamp{0%{transform:scale(1.7) rotate(-18deg);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+/* illustrated diploma plate (ui/diploma.png) when it exists: the paper becomes the picture, the text stays live */
+.diploma.art{padding:15% 15% 18%}
+.diploma.art .dp-paper{background:var(--dp-art) center/100% 100% no-repeat;clip-path:none}
+.diploma.art .dp-paper::before,.diploma.art .dp-paper::after,.diploma.art .dp-frame,.diploma.art .dp-c,.diploma.art .dp-crest,.diploma.art .seal{display:none}
+/* the offer, set as a letter */
+.offer{position:relative;display:flex;flex-direction:column;gap:7px;padding:24px 24px 20px;border-radius:5px 5px 14px 14px;color:#1b2a4a;background-image:var(--paper-img,none),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .16 0 0 0 .42 -.14'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"),linear-gradient(180deg,#fcf7ea,#f2e8cc);background-size:512px 512px,240px 240px,100% 100%;box-shadow:0 1px 0 #fff inset,0 20px 44px rgba(0,0,0,.45),0 0 0 1px rgba(70,48,12,.22);overflow:hidden;transform:rotate(.35deg);min-height:150px}
+.offer::before{content:"";position:absolute;left:0;right:0;top:0;height:9px;background:linear-gradient(90deg,var(--c,#5f7fa8),var(--r,#2f3f5a));box-shadow:0 1px 0 rgba(255,255,255,.4) inset}
+.offer::after{content:"";position:absolute;right:20px;bottom:10px;width:104px;height:30px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 36' fill='none' stroke='%231b2a4a' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M4 26c6-14 10-20 13-18 4 3-6 22-2 22 5 0 9-12 14-12 4 0 0 10 4 10 5 0 7-9 12-9 3 0 1 7 5 7 6 0 10-6 18-8 8-2 24-2 42 4'/%3E%3C/svg%3E") no-repeat center/contain;opacity:.32;pointer-events:none}
+.offer>*{animation:dgRise .4s cubic-bezier(.2,.8,.2,1) both}
+.offer>:nth-child(2){animation-delay:.04s}.offer>:nth-child(3){animation-delay:.08s}.offer>:nth-child(4){animation-delay:.12s}.offer>:nth-child(5){animation-delay:.16s}
+.offer>p{color:#6a7596;font-style:italic;font-size:15px;line-height:1.5;padding:18px 0 28px;background:repeating-linear-gradient(180deg,transparent 0 25px,rgba(27,42,74,.12) 25px 26px)}
+.offer .emb{position:absolute;right:20px;top:24px;width:46px;height:46px;border-radius:13px;animation:dgRise .4s both}
+.offer .emb svg{width:27px;height:27px}
+.offer h3{font:700 23px/1.15 "Fraunces","Iowan Old Style","Palatino Linotype",Georgia,serif;font-variation-settings:"opsz" 72;letter-spacing:-.005em;color:#16244a;padding-right:60px}
+.offer .meta{color:#4a587a;font-size:14px;line-height:1.4;padding-right:60px;padding-bottom:10px;border-bottom:1px dotted rgba(27,42,74,.4)}
+.offer .pay{font:500 20px/1.2 var(--font-mono);color:#8a4f00;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:2px}
+.offer ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px;font-size:14px;line-height:1.4;color:#243252}
+.offer li{display:grid;grid-template-columns:20px minmax(0,1fr)}
+.offer li::before{content:"+";font:700 14px var(--font-mono);color:#1c8a5a}
+.offer li.minus::before{content:"\2212";color:#b23a3a}
+/* the call to action */
+.dg-bar{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:34px 16px max(20px,env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--ink) 38%,rgba(11,19,30,0));display:flex;justify-content:center;pointer-events:none}
+.dg-bar .btn{pointer-events:auto}
+#degree .btn{position:relative;min-height:52px;padding:14px 32px;border-radius:15px;font:700 16px var(--font-display);overflow:hidden;isolation:isolate;transition:transform .14s cubic-bezier(.2,.8,.2,1),box-shadow .2s,filter .2s,opacity .2s}
+#degree .btn:not(:disabled){background:linear-gradient(180deg,#ffe08a 0,#ffc247 46%,#f0a21f 100%);box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 -2px 0 rgba(120,60,0,.28) inset,0 12px 32px rgba(255,176,36,.36),0 2px 4px rgba(0,0,0,.5)}
+#degree .btn:not(:disabled)::before{content:"";position:absolute;top:0;bottom:0;left:-70%;width:50%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:skewX(-18deg);transition:left .7s cubic-bezier(.2,.8,.2,1);z-index:-1;pointer-events:none}
+#degree .btn:not(:disabled):hover::before{left:130%}
+#degree .btn:not(:disabled)::after{content:"\2192";margin-left:12px;display:inline-block;transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+#degree .btn:not(:disabled):hover::after{transform:translateX(4px)}
+#degree .btn:disabled{background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04));color:#9fb3c2;opacity:1;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 1px 0 rgba(255,255,255,.12) inset}
+#degree .btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media (max-width:560px){.diploma{padding:26px 20px 44px}.diploma .field{font-size:21px}.diploma h3{font-size:19px}.diploma .seal{right:20px;width:58px;height:58px}.dp-crest{width:130px;height:130px}.dg-bar .btn{width:100%}}
+@media (prefers-reduced-motion:reduce){.diploma .field{animation:none}.diploma .seal.stamped span,.offer>*,.dg-side{animation:none}.diploma{transition:none}}

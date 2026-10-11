@@ -4,7 +4,7 @@
    rig can wave, clap, shake hands and hold a diploma overhead. Light comes from the upper left (CIN_LIGHT). */
 const CIN_LIGHT = [-0.62, -0.78];
 const CIN_SH = { x: -20, y: -106 };            // shoulder offset magnitude (x mirrors per side)
-const CIN_UP = 27, CIN_FORE = 25;               // upper arm / forearm
+const CIN_UP = 29, CIN_FORE = 27.5;               // upper arm / forearm
 const CIN_HEAD_Y = -137;                        // head centre
 
 /* --- pure helpers --- */
@@ -106,11 +106,11 @@ function cinArm(c, o, side, tx, ty, kind, lod) {
   // lit side of the sleeve faces the light
   const lg = (px, py, nx2, ny2, r, base) => { const sgn = (nx2 * CIN_LIGHT[0] + ny2 * CIN_LIGHT[1]) > 0 ? 1 : -1; return cnLG(c, px + nx2 * r * sgn, py + ny2 * r * sgn, px - nx2 * r * sgn, py - ny2 * r * sgn, [[0, cnShade(base, 0.2)], [0.45, base], [1, dark]]); };
   c.fillStyle = lg((sx + E[0]) / 2, (sy + E[1]) / 2, unx, uny, 8, gown);
-  cinCapsule(c, sx, sy, E[0], E[1], 9, 8.2); c.fill();
+  cinCapsule(c, sx, sy, E[0], E[1], 8.2, 7.4); c.fill();
   // bell sleeve (forearm): narrow at the elbow, wide at the cuff, with a bulge for drape
-  const wr = 10.6, er = 8.0, mx = (E[0] + W[0]) / 2 + nx * 1.0, my = (E[1] + W[1]) / 2 + ny * 1.0;
-  c.beginPath(); c.moveTo(E[0] + nx * er, E[1] + ny * er); c.quadraticCurveTo(mx + nx * 9, my + ny * 9, W[0] + nx * wr, W[1] + ny * wr);
-  c.lineTo(W[0] - nx * wr, W[1] - ny * wr); c.quadraticCurveTo(mx - nx * 9, my - ny * 9, E[0] - nx * er, E[1] - ny * er); c.closePath();
+  const wr = 9.4, er = 7.3, mx = (E[0] + W[0]) / 2 + nx * 1.0, my = (E[1] + W[1]) / 2 + ny * 1.0;
+  c.beginPath(); c.moveTo(E[0] + nx * er, E[1] + ny * er); c.quadraticCurveTo(mx + nx * 7.8, my + ny * 7.8, W[0] + nx * wr, W[1] + ny * wr);
+  c.lineTo(W[0] - nx * wr, W[1] - ny * wr); c.quadraticCurveTo(mx - nx * 7.8, my - ny * 7.8, E[0] - nx * er, E[1] - ny * er); c.closePath();
   c.fillStyle = lg((E[0] + W[0]) / 2, (E[1] + W[1]) / 2, nx, ny, 11, gown); c.fill();
   // drape folds
   if (!lod) {
@@ -119,7 +119,7 @@ function cinArm(c, o, side, tx, ty, kind, lod) {
     c.strokeStyle = 'rgba(180,200,255,.16)'; c.beginPath(); c.moveTo(E[0] + nx * 5.6, E[1] + ny * 5.6); c.lineTo(W[0] + nx * 5.2, W[1] + ny * 5.2); c.stroke();
   }
   // elbow cap hides the joint
-  c.fillStyle = gown; c.beginPath(); c.arc(E[0], E[1], 7.6, 0, CN_TAU); c.fill();
+  c.fillStyle = gown; c.beginPath(); c.arc(E[0], E[1], 6.9, 0, CN_TAU); c.fill();
   // sleeve opening with a darker lining
   c.save(); c.translate(W[0], W[1]); c.rotate(fa + Math.PI / 2);
   c.fillStyle = cnShade(gown, -0.55); c.beginPath(); c.ellipse(0, 0, wr, 2.6, 0, 0, CN_TAU); c.fill();

@@ -3,14 +3,17 @@ let pickedDegree = null, typeTimer = 0;
 function showDegreeScreen() {
   G.mode = 'degree';
   const scr = $('#degree'); scr.hidden = false; scr.scrollTop = 0;
+  degSetup();
   pickedDegree = null;
   $('#dField').textContent = '';
+  $('#dField').classList.remove('typing');
   $('#offer').innerHTML = '';
   $('#offer').appendChild(el('p', '', 'Choose a degree to see the job it leads to.'));
   const list = $('#degList'); list.innerHTML = '';
-  DEGREES.forEach(d => {
+  DEGREES.forEach((d, i) => {
     const b = el('button', 'deg'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.dataset.id = d.id;
-    b.style.setProperty('--c', d.wall); b.style.setProperty('--r', d.roof);
+    b.style.setProperty('--c', d.wall); b.style.setProperty('--r', d.roof); b.style.setProperty('--a', d.accent); b.style.setProperty('--i', i);
+    b.appendChild(degEmblem(d));
     b.appendChild(el('b', '', d.short));
     b.appendChild(el('span', '', d.job));
     b.appendChild(el('em', '', '$' + d.rate + '/hr'));
@@ -22,18 +25,26 @@ function pickDegree(id) {
   const d = DEG(id); pickedDegree = id;
   $$('#degList .deg').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
   clearInterval(typeTimer);
-  const f = $('#dField'); let i = 0; f.textContent = '';
-  typeTimer = setInterval(() => { i++; f.textContent = d.field.slice(0, i); if (i >= d.field.length) clearInterval(typeTimer); }, 28);
+  const f = $('#dField'); let i = 0; f.textContent = ''; f.classList.add('typing');
+  typeTimer = setInterval(() => { i++; f.textContent = d.field.slice(0, i); if (i >= d.field.length) { clearInterval(typeTimer); f.classList.remove('typing'); } }, 28);
+  // the seal is stamped again and the sheet settles
+  const seal = $('#degree .seal'), dp = $('#degree .diploma');
+  if (seal) { seal.classList.remove('stamped'); void seal.offsetWidth; seal.classList.add('stamped'); }
+  if (dp) { dp.classList.add('pop'); setTimeout(() => dp.classList.remove('pop'), 420); }
   const label = d.field.startsWith('Arts') ? 'Arts' : 'Science';
   const off = $('#offer'); off.innerHTML = '';
+  off.style.setProperty('--c', d.wall); off.style.setProperty('--r', d.roof);
+  off.appendChild(degEmblem(d));
   off.appendChild(el('h3', '', d.job));
   off.appendChild(el('div', 'meta', d.employer + '. Bachelor of ' + label + '.'));
-  off.appendChild(el('div', 'pay', '$' + d.rate + '/hr  ·  about $' + (d.rate * 40) + ' a week'));
+  off.appendChild(el('div', 'pay', '$' + d.rate + '/hr  \u00b7  about $' + (d.rate * 40) + ' a week'));
   const ul = el('ul');
   d.pros.forEach(t => ul.appendChild(el('li', '', t)));
   d.cons.forEach(t => ul.appendChild(el('li', 'minus', t)));
   off.appendChild(ul);
   const btn = $('#btnAccept'); btn.disabled = false; btn.textContent = 'Accept the job at ' + d.employer;
+  // on a narrow screen the diploma sits below the cards: bring it into view
+  if (window.innerWidth <= 820) { const sd = $('#degree .dg-side'); if (sd && sd.scrollIntoView) setTimeout(() => sd.scrollIntoView({ block: 'center', behavior: REDUCED ? 'auto' : 'smooth' }), 120); }
 }
 /* ============================ game flow ============================ */
 function showOnly(id) {
