@@ -1,7 +1,7 @@
 /* ---------- animated scenes for longer activities ---------- */
-/* Every scene is a function (c, w, h, t, fr, o): c is already scaled to css pixels, t is the scene clock in seconds, fr is how far through the
-   activity we are (0..1) and o is the activity's own options. Static set dressing is painted once into AK.layer caches ("sc|...");
-   only what moves is drawn each frame. SC.draw finishes every scene with the shared grade, vignette, letterbox and grain (SK.finish). */
+// Every scene is a function (c, w, h, t, fr, o): c is already scaled to css pixels, t is the scene clock in seconds, fr is how far through the
+// activity we are (0..1) and o is the activity's own options. Static set dressing is painted once into AK.layer caches ("sc|...");
+// only what moves is drawn each frame. SC.draw finishes every scene with the shared grade, vignette, letterbox and grain (SK.finish).
 const SC = { o: null, t: 0, ctx: null, w: 0, h: 0, line: -1 };
 SC.open = function (k, o) {
   k.scene = o.scene; SC.o = o; SC.t = 0; SC.line = -1; SC.frac = 0;
@@ -272,8 +272,8 @@ const SCENES = {
     c.drawImage(scLayer('lau', w, h, (g, W, H) => scLaundryRoom(g, W, H)), 0, 0, w, h);
     // sun through the windows, slowly crossing the floor
     const sh = Math.sin(t * 0.08) * w * 0.02;
-    SK.shaft(c, w * 0.15 + sh, h * 0.12, w * 0.14, w * 0.35 + sh * 2, h * 0.95, w * 0.2, '#fff3c8', 0.32);
-    SK.shaft(c, w * 0.85 - sh, h * 0.12, w * 0.14, w * 0.65 - sh * 2, h * 0.95, w * 0.2, '#fff3c8', 0.26);
+    SK.shaft(c, w * 0.15 + sh, h * 0.12, w * 0.14, w * 0.35 + sh * 2, h * 0.95, w * 0.2, '#fff3c8', 0.2);
+    SK.shaft(c, w * 0.85 - sh, h * 0.12, w * 0.14, w * 0.65 - sh * 2, h * 0.95, w * 0.2, '#fff3c8', 0.16);
     SK.motes(c, t, w * 0.1, h * 0.1, w * 0.9, h * 0.9, 34, 5, '#ffffff', 0.55);
     // a folding table with a basket at the right, machines in a row
     const n = 3, mw = Math.min(w * 0.25, h * 0.58), gap = (w - mw * n) / (n + 1), my = h * 0.72 - mw * 1.12 + h * 0.02, mh = mw * 1.12;

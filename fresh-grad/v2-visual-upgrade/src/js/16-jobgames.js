@@ -550,7 +550,7 @@ JA.games.biz = {
       '<div class="bz-track"><i class="band"></i><input type="range" min="10" max="110" step="1" value="60" aria-label="Offer in thousands of dollars"></div>' +
       '<button type="button" class="btn bz-go">Make offer</button></div>';
     g.host = host;
-    g.face = $('.bz-face', host); g.nm = $('.nm', host); g.co = $('.co', host); g.chips = $('.bz-chips', host); g.hearts = $('.bz-hearts', host);
+    g.callEl = $('.bz-call', host); g.face = $('.bz-face', host); g.nm = $('.nm', host); g.co = $('.co', host); g.chips = $('.bz-chips', host); g.hearts = $('.bz-hearts', host);
     g.say = $('.bz-say', host); g.val = $('.bz-val b', host); g.band = $('.band', host); g.go = $('.bz-go', host); g.timer = $('.bz-timer span', host);
     g.d = $('.bz-top .d', host); g.r = $('.bz-top .r', host); g.range = $('input', host);
     g.nd = $('.bz-dial .nd', host); g.dv = $('.bz-dial .dval', host); g.db = $('.bz-dial .dband', host);
@@ -582,13 +582,13 @@ JA.games.biz = {
     bzDial(g);
     g.face.classList.remove('ring'); void g.face.offsetWidth; g.face.classList.add('ring');
     g.say.className = 'bz-say'; g.say.textContent = '“' + JPICK(['Thanks for calling back. What is your number?', 'We have been waiting on a quote. Go ahead.', 'Let us hear it. What will this cost us?', 'I have ten minutes. What is the price?']) + '”';
-    g.go.disabled = false;
+    g.go.disabled = false; g.callEl.classList.add('live');
     JA.games.biz.hearts(J);
     jtone(740, 0.07, 0.04); jtone(988, 0.09, 0.04);
   },
   finishCall(J, text, cls, face) {
     const g = J.g;
-    g.lock = true; g.gap = 1.5; g.go.disabled = true;
+    g.lock = true; g.gap = 1.5; g.go.disabled = true; g.callEl.classList.remove('live');
     g.say.className = 'bz-say ' + cls; g.say.textContent = text;
     if (face) g.face.innerHTML = bzFace(g.c, face);
     g.d.textContent = g.deals; g.r.textContent = '$' + g.rev + 'K';
@@ -617,7 +617,7 @@ JA.games.biz = {
         g.say.className = 'bz-say warn';
         g.say.textContent = '“' + (over <= 1.08 ? 'Hmm, that is a touch steep.' : over <= 1.25 ? 'That is over our budget.' : 'You must be joking.') + '”';
         g.face.innerHTML = bzFace(c, over <= 1.08 ? 'hmm' : 'bad');
-        SFX.chime('bad');
+        SFX.chime('bad'); g.say.classList.add('shake'); setTimeout(() => g.say.classList.remove('shake'), 400);
       }
     }
   },
@@ -798,7 +798,7 @@ const CK_DEFS = '<svg class="ck-defs" width="0" height="0" aria-hidden="true" st
   '<radialGradient id="ckRim" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="#9aa5b0"/><stop offset=".55" stop-color="#4b535c"/><stop offset="1" stop-color="#1c2025"/></radialGradient>' +
   '<radialGradient id="ckIn" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#2d3239"/><stop offset=".8" stop-color="#171a1f"/><stop offset="1" stop-color="#0d0f12"/></radialGradient></defs></svg>';
 let CK_FLAMES = '<circle cx="60" cy="60" r="48.500" fill="none" stroke="#ff8a3d" stroke-width="7" opacity=".26"/>';
-for (let i = 0; i < 28; i++) { const a = i / 28 * 6.2832, x = 60 + Math.cos(a) * 45.500, y = 60 + Math.sin(a) * 45.500; CK_FLAMES += '<g class="fg" transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + (a * 57.2958 + 90).toFixed(1) + ')"><path class="fo" d="M-3 0Q-3.500 -4.500 0 -9Q3.500 -4.500 3 0Z"/><path class="fi" d="M-1.600 0Q-1.800 -2.600 0 -5Q1.800 -2.600 1.600 0Z"/></g>'; }
+for (let i = 0; i < 18; i++) { const a = i / 18 * 6.2832, x = 60 + Math.cos(a) * 45.500, y = 60 + Math.sin(a) * 45.500; CK_FLAMES += '<g class="fg" transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + (a * 57.2958 + 90).toFixed(1) + ') scale(' + (0.65 + hash01(i, 3, 3) * 0.7).toFixed(2) + ')"><path class="fo" d="M-3 0Q-3.500 -4.500 0 -9Q3.500 -4.500 3 0Z"/><path class="fi" d="M-1.600 0Q-1.800 -2.600 0 -5Q1.800 -2.600 1.600 0Z"/></g>'; }
 let CK_SIZZLE = '';
 for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832 + 0.3, r = 33 + (i % 2) * 2; CK_SIZZLE += '<circle cx="' + (60 + Math.cos(a) * r).toFixed(1) + '" cy="' + (60 + Math.sin(a) * r).toFixed(1) + '" r="2.600"/>'; }
 const CK_PAN = '<g class="grate"><circle cx="60" cy="60" r="50"/><path d="M10 60H110M60 10V110" stroke-opacity=".6"/></g><g class="fl">' + CK_FLAMES + '</g>' +

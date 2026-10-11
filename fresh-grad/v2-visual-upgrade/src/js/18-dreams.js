@@ -87,7 +87,7 @@ function showDream(d) {
   else if (d.good === false) { SFX.beep(98, 1.0, 'sawtooth', 0.025); }
   dr.hidden = false;
 }
-function hideDream() { $('#dream').hidden = true; DR.d = null; }
+function hideDream() { $('#dream').hidden = true; DR.d = null; AK.dropLayers('dr|'); }
 function setDreamLine(text) {
   const el2 = $('#dreamLine');
   el2.style.opacity = 0;
@@ -177,11 +177,9 @@ function drawDream(dt) {
     const vg = c.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.2, w / 2, h / 2, Math.max(w, h) * 0.75);
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(60,0,10,' + (0.5 + 0.2 * e).toFixed(3) + ')');
     c.fillStyle = vg; c.fillRect(0, 0, w, h);
-    // the odd glitch: a band of the picture slips sideways and splits into red and cyan
-    if (!REDUCED && Math.sin(DR.t * 3.1) > 0.96) {
-      const gy = Math.floor((Math.sin(DR.t * 40) * 0.5 + 0.5) * ph * 0.9), gh = Math.floor(ph * 0.05);
-      c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.5; c.drawImage(cv, 0, gy, pw, gh, 14, gy, pw, gh); c.globalAlpha = 0.3; c.drawImage(cv, 0, gy, pw, gh, -10, gy, pw, gh); c.restore();
-      c.fillStyle = 'rgba(255,60,60,.07)'; c.fillRect(0, gy / dpr, w, gh / dpr);
+    // the odd glitch: thin bands of red and cyan tear across the picture for a heartbeat
+    if (!REDUCED && Math.sin(DR.t * 0.83) > 0.97 && Math.sin(DR.t * 31) > 0) {
+      for (let i = 0; i < 4; i++) { const gy = hash01(Math.floor(DR.t * 24), i, 5) * h, gh = h * (0.008 + hash01(i, 6, 6) * 0.03); c.fillStyle = i % 2 ? 'rgba(40,220,255,.12)' : 'rgba(255,50,70,.16)'; c.fillRect((i % 2 ? 1 : -1) * 12, gy, w, gh); c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(0, gy + gh, w, 1); }
     }
   } else {
     // good and calm dreams glow: a soft bloom from above, and a deep blue vignette

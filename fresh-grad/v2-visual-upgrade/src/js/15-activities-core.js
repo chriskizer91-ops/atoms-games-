@@ -52,7 +52,7 @@ JA.open = function (k, o) {
   $('#jClock').textContent = clockStr(S.t);
   $('#jLeft').textContent = beat ? '' : hoursStr(k.total) + ' shift';
   $('#jBarFill').style.width = '0%';
-  $('#jPerf').textContent = '–';
+  $('#jPerf').textContent = '–'; $('#jPerf').dataset.rk = '';
   $('#jStage').innerHTML = ''; $('#jFoot').textContent = '';
   JFX.clear();
   root.hidden = false;
@@ -107,7 +107,7 @@ JA.hud = function (J) {
   if (cl !== J.shownClock) { J.shownClock = cl; $('#jClock').textContent = cl; }
   const p = J.def.perf(J);
   const txt = p == null ? '–' : JA.rank(p) + ' · ' + Math.round(p * 100) + '%';
-  if (txt !== J.shown) { J.shown = txt; $('#jPerf').textContent = txt; }
+  if (txt !== J.shown) { J.shown = txt; $('#jPerf').textContent = txt; $('#jPerf').dataset.rk = p == null ? '' : JA.rank(p); }
 };
 /* called every frame from stepSkip while an activity is on screen */
 JA.frame = function (dt) {
@@ -137,7 +137,7 @@ JA.finish = function () {
   if (!J.beat) { k.perfMult = JA.mult(J.perf); k.rank = 'rank ' + rk; }
   $('#jBarFill').style.width = '100%'; $('#jClock').textContent = clockStr(S.t);
   const pt = rk + ' · ' + Math.round(J.perf * 100) + '%';
-  $('#jPerf').textContent = pt; J.shown = pt;
+  $('#jPerf').textContent = pt; J.shown = pt; $('#jPerf').dataset.rk = rk;
   JA.showResult(J, r, rk);
   SFX.chime(J.perf >= 0.62 ? 'pay' : 'door');
 };

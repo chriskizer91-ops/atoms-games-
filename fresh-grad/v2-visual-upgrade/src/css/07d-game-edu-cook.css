@@ -49,8 +49,8 @@
 .pan .charS{fill:none;stroke:#120b07;opacity:calc((var(--m,0) - .72) * 3.6)}
 .pan .grate{stroke:#3a414a;stroke-width:3.2;stroke-linecap:round;fill:none}
 .pan .fl{opacity:0;transition:opacity .3s}
-.pan:not(.cold) .fl{opacity:.55}
-.pan.cook .fl,.pan.burnt .fl{opacity:1}
+.pan:not(.cold) .fl{opacity:.4}
+.pan.cook .fl,.pan.burnt .fl{opacity:.9}
 .pan .fo{fill:#ff8a3d;transform-box:fill-box;transform-origin:50% 100%;animation:ckfl .42s ease-in-out infinite alternate}
 .pan .fi{fill:#5db8ff;transform-box:fill-box;transform-origin:50% 100%;animation:ckfl .3s ease-in-out infinite alternate-reverse}
 .pan .fg:nth-child(3n) .fo{animation-duration:.36s}.pan .fg:nth-child(3n+1) .fo{animation-duration:.5s}
@@ -62,7 +62,7 @@
 .pan .o1{fill:url(#ckIn)}
 .pan .shn{fill:#fff;opacity:.2}
 .pan .oil{fill:#fff;opacity:.1}
-.pan .trk{stroke:#ffffff1a}.pan .sw{stroke:#5bd39b99}.pan .pr{stroke:#ffb347;filter:drop-shadow(0 0 3px rgba(255,170,60,.6))}
+.pan .trk{stroke:#ffffff1a}.pan .sw{stroke:#5bd39b99}.pan .pr{stroke:#ffb347}
 .pan .sz circle{fill:none;stroke:#fff;stroke-width:1.1;opacity:0;transform-box:fill-box;transform-origin:50% 50%}
 .pan.cook .sz circle{animation:cksz .9s ease-out infinite}
 .pan .sz circle:nth-child(2n){animation-delay:.3s!important}.pan .sz circle:nth-child(3n){animation-delay:.55s!important}
@@ -71,8 +71,8 @@
 .pan .grill{stroke:#1a0d06;stroke-width:3.2;stroke-linecap:round;fill:none;opacity:calc((var(--m,0) - .25) * 1.2)}
 .pan .glaze{fill:#fff;opacity:calc(.28 - var(--m,0) * .22)}
 .pan.sweet{box-shadow:0 0 0 2px #5bd39baa inset,0 0 30px #5bd39b55,0 5px 12px rgba(0,0,0,.5)}
-.pan.sweet .pr{stroke:#5bd39b;filter:drop-shadow(0 0 4px rgba(91,211,155,.8))}
-.pan.late .pr{stroke:#ff6b6b;filter:drop-shadow(0 0 4px rgba(255,107,107,.8))}
+.pan.sweet .pr{stroke:#5bd39b}
+.pan.late .pr{stroke:#ff6b6b}
 .pan.late{box-shadow:0 0 0 2px #ff6b6b88 inset,0 0 24px #ff6b6b33,0 5px 12px rgba(0,0,0,.5)}
 .pan.done{box-shadow:0 0 0 2px #ffd778aa inset,0 0 26px #ffd77855,0 5px 12px rgba(0,0,0,.5)}
 .pan .nm{position:absolute;left:12%;right:12%;bottom:6px;padding:2px 0 3px;text-align:center;font:500 10.5px var(--font-mono);color:#d8e0e8;letter-spacing:.05em;border-radius:6px;background:linear-gradient(180deg,#3a424c,#242a31);box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 2px 4px rgba(0,0,0,.5)}
@@ -80,7 +80,7 @@
 .pan.cold{filter:grayscale(1) brightness(.5)}
 .pan:active{transform:scale(.97)}
 .pan.nope{animation:jshake .25s}
-.pan::before{content:"";position:absolute;left:22%;right:22%;top:6%;height:44%;border-radius:50%;background:radial-gradient(ellipse at 50% 80%,rgba(255,255,255,.55),rgba(255,255,255,0) 70%);filter:blur(7px);opacity:0;pointer-events:none}
+.pan::before{content:"";position:absolute;left:22%;right:22%;top:6%;height:44%;border-radius:50%;background:radial-gradient(ellipse at 50% 80%,rgba(255,255,255,.5),rgba(255,255,255,0) 68%);opacity:0;pointer-events:none}
 .pan.cook::before{opacity:calc(var(--m,0) * .42);animation:cksteam 1.6s ease-in-out infinite}
 @keyframes cksteam{0%{transform:translateY(8%) scale(.8)}100%{transform:translateY(-14%) scale(1.15)}}
 .pan.burnt::after{content:"";position:absolute;inset:14% 20% 34%;background:radial-gradient(circle,#9a9a9acc,#5a5a5a00 70%);filter:blur(6px);animation:smoke .95s ease-out forwards;pointer-events:none}

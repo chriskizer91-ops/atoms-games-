@@ -19,44 +19,78 @@ const marketOn = () => S && weekdayOf(S.day) === 6 && S.t >= 7.5 * 60 && S.t < 1
 const concertOn = () => S && weekdayOf(S.day) === 0 && S.t >= 17.75 * 60 && S.t < 20.25 * 60;
 const STALLS = [[1080, '#e76f51', ['#e63946', '#f4a261', '#8ac926']], [1180, '#2a9d8f', ['#ffd166', '#f4a261', '#e9c46a']], [1300, '#c77dff', ['#ff7eb6', '#ffd166', '#ffffff']]];
 function drawStall(c, x, y, col, goods, vendor) {
-  c.fillStyle = 'rgba(8,12,24,.2)'; c.beginPath(); c.ellipse(x, y + 3, 44, 7, 0, 0, 7); c.fill();
-  c.fillStyle = '#5a3d27'; c.fillRect(x - 38, y - 52, 3, 54); c.fillRect(x + 35, y - 52, 3, 54);
+  c.fillStyle = 'rgba(8,12,24,.22)'; c.beginPath(); c.ellipse(x, y + 3, 48, 8, 0, 0, 7); c.fill();
+  // crates under the table, with produce spilling over the top
+  [[-30, '#a8774a'], [26, '#9a6a3f']].forEach((cr, ci) => {
+    const cx = x + cr[0];
+    c.fillStyle = cr[1]; c.fillRect(cx - 10, y - 11, 20, 12); c.fillStyle = 'rgba(0,0,0,.26)'; c.fillRect(cx - 10, y - 7, 20, 1.2); c.fillRect(cx - 10, y - 3, 20, 1.2); c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(cx - 10, y - 11, 20, 1.4);
+    for (let i = 0; i < 4; i++) { c.fillStyle = goods[(i + ci) % goods.length]; c.beginPath(); c.arc(cx - 7.5 + i * 5, y - 12.5 - (i % 2), 3.1, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.arc(cx - 8.4 + i * 5, y - 13.6 - (i % 2), 0.9, 0, 7); c.fill(); }
+  });
+  // posts, with a lit edge
+  c.fillStyle = '#5a3d27'; c.fillRect(x - 38, y - 52, 3.4, 54); c.fillRect(x + 35, y - 52, 3.4, 54);
+  c.fillStyle = 'rgba(255,255,255,.2)'; c.fillRect(x - 38, y - 52, 1, 54); c.fillRect(x + 35, y - 52, 1, 54);
   if (vendor) drawPerson(c, x, y - 18, vendor);
-  // table and goods
+  // the table: wood top, a cloth with a scalloped hem and soft folds
   c.fillStyle = '#8b6240'; c.fillRect(x - 40, y - 20, 80, 18); c.fillStyle = '#a8774a'; c.fillRect(x - 40, y - 22, 80, 5);
   c.fillStyle = '#f6f1e7'; c.fillRect(x - 40, y - 17, 80, 9);
-  for (let i = 0; i < 9; i++) { c.fillStyle = goods[i % goods.length]; c.beginPath(); c.arc(x - 33 + i * 8.2, y - 25 - (i % 2) * 2, 3.8, 0, 7); c.fill(); }
-  // striped canopy
+  c.fillStyle = 'rgba(0,0,0,.08)'; for (let i = 1; i < 8; i++) c.fillRect(x - 40 + i * 10, y - 17, 1.4, 9);
+  c.fillStyle = '#f6f1e7'; for (let i = 0; i < 10; i++) { c.beginPath(); c.arc(x - 36 + i * 8, y - 8, 4, 0, Math.PI); c.fill(); }
+  c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(x - 40, y - 22, 80, 1);
+  // goods: fruit with a highlight and a stem, and a jar or two
+  for (let i = 0; i < 9; i++) {
+    const gx = x - 33 + i * 8.2, gy = y - 25 - (i % 2) * 2;
+    if (i % 4 === 3) { c.fillStyle = 'rgba(255,255,255,.55)'; rr(c, gx - 3.2, gy - 5, 6.4, 8, 1.4); c.fill(); c.fillStyle = goods[i % goods.length]; c.fillRect(gx - 2.6, gy - 2, 5.2, 5); c.fillStyle = '#c9a24a'; c.fillRect(gx - 3.4, gy - 6, 6.8, 1.8); }
+    else { c.fillStyle = goods[i % goods.length]; c.beginPath(); c.arc(gx, gy, 3.8, 0, 7); c.fill(); c.fillStyle = 'rgba(0,0,0,.16)'; c.beginPath(); c.arc(gx + 0.8, gy + 1.2, 3, 0.2, 2.9); c.fill(); c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.arc(gx - 1.2, gy - 1.3, 1.1, 0, 7); c.fill(); c.strokeStyle = '#3a6a30'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(gx, gy - 3.6); c.lineTo(gx + 0.8, gy - 5.2); c.stroke(); }
+  }
+  // a little chalkboard price sign
+  c.fillStyle = '#25382f'; rr(c, x + 25, y - 38, 14, 11, 1.6); c.fill(); c.strokeStyle = '#a06f3f'; c.lineWidth = 1; c.stroke(); c.strokeStyle = 'rgba(244,241,230,.8)'; c.lineWidth = 0.9; c.beginPath(); c.moveTo(x + 27, y - 35); c.lineTo(x + 35, y - 35); c.moveTo(x + 27, y - 31.5); c.lineTo(x + 33, y - 31.5); c.stroke();
+  // striped canopy: scallops, a shaded underside and a row of bunting
   const n = 6, w = 92, sw = w / n;
   for (let i = 0; i < n; i++) { c.fillStyle = i % 2 ? '#f6f1e7' : col; c.beginPath(); c.moveTo(x - w / 2 + i * sw, y - 66); c.lineTo(x - w / 2 + (i + 1) * sw, y - 66); c.lineTo(x - w / 2 + (i + 1) * sw, y - 52); c.arc(x - w / 2 + (i + 0.5) * sw, y - 52, sw / 2, 0, Math.PI); c.closePath(); c.fill(); }
+  c.fillStyle = 'rgba(0,0,0,.14)'; for (let i = 0; i < n; i++) { c.beginPath(); c.arc(x - w / 2 + (i + 0.5) * sw, y - 52, sw / 2, 0, Math.PI); c.lineTo(x - w / 2 + (i + 0.5) * sw, y - 52); c.fill(); }
   c.fillStyle = shade(col, -0.2); c.beginPath(); c.moveTo(x - w / 2, y - 66); c.lineTo(x, y - 80); c.lineTo(x + w / 2, y - 66); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.22)'; c.beginPath(); c.moveTo(x - w / 2, y - 66); c.lineTo(x, y - 80); c.lineTo(x - w * 0.15, y - 66); c.closePath(); c.fill();
   c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(x - w / 2, y - 66, w, 2);
+  c.fillStyle = 'rgba(8,12,24,.2)'; c.fillRect(x - w / 2 + 4, y - 50, w - 8, 5);
+  for (let i = 0; i < 9; i++) { c.fillStyle = goods[i % goods.length]; c.beginPath(); c.moveTo(x - 40 + i * 10, y - 47); c.lineTo(x - 36 + i * 10, y - 47); c.lineTo(x - 38 + i * 10, y - 42); c.closePath(); c.fill(); }
   if (FX.nf > 0.05) addLight(x, y + 4, 80, 40, 5, 0.4);
 }
 function drawBandstand(c) {
   const x = BANDSTAND.x, y = BANDSTAND.y;
-  c.fillStyle = 'rgba(8,12,24,.22)'; c.beginPath(); c.ellipse(x, y + 8, 76, 16, 0, 0, 7); c.fill();
+  c.fillStyle = 'rgba(8,12,24,.22)'; c.beginPath(); c.ellipse(x, y + 8, 78, 16, 0, 0, 7); c.fill();
+  // stone steps at the front, then the round deck with boards and a lit rim
+  c.fillStyle = '#b4ad9d'; c.beginPath(); c.ellipse(x, y + 17, 52, 11, 0, 0, Math.PI); c.fill(); c.fillStyle = '#c9c2b4'; c.beginPath(); c.ellipse(x, y + 14, 52, 10, 0, 0, Math.PI); c.fill();
   c.fillStyle = '#c9c2b4'; c.beginPath(); c.ellipse(x, y, 70, 18, 0, 0, 7); c.fill();
   c.fillStyle = '#a69f8f'; c.fillRect(x - 70, y, 140, 10); c.beginPath(); c.ellipse(x, y + 10, 70, 18, 0, 0, Math.PI); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.14)'; for (let i = -3; i <= 3; i++) c.fillRect(x + i * 20 - 0.6, y + 1, 1.2, 9);
   c.fillStyle = '#e8e1d0'; c.beginPath(); c.ellipse(x, y, 66, 16, 0, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(120,100,70,.28)'; c.lineWidth = 1; for (let i = -4; i <= 4; i++) { c.beginPath(); c.moveTo(x + i * 14, y - 15.4 * Math.sqrt(Math.max(0, 1 - (i * 14 / 66) ** 2))); c.lineTo(x + i * 14, y + 15.4 * Math.sqrt(Math.max(0, 1 - (i * 14 / 66) ** 2))); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(x, y - 1, 64, 14, 0, Math.PI * 1.05, Math.PI * 1.95); c.fill();
   if (concertOn()) {
     [[-34, NPC_LOOK[3], 'guitar'], [0, NPC_LOOK[9], 'mic'], [34, NPC_LOOK[6], 'drum']].forEach(m => {
       const px = x + m[0], py = y + 4;
       drawPerson(c, px, py, Object.assign({}, m[1], { face: m[0] > 0 ? -1 : 1, moving: false, phase: 0 }));
-      if (m[2] === 'guitar') { c.fillStyle = '#c47a3a'; c.beginPath(); c.ellipse(px + 2, py - 16, 6, 4.5, 0.4, 0, 7); c.fill(); c.strokeStyle = '#5a3b2a'; c.lineWidth = 2; c.beginPath(); c.moveTo(px + 6, py - 18); c.lineTo(px + 16, py - 26); c.stroke(); }
-      if (m[2] === 'drum') { c.fillStyle = '#e63946'; c.beginPath(); c.ellipse(px - 10, py - 10, 8, 4, 0, 0, 7); c.fill(); c.fillStyle = '#f6f1e7'; c.beginPath(); c.ellipse(px - 10, py - 12, 8, 3, 0, 0, 7); c.fill(); }
+      if (m[2] === 'guitar') { c.fillStyle = '#c47a3a'; c.beginPath(); c.ellipse(px + 2, py - 16, 6, 4.5, 0.4, 0, 7); c.fill(); c.strokeStyle = '#5a3b2a'; c.lineWidth = 2; c.beginPath(); c.moveTo(px + 6, py - 18); c.lineTo(px + 16, py - 26); c.stroke(); c.fillStyle = 'rgba(255,255,255,.3)'; c.beginPath(); c.ellipse(px, py - 17.5, 2.6, 1.2, 0.4, 0, 7); c.fill(); }
+      if (m[2] === 'drum') { c.fillStyle = '#e63946'; c.beginPath(); c.ellipse(px - 10, py - 10, 8, 4, 0, 0, 7); c.fill(); c.fillStyle = '#f6f1e7'; c.beginPath(); c.ellipse(px - 10, py - 12, 8, 3, 0, 0, 7); c.fill(); c.fillStyle = '#d9b34a'; c.beginPath(); c.ellipse(px + 14, py - 22, 6, 1.4, -0.1, 0, 7); c.fill(); }
       if (m[2] === 'mic') { c.strokeStyle = '#2b2f36'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(px + 9, py); c.lineTo(px + 9, py - 30); c.stroke(); c.fillStyle = '#5a6672'; c.beginPath(); c.arc(px + 9, py - 31, 2.4, 0, 7); c.fill(); }
     });
     if (!REDUCED) { c.fillStyle = 'rgba(255,233,168,.9)'; c.font = '700 13px serif'; c.textAlign = 'center'; for (let i = 0; i < 4; i++) { const k = (FX.time * 0.3 + i / 4) % 1; c.globalAlpha = Math.sin(k * Math.PI); c.fillText(i % 2 ? '♪' : '♫', x - 40 + i * 26, y - 60 - k * 50); } c.globalAlpha = 1; }
   }
-  // posts and roof
+  // a low railing between the posts, then the posts themselves with a bevel and a plinth
+  c.strokeStyle = '#e8e1d0'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x - 62, y + 9); c.lineTo(x - 30, y + 14); c.moveTo(x + 30, y + 14); c.lineTo(x + 62, y + 9); c.stroke();
+  c.fillStyle = '#d9d2c2'; for (let i = 0; i < 4; i++) { c.fillRect(x - 58 + i * 8, y + 4 + i * 1.2, 1.6, 6); c.fillRect(x + 36 + i * 8, y + 8.6 - i * 1.2, 1.6, 6); }
   c.fillStyle = '#f4efe4';
-  [-60, -30, 30, 60].forEach(dx => { c.fillRect(x + dx - 2.5, y - 66, 5, 66); });
+  [-60, -30, 30, 60].forEach(dx => { c.fillRect(x + dx - 2.5, y - 66, 5, 66); c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(x + dx - 2.5, y - 66, 1.4, 66); c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(x + dx + 1.1, y - 66, 1.4, 66); c.fillStyle = '#d9d2c2'; c.fillRect(x + dx - 4, y - 3, 8, 4); c.fillStyle = '#f4efe4'; });
+  // the roof: shingle rows, a trim and a gold finial
   c.fillStyle = '#2f7d4f'; c.beginPath(); c.moveTo(x - 76, y - 64); c.lineTo(x, y - 100); c.lineTo(x + 76, y - 64); c.closePath(); c.fill();
-  c.fillStyle = '#25663f'; c.fillRect(x - 76, y - 66, 152, 6);
-  c.fillStyle = 'rgba(255,255,255,.2)'; c.beginPath(); c.moveTo(x - 70, y - 66); c.lineTo(x, y - 97); c.lineTo(x - 20, y - 66); c.closePath(); c.fill();
-  c.fillStyle = '#d4a017'; c.beginPath(); c.arc(x, y - 102, 4, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.16)'; c.lineWidth = 1; for (let i = 1; i < 5; i++) { const ry = y - 64 - i * 7, hw = 76 * (1 - (i * 7) / 36); c.beginPath(); c.moveTo(x - hw, ry); c.lineTo(x + hw, ry); c.stroke(); }
+  c.fillStyle = '#25663f'; c.fillRect(x - 76, y - 66, 152, 6); c.fillStyle = 'rgba(255,255,255,.2)'; c.beginPath(); c.moveTo(x - 70, y - 66); c.lineTo(x, y - 97); c.lineTo(x - 20, y - 66); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(x - 76, y - 60, 152, 2.4);
+  c.fillStyle = '#d4a017'; c.beginPath(); c.arc(x, y - 102, 4, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.arc(x - 1.2, y - 103.2, 1.2, 0, 7); c.fill();
+  c.strokeStyle = '#d4a017'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y - 98); c.lineTo(x, y - 100); c.stroke();
   if (WINTER()) { c.fillStyle = '#f6fafd'; c.beginPath(); c.moveTo(x - 72, y - 66); c.lineTo(x, y - 98); c.lineTo(x + 72, y - 66); c.quadraticCurveTo(x, y - 80, x - 72, y - 66); c.fill(); }
+  // bunting under the eave
+  for (let i = 0; i < 12; i++) { c.fillStyle = ['#ffd166', '#ff7eb6', '#6fd1ff', '#ffffff'][i % 4]; const bx = x - 66 + i * 12; c.beginPath(); c.moveTo(bx, y - 58); c.lineTo(bx + 8, y - 58); c.lineTo(bx + 4, y - 51 + Math.sin(i) * 0.6); c.closePath(); c.fill(); }
   if (concertOn() && FX.nf > 0.05) { addLight(x, y + 10, 160, 70, 5, 0.9); for (let i = 0; i < 9; i++) addEmit(x - 72 + i * 18, y - 64, 8, i % 2 ? 4 : 5, 0.8); }
   if (concertOn()) { for (let i = 0; i < 9; i++) { c.fillStyle = ['#ffd166', '#ff7eb6', '#6fd1ff'][i % 3]; c.beginPath(); c.arc(x - 72 + i * 18, y - 62, 2.4, 0, 7); c.fill(); } }
 }
@@ -201,7 +235,7 @@ function fishChoice(k) {
   else if (k === 'sell') { addM(FS.val); toast('Sold for ' + fmt(FS.val) + '.', 'good'); }
   $('#fishResult').hidden = true; FS.phase = 'cast'; FS.t = 0; setFishMsg('Tap to cast');
 }
-function endFishing() { FS.on = false; $('#fishing').hidden = true; G.menu = false; updateHud(); }
+function endFishing() { FS.on = false; $('#fishing').hidden = true; G.menu = false; updateHud(); AK.dropLayers('fv|'); FD.fx.length = 0; FD.last = ''; }
 function drawFishPic(c, f, x, y, s) { fishArt(c, f, x, y, s); }
 function drawFishing(dt) { fishView(dt); }
 function bindFishing() {
@@ -257,28 +291,38 @@ function finishGig() {
 function drawGigMarker(c) {
   if (!G.gig || S.scene !== 'town') return;
   const g = G.gig, tm = REDUCED ? 0 : FX.time;
-  // a beam of light over the drop-off
-  const grd = c.createLinearGradient(0, g.y - 160, 0, g.y); grd.addColorStop(0, 'rgba(255,194,71,0)'); grd.addColorStop(1, 'rgba(255,194,71,.35)');
-  c.fillStyle = grd; c.fillRect(g.x - 14, g.y - 160, 28, 160);
+  // a beam of warm light over the drop-off, wider at the ground, with a soft pool and two rings that pulse outward
+  const grd = c.createLinearGradient(0, g.y - 170, 0, g.y); grd.addColorStop(0, 'rgba(255,194,71,0)'); grd.addColorStop(1, 'rgba(255,194,71,.4)');
+  c.fillStyle = grd; c.beginPath(); c.moveTo(g.x - 7, g.y - 170); c.lineTo(g.x + 7, g.y - 170); c.lineTo(g.x + 17, g.y); c.lineTo(g.x - 17, g.y); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,194,71,.18)'; c.beginPath(); c.ellipse(g.x, g.y, 30, 11, 0, 0, 7); c.fill();
   c.strokeStyle = '#ffc247'; c.lineWidth = 2.5; const pr = 24 + Math.sin(tm * 5) * 4; c.beginPath(); c.ellipse(g.x, g.y, pr, pr * 0.4, 0, 0, 7); c.stroke();
+  const k2 = (tm * 0.8) % 1; c.strokeStyle = 'rgba(255,194,71,' + (0.5 * (1 - k2)).toFixed(3) + ')'; c.lineWidth = 1.6; c.beginPath(); c.ellipse(g.x, g.y, 14 + k2 * 34, (14 + k2 * 34) * 0.4, 0, 0, 7); c.stroke();
+  c.setLineDash([4, 6]); c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1.2; c.lineDashOffset = -tm * 14; c.beginPath(); c.ellipse(g.x, g.y, 32, 12.8, 0, 0, 7); c.stroke(); c.setLineDash([]);
+  // a floating pin with the pizza icon, bobbing, with its shadow on the ground
   const by = g.y - 90 + Math.sin(tm * 3) * 5;
-  c.fillStyle = '#ffffff'; c.beginPath(); c.arc(g.x, by, 15, 0, 7); c.fill();
-  placeIcon(c, 'pizza', g.x, by, 0.85, '#e63946');
+  c.fillStyle = 'rgba(8,12,22,.3)'; c.beginPath(); c.ellipse(g.x, g.y + 2, 12 - Math.sin(tm * 3) * 2, 4, 0, 0, 7); c.fill();
+  c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(g.x, by + 26); c.bezierCurveTo(g.x - 6, by + 16, g.x - 16, by + 8, g.x - 16, by - 2); c.arc(g.x, by - 2, 16, Math.PI, 0); c.bezierCurveTo(g.x + 16, by + 8, g.x + 6, by + 16, g.x, by + 26); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(230,57,70,.9)'; c.lineWidth = 2; c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.ellipse(g.x - 6, by - 9, 4, 2, -0.6, 0, 7); c.fill();
+  placeIcon(c, 'pizza', g.x, by - 2, 0.85, '#e63946');
   addEmit(g.x, g.y - 20, 40, 5, 0.6);
+  if (!REDUCED) for (let i = 0; i < 6; i++) { const k = (tm * 0.5 + i / 6) % 1; c.fillStyle = 'rgba(255,230,150,' + (0.8 * Math.sin(k * Math.PI)).toFixed(3) + ')'; AK.star(c, g.x + Math.sin(i * 2.3) * 14, g.y - 10 - k * 90, 2 + (i % 3), 0.2); c.fill(); }
   // an arrow at the screen edge when the drop-off is out of view
   const vx0 = CAM.x, vy0 = CAM.y, vx1 = CAM.x + CAM.vw, vy1 = CAM.y + CAM.vh;
   if (g.x < vx0 || g.x > vx1 || g.y < vy0 || g.y > vy1) {
     const cx = (vx0 + vx1) / 2, cy = (vy0 + vy1) / 2, a = Math.atan2(g.y - cy, g.x - cx);
     const m = 28 / CAM.k, ax = clamp(cx + Math.cos(a) * CAM.vw, vx0 + m, vx1 - m), ay = clamp(cy + Math.sin(a) * CAM.vh, vy0 + m + 40 / CAM.k, vy1 - m);
     c.save(); c.translate(ax, ay); c.rotate(a); c.scale(1 / CAM.k * 1.4, 1 / CAM.k * 1.4);
-    c.fillStyle = 'rgba(8,12,22,.6)'; c.beginPath(); c.arc(0, 0, 16, 0, 7); c.fill();
+    c.fillStyle = 'rgba(8,12,22,.7)'; c.beginPath(); c.arc(0, 0, 16, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,194,71,.55)'; c.lineWidth = 1.4; c.stroke();
     c.fillStyle = '#ffc247'; c.beginPath(); c.moveTo(12, 0); c.lineTo(-6, -9); c.lineTo(-2, 0); c.lineTo(-6, 9); c.closePath(); c.fill();
     c.restore();
   }
 }
 function drawPizzaBox(c, x, y) {
-  c.fillStyle = '#c9a06a'; c.fillRect(x - 9, y - 26, 18, 5); c.fillStyle = '#e8d2a6'; c.fillRect(x - 9, y - 28, 18, 2.5);
-  c.fillStyle = '#c0392b'; c.fillRect(x - 3, y - 25.5, 6, 2);
+  c.fillStyle = 'rgba(8,12,22,.25)'; c.fillRect(x - 9, y - 21, 18, 2);
+  c.fillStyle = '#b98c52'; c.fillRect(x - 9, y - 26, 18, 5); c.fillStyle = '#e8d2a6'; c.fillRect(x - 9, y - 28.5, 18, 3);
+  c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(x - 9, y - 28.5, 18, 0.8); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x - 9, y - 22.4, 18, 1);
+  c.fillStyle = '#c0392b'; c.fillRect(x - 3, y - 25.5, 6, 2); c.fillStyle = '#fff6e8'; c.fillRect(x - 1.4, y - 25.2, 2.8, 1.2);
 }
 const drawPlayerTown0 = drawPlayerTown;
 drawPlayerTown = function (c) {

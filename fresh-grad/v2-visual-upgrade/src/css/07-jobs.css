@@ -4,12 +4,12 @@
   --ease:cubic-bezier(.2,.8,.2,1);
   z-index:18;inset:var(--top-h,0px) 0 0 0;padding:max(8px,1.4vh) 10px;place-items:center;background:#070d16;backdrop-filter:none;overflow:hidden}
 #job .jbg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% -10%,color-mix(in srgb,var(--jb,#21364a),#000 42%) 0,#08101a 62%,#05080f 100%)}
-#job .jbg i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
-#job .jb1{left:-8%;top:-14%;width:44vmax;height:44vmax;background:color-mix(in srgb,var(--ja,#ffc247),transparent 62%)}
-#job .jb2{right:-10%;bottom:-18%;width:46vmax;height:46vmax;background:color-mix(in srgb,var(--jb,#21364a),#fff 8%);opacity:.38}
+#job .jbg i{position:absolute;border-radius:50%;opacity:.5}
+#job .jb1{left:-12%;top:-18%;width:56vmax;height:56vmax;background:radial-gradient(circle,color-mix(in srgb,var(--ja,#ffc247),transparent 58%) 0,transparent 68%)}
+#job .jb2{right:-14%;bottom:-22%;width:58vmax;height:58vmax;background:radial-gradient(circle,color-mix(in srgb,var(--jb,#21364a),#fff 8%) 0,transparent 68%);opacity:.38}
 #job .jb3{inset:0;border-radius:0;filter:none;opacity:.5;background:radial-gradient(90% 80% at 50% 50%,transparent 55%,#000b 100%)}
 .jcard{position:relative;width:min(100%,740px);height:min(100%,690px);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,#17283c 0,#0d1a28 38%,#09121c 100%);box-shadow:0 0 0 1px rgba(255,255,255,.11),inset 0 1px 0 rgba(255,255,255,.12),0 44px 110px #000d,0 0 90px color-mix(in srgb,var(--jb,#21364a),transparent 70%);animation:card .32s var(--ease)}
-.jcard::before{content:"";position:absolute;inset:0;background:var(--noise);opacity:.045;mix-blend-mode:overlay;pointer-events:none}
+.jcard::before{content:"";position:absolute;inset:0;background:var(--noise);opacity:.03;pointer-events:none}
 .jcard>*{position:relative}
 .jhead{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:11px 16px;color:#fff;background:linear-gradient(135deg,color-mix(in srgb,var(--jb,#21364a),#fff 14%) 0,var(--jb,#21364a) 46%,color-mix(in srgb,var(--jb,#21364a),#000 42%) 100%);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.35)}
 .jh-pat{position:absolute;inset:0;pointer-events:none;opacity:.2;background-repeat:repeat;-webkit-mask-image:linear-gradient(90deg,transparent 30%,#000 90%);mask-image:linear-gradient(90deg,transparent 30%,#000 90%)}
@@ -30,7 +30,8 @@
 .jclock b{display:block;font:500 22px var(--font-mono);color:var(--gold);text-shadow:0 0 18px #ffc24755;font-variant-numeric:tabular-nums}
 .jclock small,.jperf small{display:block;font:500 10px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;opacity:.8}
 .jperf{min-width:76px}
-.jperf b{display:block;font:700 15px var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.jperf b{display:block;font:700 15px var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap;transition:color .3s,text-shadow .3s}
+.jperf b[data-rk=S]{color:#ffe08a;text-shadow:0 0 14px rgba(255,200,80,.6)}.jperf b[data-rk=A]{color:#7ff0b8}.jperf b[data-rk=B]{color:#8fd6ff}.jperf b[data-rk=C]{color:#ffd08a}.jperf b[data-rk=D]{color:#ff9a9a}
 .jbar{position:relative;height:5px;background:linear-gradient(180deg,#0009,#0005);box-shadow:0 1px 0 rgba(255,255,255,.05)}
 .jbar span{position:relative;display:block;height:100%;width:0;background:linear-gradient(90deg,color-mix(in srgb,var(--ja,var(--gold)),#000 25%),var(--ja,var(--gold)) 70%,#fff);box-shadow:0 0 12px color-mix(in srgb,var(--ja,#ffc247),transparent 20%);transition:width .2s linear}
 .jbar span::after{content:"";position:absolute;right:-8px;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle,#fff 0,#fff 14%,color-mix(in srgb,var(--ja,#ffc247),transparent 20%) 38%,transparent 70%);pointer-events:none}
@@ -122,7 +123,7 @@
   .jclock b{font-size:18px}.jclock small,.jperf small{display:none}
   .jperf{min-width:0}.jperf b{font-size:13px}
   .jstage{padding:10px 10px}
-  .jintro h2{font-size:27px}.jglyph{width:52px;height:52px;margin-top:-30px}
+  .jintro h2{font-size:27px}.jglyph{width:52px;height:52px;margin-top:-30px}.jhero{height:84px}.jintro{gap:7px}.jhow{gap:6px}.jhow li{padding:7px 10px 7px 42px}.jhow li::before{left:9px}
   .jres{grid-template-columns:auto minmax(0,1fr);gap:8px 12px}.jrank{width:92px;height:92px}.jrank b{font-size:42px}.jres-mid h2{font-size:22px}
   .jpay{padding:18px 14px 22px}.jpay .jp-stamp{width:46px;height:46px;font-size:23px}
 }

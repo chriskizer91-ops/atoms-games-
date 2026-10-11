@@ -23,7 +23,7 @@
 .nu-mon::before{content:"";position:absolute;right:16px;bottom:3px;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7ff0b8,#2a8e63);box-shadow:0 0 6px #5be3a0;animation:nuled 3s steps(1) infinite}
 .nu-mon::after{content:"";position:absolute;left:18px;bottom:3px;width:44px;height:5px;border-radius:3px;background:repeating-linear-gradient(90deg,#0a0d11 0 3px,#222a33 3px 5px);opacity:.8}
 .nu-scr{position:relative;padding:10px 10px 11px;border-radius:12px;background:radial-gradient(130% 100% at 50% 0,#071a12,#020a07 70%);box-shadow:0 0 0 1px #0d2a1e inset,0 0 28px rgba(60,240,150,.1) inset,0 0 0 2px #000;overflow:hidden}
-.nu-scr::before{content:"";position:absolute;inset:0;z-index:3;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1px,transparent 1px 3px);pointer-events:none;mix-blend-mode:multiply}
+.nu-scr::before{content:"";position:absolute;inset:0;z-index:3;background:repeating-linear-gradient(0deg,rgba(0,0,0,.26) 0 1px,transparent 1px 3px);pointer-events:none}
 .nu-scr::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(115deg,rgba(255,255,255,.08) 0,rgba(255,255,255,.02) 22%,transparent 40%),radial-gradient(120% 100% at 50% 50%,transparent 60%,rgba(0,0,0,.45));pointer-events:none}
 .nu-leds{position:relative;display:flex;align-items:center;gap:7px;margin:0 2px 7px;font:500 9.5px var(--font-mono);letter-spacing:.14em;color:#4f8f77}
 .nu-leds i{width:8px;height:8px;border-radius:50%;background:#12301f;box-shadow:0 0 0 1px #0b1f15 inset}
@@ -71,6 +71,8 @@
 .bz-face svg{position:relative;display:block;width:100%;height:100%;border-radius:20px;overflow:hidden;box-shadow:0 0 0 2px rgba(255,255,255,.18),0 8px 18px rgba(0,0,0,.5)}
 .bz-face::after{content:"";position:absolute;inset:-3px;border-radius:23px;border:2px solid rgba(255,194,71,0);pointer-events:none}
 .bz-face.ring::after{animation:bzring .8s ease-out}
+.bz-call.live .bz-face.ring::after{animation:bzring .8s ease-out,bzpulse 2.2s .8s ease-out infinite}
+@keyframes bzpulse{0%{border-color:rgba(120,200,255,.55);transform:scale(1)}100%{border-color:rgba(120,200,255,0);transform:scale(1.2)}}
 @keyframes bzring{0%{border-color:rgba(255,194,71,.9);transform:scale(1);box-shadow:0 0 0 0 rgba(255,194,71,.55)}100%{border-color:rgba(255,194,71,0);transform:scale(1.18);box-shadow:0 0 0 14px rgba(255,194,71,0)}}
 .bz-who b{display:block;font:800 19px/1.1 var(--font-display);letter-spacing:-.01em}
 .bz-who small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
