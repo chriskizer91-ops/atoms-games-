@@ -7,8 +7,8 @@ function workDef(jid) {
     floors: [[34, TW, 756, 514, cfg.floorType, cfg.floor, cfg.floor2], [790, TW, 24, 514, 'plain', '#bdb6a6'], [814, TW, 252, 316, 'tile', '#e6e0d2'], [814, 422, 252, 176, 'carpet', '#7a6a8a']],
     walls: [[790, TW, 24, 166], [790, 330, 24, 130], [790, 540, 24, 58], [814, 400, 252, 22]],
     deco(c) {
-      winTop(c, 340, 90); winTop(c, 520, 90); winTop(c, 700, 60);
-      sign(c, j.employer.toUpperCase(), 200, 36, Math.min(300, 40 + j.employer.length * 12), cfg.signCol);
+      cfg.wins.forEach(w => winTop(c, w[0], w[1]));
+      sign(c, j.employer.toUpperCase(), cfg.signX, 36, Math.min(300, 40 + j.employer.length * 12), cfg.signCol);
       sign(c, 'BREAK ROOM', 940, 52, 110, '#3a5a7a'); sign(c, 'OFFICE', 940, 438, 80, '#6a4a8a');
       c.fillStyle = '#5a3b2a'; c.fillRect(786, 244, 32, 5); c.fillRect(786, 330, 32, 5); c.fillRect(786, 456, 32, 5); c.fillRect(786, 540, 32, 5);
     },
@@ -28,7 +28,7 @@ function workDef(jid) {
 }
 const WORK_CFG = {
   cs: {
-    wall: '#cfd5e0', trim: '#9aa6bb', floorType: 'carpet', floor: '#8e9bb0', floor2: 'rgba(255,255,255,.07)', signCol: '#2f3f5a', deskName: 'Your desk', prompt: 'Sit at your desk', spot: [340, 324],
+    wall: '#cfd5e0', trim: '#9aa6bb', floorType: 'carpet', floor: '#8e9bb0', floor2: 'rgba(255,255,255,.07)', signCol: '#2f3f5a', deskName: 'Your desk', prompt: 'Sit at your desk', spot: [340, 324], signX: 200, wins: [[350, 80], [450, 70], [740, 50]],
     furn: [
       { t: 'server', x: 60, y: 98, w: 44, h: 70 }, { t: 'server', x: 108, y: 98, w: 44, h: 70 }, { t: 'server', x: 156, y: 98, w: 44, h: 70 }, { t: 'board', x: 540, y: 22, w: 180, h: 44, label: 'SPRINT 12' },
       { t: 'desk', x: 90, y: 250, w: 100, h: 50 }, { t: 'desk', x: 290, y: 250, w: 100, h: 50, screen: '#9be7a8' }, { t: 'desk', x: 490, y: 250, w: 100, h: 50 },
@@ -39,7 +39,7 @@ const WORK_CFG = {
     folks: [folkAt('noor', 140, 244), folkAt('felix', 540, 392), folkAt('dana', 965, 482)]
   },
   eng: {
-    wall: '#d4d7dc', trim: '#9a9fa8', floorType: 'lino', floor: '#b9bec4', floor2: 'rgba(0,0,0,.08)', signCol: '#444a55', deskName: 'Your bench', prompt: 'Work at your bench', spot: [345, 334],
+    wall: '#d4d7dc', trim: '#9a9fa8', floorType: 'lino', floor: '#b9bec4', floor2: 'rgba(0,0,0,.08)', signCol: '#444a55', deskName: 'Your bench', prompt: 'Work at your bench', spot: [345, 334], signX: 200, wins: [[336, 80], [440, 80], [730, 50]],
     furn: [
       { t: 'machine', x: 60, y: 98, w: 130, h: 80, c: '#6b7a8f', label: 'CNC MILL', fs: 10, screen: '#ffb347' }, { t: 'machine', x: 210, y: 98, w: 70, h: 60, c: '#e9e4d8', label: '3D PRINT', fs: 8, screen: '#4cc9f0' },
       { t: 'shelf', x: 310, y: 98, w: 150, h: 56, label: 'PARTS', s: 2 }, { t: 'counter', x: 500, y: 104, w: 200, h: 48, c: '#7d8a94', top: '#b0b8bf', label: 'WORKBENCH' }, { t: 'board', x: 560, y: 22, w: 150, h: 44, c: '#cfe6ff', label: 'BLUEPRINT' },
@@ -50,7 +50,7 @@ const WORK_CFG = {
     folks: [folkAt('olga', 150, 252), folkAt('pavel', 550, 402), folkAt('keller', 965, 482)]
   },
   nurse: {
-    wall: '#e3eef2', trim: '#a9c3cf', floorType: 'lino', floor: '#e3edf0', floor2: 'rgba(100,170,190,.14)', signCol: '#c9444f', deskName: 'Nurses station', prompt: 'Start your rounds', spot: [310, 376],
+    wall: '#e3eef2', trim: '#a9c3cf', floorType: 'lino', floor: '#e3edf0', floor2: 'rgba(100,170,190,.14)', signCol: '#c9444f', deskName: 'Nurses station', prompt: 'Start your rounds', spot: [310, 376], signX: 610, wins: [],
     furn: [
       { t: 'hbed', x: 70, y: 98, w: 80, h: 120 }, { t: 'hbed', x: 210, y: 98, w: 80, h: 120 }, { t: 'hbed', x: 350, y: 98, w: 80, h: 120 }, { t: 'cabinet', x: 480, y: 98, w: 150, h: 56, c: '#cfd8dc', label: 'SUPPLIES', fs: 9 },
       { t: 'counter', x: 150, y: 310, w: 320, h: 50, c: '#4d86a8', top: '#e8f6ff' }, { t: 'desk', x: 200, y: 282, w: 90, h: 28, pc: true, c: '#d9e3e8' }, { t: 'desk', x: 330, y: 282, w: 90, h: 28, pc: true, c: '#d9e3e8', screen: '#9be7a8' },
@@ -59,7 +59,7 @@ const WORK_CFG = {
     folks: [folkAt('amari', 560, 252), folkAt('tomas', 600, 410), folkAt('rosalind', 965, 482)]
   },
   biz: {
-    wall: '#ddd5e6', trim: '#a99bb8', floorType: 'carpet', floor: '#9a8aa8', floor2: 'rgba(255,255,255,.06)', signCol: '#4a3560', deskName: 'Your cubicle', prompt: 'Sit at your cubicle', spot: [310, 316],
+    wall: '#ddd5e6', trim: '#a99bb8', floorType: 'carpet', floor: '#9a8aa8', floor2: 'rgba(255,255,255,.06)', signCol: '#4a3560', deskName: 'Your cubicle', prompt: 'Sit at your cubicle', spot: [310, 316], signX: 440, wins: [[570, 80], [680, 70]],
     furn: [
       { t: 'table', x: 460, y: 112, w: 220, h: 90, c: '#7d5434', label: 'CONFERENCE', fs: 11 }, { t: 'chair', x: 480, y: 84 + 2, w: 24, h: 24 }, { t: 'chair', x: 540, y: 86, w: 24, h: 24 }, { t: 'chair', x: 600, y: 86, w: 24, h: 24 }, { t: 'chair', x: 480, y: 206, w: 24, h: 24 }, { t: 'chair', x: 540, y: 206, w: 24, h: 24 }, { t: 'chair', x: 600, y: 206, w: 24, h: 24 },
       { t: 'board', x: 120, y: 22, w: 190, h: 44, c: '#f1e9fa', label: 'Q3 TARGETS' },
@@ -71,7 +71,7 @@ const WORK_CFG = {
     folks: [folkAt('carter', 130, 244), folkAt('imogen', 560, 500), folkAt('pike', 965, 482)]
   },
   cook: {
-    wall: '#e4d3bd', trim: '#b9a07c', floorType: 'tile', floor: '#cdbba3', floor2: 'rgba(0,0,0,.07)', signCol: '#5b2a1d', deskName: 'The line', prompt: 'Work the line', spot: [210, 180],
+    wall: '#e4d3bd', trim: '#b9a07c', floorType: 'tile', floor: '#cdbba3', floor2: 'rgba(0,0,0,.07)', signCol: '#5b2a1d', deskName: 'The line', prompt: 'Work the line', spot: [210, 180], signX: 560, wins: [[700, 70]],
     furn: [
       { t: 'stove', x: 60, y: 98, w: 90, h: 56, label: 'RANGE' }, { t: 'stove', x: 160, y: 98, w: 90, h: 56, label: 'RANGE' }, { t: 'stove', x: 260, y: 98, w: 90, h: 56, label: 'GRILL' },
       { t: 'fridge', x: 420, y: 98, w: 60, h: 80 }, { t: 'sink', x: 500, y: 98, w: 100, h: 50 }, { t: 'shelf', x: 620, y: 98, w: 150, h: 56, label: 'DRY GOODS', s: 1 },

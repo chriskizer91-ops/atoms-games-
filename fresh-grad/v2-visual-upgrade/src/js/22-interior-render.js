@@ -1,127 +1,64 @@
 /* ============================ floors, walls, whole-room drawing ============================ */
-function drawFloor(c, f) {
-  // f: [x, y, w, h, type, col, col2]
+/* a floor is [x, y, w, h, type, col, col2]; a room's style table may refine it (see ROOM_STYLE) */
+function drawFloor(c, f, o) {
   const [x, y, w, h, type, col, col2] = f;
-  c.fillStyle = col; c.fillRect(x, y, w, h);
-  if (type === 'wood') {
-    for (let yy = y, r = 0; yy < y + h; yy += 26, r++) {
-      const ph = Math.min(26, y + h - yy), off = (r * 83) % 160;
-      for (let xx = x - 160 + off, k = 0; xx < x + w; xx += 160, k++) {
-        const v = hash01(r, k, Math.round(x)), px = Math.max(x, xx), pw = Math.min(x + w, xx + 160) - px;
-        if (pw <= 0) continue;
-        c.fillStyle = v < 0.5 ? 'rgba(60,30,5,' + (v * 0.2).toFixed(3) + ')' : 'rgba(255,240,210,' + ((v - 0.5) * 0.22).toFixed(3) + ')';
-        c.fillRect(px, yy, pw, ph);
-        c.fillStyle = 'rgba(70,40,10,.2)'; if (xx > x) c.fillRect(xx, yy, 1.6, ph);
-      }
-      c.fillStyle = 'rgba(70,40,10,.2)'; c.fillRect(x, yy + ph - 1.6, w, 1.6);
-      c.fillStyle = 'rgba(255,255,255,.07)'; c.fillRect(x, yy, w, 1.2);
-    }
-  } else if (type === 'tile') {
-    c.fillStyle = col2 || 'rgba(0,0,0,.06)';
-    for (let yy = 0; yy * 56 < h; yy++) for (let xx = 0; xx * 56 < w; xx++) if ((xx + yy) % 2) c.fillRect(x + xx * 56, y + yy * 56, Math.min(56, w - xx * 56), Math.min(56, h - yy * 56));
-    c.fillStyle = 'rgba(0,0,0,.08)';
-    for (let xx = x + 56; xx < x + w; xx += 56) c.fillRect(xx - 0.75, y, 1.5, h);
-    for (let yy = y + 56; yy < y + h; yy += 56) c.fillRect(x, yy - 0.75, w, 1.5);
-    c.fillStyle = 'rgba(255,255,255,.12)';
-    for (let yy = y; yy < y + h; yy += 56) c.fillRect(x, yy + 1, w, 1.2);
-    patFill(c, 'fleck', x, y, w, h, 0.7);
-  } else if (type === 'carpet') {
-    c.fillStyle = col2 || 'rgba(255,255,255,.07)'; for (let yy = y + 8; yy < y + h; yy += 18) c.fillRect(x, yy, w, 1.5);
-    patFill(c, 'fleck', x, y, w, h);
-  } else if (type === 'lino') {
-    c.fillStyle = col2 || 'rgba(0,0,0,.08)'; for (let xx = x + 60; xx < x + w; xx += 60) c.fillRect(xx, y, 2, h); for (let yy = y + 60; yy < y + h; yy += 60) c.fillRect(x, yy, w, 2);
-    patFill(c, 'fleck', x, y, w, h, 0.6);
-    const g = c.createLinearGradient(x, y, x + w * 0.5, y + h); g.addColorStop(0, 'rgba(255,255,255,.1)'); g.addColorStop(0.5, 'rgba(255,255,255,0)');
-    c.fillStyle = g; c.fillRect(x, y, w, h);
-  } else patFill(c, 'fleck', x, y, w, h, 0.6);
+  o = o || {};
+  if (o.seed == null) o.seed = (Math.round(x) * 7 + Math.round(y) * 3) % 97;
+  const fn = IM.floors[o.kind || type] || IM.floors.plain;
+  fn(c, x, y, w, h, o.col || col, o.col2 !== undefined ? o.col2 : col2, o);
+  IM.mottle(c, x, y, w, h, o.seed, o.mottle == null ? (type === 'carpet' ? 0.05 : 0.075) : o.mottle);
   // the wall above casts a soft shadow onto the floor
-  const sg = c.createLinearGradient(0, y, 0, y + 18); sg.addColorStop(0, 'rgba(10,12,30,.22)'); sg.addColorStop(1, 'rgba(10,12,30,0)');
-  c.fillStyle = sg; c.fillRect(x, y, w, Math.min(18, h));
-}
-function wallBlock(c, r, d) {
-  const fh = Math.min(16, r[3] * 0.3);
-  const sg = c.createLinearGradient(0, r[1] + r[3], 0, r[1] + r[3] + 12); sg.addColorStop(0, 'rgba(10,12,30,.24)'); sg.addColorStop(1, 'rgba(10,12,30,0)');
-  c.fillStyle = sg; c.fillRect(r[0], r[1] + r[3], r[2], 12);
-  c.fillStyle = shade(d.wallCol, 0.1); c.fillRect(r[0], r[1], r[2], r[3]);
-  c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(r[0], r[1], r[2], Math.min(3, r[3]));
-  c.fillStyle = shade(d.wallCol, -0.12); c.fillRect(r[0], r[1] + r[3] - fh, r[2], fh);
-  c.fillStyle = d.trim; c.fillRect(r[0], r[1] + r[3] - 4, r[2], 4);
-  c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(r[0] + r[2] - 3, r[1], 3, r[3]);
+  if (!o.noShadow) {
+    const sg = c.createLinearGradient(0, y, 0, y + 26); sg.addColorStop(0, 'rgba(' + IM.INK + ',.34)'); sg.addColorStop(0.45, 'rgba(' + IM.INK + ',.12)'); sg.addColorStop(1, 'rgba(' + IM.INK + ',0)');
+    c.fillStyle = sg; c.fillRect(x, y, w, Math.min(26, h));
+  }
 }
 /* one cached layer for the static part of whichever room is on screen */
-const LAYER = { name: '', res: 0, cv: null };
+const LAYER = { name: '', res: 0, cv: null, rec: null, live: null };
 function layerCache(name, w, h, paint) {
   const res = clamp(Math.min(Math.ceil((FX.m || 1) * 4) / 4, Math.sqrt(6e6 / (w * h))), 1, 2);
   if (LAYER.name !== name || LAYER.res !== res) {
     const cv = LAYER.cv || (LAYER.cv = document.createElement('canvas'));
     cv.width = Math.ceil(w * res); cv.height = Math.ceil(h * res);
     const g = cv.getContext('2d'); g.setTransform(res, 0, 0, res, 0, 0);
-    paint(g);
-    LAYER.name = name; LAYER.res = res;
+    LAYER.res = res; LAYER.name = name; LAYER.live = null; LAYER.clocks = null;
+    try { LAYER.rec = captureStatic(() => paint(g)); }
+    catch (e) { LAYER.rec = { glows: [], lights: [], emit: [], wins: [] }; if (typeof console !== 'undefined') console.warn('room paint failed', e); }
   }
   return LAYER.cv;
 }
 function drawIntBase(c, d) {
-  const A = FX.A;
-  c.fillStyle = shade(d.wallCol, -0.16); c.fillRect(0, 0, d.w, d.h);
-  c.drawImage(layerCache('int:' + d.id, d.w, d.h, g => d.floors.forEach(f => drawFloor(g, f))), 0, 0, d.w, d.h);
-  // back wall: paint, a chair rail, panelling and a baseboard
-  const wg = c.createLinearGradient(0, 0, 0, TW); wg.addColorStop(0, shade(d.wallCol, 0.16)); wg.addColorStop(1, shade(d.wallCol, -0.02));
-  c.fillStyle = wg; c.fillRect(0, 0, d.w, TW);
-  c.fillStyle = shade(d.wallCol, -0.08); c.fillRect(0, TW - 30, d.w, 18);
-  c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(0, TW - 32, d.w, 2);
-  c.fillStyle = 'rgba(0,0,0,.08)'; for (let x = 60; x < d.w; x += 64) c.fillRect(x, TW - 28, 1.5, 15);
-  c.fillStyle = d.trim; c.fillRect(0, TW - 12, d.w, 12);
-  c.fillStyle = 'rgba(255,255,255,.2)'; c.fillRect(0, TW - 12, d.w, 1.5);
-  // side walls and the front wall, seen from above
-  const top = shade(d.wallCol, -0.2);
-  c.fillStyle = top; c.fillRect(0, 0, 34, d.h); c.fillRect(d.w - 34, 0, 34, d.h);
-  c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(0, 0, 3, d.h); c.fillRect(d.w - 34, 0, 3, d.h);
-  c.fillStyle = d.trim; c.fillRect(30, TW, 5, d.h); c.fillRect(d.w - 35, TW, 5, d.h);
-  const lg = c.createLinearGradient(35, 0, 49, 0); lg.addColorStop(0, 'rgba(10,12,30,.2)'); lg.addColorStop(1, 'rgba(10,12,30,0)');
-  c.fillStyle = lg; c.fillRect(35, TW, 14, d.h - TW - 42);
-  c.fillStyle = top; c.fillRect(0, d.h - 42, d.w, 42);
-  c.fillStyle = d.trim; c.fillRect(34, d.h - 46, d.w - 68, 5);
-  c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(34, d.h - 46, d.w - 68, 1.5);
-  // front doors: daylight (or the night) shows through the glass
-  const ex = d.exit.x;
-  c.fillStyle = '#4a3122'; rr(c, ex - 50, d.h - 48, 100, 48, 4); c.fill();
-  c.fillStyle = FX.glassA; c.fillRect(ex - 43, d.h - 41, 39, 35); c.fillRect(ex + 4, d.h - 41, 39, 35);
-  c.fillStyle = FX.glassB; c.fillRect(ex - 43, d.h - 22, 39, 16); c.fillRect(ex + 4, d.h - 22, 39, 16);
-  c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(ex - 43, d.h - 41, 10, 35); c.fillRect(ex + 4, d.h - 41, 10, 35);
-  c.fillStyle = '#e9c46a'; c.fillRect(ex - 3.5, d.h - 27, 2, 9); c.fillRect(ex + 1.5, d.h - 27, 2, 9);
-  if (A && A.nf < 0.6) {
-    // daylight spilling in through the doors
-    const dg = c.createLinearGradient(0, d.h - 46, 0, d.h - 130); dg.addColorStop(0, 'rgba(255,244,214,' + (0.3 * (1 - A.nf)).toFixed(3) + ')'); dg.addColorStop(1, 'rgba(255,244,214,0)');
-    c.fillStyle = dg; c.beginPath(); c.moveTo(ex - 44, d.h - 46); c.lineTo(ex + 44, d.h - 46); c.lineTo(ex + 80, d.h - 130); c.lineTo(ex - 80, d.h - 130); c.closePath(); c.fill();
-  }
-  c.fillStyle = 'rgba(10,12,26,.16)'; rr(c, ex - 31, d.h - 67, 64, 20, 4); c.fill();
-  c.fillStyle = '#4a3a2c'; rr(c, ex - 32, d.h - 69, 64, 20, 4); c.fill();
-  c.strokeStyle = 'rgba(243,230,161,.45)'; c.lineWidth = 1; rr(c, ex - 29, d.h - 66, 58, 14, 2.5); c.stroke();
-  signText(c, 'EXIT', ex, d.h - 58.5, 10, '#f3e6a1');
-  d.walls.forEach(r => wallBlock(c, r, d));
-  FX.wins.length = 0;
-  if (d.deco) d.deco(c, d);
-  // light through the windows falls across the floor
-  if (A && FX.wins.length) {
-    const day = A.sh * (1 - A.cloud * 0.5), a = day > 0.04 ? 0.24 * day : 0.1 * A.nf * (1 - A.cloud);
-    if (a > 0.01) {
-      const dx = -A.sunX * 90, len = 150 + (1 - A.el) * 100, col = day > 0.04 ? (A.warm > 0.4 ? '255,214,160' : '255,244,214') : '170,196,255';
-      c.save(); c.beginPath(); c.rect(35, TW, d.w - 70, d.h - TW - 46); c.clip();
-      c.globalCompositeOperation = 'lighter';
-      const g = c.createLinearGradient(0, TW, 0, TW + len); g.addColorStop(0, 'rgba(' + col + ',' + a.toFixed(3) + ')'); g.addColorStop(1, 'rgba(' + col + ',0)');
-      c.fillStyle = g;
-      for (let i = 0; i < FX.wins.length; i += 2) {
-        const wx = FX.wins[i], ww = FX.wins[i + 1];
-        c.beginPath(); c.moveTo(wx, TW); c.lineTo(wx + ww, TW); c.lineTo(wx + ww + dx + 26, TW + len); c.lineTo(wx + dx - 26, TW + len); c.closePath(); c.fill();
-      }
-      c.restore();
-    }
-  }
-  // flat things first, then furniture back-to-front
-  d.furn.filter(f => FURN_FLAT[f.t] && (!f.when || f.when())).forEach(f => drawFurn(c, f));
-  d.furn.filter(f => !FURN_FLAT[f.t] && (!f.when || f.when())).slice().sort((a, b) => (a.y + a.h) - (b.y + b.h)).forEach(f => drawFurn(c, f));
+  ROOMCTX.d = d; ROOMCTX.st = roomStyle(d); ROOMCTX.sc = false;
+  const cv = layerCache('int:' + roomSig(d), d.w, d.h, g => paintRoom(g, d)), rec = LAYER.rec;
+  drawWindowViews(c, rec);                       // the sky, live, behind the glass holes
+  c.drawImage(cv, 0, 0, d.w, d.h);
+  replayLights(rec);                             // lamps, signs and screens painted into the layer
+  liveFurn(c, d);                                // screens, flames, LEDs, tumbling washers
+  liveClocks(c); if (ROOMCTX.st.live) ROOMCTX.st.live(c, d);
+  drawRoomLight(c, d, rec);                      // sun pools, door spill, dust
 }
+/* everything static in a room, once per visit */
+function paintRoom(g, d) {
+  const st = roomStyle(d);
+  d.floors.forEach((f, i) => drawFloor(g, f, st.floors && st.floors[i] ? Object.assign({}, st.floors[i]) : null));
+  paintBackWall(g, d, st);
+  paintShellEdges(g, d, st);
+  paintExitDoor(g, d, st);
+  d.walls.forEach(r => wallBlock(g, r, d));
+  if (d.deco) d.deco(g, d);
+  if (st.extra) st.extra(g, d);
+  // flat things first, then furniture back to front
+  d.furn.filter(f => FURN_FLAT[f.t] && (!f.when || f.when())).forEach(f => drawFurn(g, f));
+  d.furn.filter(f => !FURN_FLAT[f.t] && (!f.when || f.when())).slice().sort((a, b) => (a.y + a.h) - (b.y + b.h)).forEach(f => drawFurn(g, f));
+  if (st.over) st.over(g, d);
+  LAYER.live = d.furn.filter(f => FURN_LIVE[f.t] && (!f.when || f.when()));
+  paintRoomGrade(g, d);
+}
+function liveFurn(c, d) {
+  const L = LAYER.live; if (!L) return;
+  for (let i = 0; i < L.length; i++) FURN_LIVE[L[i].t](c, L[i], d);
+}
+
 
 /* ============================ walking around, spots and people ============================ */
 function folkPos(fid) {
@@ -187,13 +124,15 @@ function intSpec(spotId) {
 /* ============================ drawing the scene ============================ */
 /* indoor lighting: daylight by day, warm lamps overhead once it is dark outside */
 function roomLights(w, h, step) {
-  const A = FX.A;
+  const A = FX.A, st = ROOMCTX.st;
   if (FX.nf <= 0.05) return [255, 255, 255];
-  for (let y = 150; y < h - 40; y += step * 0.8) for (let x = step * 0.5; x < w; x += step) {
+  const L = st && st.lamps;
+  if (L) for (let i = 0; i < L.length; i++) { const l = L[i]; addLight(l[0], l[1], l[2], l[3], l[4] || 0, l[5] == null ? 0.9 : l[5]); }
+  else for (let y = 150; y < h - 40; y += step * 0.8) for (let x = step * 0.5; x < w; x += step) {
     if (x < CAM.x - 200 || x > CAM.x + CAM.vw + 200 || y < CAM.y - 160 || y > CAM.y + CAM.vh + 160) continue;
-    addLight(x, y, 190, 150, 0, 0.5);
+    addLight(x, y, 190, 150, 0, 0.62);
   }
-  return mix3([255, 255, 255], [196, 172, 170], clamp(A.nf, 0, 1));
+  return mix3([255, 255, 255], (st && st.night) || [150, 136, 160], clamp(A.nf, 0, 1));
 }
 function targetRing(c) {
   if (!G.target) return;
@@ -234,28 +173,20 @@ function renderInterior(dt) {
 }
 /* ============================ interior layouts ============================ */
 FURN_FLAT.board = 1;
-function winTop(c, x, w) {
-  const A = FX.A;
-  c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(x - 5, 17, w + 12, 54);
-  c.fillStyle = '#6f5f4a'; rr(c, x - 5, 14, w + 10, 55, 3); c.fill();
-  if (A) {
-    const g = c.createLinearGradient(0, 20, 0, 64); g.addColorStop(0, rgbS(A.top)); g.addColorStop(1, rgbS(A.bot));
-    c.fillStyle = g; c.fillRect(x, 20, w, 44);
-    if (A.star > 0.3) { c.fillStyle = 'rgba(255,255,255,' + (0.8 * A.star).toFixed(3) + ')'; for (let i = 0; i < 5; i++) c.fillRect(x + 6 + hash01(i, Math.round(x), 1) * (w - 12), 23 + hash01(i, Math.round(x), 2) * 30, 1.3, 1.3); }
-    else if (A.nf < 0.5) {
-      // rooftops across the street
-      c.fillStyle = rgbS(mix3(A.bot, [104, 122, 146], 0.6));
-      for (let i = 0; i < 4; i++) { const bw = w / 4, bh = 8 + hash01(i, Math.round(x), 3) * 14; c.fillRect(x + i * bw, 64 - bh, bw + 0.5, bh); }
-    }
-    if (A.rain > 0.1) { c.strokeStyle = 'rgba(220,235,255,.5)'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i < 7; i++) { const rx = x + ((i * 13 + FX.time * 40) % w); c.moveTo(rx, 22 + (i * 9) % 30); c.lineTo(rx - 2, 30 + (i * 9) % 30); } c.stroke(); }
-  } else { c.fillStyle = '#a9d6ea'; c.fillRect(x, 20, w, 44); }
-  c.fillStyle = 'rgba(255,255,255,.26)'; c.beginPath(); c.moveTo(x + 2, 64); c.lineTo(x + w * 0.28, 20); c.lineTo(x + w * 0.44, 20); c.lineTo(x + w * 0.16, 64); c.closePath(); c.fill();
-  c.fillStyle = '#6f5f4a'; c.fillRect(x + w / 2 - 1.8, 20, 3.6, 44); c.fillRect(x, 40, w, 2.4);
-  c.fillStyle = '#e6dccb'; rr(c, x - 8, 66, w + 16, 5, 2); c.fill();
-  c.fillStyle = 'rgba(0,0,0,.16)'; c.fillRect(x - 6, 71, w + 12, 2);
-  FX.wins.push(x, w);
+function sign(c, text, cx, y, w, col) {
+  const st = ROOMCTX.st, x = cx - w / 2, y0 = y - 11, h = 22;
+  IM.shadow(c, x, y0, w, h, 6, 5, 0.36, 1, 3);
+  c.fillStyle = IM.grad(c, 0, y0, 0, y0 + h, [[0, shade(col, 0.16)], [0.5, col], [1, shade(col, -0.2)]]); rr(c, x, y0, w, h, 6); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = 1; rr(c, x + 0.5, y0 + 0.5, w - 1, h - 1, 5.5); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,.16)'; rr(c, x + 2.6, y0 + 2.6, w - 5.2, h - 5.2, 4); c.stroke();
+  c.fillStyle = 'rgba(' + IM.INK + ',.22)'; rr(c, x + 1, y0 + h - 4, w - 2, 3, 2); c.fill();
+  c.fillStyle = IM.grad(c, 0, y0, 0, y0 + h * 0.55, [[0, 'rgba(255,255,255,.2)'], [1, 'rgba(255,255,255,0)']]); rr(c, x + 1, y0 + 1, w - 2, h * 0.55, 5); c.fill();
+  c.fillStyle = 'rgba(' + IM.INK + ',.4)'; c.beginPath(); c.arc(x + 4.5, y, 1.1, 0, 7); c.arc(x + w - 4.5, y, 1.1, 0, 7); c.fill();
+  c.font = '800 11px "Bricolage Grotesque","Trebuchet MS",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = 'rgba(' + IM.INK + ',.45)'; c.fillText(text, cx + 0.7, y + 1.4);
+  c.fillStyle = '#fff7e8'; c.fillText(text, cx, y + 0.5);
+  addEmit(cx, y, Math.min(w * 0.6, 90), st && st.neon ? (st.neonKind || 0) : 0, st && st.neon ? 0.34 : 0.16);
 }
-function sign(c, text, cx, y, w, col) { c.fillStyle = col; rr(c, cx - w / 2, y - 11, w, 22, 6); c.fill(); signText(c, text, cx, y + 0.5, 11, '#fff'); }
 const folkAt = (fid, x, y) => ({ id: fid, x, y });
 const MEAL_SECS = ['Meals'];
 
@@ -267,7 +198,7 @@ defInt('apartment', {
   walls: [[330, TW, 28, 316], [330, 480, 28, 118]],
   deco(c, d) {
     winTop(c, 100, 90); winTop(c, 560, 80); winTop(c, 760, 70);
-    sign(c, 'LOBBY', 180, 52, 90, '#7a5a3a');
+    sign(c, 'LOBBY', 262, 52, 90, '#7a5a3a');
     c.fillStyle = '#5a3b2a'; c.fillRect(326, 396, 36, 6); c.fillRect(326, 478, 36, 6);
     sign(c, 'APT 12', 344, 438, 56, '#8a4a38');
     c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(34, 512, 296, 2);
@@ -303,8 +234,7 @@ defInt('grocery', {
   name: 'Corner Grocery', w: 1100, h: 640, exit: { x: 550 }, wallCol: '#d4e3d4', trim: '#9ab59f',
   floors: [[34, TW, 1032, 514, 'tile', '#ece9e0', 'rgba(60,140,100,.09)']],
   deco(c) {
-    winTop(c, 420, 90); winTop(c, 560, 90);
-    c.fillStyle = '#2f8a5b'; for (let i = 0; i < 14; i++) if (i % 2) c.fillRect(300 + i * 36, 66, 36, 14);
+    winTop(c, 190, 90); winTop(c, 840, 90);
     sign(c, 'CORNER GROCERY', 550, 36, 220, '#2f6b4c');
   },
   furn: [
@@ -334,8 +264,6 @@ defInt('diner', {
   deco(c) {
     winTop(c, 120, 100); winTop(c, 780, 100);
     sign(c, "DOT'S DINER", 500, 36, 200, '#a83a3a');
-    c.fillStyle = '#d9d9d6'; c.fillRect(34, 70, 932, 4);
-    c.fillStyle = '#a83a3a'; for (let i = 0; i < 32; i++) if (i % 2) c.fillRect(34 + i * 29, 74, 29, 6);
   },
   furn: [
     { t: 'machine', x: 262, y: 96, w: 86, h: 34, c: '#7d8a94', label: 'GRILL', fs: 9, screen: '#ff9f43' }, { t: 'machine', x: 356, y: 96, w: 60, h: 34, c: '#cfd8dc', label: 'FRYER', fs: 9, screen: '#ffd166' },
@@ -365,7 +293,6 @@ defInt('clinic', {
   walls: [[640, TW, 24, 238], [664, 300, 116, 22], [860, 300, 106, 22]],
   deco(c) {
     winTop(c, 100, 90); winTop(c, 250, 90);
-    c.fillStyle = '#d63b4b'; c.fillRect(496, 20, 8, 36); c.fillRect(482, 34, 36, 8);
     sign(c, 'EXAM', 820, 52, 70, '#4d86a8'); sign(c, 'RECEPTION', 230, 100, 110, '#4d86a8');
   },
   furn: [
