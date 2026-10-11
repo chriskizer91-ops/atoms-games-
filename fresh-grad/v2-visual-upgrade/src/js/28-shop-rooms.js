@@ -147,7 +147,6 @@ defInt('pharmacy', {
   deco(c) {
     winTop(c, 110, 90); winTop(c, 260, 70);
     sign(c, 'MAIN STREET PHARMACY', 500, 36, 230, '#2f7d55');
-    c.fillStyle = '#2f9d6a'; c.fillRect(746, 18, 10, 34); c.fillRect(734, 30, 34, 10);
     signText(c, 'PRESCRIPTIONS', 730, 64, 9, '#2f7d55');
   },
   furn: [
@@ -260,7 +259,7 @@ defInt('books', {
   name: 'Dog-Ear Books', w: 960, h: 600, exit: { x: 480 }, wallCol: '#e9dcc8', trim: '#7a5a3a',
   floors: [[34, TW, 892, 474, 'wood', '#b98a5a']],
   deco(c) {
-    winTop(c, 400, 70); winTop(c, 490, 70);
+    winTop(c, 140, 70); winTop(c, 760, 70);
     sign(c, 'DOG-EAR BOOKS', 480, 36, 170, '#8a5a3c');
   },
   furn: [
@@ -347,7 +346,7 @@ defInt('hardware', {
   name: "Hank's Hardware", w: 1000, h: 620, exit: { x: 500 }, wallCol: '#ddd5c6', trim: '#c0392b',
   floors: [[34, TW, 932, 494, 'plain', '#cfcac0'], [600, 250, 340, 300, 'wood', '#c9a06a']],
   deco(c) {
-    winTop(c, 440, 60); winTop(c, 520, 60);
+    winTop(c, 160, 70); winTop(c, 800, 70);
     sign(c, "HANK'S HARDWARE", 500, 36, 180, '#c0392b');
   },
   furn: [
@@ -420,11 +419,17 @@ defInt('cinema', {
     wallPoster(c, 70, 46, fl[0].pal, fl[0].t); wallPoster(c, 134, 46, fl[1].pal, fl[1].t); wallPoster(c, 198, 46, fl[2].pal, fl[2].t);
     sign(c, 'NOW SHOWING', 500, 30, 150, '#d4a017');
     c.fillStyle = '#ffe9a8'; for (let i = 0; i < 18; i++) { c.beginPath(); c.arc(420 + i * 9.4, 48, 1.8, 0, 7); c.fill(); }
-    // doors to the theaters
+    // doors to the theaters: an arch, velvet curtains, brass pulls and a warm line of light from inside
     [[760, '1'], [880, '2']].forEach(p => {
-      c.fillStyle = '#2a0a14'; c.fillRect(p[0] - 36, 18, 72, 66);
-      c.fillStyle = '#7a1f33'; c.fillRect(p[0] - 32, 22, 30, 62); c.fillRect(p[0] + 2, 22, 30, 62);
-      c.fillStyle = '#d4a017'; c.beginPath(); c.arc(p[0] - 10, 54, 3, 0, 7); c.arc(p[0] + 10, 54, 3, 0, 7); c.fill();
+      IM.shadow(c, p[0] - 38, 16, 76, 70, 6, 6, 0.45, 2, 3);
+      c.fillStyle = IM.grad(c, p[0] - 38, 0, p[0] + 38, 0, [[0, '#f1dc9a'], [0.5, '#d4a017'], [1, '#8a6a2e']]); rr(c, p[0] - 38, 16, 76, 70, 6); c.fill();
+      c.fillStyle = '#1a0610'; rr(c, p[0] - 33, 21, 66, 65, 4); c.fill();
+      c.fillStyle = IM.grad(c, p[0] - 33, 0, p[0] + 33, 0, [[0, '#a0293f'], [0.5, '#7a1f33'], [1, '#541424']]);
+      c.fillRect(p[0] - 32, 22, 31, 64); c.fillRect(p[0] + 1, 22, 31, 64);
+      c.fillStyle = 'rgba(255,255,255,.14)'; for (let k = 0; k < 5; k++) { c.fillRect(p[0] - 30 + k * 6, 22, 1.6, 64); c.fillRect(p[0] + 3 + k * 6, 22, 1.6, 64); }
+      c.fillStyle = 'rgba(0,0,0,.22)'; for (let k = 0; k < 5; k++) { c.fillRect(p[0] - 27 + k * 6, 22, 1.4, 64); c.fillRect(p[0] + 6 + k * 6, 22, 1.4, 64); }
+      c.fillStyle = 'rgba(255,214,150,.5)'; c.fillRect(p[0] - 0.8, 22, 1.6, 64);
+      c.fillStyle = '#e9c46a'; c.beginPath(); c.arc(p[0] - 10, 56, 3, 0, 7); c.arc(p[0] + 10, 56, 3, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(p[0] - 10.8, 55, 1, 0, 7); c.arc(p[0] + 9.2, 55, 1, 0, 7); c.fill();
       sign(c, 'THEATER ' + p[1], p[0], 12, 70, '#2a0a14');
     });
   },
@@ -620,8 +625,7 @@ defInt('cafe', {
     sign(c, 'CAFE LUNA', 480, 30, 140, '#3d5a80');
     c.fillStyle = '#f3e6a1'; c.beginPath(); c.arc(414, 30, 7, 0.6, 5.7); c.arc(417, 28, 6, 5.4, 0.9, true); c.fill();
     chalkboard(c, 640, 120, 'MENU', ['Latte  $4.50', 'Iced tea  $3', 'Hot chocolate  $4', 'Panini  $10']);
-    c.fillStyle = 'rgba(243,230,161,.9)'; for (let i = 0; i < 7; i++) { c.beginPath(); c.arc(790 + i * 22, 14 + (i % 2) * 4, 2.6, 0, 7); c.fill(); }
-    if (FX.nf > 0.05) addEmit(860, 16, 80, 0, 0.4);
+    W.stringLights(c, 772, 936, 8, 6, 7);
   },
   furn: [
     { t: 'counter', x: 300, y: 128, w: 300, h: 46, c: '#3d5a80', top: '#efe3c8' },
@@ -718,11 +722,11 @@ defInt('dentist', {
   floors: [[34, TW, 560, 474, 'carpet', '#cfe3e8'], [594, TW, 332, 474, 'lino', '#eef6f8']],
   walls: [[594, TW, 24, 230], [594, 400, 24, 158]],
   deco(c) {
-    winTop(c, 100, 80); winTop(c, 220, 80);
+    winTop(c, 56, 70); winTop(c, 140, 70);
     sign(c, 'BRIGHT SMILE DENTAL', 340, 36, 210, '#3aa6b9');
     placeIcon(c, 'tooth', 470, 36, 1.2, '#3aa6b9');
     sign(c, 'EXAM', 780, 44, 70, '#3aa6b9');
-    c.fillStyle = '#8ecae6'; rr(c, 860, 14, 50, 50, 4); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(880, 34, 8, 0, 7); c.arc(892, 30, 10, 0, 7); c.fill();
+    W.frame(c, 862, 16, 46, 44, 'sea', '#3aa6b9', 4);
   },
   furn: [
     { t: 'counter', x: 90, y: 132, w: 260, h: 46, c: '#3aa6b9', top: '#f0fbfd', label: 'RECEPTION' },
