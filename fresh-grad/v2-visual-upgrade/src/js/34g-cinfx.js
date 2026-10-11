@@ -120,7 +120,7 @@ function cinMakeConfetti() {
 function cinConfPos(p, ct) {
   const t = ct - p.t0;
   if (t <= 0) return null;
-  const tw = cinWarp(t + 0.0) ;        // slow motion applies to the early flight only (see cinWarp)
+  const tw = Math.max(0, cinWarp(ct - 11.62) - cinWarp(p.t0 - 11.62));      // slow motion is global (see cinWarp): measure flight time in warped time
   const e = 1 - Math.exp(-p.k * tw);
   const x = p.x + p.vx * e / p.k + Math.sin(tw * p.sf + p.ph) * p.sw * Math.min(1, tw * 0.8);
   const y = p.y + p.vt * tw + (p.vy - p.vt) * e / p.k;
@@ -316,6 +316,5 @@ function cinCards(c, V, ct) {
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = (0.2 + glow * 0.1) * dk; c.drawImage(S.glowA, cx - 130 * sc, cy - 90 * sc, 260 * sc, 180 * sc); c.globalCompositeOperation = 'source-over';
     c.globalAlpha = dk; cinDiploma(c, cx, cy, -0.35 + Math.sin(ct * 0.7) * 0.05, sc, 0.4); c.globalAlpha = 1;
   }
-  // fade in from the white-out/black
-  const f = 1 - cnS5(u / 0.5); if (f > 0) { c.fillStyle = 'rgba(0,0,0,' + f.toFixed(3) + ')'; c.fillRect(0, 0, pw, ph); }
+  // (the fade up from the white-out and black is the DOM flash layer, see cinFxDom)
 }

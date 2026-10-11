@@ -10,6 +10,8 @@ function titleFxInit() {
   if (!root) return;
   // warm the first illustrated stills so the opening shot is ready the moment New game is pressed
   try { if (ART.on) ['cutscene/still-01-quad', 'cutscene/still-02a-lecture', 'cutscene/still-02b-group', 'cutscene/still-02c-coffee', 'cutscene/still-02d-allnighter'].forEach(k => ART.get(k)); } catch (e) { /* art is optional */ }
+  // bake the cutscene's set while the title is idle, so New game starts instantly (skipped when there is a save to continue)
+  try { const cb = $('#btnContinue'); if (window.requestIdleCallback && cb && cb.hidden) requestIdleCallback(() => { try { cinBuild(); } catch (e) { /* built on demand instead */ } }, { timeout: 8000 }); } catch (e) { /* optional */ }
   try {
     const cv = document.createElement('canvas'); cv.width = cv.height = 128;
     const g = cv.getContext('2d'), id = g.createImageData(128, 128), d = id.data, rnd = mulberry32(31);

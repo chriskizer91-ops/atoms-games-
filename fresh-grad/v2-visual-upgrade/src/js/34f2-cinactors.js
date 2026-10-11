@@ -183,7 +183,16 @@ function cinDiplomaStory(c, ct, rd, rg, dean, grad) {
   // after the release: in the Graduate's hand, to the chest, then overhead
   const r = grad.raise, hand = wG;
   const ang = lerp(lerp(-0.82, -1.25, cnS5((ct - 8.7) / 0.5)), -0.5, r) + Math.sin(ct * 4.1) * 0.05 * r;
-  cinDiploma(c, hand[0] + lerp(2, 5, r), hand[1] + lerp(-6, -18, r), ang, 1, 0);
+  const dx = hand[0] + lerp(2, 5, r), dy = hand[1] + lerp(-6, -18, r);
+  cinDiploma(c, dx, dy, ang, 1, 0);
+  // a glint off the gold seal as the diploma goes up
+  const gl = Math.max(0, 1 - Math.abs(ct - 9.95) / 0.38) * (REDUCED ? 0.5 : 1);
+  if (gl > 0.02) {
+    const sx = dx + 1.8 * Math.cos(ang) + 2.3 * Math.sin(ang), sy = dy + 1.8 * Math.sin(ang) - 2.3 * Math.cos(ang);
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = gl; c.drawImage(CN.S.glowW, sx - 16, sy - 16, 32, 32);
+    c.strokeStyle = 'rgba(255,250,224,.9)'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(sx - 15 * gl, sy); c.lineTo(sx + 15 * gl, sy); c.moveTo(sx, sy - 15 * gl); c.lineTo(sx, sy + 15 * gl); c.stroke();
+    c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  }
 }
 
 /* the handshake, drawn small: two hands in profile with cuffs, thumbs on top */

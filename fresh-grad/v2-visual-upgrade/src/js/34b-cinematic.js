@@ -11,6 +11,7 @@ const CN_RGB = {};
 function cnRgb(h) {
   let v = CN_RGB[h];
   if (v) return v;
+  if (h.charAt(0) === 'r') { const m = h.match(/[\d.]+/g) || [0, 0, 0]; v = [+m[0], +m[1], +m[2]]; return (CN_RGB[h] = v); }   // "rgb(r,g,b)" results of cnMix / cnShade
   let s = h.charAt(0) === '#' ? h.slice(1) : h;
   if (s.length === 3) s = s[0] + s[0] + s[1] + s[1] + s[2] + s[2];
   v = [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
@@ -106,7 +107,10 @@ const CIN_KEYS = [
   [8.15, 770, 452, 3.4, 0, 0],
   [9.0, 764, 424, 1.62, 0, 0.5],
   [9.9, 722, 348, 1.32, 0, 0.5],
-  [11.2, 706, 354, 1.46, 0, 0.3],
+  [10.3, 710, 358, 1.38, 0, 0.3],
+  [10.78, 640, 704, 1.62, 0.4, 0],
+  [11.05, 648, 698, 1.7, 0.2, 0],
+  [11.5, 692, 356, 1.42, -0.3, 0.3],
   [11.7, 690, 352, 1.40, -0.4, 0.2],
   [13.0, 640, 362, 0.86, 0.6, 0.6],
   [14.6, 628, 372, 0.82, 0.2, 0.2],
@@ -386,10 +390,10 @@ function cinFxDom(V, ct) {
   // fade up from black, then the white flash into black
   let a = 0, col = '0,0,0';
   if (ct < 1.1) a = 1 - ct / 1.1;
-  if (ct > 14.4 && ct < 15.75) {
-    const f = clamp((ct - 14.4) / 0.9, 0, 1), b = clamp((ct - 15.3) / 0.35, 0, 1);
-    if (b < 1) { a = (REDUCED ? f * 0.55 : f) * (1 - b); col = '255,250,238'; }
-    if (b > 0) { a = Math.max(a, b); col = b > 0.5 ? '0,0,0' : col; }
+  if (ct > 14.4 && ct < 16.3) {
+    const f = clamp((ct - 14.4) / 0.9, 0, 1), b = clamp((ct - 15.3) / 0.35, 0, 1), o = clamp((ct - 15.65) / 0.55, 0, 1);
+    const wa = (REDUCED ? f * 0.55 : f) * (1 - b), ba = b * (1 - o);
+    if (ba > wa) { a = ba; col = '0,0,0'; } else { a = wa; col = '255,250,238'; }
   }
   a = Math.round(a * 100) / 100;
   if (st.fa !== a) { st.fa = a; D.flash.style.opacity = a; }
