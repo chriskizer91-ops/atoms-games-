@@ -88,3 +88,27 @@ Every beat from 0 s to the end cards is an illustrated still (coverage check: no
 - **End cards over the sunset still.** The card text moves up into the sky (`#cut.cards-art`), with a little extra shade at the top,
   so it no longer sits on the Graduate's head; the procedural drifting diploma is left out because the still already has one in hand.
 - The handshake still now runs 6.5-8.7 s and dissolves into the family cutaway (8.6-9.6 s), then the diploma close-up.
+
+## Drop 3 (freshgrad-art-recovered-05 / -06)
+Zip 05: 10 PNGs. Zip 06 arrived truncated (10.9 MB, no central directory, zero-filled tail); its entries are stored uncompressed, so the
+three complete ones were recovered from their local headers with CRC checks. 10 used:
+
+| Delivered file | Key | Prompt |
+|---|---|---|
+| Golden-hour graduate on main street | `assets/title/hero-wide` | UI-01 (replaces the P00-A stand-in) |
+| Golden-hour graduation on Main Street (zip 06) | `assets/title/hero-tall` | UI-02 (phones) |
+| Ornate Blank Diploma with Wax Seal (zip 06) | `assets/ui/diploma` | UI-03 |
+| Warm dean with diploma, hand extended | `assets/chars/dean/pose-handshake` | CH-04 |
+| Kind Dean Applauding Graduation | `assets/chars/dean/pose-clap` | CH-04 |
+| Dignified Dean Gesturing Offscreen | `assets/chars/dean/pose-point-announce` | CH-04 |
+| Eight classmates in navy graduation attire | `assets/chars/ch-05-classmates-stand` | CH-05 |
+| Eight Graduates Cheering Together | `assets/chars/ch-05-classmates-cheer` | CH-05 |
+| Classmates Celebrating With Flying Caps | `assets/chars/ch-05-classmates-toss` | CH-05 |
+| Everyday Outfit Model Sheet | `reference-art/ch-06-grad-everyday-sheet` | CH-06 |
+
+Not used: *Kind dean announcing a graduate* (two figures in one frame, so not a pose; the single-figure take was used), *Fresh Grad
+Turnaround Sheet* (repeats CH-01 and CH-06), *Seamless cream cotton paper texture* (a busy pattern of mugs and books, not paper), *Navy
+velvet paper with gold flecks* (damaged in the cut-off zip; only drawn when the sunset still is missing anyway).
+
+Code: the diploma plate now keeps its own proportions (`--dp-ar`, set from the file) and the typed text sits in the blank field above
+the wax seal, with smaller type on phones. The Dean poses and classmate lineups, like the other poses, only load if a cutscene still is missing.

@@ -29,7 +29,10 @@
 .diploma .seal.stamped span{animation:dpStamp .5s cubic-bezier(.2,1.5,.3,1) both}
 @keyframes dpStamp{0%{transform:scale(1.7) rotate(-18deg);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
 /* illustrated diploma plate (ui/diploma.png) when it exists: the paper becomes the picture, the text stays live */
-.diploma.art{padding:15% 15% 18%}
+/* the plate keeps its own proportions (--dp-ar from the file); the text sits in the blank field above the seal at the lower right.
+   Padding percentages are of the width: 12.5% top, 23% bottom ~ 17% and 31% of a 4:3 plate. A long field can still grow the plate. */
+.diploma.art{aspect-ratio:var(--dp-ar,4/3);padding:12.5% 15% 23%;display:flex;flex-direction:column;justify-content:center;align-items:center}
+@media (max-width:560px){.diploma.art{padding:11% 14% 24%}.diploma.art small{font-size:8.5px;letter-spacing:.2em}.diploma.art small:first-of-type{font-size:10px;letter-spacing:.26em}.diploma.art small:first-of-type::after{margin-top:6px}.diploma.art h3{font-size:18px;margin:6px 0 7px}.diploma.art .field{font-size:20px;min-height:28px}}
 .diploma.art .dp-paper{background:var(--dp-art) center/100% 100% no-repeat;clip-path:none}
 .diploma.art .dp-paper::before,.diploma.art .dp-paper::after,.diploma.art .dp-frame,.diploma.art .dp-c,.diploma.art .dp-crest,.diploma.art .seal{display:none}
 /* the offer, set as a letter */

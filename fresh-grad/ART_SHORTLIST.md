@@ -1,36 +1,44 @@
-# Fresh Grad — art short list (replaces the ~500-image plan)
+# Fresh Grad — remaining image requests
 
-**Make only the images on this page. Skip everything else in `IMAGE_PROMPTS.md`.** The opening cutscene is finished (38 delivered
-images are in the game). What is left below are the pictures a player actually sees often: 24 core images, plus 21 optional ones.
+**Make only the images on this page.** Everything else from the old ~500-image plan (`IMAGE_PROMPTS.md`) is either delivered or cut.
+The opening cutscene, the title screen, the diploma and the cast sheets are done (45 of the 52 images received are in the game; the rest were near-duplicates or unusable).
+What is left: **23 core images**, plus **21 optional** ones if you want more.
 
-Style, cast and delivery rules are unchanged: see `IMAGE_PROMPTS.md` §1 (sizes), §3 (style blocks `[SCENE]`, `[PORTRAIT]`, palette)
-and §4 (cast). Attach the delivered style anchors (`reference-art/p00-*`) and model sheets (`reference-art/ch-01-grad-sheet`,
-`ch-04-dean-sheet`) as references. **One take per image: no second takes, no duplicates.** File names: the key below (for example
-`bg/dream-fly.png`) saves a mapping step, but descriptive names are fine too.
+**Rules for every image**
+- **One take per image: no second takes, no near-duplicates.**
+- **No text anywhere** (no letters, numbers, signs, logos).
+- File name: the key below (for example `bg/dream-fly.png`) saves a mapping step; descriptive names are fine too.
+- Attach as references: the style anchors `reference-art/p00-a-street`, `p00-b-character-stage`, `p00-c-icons-faces` and, for people,
+  the model sheets `ch-01-grad-sheet`, `ch-04-dean-sheet`, `ch-06-grad-everyday-sheet`.
+- Backdrops: **1920×1080, opaque, no people unless stated**, and keep the **centre and lower third calm** (the game puts text, cards
+  and animation there). Portraits: **1024×1024, transparent background** (or flat `#FF00FF`).
 
-All backdrops are `1920×1080 · opaque · [SCENE]`, no people unless stated, **no text**, and keep the **centre and lower third calm**
-(the game puts text and animation there).
+**Style block to start every backdrop prompt (`[SCENE]`)**
+> Stylized 2D digital illustration for a cozy small-town life-sim game. Clean confident shapes with soft cel-shading and painterly
+> gradient lighting, gentle atmospheric depth, warm golden-hour light against cool deep-navy shadows, rich yet slightly desaturated
+> palette with marigold gold (#ffc247) and coral (#ff7a59) accents, deep navy (#0b131e to #1d2e6b) shadows, subtle film grain, crisp
+> readable silhouettes, charming and quietly funny. Not a photograph, not a 3D render. No text, no letters, no logos.
 
-## Already received — do not resend
-| Zip | What was in it |
-|---|---|
-| `freshgrad-art-recovered-01.zip` | Golden Hour on Main Street · Graduate Meets Dean on Commencement Stage · Cozy life-sim icons and town portraits · Fresh Graduate Character Turnaround Sheet · Kind Dean Turnaround Model Sheet · Commencement Morning in the Quad · Back-row lecture hall in golden light · Midnight Coffee by the Rainy Window |
-| `freshgrad-art-recovered-02.zip` | All-nighter under a desk lamp · Graduate backstage before the spotlight · Dusk study crew and cardboard prototype · Midnight coffee on a rainy desk · Sleepy All-Nighter at the Desk · Graduate's walk toward the dean · A heartfelt graduation handshake · Golden Diploma Handoff · Tossed Caps, Bright Beginnings |
-| `freshgrad-art-recovered-03.zip` | Graduation caps, diplomas, and confetti · Graduation Walk Into Golden Hour · Confetti, tears, and new beginnings · Cheering audience with colorful blank signs · Family cheers, tears, and balloons · Relaxed Graduate in Navy and Gold · Wooden podium with golden medallion · Empty Commencement Stage with Bunting · Distant cheering crowd with balloons · Eight moods, one graduate |
-| `freshgrad-art-recovered-04.zip` | Joyful Graduate Tossing Mortarboard · Cheering Graduate with Diploma · Kind Dean in Graduation Robes · Wooden podium with gold medallion · Fresh Graduate Handshake Pose · Nervous Graduate With Swaying Tassel · Confident graduate striding forward · Eight-expression portrait grid · Graduate waving with diploma · Crisp character cutout with cap and tassel · Mid-stride graduate character |
+**Style block for portraits (`[PORTRAIT]`)**
+> Stylized 2D character bust portrait for a cozy life-sim game: head and shoulders, three-quarter turn toward the viewer's right, warm
+> friendly expression, round dark eyes with a small white highlight, soft brows, faint cheek blush, soft cel-shading with a warm rim
+> light from the upper left, clean shapes without heavy outlines, framing identical for every portrait (head top at 12 % from the top,
+> shoulders cut by the bottom edge, face centred). Transparent background (or flat #FF00FF). No text.
 
-A zip with a different name (for example `-05`) is new: send it. Anything in it that is not on this page will be skipped.
+**Negative (where the tool allows):** text, letters, words, numbers, logo, watermark, signature, photorealistic, 3D render, plastic look,
+anime eyes, heavy black outline, extra fingers, malformed hands, cropped head, duplicated limbs, blurry, muddy colours, gore, horror.
 
-## Core — 24 images
+---
 
-| # | Key | Where it shows | Prompt |
+## Core — 23 images
+
+| # | Key | Where it shows | Prompt (after the `[SCENE]` block) |
 |---|---|---|---|
-| 1 | `ui/diploma` (1600×1200, transparent) | Degree picker, every new game | A formal diploma lying flat, seen straight-on: heavy cream paper (#f6f0dc) with subtle fibres, an ornate engraved navy double border with corner flourishes, a large blank central area (no words), a raised gold wax seal with a red ribbon at the lower right, a faint laurel-and-open-book crest watermark (no letters) at the centre, soft paper shadow, one slightly curled corner at top-left. |
-| 2-5 | `bg/recap-spring`, `bg/recap-summer`, `bg/recap-autumn`, `bg/recap-winter` | The morning card, **every morning** | A morning window sill with a coffee cup and a folded paper, the season outside the window: blossom / bright green / falling leaves / snow. |
-| 6-17 | `bg/dream-<id>` (12) | One dream **every night's sleep** | See the 12 rows below. Good dreams luminous, pink-and-amber; bad dreams unsettling but gentle (red vignette, long shadows), never gory. |
-| 18-22 | `bg/job-cs`, `bg/job-eng`, `bg/job-nurse`, `bg/job-biz`, `bg/job-cook` | Shift intro, **every workday** | See the 5 rows below. A cosy illustration of that workplace in the job's colours, no people. The game shows it as a wide strip, so keep the key details in the **middle horizontal band**. |
-| 23 | `bg/levelup` | Level-up card | A violet-and-gold radial burst with ribbons and sparkles. |
-| 24 | `bg/promotion` | Promotion card | A gold-and-purple laurel burst. |
+| 1-4 | `bg/recap-spring`, `bg/recap-summer`, `bg/recap-autumn`, `bg/recap-winter` | The morning card, **every morning** | A morning window sill with a coffee cup and a folded newspaper (blank, no print), the season outside the window: spring blossom / bright summer green / falling autumn leaves / snow. |
+| 5-16 | `bg/dream-<id>` (12, below) | One dream **every night's sleep** | Good dreams luminous, pink-and-amber; bad dreams unsettling but gentle (red vignette, long shadows), never gory. On phones only the centre column shows, so keep the subject central. |
+| 17-21 | `bg/job-<id>` (5, below) | Shift intro, **every workday** | A cosy illustration of that workplace in the job's colours, no people. The game shows it as a wide strip, so keep the key details in the **middle horizontal band**. |
+| 22 | `bg/levelup` | Level-up card | A violet-and-gold radial burst with ribbons and sparkles. |
+| 23 | `bg/promotion` | Promotion card | A gold-and-purple laurel burst. |
 
 **Dreams**
 | Key | Prompt |
@@ -57,21 +65,55 @@ A zip with a different name (for example `-05`) is new: send it. Anything in it 
 | `bg/job-biz` | A boardroom with a long table, a view over the city and a targets board (#9b7bb0, plum). |
 | `bg/job-cook` | A busy restaurant kitchen at rush with ranges, pans, flames and a ticket rail (#c46a3b, copper). |
 
+---
+
 ## Optional — 21 images, only if you want more
-| Keys | Where it shows | Prompt |
-|---|---|---|
-| `bg/fishing-day`, `bg/fishing-dusk`, `bg/fishing-night`, `bg/fishing-ice` (4) | Fishing | A pond seen from the bank, sky with clouds, a far bank of round trees, water with depth and sun glints, lily pads, reeds with cattails in the foreground; keep the water surface open. Ice: a pale ice sheet, snow mounds, bare snowy trees, **no fishing hole** (the game draws its own where the line lands). |
-| `bg/scene-cinema`, `-laundry`, `-read`, `-salon`, `-dentist`, `-music`, `-hang` (7) | Activities | **Empty sets: the game animates the people and props on top, so paint only the room.** Cinema: the auditorium from the back, rows of empty maroon seats, a big blank screen. Laundry: the laundromat's tiled wall, window light and a folding shelf, **no machines**. Read: a warm reading corner with an armchair, bookshelf and window, **no book, lamp or mug**. Salon: a blush striped wall with shelves of bottles, **no mirror**. Dentist: a ceiling seen from the chair with soft tiles and a clouds poster, **no lamp**. Music: a small stage with a brick back wall, curtains and string lights, **no spotlight, no band**. Hang: a cosy cafe interior with shelves, a window and string lights, **no table or mugs**. |
-| `portraits/dot`, `sal`, `bianca`, `hank`, `mrs-reyes`, `luna`, `agnes`, `dr-chen`, `ms-park`, `greta` (10, 1024×1024 transparent, `[PORTRAIT]`) | Conversations with the ten regulars | Use each person's row in `IMAGE_PROMPTS.md` §5 P05 (shirt, hair, skin, trait). Identical framing for all ten. |
 
-## Do not make (the rest of the ~500)
-- **More cutscene art**: Dean handshake / clap / announce poses, classmate lineups (CH-05), paper-doll sheets (P12). The finished stills
-  cover the whole opening, so these would never be seen.
-- **Reference boards (P11, ~62)**: the game never loads them.
-- **Icons, badges, logos, food, stamps, trophies (P07, ~140)** and **mini-game pieces (P08, ~60)**: small, numerous, and the game's own
-  drawings already cover them.
-- `bg/job-edu`: a teacher walks straight into the school, so the shift intro never shows for that job.
-- **Textures, light sprites, posters (P09, P10)**, title variants (UI-01/UI-02: the street anchor already serves as the title), paper
-  textures, phone wallpaper, passport cover, the other ~70 portraits, kids, fish.
+**Fishing (4)** — `bg/fishing-day`, `bg/fishing-dusk`, `bg/fishing-night`, `bg/fishing-ice` (`[SCENE]`)
+> A pond seen from the bank, sky with clouds, a far bank of round trees, water with depth and sun glints, lily pads, reeds with cattails
+> in the foreground; keep the water surface open (the game draws the bobber and line). Dusk: amber and plum light. Night: deep navy, moon
+> on the water. Ice: a pale ice sheet, snow mounds, bare snowy trees, **no fishing hole** (the game draws its own where the line lands).
 
-Every slot above is optional in the code: a missing file just keeps the game's own drawing, so stopping at any point is safe.
+**Activity scenes (7)** — `[SCENE]`. **Empty sets: the game animates the people and props on top, so paint only the room.**
+| Key | Prompt |
+|---|---|
+| `bg/scene-cinema` | A cinema auditorium from the back, rows of empty maroon seats, a big blank glowing screen. |
+| `bg/scene-laundry` | A laundromat's tiled wall, window light and a folding shelf, **no machines**. |
+| `bg/scene-read` | A warm reading corner with an armchair, a bookshelf and a window, **no book, lamp or mug**. |
+| `bg/scene-salon` | A blush striped salon wall with shelves of bottles, **no mirror**. |
+| `bg/scene-dentist` | A ceiling seen from the dentist's chair, soft ceiling tiles and a clouds poster, **no lamp**. |
+| `bg/scene-music` | A small stage with a brick back wall, curtains and string lights, **no spotlight, no band**. |
+| `bg/scene-hang` | A cosy cafe interior with shelves, a window and string lights, **no table or mugs**. |
+
+**Faces for the ten regulars (10)** — `portraits/<slug>`, 1024×1024 transparent, `[PORTRAIT]`, identical framing for all ten.
+| Key | Who | Shirt | Hair | Skin | Details |
+|---|---|---|---|---|---|
+| `portraits/dot` | Dot, diner owner | `#f4a261` uniform | short golden `#c9a24a` | `#f3d0b0` | apron, big warm "hon" smile |
+| `portraits/sal` | Sal, pizza maker | `#f6f1e7` | short `#1c1410` | `#d99d77` | floury apron, proud |
+| `portraits/bianca` | Bianca, stylist | `#c05d8a` | long teal `#2a9d8f` | `#efc3a0` | scissors in hand |
+| `portraits/hank` | Hank, hardware owner | `#c0392b` | grey cap `#8a8a8a` | `#d99d77` | grey beard, tool-belt strap |
+| `portraits/mrs-reyes` | Mrs. Reyes, landlord | `#6f7bd4` cardigan | curly blond `#d8c27a` | `#f0c7a4` | warm, reading glasses on a chain |
+| `portraits/luna` | Luna, cafe owner | `#3d5a80` | long chestnut `#5a3825` | `#c68a62` | apron, moon pendant |
+| `portraits/agnes` | Agnes, bookshop owner | `#9b7bb0` | silver top-knot `#c9c9cf` | `#f2c9a5` | reading glasses, mischievous |
+| `portraits/dr-chen` | Dr. Chen, physician | `#5ab0c9` scrubs, white coat | plain `#222` | `#e6b995` | stethoscope |
+| `portraits/ms-park` | Ms. Park, second-grade teacher | `#c05d8a` | cap, brown `#7a4a2a` | `#f2c9a5` | kind, holding a coffee |
+| `portraits/greta` | Greta, bank teller | `#2a6f97` blazer | blond top-knot `#d8c27a` | `#f0c7a4` | friendly, a lollipop jar glimpsed |
+
+---
+
+## Do not make
+- Anything for the opening cutscene, the title screen, the diploma, paper textures or character sheets: **done**.
+- Icons, badges, logos, food, stamps, trophies, mini-game pieces, fish, kids, the other ~70 portraits, reference boards, textures, light
+  sprites, posters, phone wallpaper, passport cover, `bg/job-edu` (a teacher never sees that screen): **cut**.
+
+## Already received (do not resend)
+| Zip | Images |
+|---|---|
+| `-01` | 8: main street (style anchor), Graduate meets Dean, icons and portraits board, Graduate model sheet, Dean model sheet, quad, lecture hall, coffee by the window |
+| `-02` | 9: two all-nighters, backstage, study crew, coffee close-up, walk to the Dean, handshake, diploma handoff, tossed caps |
+| `-03` | 10: caps/diplomas/confetti sheet, sunset walk, tearful close-up, front crowd, family, idle pose, podium, empty stage, back crowd, eight moods |
+| `-04` | 11: Graduate poses (cap toss, cheering, handshake, nervous, two walks, waving, two idles), Dean idle, second podium, second expression grid |
+| `-05` | 10: Graduate on main street (title), Dean handshake / applauding / gesturing, Dean announcing with the Graduate, three classmate lineups, everyday outfit sheet, turnaround sheet |
+| `-06` | **Arrived cut off at 10.9 MB.** Recovered: Golden-hour graduation on Main Street (phone title), Ornate Blank Diploma with Wax Seal, Seamless cream cotton paper texture (a pattern of mugs and books, not paper; not used). Navy velvet paper was damaged. Anything after it was lost; it is only worth re-sending if it held something from this page. |
+
+Every slot in the game is optional: a missing file keeps the game's own drawing, so stopping at any point is safe.

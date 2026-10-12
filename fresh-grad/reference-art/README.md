@@ -12,5 +12,6 @@ They are not loaded by the game; they are looked at while drawing and polishing 
 | `ch-01-grad-sheet.webp` | CH-01 | The Graduate's model sheet (front, 3/4, side, back, cap, stole) |
 | `ch-04-dean-sheet.webp` | CH-04 | The Dean's model sheet (front, 3/4, side, back) |
 | `ch-02-grad-faces.webp` | CH-02 | The Graduate's eight expressions (gown and cap) |
+| `ch-06-grad-everyday-sheet.webp` | CH-06 | The Graduate in the everyday coral tee, plus hairstyles and shirt colours |
 
-Attach `ch-01-grad-sheet` / `ch-04-dean-sheet` as character references, and the three P00 anchors as style references, to every later prompt.
+Attach `ch-01-grad-sheet` / `ch-04-dean-sheet` / `ch-06-grad-everyday-sheet` as character references, and the three P00 anchors as style references, to every later prompt.

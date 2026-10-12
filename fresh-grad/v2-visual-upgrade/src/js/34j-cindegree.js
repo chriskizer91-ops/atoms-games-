@@ -49,7 +49,7 @@ function degArt(n) {
   if (!ART.on || n > 8) return;
   const dp = $('#degree .diploma'), off = $('#offer');
   const a = ART.get('ui/diploma'), p = ART.get('ui/paper-cream');
-  if (a && dp) { dp.style.setProperty('--dp-art', 'url("' + a.src + '")'); dp.classList.add('art'); }
+  if (a && dp) { dp.style.setProperty('--dp-art', 'url("' + a.src + '")'); dp.style.setProperty('--dp-ar', a.naturalWidth + ' / ' + a.naturalHeight); dp.classList.add('art'); }
   if (p && off) off.style.setProperty('--paper-img', 'url("' + p.src + '")');
   const bad = k => { const e = ART.cache.get(k); return !!(e && e.bad); };
   if (!(a || bad('ui/diploma')) || !(p || bad('ui/paper-cream'))) setTimeout(() => degArt(n + 1), 700);
