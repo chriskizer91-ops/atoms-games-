@@ -13,8 +13,14 @@ const CIN_PLATE = {
 };
 const CIN_POSE_H = 166;            // world height of a pose image's figure (feet to cap) at scale 1: 90% of the image height maps to this
 
+/* plates, poses and lineups only show where no still covers the beat, so they are not even fetched until a still is known to be missing */
+function cinSetArtOn() {
+  if (!ART.on) return false;
+  if (!CN.setArt) { const shots = CN.stillShots || (CN.stillShots = CUT_SHOTS.filter(s => !s.card)); CN.setArt = shots.some(s => ART.missing(s.k)); }
+  return CN.setArt;
+}
 function cinArtPlates() {
-  if (!ART.on) return {};
+  if (!cinSetArtOn()) return {};
   const st = ART.get('cutscene/plate-stage-empty');
   if (!st) return {};
   return { stage: st, back: ART.get('cutscene/plate-crowd-back'), front: ART.get('cutscene/plate-crowd-front'), podium: ART.get('cutscene/plate-podium') };
@@ -51,7 +57,7 @@ const CIN_POSES = {
   grad: ['idle', 'walk-a', 'walk-b', 'handshake', 'diploma-up', 'cap-toss', 'wave', 'nervous'],
   dean: ['idle', 'handshake', 'clap', 'point-announce']
 };
-function cinPose(who, name) { return ART.on ? ART.get('chars/' + who + '/pose-' + name) : null; }
+function cinPose(who, name) { return cinSetArtOn() ? ART.get('chars/' + who + '/pose-' + name) : null; }
 /* which pose each beat uses; null when that pose file is missing (the procedural figure then draws instead) */
 function cinGradPoseName(ct, g) {
   if (ct < 2.6) return 'nervous';
@@ -82,11 +88,11 @@ function cinWristWorld(o, side, x, y, s) {
 }
 /* returns {dean, grad, skipClass} when art replaces some of the cast. dean/grad carry wrist positions so the diploma and clasp still line up */
 function cinArtActors(c, V, ct, cls, dean, grad) {
-  if (!ART.on) return null;
+  if (!cinSetArtOn()) return null;
   let out = null;
   const gp = cinPose('grad', cinGradPoseName(ct, grad)), dp = cinPose('dean', cinDeanPoseName(ct));
   const cs = ct < 9.8 ? 'stand' : ct < 11.6 ? 'cheer' : ct < 12.8 ? 'toss' : 'cheer';
-  const ci = ART.on ? ART.get('chars/ch-05-classmates-' + cs) : null;
+  const ci = ART.get('chars/ch-05-classmates-' + cs);
   const ret = (o, x, y, s) => ({ hands: { L: { world: cinWristWorld(o, -1, x, y, s) }, R: { world: cinWristWorld(o, 1, x, y, s) } }, head: [x, y - 137 * s], capTop: [x, y - 160 * s] });
   if (ci) {                       // the lineup of eight classmates as one plate-like layer on the left of the stage
     const w = 560, h = w * 9 / 16, bob = ct > 9.8 ? -Math.abs(Math.sin(ct * 6.3)) * 4 : 0;

@@ -231,12 +231,9 @@ function cinBuild() {
   try { ART.preload(cinArtKeys()); } catch (e) { /* art is optional */ }
 }
 function cinArtKeys() {
+  // the stills and the confetti sheet they use. Plates, poses and the card paper load only when they can show (cinSetArtOn, cinCards)
   const ks = CUT_SHOTS.map(s => s.k);
-  ks.push('cutscene/plate-stage-empty', 'cutscene/plate-crowd-front', 'cutscene/plate-crowd-back', 'cutscene/plate-podium', 'cutscene/sprites-hats-confetti');
-  ks.push('chars/grad/pose-idle', 'chars/grad/pose-walk-a', 'chars/grad/pose-walk-b', 'chars/grad/pose-handshake', 'chars/grad/pose-diploma-up', 'chars/grad/pose-cap-toss', 'chars/grad/pose-wave', 'chars/grad/pose-nervous');
-  ks.push('chars/dean/pose-idle', 'chars/dean/pose-handshake', 'chars/dean/pose-clap', 'chars/dean/pose-point-announce');
-  ks.push('chars/ch-05-classmates-stand', 'chars/ch-05-classmates-cheer', 'chars/ch-05-classmates-toss');
-  ks.push('ui/paper-navy-card');
+  ks.push('cutscene/sprites-hats-confetti');
   return ks;
 }
 
@@ -404,20 +401,37 @@ function cinStillDust(c, V, ct, al, top, hgt) {
   }
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
 }
-/* big confetti tumbling in front of a still: the painted confetti is frozen, this keeps the air moving (continuous across stills) */
+/* where the painted confetti and streamers sit on cutscene/sprites-hats-confetti (1254 px sheet; found once offline, x y w h) */
+const CIN_CONF_SPR = [[480, 635, 64, 68], [811, 635, 96, 84], [189, 642, 91, 70], [1106, 644, 84, 66], [1005, 647, 37, 81], [364, 653, 72, 69], [675, 653, 73, 76], [31, 645, 100, 105], [563, 691, 61, 46], [908, 681, 58, 70], [1153, 718, 84, 62], [247, 715, 54, 73], [754, 739, 57, 55], [626, 731, 73, 76], [1065, 738, 61, 70], [145, 740, 59, 66], [463, 741, 89, 78], [968, 747, 52, 89], [346, 756, 89, 80], [835, 780, 82, 68], [585, 810, 45, 48], [55, 800, 87, 74], [1162, 818, 70, 49], [722, 820, 76, 69], [195, 826, 70, 64], [1055, 841, 51, 52], [312, 834, 83, 77], [430, 850, 65, 80], [866, 866, 82, 58], [663, 881, 52, 50], [556, 876, 86, 66], [125, 894, 71, 58], [33, 891, 71, 70], [974, 889, 83, 79], [1108, 902, 125, 70], [240, 902, 87, 81], [744, 906, 97, 73], [487, 925, 71, 58]];
+const CIN_STREAMER_SPR = [[651, 996, 119, 210], [952, 993, 106, 225], [41, 991, 113, 232], [204, 997, 102, 221], [1101, 1000, 130, 217], [350, 993, 96, 232], [492, 998, 111, 224], [823, 1002, 88, 223]];
+/* big confetti tumbling in front of a still: the painted confetti is frozen, this keeps the air moving (continuous across stills).
+   Uses the painted pieces of the sprite sheet when it has loaded, flat paper otherwise */
 function cinStillConfetti(c, V, ct, al, top, hgt) {
   const conf = CUT.conf;
   if (!conf || !conf.length) return;
+  const sh = ART.get('cutscene/sprites-hats-confetti'), shk = sh ? sh.naturalWidth / 1254 : 1;
   const n = REDUCED ? 16 : 40, k = hgt / 720, t = ct - 11.9, span = 840;
   for (let i = 0; i < n; i++) {
     const p = conf[(i * 7) % conf.length], sp = 60 + hash01(i, 51, 1) * 110;
     const y = top + ((((hash01(i, 52, 2) * span + t * sp) % span) + span) % span - 60) * k;
     const x = hash01(i, 53, 3) * V.pw + Math.sin(t * p.sf + p.ph) * p.sw * 1.8 * k;
     const near = hash01(i, 54, 4), sc = (1.6 + near * 2.6) * k, flip = Math.cos(t * p.fr * 0.45 + p.ph);
-    const hh = Math.max(0.8 * k, p.h * sc * Math.abs(flip));
     c.save(); c.translate(x, y); c.rotate(p.rot + t * p.vr * 0.35);
-    c.globalAlpha = al * (0.95 - near * 0.3); c.fillStyle = p.col; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh);
-    if (flip < 0) { c.globalAlpha *= 0.35; c.fillStyle = '#fff'; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh); }
+    c.globalAlpha = al * (0.95 - near * 0.3);
+    if (sh && i % 10 === 9) {          // a curling streamer: slower spin, no flip
+      const r = CIN_STREAMER_SPR[i % CIN_STREAMER_SPR.length], dh = (34 + near * 30) * k, dw = dh * r[2] / r[3];
+      c.rotate(Math.sin(t * 1.3 + p.ph) * 0.5 - p.vr * t * 0.25);
+      c.drawImage(sh, r[0] * shk, r[1] * shk, r[2] * shk, r[3] * shk, -dw / 2, -dh / 2, dw, dh);
+    } else if (sh) {
+      const r = CIN_CONF_SPR[(i * 5) % CIN_CONF_SPR.length], d = (p.w + p.h) * 0.75 * sc, m = Math.max(r[2], r[3]);
+      const dw = d * r[2] / m, dh = Math.max(0.8 * k, d * r[3] / m * Math.abs(flip));
+      if (flip < 0) c.globalAlpha *= 0.82;
+      c.drawImage(sh, r[0] * shk, r[1] * shk, r[2] * shk, r[3] * shk, -dw / 2, -dh / 2, dw, dh);
+    } else {
+      const hh = Math.max(0.8 * k, p.h * sc * Math.abs(flip));
+      c.fillStyle = p.col; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh);
+      if (flip < 0) { c.globalAlpha *= 0.35; c.fillStyle = '#fff'; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh); }
+    }
     c.restore();
   }
 }

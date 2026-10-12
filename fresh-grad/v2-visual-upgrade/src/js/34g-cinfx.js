@@ -296,7 +296,9 @@ function cinCards(c, V, ct) {
   if (img) {
     const e = clamp(u / 4.3, 0, 1), al = cnS5(u / 0.8);
     c.globalAlpha = al; ART.cover(c, img, 0, 0, pw, ph, lerp(shot.fx0, shot.fx1, e), lerp(shot.fy0, shot.fy1, e), lerp(shot.z0, shot.z1, e)); c.globalAlpha = 1;
-    c.fillStyle = 'rgba(4,6,14,' + (0.38 + breath * 0.08) + ')'; c.fillRect(0, 0, pw, ph);
+    c.fillStyle = 'rgba(4,6,14,' + (0.3 + breath * 0.06) + ')'; c.fillRect(0, 0, pw, ph);
+    // the card text moves up into the sky (CSS .cards-art), so shade the top of the frame a little more for it
+    c.fillStyle = cnLG(c, 0, 0, 0, ph * 0.5, [[0, 'rgba(4,6,14,.42)'], [0.6, 'rgba(4,6,14,.2)'], [1, 'rgba(4,6,14,0)']]); c.fillRect(0, 0, pw, ph * 0.5);
   } else {
     c.fillStyle = cnRG(c, pw * 0.5, ph * 0.62, 0, pw * 0.5, ph * 0.62, Math.max(pw, ph) * 0.62, [[0, '#1a2a4a'], [0.45, '#0d1628'], [1, '#02030a']]); c.fillRect(0, 0, pw, ph);
     // optional navy velvet-paper texture (ui/paper-navy-card.png) under the glow
@@ -312,8 +314,10 @@ function cinCards(c, V, ct) {
     }
     c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   }
-  // the rolled diploma, drifting between the two cards
-  const dk = cnS5((ct - 16.2) / 0.9);
+  const root = CN.dom && CN.dom.root;
+  if (root && root.classList.contains('cards-art') !== !!img) root.classList.toggle('cards-art', !!img);
+  // the rolled diploma, drifting between the two cards (the sunset still already has one in the Graduate's hand)
+  const dk = img ? 0 : cnS5((ct - 16.2) / 0.9);
   if (dk > 0.01) {
     const sc = ph / 720 * 1.9, glow = 0.5 + 0.5 * Math.sin(ct * 1.5), cx = pw / 2, cy = ph * (V.portrait ? 0.7 : 0.72) + Math.sin(ct * 0.8) * 4 * V.k;
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = (0.2 + glow * 0.1) * dk; c.drawImage(S.glowA, cx - 130 * sc, cy - 90 * sc, 260 * sc, 180 * sc); c.globalCompositeOperation = 'source-over';
