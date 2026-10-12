@@ -25,6 +25,8 @@ function fishBody(c, L, T, tail) {
   c.closePath();
 }
 function fishArt(c, f, x, y, s) {
+  const im = agFishImg(f);
+  if (im) { agFishDraw(c, im, x, y, s); return; }
   c.save(); c.translate(x, y); c.scale(s, s);
   if (f.id === 'boot') { fishBoot(c, f); c.restore(); return; }
   const k = FISH_LOOK[f.id] || FISH_LOOK.bluegill, L = k.long ? 1.1 : 1, T = k.tall * (k.long ? 0.7 : 1);

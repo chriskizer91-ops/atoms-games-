@@ -69,59 +69,70 @@ function fishView(dt) {
   FD.t += dt || 0.016;
   const A = FX.A || skyAt(S.t, S.day), hz = h * 0.34, night = A.nf > 0.5, amb = A.amb;
   const cloudy = A.cloud > 0.2;
-  // ---- sky, stars, sun or moon
-  c.fillStyle = SK.lin(c, 0, 0, 0, hz, [[0, rgbS(A.top)], [1, rgbS(A.bot)]]); c.fillRect(0, 0, w, hz + 2);
-  if (A.star > 0.02) for (let i = 0; i < 46; i++) { const tw = 0.5 + 0.5 * Math.sin(tm * 1.7 + i * 2.1); c.fillStyle = 'rgba(255,255,255,' + (A.star * (0.35 + 0.55 * tw)).toFixed(3) + ')'; c.fillRect(hash01(i, 1, 2) * w, hash01(i, 3, 4) * hz * 0.85, 1.3, 1.3); }
+  // ---- sky, stars, sun or moon; when the illustrated backdrop for this light (bg/fishing-*) is there it replaces the sky,
+  // far bank, water, lily pads and reeds, and only the live pieces (fish shadows, rings, splashes, bobber, rod, meters, weather) are drawn over it
+  const BG = agFishBg(A, ice, night);
+  if (BG) ART.cover(c, BG, 0, 0, w, h, 0.5, 0.5);
+  else {
+    c.fillStyle = SK.lin(c, 0, 0, 0, hz, [[0, rgbS(A.top)], [1, rgbS(A.bot)]]); c.fillRect(0, 0, w, hz + 2);
+    if (A.star > 0.02) for (let i = 0; i < 46; i++) { const tw = 0.5 + 0.5 * Math.sin(tm * 1.7 + i * 2.1); c.fillStyle = 'rgba(255,255,255,' + (A.star * (0.35 + 0.55 * tw)).toFixed(3) + ')'; c.fillRect(hash01(i, 1, 2) * w, hash01(i, 3, 4) * hz * 0.85, 1.3, 1.3); }
+  }
   let sx, sy;
   if (A.sunUp) { sx = w * (0.5 - A.sunX * 0.36); sy = hz * (0.86 - A.el * 0.66); } else { const mf = clamp(A.mf, 0, 1); sx = w * (0.88 - mf * 0.76); sy = hz * (0.88 - Math.sin(mf * Math.PI) * 0.7); }
-  if (A.sunUp) { AK.light(c, sx, sy, 130 * u + 40, A.warm > 0.5 ? '#ffb070' : '#fff0c0', 0.5 * (1 - A.cloud * 0.7)); c.fillStyle = A.warm > 0.5 ? '#ffe2b0' : '#fff7d6'; c.beginPath(); c.arc(sx, sy, 12 * u + 2, 0, 7); c.fill(); }
-  else if (night) { AK.light(c, sx, sy, 80 * u + 24, '#cfd8ff', 0.4 * (1 - A.cloud)); c.fillStyle = '#f4f1dc'; c.beginPath(); c.arc(sx, sy, 12 * u + 2, 0, 7); c.fill(); c.fillStyle = 'rgba(160,170,190,.35)'; [[-3, -2, 3], [3, 3, 2.4], [-1, 4, 1.6]].forEach(q => { c.beginPath(); c.arc(sx + q[0] * u, sy + q[1] * u, q[2] * u, 0, 7); c.fill(); }); }
-  const cc = night ? 'rgb(120,130,170)' : 'rgb(255,255,255)', ca = (night ? 0.35 : 0.85) * (cloudy ? 1 : 0.8);
-  for (let i = 0; i < (cloudy ? 7 : 4); i++) fvCloud(c, ((i * 0.27 + tm * (0.0035 + i * 0.0007)) % 1.4 - 0.2) * w, hz * (0.16 + (i % 3) * 0.2), (0.9 + (i % 3) * 0.3) * u * (h > w ? 1.4 : 1), ca * (cloudy ? 1.05 : 0.9), i % 2 ? cc : (night ? 'rgb(150,160,200)' : 'rgb(246,250,255)'));
-  // ---- far bank: hills and two rows of trees, tinted by the ambient light
-  const aq = amb.map(v => Math.round(v / 14) * 14), SL = AK.layer('fv|' + se + '|' + (ice ? 1 : 0) + '|' + Math.round(h) + '|' + aq.join('-'), w, h, dpr, (g, ww, hh) => { fvTrees(g, ww, hh, hz, se, ice); const lum = (aq[0] + aq[1] + aq[2]) / 765, al = clamp((1 - lum) * 1.2, 0, 0.8); if (al > 0.01) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(' + Math.round(aq[0] * 0.35) + ',' + Math.round(aq[1] * 0.4) + ',' + Math.round(aq[2] * 0.6) + ',' + al.toFixed(3) + ')'; g.fillRect(0, 0, ww, hh); g.globalCompositeOperation = 'source-over'; } });
-  c.drawImage(SL, 0, 0, w, h);
-  // ---- water or ice
-  const top = mix3(A.bot, [70, 150, 195], 0.55), bot = mix3(A.top, [14, 54, 100], 0.7);
-  if (ice) { c.fillStyle = SK.lin(c, 0, hz, 0, h, [[0, '#e6f1f8'], [0.5, '#cfe3ef'], [1, '#a9cbe0']]); c.fillRect(0, hz + 2, w, h - hz); }
-  else {
-    c.fillStyle = SK.lin(c, 0, hz, 0, h, [[0, rgbS(top)], [0.45, rgbS(mix3(top, bot, 0.5))], [1, rgbS(bot)]]); c.fillRect(0, hz + 2, w, h - hz);
-    // the trees mirrored in the water, in wobbling strips
-    const sy0 = hz - h * 0.3, sh = h * 0.3 + 8, strips = 16, L = SL;
-    c.save(); c.beginPath(); c.rect(0, hz + 2, w, h * 0.3); c.clip();
-    for (let i = 0; i < strips; i++) { c.globalAlpha = (night ? 0.2 : 0.3) * (1 - i / strips * 0.85); const yy = sh / strips * i, off = Math.sin(tm * 1.6 + i * 0.9) * (1 + i * 0.25) * u; c.save(); c.translate(0, hz + 2 + (sh - yy) - sh / strips * 0.0); c.scale(1, -1); c.drawImage(L, off * dpr, (sy0 + yy) * dpr + (sh / strips) * 0.0, w * dpr, (sh / strips) * dpr + 1, 0, 0, w, sh / strips + 0.6); c.restore(); }
-    c.restore();
+  if (!BG) {
+    if (A.sunUp) { AK.light(c, sx, sy, 130 * u + 40, A.warm > 0.5 ? '#ffb070' : '#fff0c0', 0.5 * (1 - A.cloud * 0.7)); c.fillStyle = A.warm > 0.5 ? '#ffe2b0' : '#fff7d6'; c.beginPath(); c.arc(sx, sy, 12 * u + 2, 0, 7); c.fill(); }
+    else if (night) { AK.light(c, sx, sy, 80 * u + 24, '#cfd8ff', 0.4 * (1 - A.cloud)); c.fillStyle = '#f4f1dc'; c.beginPath(); c.arc(sx, sy, 12 * u + 2, 0, 7); c.fill(); c.fillStyle = 'rgba(160,170,190,.35)'; [[-3, -2, 3], [3, 3, 2.4], [-1, 4, 1.6]].forEach(q => { c.beginPath(); c.arc(sx + q[0] * u, sy + q[1] * u, q[2] * u, 0, 7); c.fill(); }); }
+    const cc = night ? 'rgb(120,130,170)' : 'rgb(255,255,255)', ca = (night ? 0.35 : 0.85) * (cloudy ? 1 : 0.8);
+    for (let i = 0; i < (cloudy ? 7 : 4); i++) fvCloud(c, ((i * 0.27 + tm * (0.0035 + i * 0.0007)) % 1.4 - 0.2) * w, hz * (0.16 + (i % 3) * 0.2), (0.9 + (i % 3) * 0.3) * u * (h > w ? 1.4 : 1), ca * (cloudy ? 1.05 : 0.9), i % 2 ? cc : (night ? 'rgb(150,160,200)' : 'rgb(246,250,255)'));
+    // ---- far bank: hills and two rows of trees, tinted by the ambient light
+    const aq = amb.map(v => Math.round(v / 14) * 14), SL = AK.layer('fv|' + se + '|' + (ice ? 1 : 0) + '|' + Math.round(h) + '|' + aq.join('-'), w, h, dpr, (g, ww, hh) => { fvTrees(g, ww, hh, hz, se, ice); const lum = (aq[0] + aq[1] + aq[2]) / 765, al = clamp((1 - lum) * 1.2, 0, 0.8); if (al > 0.01) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(' + Math.round(aq[0] * 0.35) + ',' + Math.round(aq[1] * 0.4) + ',' + Math.round(aq[2] * 0.6) + ',' + al.toFixed(3) + ')'; g.fillRect(0, 0, ww, hh); g.globalCompositeOperation = 'source-over'; } });
+    c.drawImage(SL, 0, 0, w, h);
+    // ---- water or ice
+    const top = mix3(A.bot, [70, 150, 195], 0.55), bot = mix3(A.top, [14, 54, 100], 0.7);
+    if (ice) { c.fillStyle = SK.lin(c, 0, hz, 0, h, [[0, '#e6f1f8'], [0.5, '#cfe3ef'], [1, '#a9cbe0']]); c.fillRect(0, hz + 2, w, h - hz); }
+    else {
+      c.fillStyle = SK.lin(c, 0, hz, 0, h, [[0, rgbS(top)], [0.45, rgbS(mix3(top, bot, 0.5))], [1, rgbS(bot)]]); c.fillRect(0, hz + 2, w, h - hz);
+      // the trees mirrored in the water, in wobbling strips
+      const sy0 = hz - h * 0.3, sh = h * 0.3 + 8, strips = 16, L = SL;
+      c.save(); c.beginPath(); c.rect(0, hz + 2, w, h * 0.3); c.clip();
+      for (let i = 0; i < strips; i++) { c.globalAlpha = (night ? 0.2 : 0.3) * (1 - i / strips * 0.85); const yy = sh / strips * i, off = Math.sin(tm * 1.6 + i * 0.9) * (1 + i * 0.25) * u; c.save(); c.translate(0, hz + 2 + (sh - yy) - sh / strips * 0.0); c.scale(1, -1); c.drawImage(L, off * dpr, (sy0 + yy) * dpr + (sh / strips) * 0.0, w * dpr, (sh / strips) * dpr + 1, 0, 0, w, sh / strips + 0.6); c.restore(); }
+      c.restore();
+    }
+    // ---- light on the water: a glitter path under the sun or moon, and drifting wave strokes
+    if (!ice) {
+      c.save(); c.globalCompositeOperation = 'lighter';
+      const gl = A.sunUp ? (A.warm > 0.5 ? [255, 214, 150] : [255, 244, 210]) : [220, 230, 255], ga = A.sunUp ? 0.5 * (1 - A.cloud * 0.8) : night ? 0.4 * (1 - A.cloud) : 0;
+      if (ga > 0.02) for (let i = 0; i < 26; i++) { const k = i / 25, yy = hz + 6 + k * (h - hz) * 0.7, ww2 = (10 + k * 60) * u * (0.5 + 0.5 * Math.sin(tm * 2.2 + i * 1.7)), xx = sx + Math.sin(tm * 0.8 + i * 2.3) * (4 + k * 40) * u; c.fillStyle = AK.rgba(gl, ga * (1 - k * 0.5) * (0.4 + 0.6 * Math.abs(Math.sin(tm * 3 + i * 5.1)))); c.fillRect(xx - ww2 / 2, yy, ww2, 1.6 + k * 1.4); }
+      c.restore();
+      c.strokeStyle = 'rgba(255,255,255,.2)'; c.lineWidth = 1.2;
+      for (let i = 0; i < 20; i++) { const k = (i % 10) / 10, yy = hz + 14 + k * (h - hz - 20), x = ((i * 97 + tm * (8 + k * 14)) % (w + 120)) - 60, ln = (14 + k * 26) * u; c.beginPath(); c.moveTo(x - ln, yy); c.quadraticCurveTo(x, yy - 2 - k * 3, x + ln, yy); c.stroke(); }
+      // lily pads that drift and bob, one with a flower
+      [[0.15, 0.55], [0.62, 0.46], [0.85, 0.7], [0.48, 0.82], [0.28, 0.72]].forEach((p, i) => {
+        const lx = w * p[0] + Math.sin(tm * 0.35 + i) * 3, ly = h * p[1] + Math.sin(tm * 0.8 + i * 2) * 1.2, lr = (11 + p[1] * 14) * u * 1.15;
+        c.fillStyle = 'rgba(10,40,60,.28)'; c.beginPath(); c.ellipse(lx + 2, ly + 3, lr, lr * 0.4, 0, 0, 7); c.fill();
+        c.fillStyle = SK.lin(c, lx - lr, ly, lx + lr, ly, [[0, '#3f9a55'], [1, '#69c47a']]); c.beginPath(); c.moveTo(lx, ly); c.ellipse(lx, ly, lr, lr * 0.4, 0.2 * (i - 2) * 0.3, 0.45, 6.0); c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(20,90,40,.4)'; c.lineWidth = 0.8; for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + Math.cos(0.9 + k * 1.3) * lr * 0.9, ly + Math.sin(0.9 + k * 1.3) * lr * 0.36); c.stroke(); }
+        c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.ellipse(lx - lr * 0.3, ly - lr * 0.1, lr * 0.4, lr * 0.1, 0, 0, 7); c.fill();
+        if (i === 1 && se !== 'autumn') { for (let k = 0; k < 6; k++) { c.fillStyle = k % 2 ? '#ffd6e4' : '#ffb3cf'; c.beginPath(); c.ellipse(lx + 4 + Math.cos(k) * 3.4 * u, ly - 4 * u + Math.sin(k) * 1.8 * u, 2.6 * u, 1.3 * u, k, 0, 7); c.fill(); } c.fillStyle = '#ffd24a'; c.beginPath(); c.arc(lx + 4, ly - 4 * u, 1.6 * u, 0, 7); c.fill(); }
+      });
+      if (se === 'autumn') ['#d9822b', '#c0502a', '#e7b24a', '#a8432a', '#d9822b'].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.ellipse(((i * 230 + tm * 7) % (w + 40)) - 20, h * (0.5 + i * 0.09), 5 * u, 2.4 * u, i + Math.sin(tm + i) * 0.3, 0, 7); c.fill(); });
+    } else {
+      // ice: frost, cracks and snow banks
+      c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.2;
+      for (let i = 0; i < 7; i++) { let x = w * hash01(i, 1, 1), y = hz + 20 + hash01(i, 2, 1) * (h - hz - 40); c.beginPath(); c.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (hash01(i, 10 + k, 1) - 0.4) * 80; y += (hash01(i, 20 + k, 1) - 0.5) * 40; c.lineTo(x, y); } c.stroke(); }
+      c.strokeStyle = 'rgba(120,160,190,.35)'; for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(w * hash01(i, 5, 1), hz + 30 + hash01(i, 6, 1) * (h - hz - 60)); c.lineTo(w * hash01(i, 7, 1), hz + 30 + hash01(i, 8, 1) * (h - hz - 60)); c.stroke(); }
+      c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(sx, hz + 40 * u, 120 * u, 14 * u, 0, 0, 7); c.fill(); c.restore();
+      c.fillStyle = '#f6fafd'; [[0.08, 0.93, 90, 22], [0.92, 0.9, 100, 24], [0.5, 0.99, 140, 22], [0.3, 0.97, 60, 14]].forEach(p => { c.beginPath(); c.ellipse(w * p[0], h * p[1], p[2] * u, p[3] * u, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(160,185,210,.5)'; c.beginPath(); c.ellipse(w * p[0], h * p[1] + p[3] * u * 0.4, p[2] * u * 0.9, p[3] * u * 0.4, 0, 0, 7); c.fill(); c.fillStyle = '#f6fafd'; });
+    }
   }
-  // ---- light on the water: a glitter path under the sun or moon, and drifting wave strokes
   if (!ice) {
-    c.save(); c.globalCompositeOperation = 'lighter';
-    const gl = A.sunUp ? (A.warm > 0.5 ? [255, 214, 150] : [255, 244, 210]) : [220, 230, 255], ga = A.sunUp ? 0.5 * (1 - A.cloud * 0.8) : night ? 0.4 * (1 - A.cloud) : 0;
-    if (ga > 0.02) for (let i = 0; i < 26; i++) { const k = i / 25, yy = hz + 6 + k * (h - hz) * 0.7, ww2 = (10 + k * 60) * u * (0.5 + 0.5 * Math.sin(tm * 2.2 + i * 1.7)), xx = sx + Math.sin(tm * 0.8 + i * 2.3) * (4 + k * 40) * u; c.fillStyle = AK.rgba(gl, ga * (1 - k * 0.5) * (0.4 + 0.6 * Math.abs(Math.sin(tm * 3 + i * 5.1)))); c.fillRect(xx - ww2 / 2, yy, ww2, 1.6 + k * 1.4); }
-    c.restore();
-    c.strokeStyle = 'rgba(255,255,255,.2)'; c.lineWidth = 1.2;
-    for (let i = 0; i < 20; i++) { const k = (i % 10) / 10, yy = hz + 14 + k * (h - hz - 20), x = ((i * 97 + tm * (8 + k * 14)) % (w + 120)) - 60, ln = (14 + k * 26) * u; c.beginPath(); c.moveTo(x - ln, yy); c.quadraticCurveTo(x, yy - 2 - k * 3, x + ln, yy); c.stroke(); }
-    // lily pads that drift and bob, one with a flower
-    [[0.15, 0.55], [0.62, 0.46], [0.85, 0.7], [0.48, 0.82], [0.28, 0.72]].forEach((p, i) => {
-      const lx = w * p[0] + Math.sin(tm * 0.35 + i) * 3, ly = h * p[1] + Math.sin(tm * 0.8 + i * 2) * 1.2, lr = (11 + p[1] * 14) * u * 1.15;
-      c.fillStyle = 'rgba(10,40,60,.28)'; c.beginPath(); c.ellipse(lx + 2, ly + 3, lr, lr * 0.4, 0, 0, 7); c.fill();
-      c.fillStyle = SK.lin(c, lx - lr, ly, lx + lr, ly, [[0, '#3f9a55'], [1, '#69c47a']]); c.beginPath(); c.moveTo(lx, ly); c.ellipse(lx, ly, lr, lr * 0.4, 0.2 * (i - 2) * 0.3, 0.45, 6.0); c.closePath(); c.fill();
-      c.strokeStyle = 'rgba(20,90,40,.4)'; c.lineWidth = 0.8; for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + Math.cos(0.9 + k * 1.3) * lr * 0.9, ly + Math.sin(0.9 + k * 1.3) * lr * 0.36); c.stroke(); }
-      c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.ellipse(lx - lr * 0.3, ly - lr * 0.1, lr * 0.4, lr * 0.1, 0, 0, 7); c.fill();
-      if (i === 1 && se !== 'autumn') { for (let k = 0; k < 6; k++) { c.fillStyle = k % 2 ? '#ffd6e4' : '#ffb3cf'; c.beginPath(); c.ellipse(lx + 4 + Math.cos(k) * 3.4 * u, ly - 4 * u + Math.sin(k) * 1.8 * u, 2.6 * u, 1.3 * u, k, 0, 7); c.fill(); } c.fillStyle = '#ffd24a'; c.beginPath(); c.arc(lx + 4, ly - 4 * u, 1.6 * u, 0, 7); c.fill(); }
-    });
-    if (se === 'autumn') ['#d9822b', '#c0502a', '#e7b24a', '#a8432a', '#d9822b'].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.ellipse(((i * 230 + tm * 7) % (w + 40)) - 20, h * (0.5 + i * 0.09), 5 * u, 2.4 * u, i + Math.sin(tm + i) * 0.3, 0, 7); c.fill(); });
     // the bobber's neighbourhood gets rings that come and go
     for (let i = 0; i < 4; i++) { const k = (tm * 0.12 + i / 4) % 1, rx = w * (0.22 + hash01(i, Math.floor(tm * 0.12 + i / 4), 5) * 0.6), ry = h * (0.5 + hash01(i, Math.floor(tm * 0.12 + i / 4), 6) * 0.38); c.strokeStyle = 'rgba(255,255,255,' + (0.28 * Math.sin(k * Math.PI)).toFixed(3) + ')'; c.lineWidth = 1; c.beginPath(); c.ellipse(rx, ry, (6 + k * 34) * u, (6 + k * 34) * u * 0.28, 0, 0, 7); c.stroke(); }
-  } else {
-    // ice: frost, cracks and snow banks
-    c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.2;
-    for (let i = 0; i < 7; i++) { let x = w * hash01(i, 1, 1), y = hz + 20 + hash01(i, 2, 1) * (h - hz - 40); c.beginPath(); c.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (hash01(i, 10 + k, 1) - 0.4) * 80; y += (hash01(i, 20 + k, 1) - 0.5) * 40; c.lineTo(x, y); } c.stroke(); }
-    c.strokeStyle = 'rgba(120,160,190,.35)'; for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(w * hash01(i, 5, 1), hz + 30 + hash01(i, 6, 1) * (h - hz - 60)); c.lineTo(w * hash01(i, 7, 1), hz + 30 + hash01(i, 8, 1) * (h - hz - 60)); c.stroke(); }
-    c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(sx, hz + 40 * u, 120 * u, 14 * u, 0, 0, 7); c.fill(); c.restore();
-    c.fillStyle = '#f6fafd'; [[0.08, 0.93, 90, 22], [0.92, 0.9, 100, 24], [0.5, 0.99, 140, 22], [0.3, 0.97, 60, 14]].forEach(p => { c.beginPath(); c.ellipse(w * p[0], h * p[1], p[2] * u, p[3] * u, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(160,185,210,.5)'; c.beginPath(); c.ellipse(w * p[0], h * p[1] + p[3] * u * 0.4, p[2] * u * 0.9, p[3] * u * 0.4, 0, 0, 7); c.fill(); c.fillStyle = '#f6fafd'; });
   }
-  // everything above sits under the ambient tint; lights are added after
-  c.save(); c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgb(' + Math.round(lerp(amb[0], 255, 0.25)) + ',' + Math.round(lerp(amb[1], 255, 0.25)) + ',' + Math.round(lerp(amb[2], 255, 0.25)) + ')'; c.fillRect(0, hz + 4, w, h - hz); c.restore();
+  if (!BG) {
+    // everything above sits under the ambient tint; lights are added after
+    c.save(); c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgb(' + Math.round(lerp(amb[0], 255, 0.25)) + ',' + Math.round(lerp(amb[1], 255, 0.25)) + ',' + Math.round(lerp(amb[2], 255, 0.25)) + ')'; c.fillRect(0, hz + 4, w, h - hz); c.restore();
+  }
   // ---- the bobber, the line, the rod and what is under the water
   const bx = w * (0.34 + FS.dist * 0.38), by = h * (0.66 - FS.dist * 0.2), tipX0 = w * 0.1, tipY0 = h * 0.22;
   if (FD.last !== FS.phase) {
@@ -194,21 +205,21 @@ function fishView(dt) {
     if (FS.phase === 'bite') { c.fillStyle = '#ffc247'; c.shadowColor = '#ffc247'; c.shadowBlur = 14; c.font = '800 ' + Math.round(40 * Math.max(0.7, u)) + 'px "Bricolage Grotesque",sans-serif'; c.textAlign = 'center'; c.fillText('!', bx, by - 30); c.shadowBlur = 0; }
   }
   // ---- foreground: reeds and cattails
-  if (!ice) {
+  if (!ice && !BG) {
     for (let i = 0; i < 17; i++) {
       const rightSide = i < 10, x = rightSide ? w - 8 - i * 10.5 * Math.max(0.85, u) : 6 + (i - 10) * 11 * Math.max(0.85, u), sw = Math.sin(tm * 1.4 + i) * 3, hh = (46 + (i % 4) * 14 + hash01(i, 1, 1) * 18) * u * 1.05;
       c.strokeStyle = i % 3 ? '#2e6a36' : '#3f7a3f'; c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, h + 2); c.quadraticCurveTo(x + sw * 0.4, h - hh * 0.5, x + sw, h - hh); c.stroke();
       if (i % 3 === 0) { c.fillStyle = '#6b4a30'; rr(c, x + sw - 2.2, h - hh - 12 * u, 4.4, 14 * u, 2.2); c.fill(); c.fillStyle = 'rgba(255,255,255,.2)'; c.fillRect(x + sw - 1.4, h - hh - 11 * u, 1.2, 10 * u); }
     }
     c.lineCap = 'butt';
-  } else {
+  } else if (ice) {
     // a breath of steam from the angler, now and then
     FD.puff += dt || 0.016;
     if (!REDUCED) for (let i = 0; i < 3; i++) { const k = ((FD.puff * 0.4) + i / 3) % 1; c.fillStyle = 'rgba(255,255,255,' + (0.35 * Math.sin(k * Math.PI)).toFixed(3) + ')'; c.beginPath(); c.arc(w * 0.12 + k * 40 * u + Math.sin(FD.puff + i) * 4, h * 0.82 - k * 50 * u, (6 + k * 16) * u, 0, 7); c.fill(); }
   }
   // sun shafts through the trees and a gentle vignette
-  if (A.sunUp && A.cloud < 0.5 && !REDUCED) { c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 3; i++) { const x0 = sx + (i - 1) * 40 * u; c.fillStyle = SK.lin(c, x0, 0, x0 + 80 * u, h * 0.7, [[0, 'rgba(255,240,200,.06)'], [1, 'rgba(255,240,200,0)']]); c.beginPath(); c.moveTo(x0 - 8 * u, 0); c.lineTo(x0 + 10 * u, 0); c.lineTo(x0 + 120 * u, h * 0.8); c.lineTo(x0 + 40 * u, h * 0.8); c.closePath(); c.fill(); } c.restore(); }
-  if (night) { const moonOn = A.mf >= 0; if (moonOn) AK.light(c, sx, hz + 30 * u, 60 * u, '#cfd8ff', 0.16); }
+  if (!BG && A.sunUp && A.cloud < 0.5 && !REDUCED) { c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 3; i++) { const x0 = sx + (i - 1) * 40 * u; c.fillStyle = SK.lin(c, x0, 0, x0 + 80 * u, h * 0.7, [[0, 'rgba(255,240,200,.06)'], [1, 'rgba(255,240,200,0)']]); c.beginPath(); c.moveTo(x0 - 8 * u, 0); c.lineTo(x0 + 10 * u, 0); c.lineTo(x0 + 120 * u, h * 0.8); c.lineTo(x0 + 40 * u, h * 0.8); c.closePath(); c.fill(); } c.restore(); }
+  if (night && !BG) { const moonOn = A.mf >= 0; if (moonOn) AK.light(c, sx, hz + 30 * u, 60 * u, '#cfd8ff', 0.16); }
   AK.vignette(c, w, h, 0.4, [4, 10, 24], 0.45);
   // ---- the two meters
   if (FS.phase === 'cast') {
