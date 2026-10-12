@@ -62,7 +62,7 @@ JA.intro = function (J) {
   const st = $('#jStage'), d = J.def, jb = job();
   st.innerHTML = '';
   const box = el('div', 'jintro');
-  const hero = el('div', 'jhero'); hero.innerHTML = JART[J.id] ? JART[J.id](jb.roof, jb.accent) : ''; box.appendChild(hero);
+  const hero = el('div', 'jhero'); hero.innerHTML = JART[J.id] ? JART[J.id](jb.roof, jb.accent) : ''; box.appendChild(hero); artJobHero(hero, jb.id);
   const gl = el('div', 'jglyph'); gl.innerHTML = d.glyph; box.appendChild(gl);
   box.appendChild(el('p', 'jeye', 'Today’s shift'));
   box.appendChild(el('h2', '', d.name));

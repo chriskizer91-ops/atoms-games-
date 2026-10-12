@@ -23,6 +23,12 @@ function scSalonRoom(g, w, h, mx, my, mw, mh) {
   g.fillStyle = SK.lin(g, mx, my, mx + mw, my + mh, [[0, '#f1d27a'], [0.5, '#b58a2a'], [1, '#e6c05a']]); rr(g, mx - 14, my - 14, mw + 28, mh + 28, mw * 0.5); g.fill();
   g.fillStyle = '#7a5a1a'; rr(g, mx - 7, my - 7, mw + 14, mh + 14, mw * 0.48); g.fill();
 }
+/* over an illustrated salon wall: only the mirror's gold frame, so the live reflection has its edge */
+function scSalonArtFrame(g, mx, my, mw, mh) {
+  g.fillStyle = 'rgba(40,10,30,.28)'; rr(g, mx - 18, my - 10, mw + 36, mh + 36, mw * 0.5); g.fill();
+  g.fillStyle = SK.lin(g, mx, my, mx + mw, my + mh, [[0, '#f1d27a'], [0.5, '#b58a2a'], [1, '#e6c05a']]); rr(g, mx - 14, my - 14, mw + 28, mh + 28, mw * 0.5); g.fill();
+  g.fillStyle = '#7a5a1a'; rr(g, mx - 7, my - 7, mw + 14, mh + 14, mw * 0.48); g.fill();
+}
 function scSalonScissors(c, x, y, ang, open, s) {
   c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s);
   [-1, 1].forEach(side => {
@@ -38,7 +44,7 @@ function scSalonScissors(c, x, y, ang, open, s) {
 function scStar(c, x, y, r, a, col) { c.save(); c.globalAlpha = a; c.fillStyle = col; AK.star(c, x, y, r, 0.18); c.fill(); c.globalAlpha = a * 0.5; AK.light(c, x, y, r * 1.8, '#fff6d0', 0.6); c.restore(); }
 SCENES.salon = function (c, w, h, t, fr, o) {
   const mw = Math.min(w * 0.46, h * 0.8), mh = mw * 1.08, mx = (w - mw) / 2, my = h * 0.08, after = fr > 0.55;
-  c.drawImage(scLayer('sal', w, h, (g, W, H) => scSalonRoom(g, W, H, mx, my, mw, mh)), 0, 0, w, h);
+  c.drawImage(scLayer('sal' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) ? scSalonArtFrame(g, mx, my, mw, mh) : scSalonRoom(g, W, H, mx, my, mw, mh)), 0, 0, w, h);
   // inside the mirror
   c.save(); rr(c, mx, my, mw, mh, mw * 0.46); c.clip();
   c.fillStyle = SK.lin(c, 0, my, 0, my + mh, [[0, '#f4fbff'], [0.6, '#d4e8f2'], [1, '#bad3e1']]); c.fillRect(mx, my, mw, mh);
@@ -106,7 +112,7 @@ function scDentistRoom(g, w, h) {
   g.lineCap = 'butt';
 }
 SCENES.dentist = function (c, w, h, t, fr, o) {
-  c.drawImage(scLayer('den', w, h, (g, W, H) => scDentistRoom(g, W, H)), 0, 0, w, h);
+  c.drawImage(scLayer('den' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scDentistRoom(g, W, H)), 0, 0, w, h);
   const q = h / 100;
   // the big lamp on its arm, and a beam that is bright but not blinding
   const lx = w * 0.7, ly = h * 0.2;

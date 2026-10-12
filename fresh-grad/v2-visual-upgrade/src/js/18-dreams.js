@@ -153,7 +153,7 @@ function drawDream(dt) {
   // a slow push-in with a little sway, like a camera that cannot quite hold still
   const z = 1.04 + 0.02 * Math.sin(tm * 0.11), dx = Math.sin(tm * 0.07) * w * 0.012, dy = Math.cos(tm * 0.05) * h * 0.01;
   c.save(); c.translate(w / 2 + dx, h / 2 + dy); c.scale(z, z); c.translate(-w / 2, -h / 2);
-  dreamMotif(c, d.motif, tm, w, h, mood);
+  if (!artDreamBg(c, d, w, h, mood)) dreamMotif(c, d.motif, tm, w, h, mood);
   c.restore();
   // drifting motes: warm light rising in good dreams, soot falling in bad ones
   for (const p of DR.parts) {

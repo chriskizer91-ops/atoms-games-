@@ -71,6 +71,11 @@ function scCinemaRoom(g, w, h, sx, sy, sw, sh) {
   g.strokeStyle = '#d4a017'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(w, h * 0.055);
   for (let i = 0; i < n; i++) { const x1 = w - w * i / n, x2 = w - w * (i + 1) / n; g.quadraticCurveTo((x1 + x2) / 2, h * 0.12, x2, h * 0.055); } g.stroke();
 }
+/* with an illustrated auditorium behind it, the live picture still needs its dark surround to sit in */
+function scCinemaArtFrame(g, sx, sy, sw, sh) {
+  g.fillStyle = 'rgba(3,2,7,.55)'; rr(g, sx - 14, sy - 12, sw + 28, sh + 24, 10); g.fill();
+  g.fillStyle = '#030207'; g.fillRect(sx - 7, sy - 7, sw + 14, sh + 14);
+}
 function scCinemaScreen(c, sx, sy, sw, sh, t, fr, o, ca, cb, shot, ph) {
   c.save(); c.beginPath(); c.rect(sx, sy, sw, sh); c.clip();
   if (fr < 0.07 || fr > 0.93) {
@@ -254,7 +259,7 @@ const SCENES = {
     const pal = o.pal || ['#ff9f43', '#4cc9f0', '#c77dff'];
     const sx = w * 0.15, sy = h * 0.1, sw = w * 0.7, sh = h * 0.43;
     const shot = Math.floor(t / 2.4), ph = (t % 2.4) / 2.4, ca = pal[shot % pal.length], cb = pal[(shot + 1) % pal.length];
-    c.drawImage(scLayer('cin', w, h, (g, W, H) => scCinemaRoom(g, W, H, sx, sy, sw, sh)), 0, 0, w, h);
+    c.drawImage(scLayer('cin' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) ? scCinemaArtFrame(g, sx, sy, sw, sh) : scCinemaRoom(g, W, H, sx, sy, sw, sh)), 0, 0, w, h);
     const flick = REDUCED ? 1 : 0.95 + 0.05 * Math.sin(t * 37) * Math.sin(t * 11.3);
     // the beam from the booth sits behind the picture, so only the part above the frame shows
     c.save(); c.globalCompositeOperation = 'lighter';
@@ -269,7 +274,7 @@ const SCENES = {
     if (o.popcorn) scPopcorn(c, w, h, t);
   },
   laundry(c, w, h, t, fr, o) {
-    c.drawImage(scLayer('lau', w, h, (g, W, H) => scLaundryRoom(g, W, H)), 0, 0, w, h);
+    c.drawImage(scLayer('lau' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scLaundryRoom(g, W, H)), 0, 0, w, h);
     // sun through the windows, slowly crossing the floor
     const sh = Math.sin(t * 0.08) * w * 0.02;
     SK.shaft(c, w * 0.15 + sh, h * 0.12, w * 0.14, w * 0.35 + sh * 2, h * 0.95, w * 0.2, '#fff3c8', 0.2);
@@ -286,7 +291,7 @@ const SCENES = {
   },
   read(c, w, h, t, fr, o) {
     const place = o.place || 'home', park = place === 'park';
-    c.drawImage(scLayer('rd|' + place, w, h, (g, W, H) => scReadRoom(g, W, H, place)), 0, 0, w, h);
+    c.drawImage(scLayer('rd|' + place + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scReadRoom(g, W, H, place)), 0, 0, w, h);
     const bw = Math.min(w * 0.6, h * 1.16), bh = bw * 0.5, bx = (w - bw) / 2, by = h * 0.37, sp = bw / 2, u = h / 100;
     // light: a green-shaded table lamp for indoor places, dappled sun under the trees outdoors
     if (!park) {
