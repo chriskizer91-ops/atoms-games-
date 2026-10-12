@@ -111,7 +111,7 @@ function scBubble(c, x, y, k, s, flip) {
 }
 function scHang(c, w, h, t, fr, o) {
   const place = o.place || 'cafe', s = h / 110, ty = h * 0.86;
-  c.drawImage(scLayer('hang|' + place, w, h, (g, W, H) => scHangRoom(g, W, H, place)), 0, 0, w, h);
+  c.drawImage(scLayer('hang|' + place + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scHangRoom(g, W, H, place)), 0, 0, w, h);
   AK.light(c, w * 0.5, -h * 0.1, w * 0.5, place === 'park' ? '#fff6d0' : '#ffd9a0', place === 'park' ? 0.22 : 0.26);
   scHangProps(c, w, h, t, place, ty, s);
   const turn = Math.floor(t / 1.6) % 2, k = (t % 1.6) / 1.6, hop = (who) => (who === turn ? -Math.abs(Math.sin(t * 7)) * 0.9 * s * (k < 0.8 ? 1 : 0) : 0);

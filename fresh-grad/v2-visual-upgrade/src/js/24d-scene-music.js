@@ -50,7 +50,7 @@ function scDrumKit(c, x, y, s, t) {
 SCENES.music = function (c, w, h, t, fr, o) {
   if (o.records) return scRecords(c, w, h, t, fr, o);
   const concert = o.kind === 'concert', s = h / 120, sy = h * 0.8, cx = w / 2;
-  c.drawImage(scLayer('mus|' + (concert ? 'c' : 'm'), w, h, (g, W, H) => scStageRoom(g, W, H, concert)), 0, 0, w, h);
+  c.drawImage(scLayer('mus|' + (concert ? 'c' : 'm') + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scStageRoom(g, W, H, concert)), 0, 0, w, h);
   const cols = ['#ffe0b0', '#ff8fc4', '#8fd4ff'];
   // moving heads: three beams that find the singer, swinging gently, with haze between
   for (let i = 0; i < 3; i++) {
