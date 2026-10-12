@@ -1696,6 +1696,18 @@ kbd,.kc{display:inline-grid;place-items:center;min-width:24px;height:24px;paddin
 #panel.art-bd{--bd-scrim:radial-gradient(120% 90% at 50% 40%,rgba(8,12,26,.38),rgba(4,7,16,.74))}
 
 @media (prefers-reduced-motion:reduce){.overlay.art-bd::before{animation:none}}
+/* optional art slots (js/36b-art-world.js). Nothing here applies until an image has loaded and its element exists. */
+/* the speaker's bust rises out of the panel header's right side, facing into the card; the watermark glyph steps aside */
+.card>header .tk-face{position:absolute;right:52px;bottom:0;height:calc(100% + 4px);aspect-ratio:1;width:auto;object-fit:contain;object-position:50% 100%;pointer-events:none;
+  transform:scaleX(-1);filter:drop-shadow(0 4px 10px rgba(3,6,16,.45)) drop-shadow(0 0 1px rgba(255,255,255,.25));
+  -webkit-mask-image:linear-gradient(270deg,transparent 0,#000 22%);mask-image:linear-gradient(270deg,transparent 0,#000 22%);animation:tkface .45s cubic-bezier(.2,.8,.2,1) both}
+.card>header.has-face .hmark{opacity:0}
+@keyframes tkface{from{opacity:0;transform:scaleX(-1) translateY(10px)}}
+@keyframes tkme{from{opacity:0}}
+/* shift intro: the illustrated workplace covers the inline drawing; the existing ::after scrim stays on top of it */
+.jhero .jh-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 55%;animation:tkme .5s ease-out both}
+@media (max-width:560px){.card>header .tk-face{right:46px}}
+@media (prefers-reduced-motion:reduce){.card>header .tk-face,.jhero .jh-art{animation:none}}
 </style>
 
 <div id="app">
@@ -8737,7 +8749,7 @@ JA.intro = function (J) {
   const st = $('#jStage'), d = J.def, jb = job();
   st.innerHTML = '';
   const box = el('div', 'jintro');
-  const hero = el('div', 'jhero'); hero.innerHTML = JART[J.id] ? JART[J.id](jb.roof, jb.accent) : ''; box.appendChild(hero);
+  const hero = el('div', 'jhero'); hero.innerHTML = JART[J.id] ? JART[J.id](jb.roof, jb.accent) : ''; box.appendChild(hero); artJobHero(hero, jb.id);
   const gl = el('div', 'jglyph'); gl.innerHTML = d.glyph; box.appendChild(gl);
   box.appendChild(el('p', 'jeye', 'Today’s shift'));
   box.appendChild(el('h2', '', d.name));
@@ -10577,7 +10589,7 @@ function drawDream(dt) {
   // a slow push-in with a little sway, like a camera that cannot quite hold still
   const z = 1.04 + 0.02 * Math.sin(tm * 0.11), dx = Math.sin(tm * 0.07) * w * 0.012, dy = Math.cos(tm * 0.05) * h * 0.01;
   c.save(); c.translate(w / 2 + dx, h / 2 + dy); c.scale(z, z); c.translate(-w / 2, -h / 2);
-  dreamMotif(c, d.motif, tm, w, h, mood);
+  if (!artDreamBg(c, d, w, h, mood)) dreamMotif(c, d.motif, tm, w, h, mood);
   c.restore();
   // drifting motes: warm light rising in good dreams, soot falling in bad ones
   for (const p of DR.parts) {
@@ -14104,6 +14116,11 @@ function scCinemaRoom(g, w, h, sx, sy, sw, sh) {
   g.strokeStyle = '#d4a017'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(w, h * 0.055);
   for (let i = 0; i < n; i++) { const x1 = w - w * i / n, x2 = w - w * (i + 1) / n; g.quadraticCurveTo((x1 + x2) / 2, h * 0.12, x2, h * 0.055); } g.stroke();
 }
+/* with an illustrated auditorium behind it, the live picture still needs its dark surround to sit in */
+function scCinemaArtFrame(g, sx, sy, sw, sh) {
+  g.fillStyle = 'rgba(3,2,7,.55)'; rr(g, sx - 14, sy - 12, sw + 28, sh + 24, 10); g.fill();
+  g.fillStyle = '#030207'; g.fillRect(sx - 7, sy - 7, sw + 14, sh + 14);
+}
 function scCinemaScreen(c, sx, sy, sw, sh, t, fr, o, ca, cb, shot, ph) {
   c.save(); c.beginPath(); c.rect(sx, sy, sw, sh); c.clip();
   if (fr < 0.07 || fr > 0.93) {
@@ -14287,7 +14304,7 @@ const SCENES = {
     const pal = o.pal || ['#ff9f43', '#4cc9f0', '#c77dff'];
     const sx = w * 0.15, sy = h * 0.1, sw = w * 0.7, sh = h * 0.43;
     const shot = Math.floor(t / 2.4), ph = (t % 2.4) / 2.4, ca = pal[shot % pal.length], cb = pal[(shot + 1) % pal.length];
-    c.drawImage(scLayer('cin', w, h, (g, W, H) => scCinemaRoom(g, W, H, sx, sy, sw, sh)), 0, 0, w, h);
+    c.drawImage(scLayer('cin' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) ? scCinemaArtFrame(g, sx, sy, sw, sh) : scCinemaRoom(g, W, H, sx, sy, sw, sh)), 0, 0, w, h);
     const flick = REDUCED ? 1 : 0.95 + 0.05 * Math.sin(t * 37) * Math.sin(t * 11.3);
     // the beam from the booth sits behind the picture, so only the part above the frame shows
     c.save(); c.globalCompositeOperation = 'lighter';
@@ -14302,7 +14319,7 @@ const SCENES = {
     if (o.popcorn) scPopcorn(c, w, h, t);
   },
   laundry(c, w, h, t, fr, o) {
-    c.drawImage(scLayer('lau', w, h, (g, W, H) => scLaundryRoom(g, W, H)), 0, 0, w, h);
+    c.drawImage(scLayer('lau' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scLaundryRoom(g, W, H)), 0, 0, w, h);
     // sun through the windows, slowly crossing the floor
     const sh = Math.sin(t * 0.08) * w * 0.02;
     SK.shaft(c, w * 0.15 + sh, h * 0.12, w * 0.14, w * 0.35 + sh * 2, h * 0.95, w * 0.2, '#fff3c8', 0.2);
@@ -14319,7 +14336,7 @@ const SCENES = {
   },
   read(c, w, h, t, fr, o) {
     const place = o.place || 'home', park = place === 'park';
-    c.drawImage(scLayer('rd|' + place, w, h, (g, W, H) => scReadRoom(g, W, H, place)), 0, 0, w, h);
+    c.drawImage(scLayer('rd|' + place + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scReadRoom(g, W, H, place)), 0, 0, w, h);
     const bw = Math.min(w * 0.6, h * 1.16), bh = bw * 0.5, bx = (w - bw) / 2, by = h * 0.37, sp = bw / 2, u = h / 100;
     // light: a green-shaded table lamp for indoor places, dappled sun under the trees outdoors
     if (!park) {
@@ -14476,6 +14493,12 @@ function scSalonRoom(g, w, h, mx, my, mw, mh) {
   g.fillStyle = SK.lin(g, mx, my, mx + mw, my + mh, [[0, '#f1d27a'], [0.5, '#b58a2a'], [1, '#e6c05a']]); rr(g, mx - 14, my - 14, mw + 28, mh + 28, mw * 0.5); g.fill();
   g.fillStyle = '#7a5a1a'; rr(g, mx - 7, my - 7, mw + 14, mh + 14, mw * 0.48); g.fill();
 }
+/* over an illustrated salon wall: only the mirror's gold frame, so the live reflection has its edge */
+function scSalonArtFrame(g, mx, my, mw, mh) {
+  g.fillStyle = 'rgba(40,10,30,.28)'; rr(g, mx - 18, my - 10, mw + 36, mh + 36, mw * 0.5); g.fill();
+  g.fillStyle = SK.lin(g, mx, my, mx + mw, my + mh, [[0, '#f1d27a'], [0.5, '#b58a2a'], [1, '#e6c05a']]); rr(g, mx - 14, my - 14, mw + 28, mh + 28, mw * 0.5); g.fill();
+  g.fillStyle = '#7a5a1a'; rr(g, mx - 7, my - 7, mw + 14, mh + 14, mw * 0.48); g.fill();
+}
 function scSalonScissors(c, x, y, ang, open, s) {
   c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s);
   [-1, 1].forEach(side => {
@@ -14491,7 +14514,7 @@ function scSalonScissors(c, x, y, ang, open, s) {
 function scStar(c, x, y, r, a, col) { c.save(); c.globalAlpha = a; c.fillStyle = col; AK.star(c, x, y, r, 0.18); c.fill(); c.globalAlpha = a * 0.5; AK.light(c, x, y, r * 1.8, '#fff6d0', 0.6); c.restore(); }
 SCENES.salon = function (c, w, h, t, fr, o) {
   const mw = Math.min(w * 0.46, h * 0.8), mh = mw * 1.08, mx = (w - mw) / 2, my = h * 0.08, after = fr > 0.55;
-  c.drawImage(scLayer('sal', w, h, (g, W, H) => scSalonRoom(g, W, H, mx, my, mw, mh)), 0, 0, w, h);
+  c.drawImage(scLayer('sal' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) ? scSalonArtFrame(g, mx, my, mw, mh) : scSalonRoom(g, W, H, mx, my, mw, mh)), 0, 0, w, h);
   // inside the mirror
   c.save(); rr(c, mx, my, mw, mh, mw * 0.46); c.clip();
   c.fillStyle = SK.lin(c, 0, my, 0, my + mh, [[0, '#f4fbff'], [0.6, '#d4e8f2'], [1, '#bad3e1']]); c.fillRect(mx, my, mw, mh);
@@ -14559,7 +14582,7 @@ function scDentistRoom(g, w, h) {
   g.lineCap = 'butt';
 }
 SCENES.dentist = function (c, w, h, t, fr, o) {
-  c.drawImage(scLayer('den', w, h, (g, W, H) => scDentistRoom(g, W, H)), 0, 0, w, h);
+  c.drawImage(scLayer('den' + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scDentistRoom(g, W, H)), 0, 0, w, h);
   const q = h / 100;
   // the big lamp on its arm, and a beam that is bright but not blinding
   const lx = w * 0.7, ly = h * 0.2;
@@ -14654,7 +14677,7 @@ function scDrumKit(c, x, y, s, t) {
 SCENES.music = function (c, w, h, t, fr, o) {
   if (o.records) return scRecords(c, w, h, t, fr, o);
   const concert = o.kind === 'concert', s = h / 120, sy = h * 0.8, cx = w / 2;
-  c.drawImage(scLayer('mus|' + (concert ? 'c' : 'm'), w, h, (g, W, H) => scStageRoom(g, W, H, concert)), 0, 0, w, h);
+  c.drawImage(scLayer('mus|' + (concert ? 'c' : 'm') + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scStageRoom(g, W, H, concert)), 0, 0, w, h);
   const cols = ['#ffe0b0', '#ff8fc4', '#8fd4ff'];
   // moving heads: three beams that find the singer, swinging gently, with haze between
   for (let i = 0; i < 3; i++) {
@@ -17829,7 +17852,7 @@ function fishChoice(k) {
   $('#fishResult').hidden = true; FS.phase = 'cast'; FS.t = 0; setFishMsg('Tap to cast');
 }
 function endFishing() { FS.on = false; $('#fishing').hidden = true; G.menu = false; updateHud(); AK.dropLayers('fv|'); FD.fx.length = 0; FD.last = ''; }
-function drawFishPic(c, f, x, y, s) { fishArt(c, f, x, y, s); agFishCard(c, f, x, y, s); }
+function drawFishPic(c, f, x, y, s) { fishArt(c, f, x, y, s); }
 function drawFishing(dt) { fishView(dt); }
 function bindFishing() {
   const cv = $('#fishCv');
@@ -18123,7 +18146,7 @@ function scBubble(c, x, y, k, s, flip) {
 }
 function scHang(c, w, h, t, fr, o) {
   const place = o.place || 'cafe', s = h / 110, ty = h * 0.86;
-  c.drawImage(scLayer('hang|' + place, w, h, (g, W, H) => scHangRoom(g, W, H, place)), 0, 0, w, h);
+  c.drawImage(scLayer('hang|' + place + artSceneTag(o), w, h, (g, W, H) => artSceneBg(g, W, H, o) || scHangRoom(g, W, H, place)), 0, 0, w, h);
   AK.light(c, w * 0.5, -h * 0.1, w * 0.5, place === 'park' ? '#fff6d0' : '#ffd9a0', place === 'park' ? 0.22 : 0.26);
   scHangProps(c, w, h, t, place, ty, s);
   const turn = Math.floor(t / 1.6) % 2, k = (t % 1.6) / 1.6, hop = (who) => (who === turn ? -Math.abs(Math.sin(t * 7)) * 0.9 * s * (k < 0.8 ? 1 : 0) : 0);
@@ -18167,8 +18190,6 @@ function fishBody(c, L, T, tail) {
   c.closePath();
 }
 function fishArt(c, f, x, y, s) {
-  const im = agFishImg(f);
-  if (im) { agFishDraw(c, im, x, y, s); return; }
   c.save(); c.translate(x, y); c.scale(s, s);
   if (f.id === 'boot') { fishBoot(c, f); c.restore(); return; }
   const k = FISH_LOOK[f.id] || FISH_LOOK.bluegill, L = k.long ? 1.1 : 1, T = k.tall * (k.long ? 0.7 : 1);
@@ -21852,31 +21873,139 @@ function artBackdrop(ov, key) {
 }
 // P06: the backdrop behind a panel (only the blackout notice has one)
 function artPanelBackdrop(id, spec) { return id === 'notice' && spec && spec.title === 'You blacked out' ? 'bg/blackout' : null; }
+/* ============================ optional art: faces, dream and scene backdrops, shift heroes ============================
+   Every slot here asks ART for its file only when its screen opens, and changes nothing until the
+   file has loaded: with no files (or ?noart) every screen looks exactly as the procedural version. Keys follow IMAGE_PROMPTS.md
+   (P05 portraits/ for ten faces, P06 bg/; ART_SHORTLIST.md). Only function declarations at the top level: they are hoisted, so this file
+   can sit at the end of the script and still be called from anywhere at run time. */
+
+/* ---------- P05: who is talking, and which portrait key shows them ---------- */
+/* town folk and shop staff (G.inside = 'npc:<id>') -> portrait slug; ids that already equal their slug are listed too */
+function artFolkSlug(id) {
+  const M = artFolkSlug.M || (artFolkSlug.M = {
+    // street talkers
+    maya: 'maya', rosa: 'rosa', bell: 'mr-bell', theo: 'theo', priya: 'priya', walt: 'walt', june: 'june',
+    cole: 'officer-cole', ines: 'ines', lena: 'lena', sam: 'sam-musician', kofi: 'kofi',
+    // apartment, grocery, diner, clinic
+    reyes: 'mrs-reyes', dev: 'dev', tanaka: 'mr-tanaka', odell: 'ms-odell', dot: 'dot', gus: 'gus', imani: 'nurse-imani', chen: 'dr-chen',
+    // coworkers
+    noor: 'noor', felix: 'felix', dana: 'dana-whitlock', olga: 'olga', pavel: 'pavel', keller: 'mr-keller',
+    amari: 'dr-amari', tomas: 'tomas', rosalind: 'head-nurse-rosalind', carter: 'carter', imogen: 'imogen', pike: 'ms-pike',
+    dmitri: 'dmitri', beto: 'beto', marisol: 'chef-marisol',
+    // shop staff and regulars (28-shop-rooms.js)
+    okafor: 'mr-okafor', greta: 'greta', hale: 'mr-hale', agnes: 'agnes', milo: 'milo', luc: 'luc', hank: 'hank', zoe: 'zoe-cinema',
+    ike: 'ike', bianca: 'bianca', kim: 'mrs-kim', rafa: 'rafa', luna: 'luna', sal: 'sal', ruby: 'ruby-dental', patel: 'dr-patel',
+    nadia: 'nadia', otis: 'otis', tess: 'tess', gwen: 'gwen'
+  });
+  return M[id] || null;
+}
+/* the school staff talk through 'sch:talk-<id>' and reuse some town ids (okafor, kim), so they get their own table */
+function artTeacherSlug(id) {
+  return { park: 'ms-park', alvarez: 'mr-alvarez', okafor: 'mrs-okafor', dawson: 'principal-dawson', kim: 'mr-kim', reed: 'nurse-reed', lin: 'ms-lin' }[id] || null;
+}
+/* only the ten recurring faces get portrait files; everyone else keeps today's faceless panel */
+function artHasFace(slug) { return ['dot', 'sal', 'bianca', 'hank', 'mrs-reyes', 'luna', 'agnes', 'dr-chen', 'ms-park', 'greta'].indexOf(slug) >= 0; }
+/* the portrait key for the open talk panel, or null */
+function artTalkKey() {
+  const id = G.inside;
+  if (!id || !S) return null;
+  const slug = id.startsWith('npc:') ? artFolkSlug(id.slice(4)) : id.startsWith('sch:talk-') ? artTeacherSlug(id.slice(9)) : null;
+  return slug && artHasFace(slug) ? 'portraits/' + slug : null;
+}
+/* first key in the list that has loaded; keys still loading re-sync the panel when they arrive */
+function artFirstLoaded(keys) {
+  for (const k of keys) {
+    const u = ART.url(k);
+    if (u) return { k, u };
+    if (!ART.missing(k)) {
+      const P = artFirstLoaded.wait || (artFirstLoaded.wait = new Set());
+      if (!P.has(k)) { P.add(k); ART.when(k, () => { P.delete(k); artTalkSync(); }); }
+    }
+  }
+  return null;
+}
+/* put the speaker's bust into the panel header; remove it for any other panel */
+function artTalkSync() {
+  const head = $('#pHead');
+  if (!head) return;
+  const key = ART.on ? artTalkKey() : null, got = key ? artFirstLoaded([key]) : null;
+  let im = head.querySelector('.tk-face');
+  if (!got) {
+    if (im) im.remove();
+    head.classList.remove('has-face');
+    return;
+  }
+  if (!im) {
+    im = document.createElement('img'); im.className = 'tk-face'; im.alt = ''; im.setAttribute('aria-hidden', 'true'); im.decoding = 'async';
+    head.insertBefore(im, head.querySelector('.htxt'));
+  }
+  if (im.dataset.k !== got.k) { im.src = got.u; im.dataset.k = got.k; }
+  head.classList.add('has-face');
+}
+
+/* ---------- P06: dream backdrops ---------- */
+/* the game's dream ids are the brief's ids; the quiet nap ('none') is bg/dream-calm */
+function artDreamKey(d) { return d ? 'bg/dream-' + (d.id === 'none' ? 'calm' : d.id) : null; }
+/* paint the dream's backdrop instead of the procedural motif; false when there is no file (the motif is drawn as before) */
+function artDreamBg(c, d, w, h, mood) {
+  const img = ART.get(artDreamKey(d));
+  if (!img) return false;
+  ART.cover(c, img, 0, 0, w, h, 0.5, 0.5);
+  // dim it a touch so the white title and lines keep their contrast; bad dreams sink a little further
+  c.fillStyle = mood === 'bad' ? 'rgba(10,2,8,.3)' : 'rgba(6,8,24,.2)'; c.fillRect(0, 0, w, h);
+  return true;
+}
+
+/* ---------- P06: activity scene backdrops ---------- */
+/* which backdrop a scene uses, or null. Reading in the park, the record player and hanging out anywhere but the cafe keep their own sets. */
+function artSceneKey(o) {
+  if (!o) return null;
+  switch (o.scene) {
+    case 'cinema': case 'laundry': case 'salon': case 'dentist': return 'bg/scene-' + o.scene;
+    case 'read': return (o.place || 'home') === 'park' ? null : 'bg/scene-read';
+    case 'music': return o.records ? null : 'bg/scene-music';
+    case 'hang': return (o.place || 'cafe') === 'cafe' ? 'bg/scene-hang' : null;
+  }
+  return null;
+}
+/* appended to a scene's cached layer name, so the layer is repainted once when the backdrop arrives */
+function artSceneTag(o) { const k = artSceneKey(o); return k && ART.get(k) ? '|art' : ''; }
+/* paint the backdrop into a scene layer (cover-fit, a soft floor shade to seat the animated figures); false when there is none */
+function artSceneBg(g, w, h, o) {
+  const k = artSceneKey(o), img = k && ART.get(k);
+  if (!img) return false;
+  ART.cover(g, img, 0, 0, w, h, 0.5, 0.5);
+  const sg = g.createLinearGradient(0, h * 0.55, 0, h); sg.addColorStop(0, 'rgba(4,6,14,0)'); sg.addColorStop(1, 'rgba(4,6,14,.38)');
+  g.fillStyle = sg; g.fillRect(0, h * 0.55, w, h * 0.45);
+  return true;
+}
+
+/* ---------- P06: the shift intro hero ---------- */
+/* the job's illustrated workplace laid over the inline SVG once it loads */
+function artJobHero(hero, jobId) {
+  if (!hero || !jobId) return;
+  ART.when('bg/job-' + jobId, img => {
+    if (hero.querySelector('.jh-art')) return;
+    const a = document.createElement('img'); a.className = 'jh-art'; a.alt = ''; a.setAttribute('aria-hidden', 'true'); a.src = img.src;
+    hero.appendChild(a);
+  });
+
+}
+
+/* the talk panel is rebuilt by renderPanel on every action; follow it */
+(function artWatchPanel() {
+  try {
+    const body = $('#pBody');
+    if (body && window.MutationObserver && ART.on) new MutationObserver(artTalkSync).observe(body, { childList: true });
+  } catch (e) { /* portraits are a nicety */ }
+})();
 // ============================ optional art for fishing ============================
-// Optional files (keys from ../IMAGE_PROMPTS.md P06/P08): fish/<id> (768x384 alpha, facing right) and
-// bg/fishing-day|dusk|night|ice (16:9 opaque). Nothing is preloaded at boot: a fish is asked for when it is hooked (the reel
-// meter draws it) or caught, a backdrop when the fishing view draws in that light. With no file (or ?noart) the procedural
-// drawing is exactly as before. Nothing in here reads or writes game state.
+// Optional files (ART_SHORTLIST.md): bg/fishing-day|dusk|night|ice (16:9 opaque), asked for when the fishing view draws in that
+// light. With no file (or ?noart) the procedural drawing is exactly as before. Nothing in here reads or writes game state.
+// (Fish art slots, fish/<id>, were built in this pass and removed when fish were cut from the art plan; see notes/art-games.md.)
 // This file sorts after the boot() call in 35-degree-flow-boot.js, so it only holds function declarations (hoisted), no
 // top-level const/let that would still be uninitialised while boot() runs.
 
-// game fish id -> brief key (the game's "sunfish" is the brief's pumpkinseed)
-function agFishKey(id) { return 'fish/' + (id === 'sunfish' ? 'pumpkinseed' : id); }
-
-/* fish art goes into the fishArt unit box (nose -19 .. tail +24): a 52 x 26 box (2:1, like the 768x384 file) centred 2.5 right of x */
-function agFishImg(f) { return f && f.id ? ART.get(agFishKey(f.id)) : null; }
-function agFishDraw(c, img, x, y, s) { c.drawImage(img, x - 23.5 * s, y - 13 * s, 52 * s, 26 * s); }
-/* the catch card is drawn once; if the fish's art is still loading, redraw it when it lands (only if that card is still up) */
-function agFishCard(c, f, x, y, s) {
-  agFishCard.cur = f;
-  const key = agFishKey(f.id);
-  if (!ART.on || ART.get(key) || ART.missing(key)) return;
-  ART.when(key, () => {
-    const res = $('#fishResult');
-    if (agFishCard.cur !== f || !res || res.hidden) return;
-    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, c.canvas.width, c.canvas.height); fishArt(c, f, x, y, s);
-  });
-}
 /* the fishing backdrop for the light the view already uses: ice in winter (WINTER()), night when A.nf > .5, dusk while the sun
    is low (A.warm > .5) or below the horizon (dawn too), otherwise day. Returns the loaded image or null. */
 function agFishBg(A, ice, night) {

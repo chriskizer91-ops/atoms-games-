@@ -179,7 +179,7 @@ function placeFacade(c, b) {
   } else {
     // a round badge over the door
     const by = shop ? bot - 69 : bot - 76;
-    const bs = wspr('bd' + b.place + artBadgeTag(b.place), 40, 44, g => artBadgePaint(g, b.place) || wPaintBadge(g, P));
+    const bs = wspr('bd' + b.place, 40, 44, g => wPaintBadge(g, P));
     c.drawImage(bs.cv, cx - 20, by - 22, bs.w, bs.h);
     if (night && open) { addEmit(cx, by, 30, 0, 0.35); }
   }

@@ -1,7 +1,7 @@
 # Fresh Grad — art short list (replaces the ~500-image plan)
 
 **Make only the images on this page. Skip everything else in `IMAGE_PROMPTS.md`.** The opening cutscene is finished (38 delivered
-images are in the game). What is left below are the pictures a player actually sees often: 25 core images, plus 21 optional ones.
+images are in the game). What is left below are the pictures a player actually sees often: 24 core images, plus 21 optional ones.
 
 Style, cast and delivery rules are unchanged: see `IMAGE_PROMPTS.md` §1 (sizes), §3 (style blocks `[SCENE]`, `[PORTRAIT]`, palette)
 and §4 (cast). Attach the delivered style anchors (`reference-art/p00-*`) and model sheets (`reference-art/ch-01-grad-sheet`,
@@ -21,16 +21,16 @@ All backdrops are `1920×1080 · opaque · [SCENE]`, no people unless stated, **
 
 A zip with a different name (for example `-05`) is new: send it. Anything in it that is not on this page will be skipped.
 
-## Core — 25 images
+## Core — 24 images
 
 | # | Key | Where it shows | Prompt |
 |---|---|---|---|
 | 1 | `ui/diploma` (1600×1200, transparent) | Degree picker, every new game | A formal diploma lying flat, seen straight-on: heavy cream paper (#f6f0dc) with subtle fibres, an ornate engraved navy double border with corner flourishes, a large blank central area (no words), a raised gold wax seal with a red ribbon at the lower right, a faint laurel-and-open-book crest watermark (no letters) at the centre, soft paper shadow, one slightly curled corner at top-left. |
 | 2-5 | `bg/recap-spring`, `bg/recap-summer`, `bg/recap-autumn`, `bg/recap-winter` | The morning card, **every morning** | A morning window sill with a coffee cup and a folded paper, the season outside the window: blossom / bright green / falling leaves / snow. |
 | 6-17 | `bg/dream-<id>` (12) | One dream **every night's sleep** | See the 12 rows below. Good dreams luminous, pink-and-amber; bad dreams unsettling but gentle (red vignette, long shadows), never gory. |
-| 18-23 | `bg/job-cs`, `bg/job-eng`, `bg/job-nurse`, `bg/job-biz`, `bg/job-edu`, `bg/job-cook` | Shift intro, **every workday** | See the 6 rows below. A cosy illustration of that workplace in the job's colours, no people. |
-| 24 | `bg/levelup` | Level-up card | A violet-and-gold radial burst with ribbons and sparkles. |
-| 25 | `bg/promotion` | Promotion card | A gold-and-purple laurel burst. |
+| 18-22 | `bg/job-cs`, `bg/job-eng`, `bg/job-nurse`, `bg/job-biz`, `bg/job-cook` | Shift intro, **every workday** | See the 5 rows below. A cosy illustration of that workplace in the job's colours, no people. The game shows it as a wide strip, so keep the key details in the **middle horizontal band**. |
+| 23 | `bg/levelup` | Level-up card | A violet-and-gold radial burst with ribbons and sparkles. |
+| 24 | `bg/promotion` | Promotion card | A gold-and-purple laurel burst. |
 
 **Dreams**
 | Key | Prompt |
@@ -55,14 +55,13 @@ A zip with a different name (for example `-05`) is new: send it. Anything in it 
 | `bg/job-eng` | A machine shop with a CNC mill, lathe, blueprint board and amber work lights (#8a8f98, #ffb347). |
 | `bg/job-nurse` | A hospital ward with beds, a nurses' station and soft teal light (#e8eef0, #c9444f). |
 | `bg/job-biz` | A boardroom with a long table, a view over the city and a targets board (#9b7bb0, plum). |
-| `bg/job-edu` | A sunny classroom with small desks, a chalkboard and kids' paintings (#e3b04f, #9a3b2e). |
 | `bg/job-cook` | A busy restaurant kitchen at rush with ranges, pans, flames and a ticket rail (#c46a3b, copper). |
 
 ## Optional — 21 images, only if you want more
 | Keys | Where it shows | Prompt |
 |---|---|---|
 | `bg/fishing-day`, `bg/fishing-dusk`, `bg/fishing-night`, `bg/fishing-ice` (4) | Fishing | A pond seen from the bank, sky with clouds, a far bank of round trees, water with depth and sun glints, lily pads, reeds with cattails in the foreground; keep the water surface open. Ice: a pale ice sheet, snow mounds, bare snowy trees, **no fishing hole** (the game draws its own where the line lands). |
-| `bg/scene-cinema`, `-laundry`, `-read`, `-salon`, `-dentist`, `-music`, `-hang` (7) | Activities | Cinema auditorium from the back with maroon seats and a huge blank glowing screen · washers with round windows, steam and soap bubbles · a reading nook with a lamp pool, steaming mug and open book · a gold oval mirror on a blush striped wall · a ceiling view with a round surgical lamp and a clouds poster · a small stage with a spotlight cone and silhouetted crowd · a small round cafe table with two mugs, cosy light. |
+| `bg/scene-cinema`, `-laundry`, `-read`, `-salon`, `-dentist`, `-music`, `-hang` (7) | Activities | **Empty sets: the game animates the people and props on top, so paint only the room.** Cinema: the auditorium from the back, rows of empty maroon seats, a big blank screen. Laundry: the laundromat's tiled wall, window light and a folding shelf, **no machines**. Read: a warm reading corner with an armchair, bookshelf and window, **no book, lamp or mug**. Salon: a blush striped wall with shelves of bottles, **no mirror**. Dentist: a ceiling seen from the chair with soft tiles and a clouds poster, **no lamp**. Music: a small stage with a brick back wall, curtains and string lights, **no spotlight, no band**. Hang: a cosy cafe interior with shelves, a window and string lights, **no table or mugs**. |
 | `portraits/dot`, `sal`, `bianca`, `hank`, `mrs-reyes`, `luna`, `agnes`, `dr-chen`, `ms-park`, `greta` (10, 1024×1024 transparent, `[PORTRAIT]`) | Conversations with the ten regulars | Use each person's row in `IMAGE_PROMPTS.md` §5 P05 (shirt, hair, skin, trait). Identical framing for all ten. |
 
 ## Do not make (the rest of the ~500)
@@ -71,6 +70,7 @@ A zip with a different name (for example `-05`) is new: send it. Anything in it 
 - **Reference boards (P11, ~62)**: the game never loads them.
 - **Icons, badges, logos, food, stamps, trophies (P07, ~140)** and **mini-game pieces (P08, ~60)**: small, numerous, and the game's own
   drawings already cover them.
+- `bg/job-edu`: a teacher walks straight into the school, so the shift intro never shows for that job.
 - **Textures, light sprites, posters (P09, P10)**, title variants (UI-01/UI-02: the street anchor already serves as the title), paper
   textures, phone wallpaper, passport cover, the other ~70 portraits, kids, fish.
 

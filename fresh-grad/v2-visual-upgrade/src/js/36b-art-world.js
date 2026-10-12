@@ -1,7 +1,7 @@
-/* ============================ optional art: faces, dream and scene backdrops, shift heroes, badges, logos ============================
-   Every slot here asks ART for its file only when its screen opens (or when a shop front is drawn), and changes nothing until the
+/* ============================ optional art: faces, dream and scene backdrops, shift heroes ============================
+   Every slot here asks ART for its file only when its screen opens, and changes nothing until the
    file has loaded: with no files (or ?noart) every screen looks exactly as the procedural version. Keys follow IMAGE_PROMPTS.md
-   (P05 portraits/ for ten faces, P06 bg/, P07 badges/ and logos/). Only function declarations at the top level: they are hoisted, so this file
+   (P05 portraits/ for ten faces, P06 bg/; ART_SHORTLIST.md). Only function declarations at the top level: they are hoisted, so this file
    can sit at the end of the script and still be called from anywhere at run time. */
 
 /* ---------- P05: who is talking, and which portrait key shows them ---------- */
@@ -105,8 +105,8 @@ function artSceneBg(g, w, h, o) {
   return true;
 }
 
-/* ---------- P06 + P07: the shift intro hero and the employer mark ---------- */
-/* hero: the job's illustrated workplace laid over the inline SVG once it loads; mark: the employer's logo in the hero's corner */
+/* ---------- P06: the shift intro hero ---------- */
+/* the job's illustrated workplace laid over the inline SVG once it loads */
 function artJobHero(hero, jobId) {
   if (!hero || !jobId) return;
   ART.when('bg/job-' + jobId, img => {
@@ -114,25 +114,9 @@ function artJobHero(hero, jobId) {
     const a = document.createElement('img'); a.className = 'jh-art'; a.alt = ''; a.setAttribute('aria-hidden', 'true'); a.src = img.src;
     hero.appendChild(a);
   });
-  ART.when('logos/' + jobId, img => {
-    if (hero.querySelector('.jh-logo')) return;
-    const a = document.createElement('img'); a.className = 'jh-logo'; a.alt = ''; a.setAttribute('aria-hidden', 'true'); a.src = img.src;
-    hero.appendChild(a);
-  });
+
 }
 
-/* ---------- P07: shop door badges ---------- */
-/* the badge sprite's cache key gains '|art' once the file has loaded, so the sprite is rebuilt exactly once */
-function artBadgeTag(place) { return ART.get('badges/' + place) ? '|art' : ''; }
-/* paint the badge art into the 40x44 badge sprite (wire and contact shadow kept from the procedural badge); false when there is none */
-function artBadgePaint(g, place) {
-  const img = ART.get('badges/' + place);
-  if (!img) return false;
-  g.fillStyle = 'rgba(8,12,28,.3)'; g.beginPath(); g.arc(21.2, 23.2, 15.4, 0, 7); g.fill();
-  g.strokeStyle = '#2a3036'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(20, 1); g.lineTo(20, 5.4); g.stroke();
-  g.drawImage(img, 3, 5, 34, 34);
-  return true;
-}
 /* the talk panel is rebuilt by renderPanel on every action; follow it */
 (function artWatchPanel() {
   try {

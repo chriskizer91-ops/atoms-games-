@@ -22,7 +22,8 @@ School staff have their own table because `okafor` and `kim` mean different peop
 Dream mapping: the game's dream ids match the brief's (`fly feast grad perfect pond late hall rent empty alarm dry`). The 40 % "quiet nap" (`id: 'none'`, motif `calm`) uses `bg/dream-calm`.
 Scene mapping: `cinema laundry salon dentist` map directly. `read` covers home, chair, cafe and books, but reading in the **park** keeps its own outdoor set. `music` covers the cafe open mic and the bandstand concert, but **not** the record player (`o.records`), which keeps its room. `hang` covers only hanging out at the **cafe**; pizza, diner, books, park, bakery and cinema keep their own sets, because a cafe table image would contradict them.
 
-## Dropped by the scope change (already implemented and tested, harmless, left in)
+## Dropped by the scope change (implemented and tested, then removed at merge by the integrator)
+These images were cut from the art plan (`ART_SHORTLIST.md`); the badge slot would have asked for 11 missing files as soon as the town drew its shop fronts. The code is in commit b7a456c if they come back.
 - `badges/<shop>`: the street badge sprite over 11 shop doors (`26-shop-fronts.js`). The sprite key gets `|art` and the 34 px image replaces the disc, keeping the hanging wire and the shadow. Tested with placeholders. The cinema has a marquee instead of a badge, so `badges/cinema` is not used.
 - `logos/<id>`: the employer mark in the top-left corner of the shift-intro hero. Tested with placeholders.
 With no files, both look exactly as before.

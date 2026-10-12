@@ -58,3 +58,6 @@ screen.
 ## Files
 `js/36c-art-games.js` (new), `js/31c-fish-art.js` (`fishArt` uses the art when loaded), `js/31d-fish-view.js` (backdrop
 branch), `js/31-activities-extra.js` (`drawFishPic` asks for the late redraw).
+
+## Integrator's note
+Fish (`fish/<id>`) were cut from the art plan (`ART_SHORTLIST.md`), so the fish slots (`agFishKey`, `agFishImg`, `agFishDraw`, `agFishCard` and their calls in `fishArt` / `drawFishPic`) were removed at merge; they would only have asked for missing files. The code is in commit 2bf2902 if fish come back. The four fishing backdrops stay wired.
