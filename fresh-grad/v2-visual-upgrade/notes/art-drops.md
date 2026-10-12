@@ -130,3 +130,14 @@ shift-intro screens at 1280x720 and 390x844: text stays readable over every plat
   game's ice hole sits on the clean ice), and all seven activity scenes with their animated props on top. No page errors, and no request
   for a missing file other than the two absent portraits.
 - The portraits fill more of their frame than the brief's 12 % head margin; in the 82 px header that reads well (hair just reaches the top).
+
+## Drop 6 (freshgrad-final-two-portraits)
+`portraits/ms-park` and `portraits/greta`, complete this time (Ms. Park's PNG is exactly the size the cut-off zip expected). Converted to
+1024 px WebP. All ten regulars now have faces; checked in their conversation headers. **The short list is complete.**
+
+## The standalone file
+`tools/standalone.py` writes `dist/FreshGrad_Seasons.html`: the built game plus every image it can show, re-encoded at the size it is
+drawn (full-screen stills, title and dreams at 1672 px; recap and celebration cards 1600; fishing 1440; scenes 1280; shift intros 1024;
+diploma 1024; portraits 320) and carried inline as `data:` URLs in `window.FG_ART`. `ART` then fetches nothing, and keys the file does
+not carry are missing at once (no failed requests). The -b takes and the cutscene plates/poses/lineups are left out: every still is in
+the file, so they could never show. 61 images, 8.5 MB of WebP, 13.3 MB of HTML; it opens by double-click from any folder.

@@ -28,12 +28,12 @@ One glass design system; day/night clock disc, glass-vial gauges, coin counter, 
 A new shift shell (hero intro art, medal and till-receipt result) and all six games reskinned (code editor, blueprint pipes, monitor with sweeping ECG, video-call offer dial, classroom echo, stove with ticket rail) — scoring verified identical. 17 scene variants, 14 dream backdrops with camera drift, a fishing view with real sky and reflections, rarity-coloured catch cards.
 
 ## Illustrated art (October 2026)
-- **87 delivered images are in the game** (`notes/art-drops.md` maps every delivered file to its key). The opening is now a fully
+- **89 delivered images are in the game** (`notes/art-drops.md` maps every delivered file to its key). The opening is now a fully
   illustrated film: eleven stills dissolve into one another (no dips back into the procedural set), with drifting dust and painted
   confetti over them, phone-safe focus points, and the end cards set in the sky of the sunset still. While a still fills the frame
   the procedural set is not drawn (script time per cutscene frame: ~17-31 ms -> under 1 ms). Plates and poses load only if a still is
   missing. Title art for desktop and phones, and the illustrated diploma on the degree picker (text kept clear of the seal).
-- **Short-list art in the game:** the morning recap (four seasons), all twelve dreams, five shift intros, level-up and promotion cards, four fishing views, seven activity scenes and conversation faces for eight regulars (Ms. Park and Greta still to come). **Slot details** (`../ART_SHORTLIST.md`): morning recap (four seasons), the twelve dreams, five
+- **Short-list art in the game:** the morning recap (four seasons), all twelve dreams, five shift intros, level-up and promotion cards, four fishing views, seven activity scenes and conversation faces for all ten regulars. `dist/FreshGrad_Seasons.html` is the whole game with all of it in one file (`tools/standalone.py`). **Slot details** (`../ART_SHORTLIST.md`): morning recap (four seasons), the twelve dreams, five
   shift intros, level-up and promotion cards; optional fishing backdrops, seven activity scenes and conversation faces for ten regulars.
   Every slot is lazy and changes nothing until its file loads; `?noart` and a missing file give the procedural look.
 - Slots for art that was cut from the plan (icons, food, stamps, trophies, shop badges, logos, fish, mini-game pieces, phone

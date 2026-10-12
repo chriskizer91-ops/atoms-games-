@@ -1,8 +1,8 @@
-# Fresh Grad — remaining image requests
+# Fresh Grad — art short list (complete)
 
-**Make only the images on this page.** Everything else from the old ~500-image plan (`IMAGE_PROMPTS.md`) is either delivered or cut.
-Everything is done except **2 portraits** (the portraits zip arrived cut off): 87 of the 96 images received are in the game; the
-other 9 were near-duplicates, damaged, empty or cut off.
+**Every image on this list has been delivered and is in the game.** Nothing is left to generate. 89 of the 98 images received are
+used; the other 9 were near-duplicates, off-brief, or damaged in transit (the damaged ones that mattered were re-sent). This page is
+kept as the record of what was asked for and the prompts that made it.
 
 **Rules for every image**
 - **One take per image: no second takes, no near-duplicates.**
@@ -23,18 +23,10 @@ anime eyes, heavy black outline, extra fingers, malformed hands, cropped head, d
 
 ---
 
-## Left — 2 portraits
-
-`portraits/<slug>`, **1024×1024 (or 1254×1254), transparent background**, `[PORTRAIT]` block, same framing as the eight already delivered
-(Dot, Sal, Bianca, Hank, Mrs. Reyes, Luna, Agnes, Dr. Chen): attach two of those as references so the set matches.
-
-| Key | Who | Shirt | Hair | Skin | Details |
-|---|---|---|---|---|---|
-| `portraits/ms-park` | Ms. Park, second-grade teacher | `#c05d8a` | cap, brown `#7a4a2a` | `#f2c9a5` | kind, holding a coffee |
-| `portraits/greta` | Greta, bank teller | `#2a6f97` blazer | blond top-knot `#d8c27a` | `#f0c7a4` | friendly, a lollipop jar glimpsed |
-
-**Why:** `freshgrad-remaining-portraits.zip` arrived cut off at 12.7 MB. The first eight portraits were recovered intact; `ms-park.png`
-was only partly there and `greta.png` not at all. A small zip with just these two (or the full zip re-exported) is enough.
+## Delivered from this list
+- Core: four morning recaps, twelve dreams, five shift intros, level-up and promotion cards.
+- Optional: four fishing views, seven activity scenes, faces for the ten regulars (Dot, Sal, Bianca, Hank, Mrs. Reyes, Luna, Agnes,
+  Dr. Chen, Ms. Park, Greta).
 
 ---
 
@@ -43,7 +35,7 @@ was only partly there and `greta.png` not at all. A small zip with just these tw
   fishing, activity scenes and the other eight faces are **done**; icons, badges, logos, food, stamps, trophies, mini-game pieces, fish,
   kids, other portraits, reference boards, textures, light sprites, posters, phone wallpaper, passport cover and `bg/job-edu` are **cut**.
 
-## Already received (do not resend)
+## Received
 | Zip | Images |
 |---|---|
 | `-01` | 8: main street (style anchor), Graduate meets Dean, icons and portraits board, Graduate model sheet, Dean model sheet, quad, lecture hall, coffee by the window |
@@ -56,5 +48,6 @@ was only partly there and `greta.png` not at all. A small zip with just these tw
 | `shortlist-core-02` | 7: five workplaces, level-up, promotion. All in the game. |
 | `remaining-backgrounds` | 12: dream-calm (good copy), four fishing views, seven activity sets. All in the game. |
 | `remaining-portraits` | **Cut off at 12.7 MB.** 8 recovered and in the game (Dot, Sal, Bianca, Hank, Mrs. Reyes, Luna, Agnes, Dr. Chen); Ms. Park damaged, Greta missing. |
+| `final-two-portraits` | 2: Ms. Park and Greta. Both in the game. |
 
 Every slot in the game is optional: a missing file keeps the game's own drawing, so stopping at any point is safe.

@@ -17,6 +17,6 @@ Reference-only pictures (building elevations, room cut-aways, cast sheets, light
 - `title/hero-wide`, `title/hero-tall`: the title screen (desktop and phone).
 - `ui/diploma`: the degree picker's diploma.
 - `bg/`: the morning recap (four seasons), twelve dreams, five shift intros, level-up and promotion, four fishing views, seven activity scenes.
-- `portraits/`: conversation faces for eight regulars (Ms. Park and Greta still to come).
+- `portraits/`: conversation faces for the ten regulars.
 
 Still to come, if made: the images in [`../../ART_SHORTLIST.md`](../../ART_SHORTLIST.md). Details per drop: `../notes/art-drops.md`.
