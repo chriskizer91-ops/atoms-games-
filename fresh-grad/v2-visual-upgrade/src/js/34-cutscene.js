@@ -22,21 +22,23 @@ const CUT_CAPS = [
 ];
 const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
 
-/* Optional illustrated stills (IMAGE_PROMPTS.md section 3). Each cross-fades over the procedural scene during its window with a
-   slow Ken-Burns move: z0 -> z1 zoom, (fx0, fy0) -> (fx1, fy1) focus as fractions of the picture. mem = faded "memory" grade.
-   A missing file is simply skipped and the procedural shot plays unchanged. */
+/* Optional illustrated stills (IMAGE_PROMPTS.md P01). Each cross-fades in over the procedural scene during its window with a
+   slow Ken-Burns move: z0 -> z1 zoom, (fx0, fy0) -> (fx1, fy1) focus as fractions of the picture (the focus is what a tall phone
+   screen keeps, so it sits on the subject). mem = faded "memory" grade; fx = live layer drawn over the still ('dust' warm motes,
+   'conf' confetti). A still dissolves straight into the next one, and holds over a short missing successor (see cinStillPlan);
+   any other gap, or a missing file, leaves the procedural shot playing unchanged. */
 const CUT_SHOTS = [
-  { k: 'cutscene/still-01-quad', a: 0.0, b: 1.4, z0: 1.0, z1: 1.09, fx0: 0.5, fy0: 0.55, fx1: 0.5, fy1: 0.5 },
-  { k: 'cutscene/still-02a-lecture', a: 1.25, b: 1.9, z0: 1.0, z1: 1.07, fx0: 0.45, fy0: 0.5, fx1: 0.55, fy1: 0.5, mem: 1 },
+  { k: 'cutscene/still-01-quad', a: 0.0, b: 1.4, z0: 1.0, z1: 1.09, fx0: 0.56, fy0: 0.55, fx1: 0.6, fy1: 0.5 },
+  { k: 'cutscene/still-02a-lecture', a: 1.25, b: 1.9, z0: 1.0, z1: 1.07, fx0: 0.2, fy0: 0.5, fx1: 0.26, fy1: 0.5, mem: 1, fx: 'dust' },
   { k: 'cutscene/still-02b-group', a: 1.8, b: 2.45, z0: 1.07, z1: 1.0, fx0: 0.55, fy0: 0.5, fx1: 0.45, fy1: 0.5, mem: 1 },
-  { k: 'cutscene/still-02c-coffee', a: 2.35, b: 3.0, z0: 1.0, z1: 1.08, fx0: 0.5, fy0: 0.45, fx1: 0.5, fy1: 0.55, mem: 1 },
-  { k: 'cutscene/still-02d-allnighter', a: 2.9, b: 3.55, z0: 1.06, z1: 1.0, fx0: 0.5, fy0: 0.55, fx1: 0.42, fy1: 0.5, mem: 1 },
-  { k: 'cutscene/still-03-wings', a: 3.5, b: 5.0, z0: 1.0, z1: 1.1, fx0: 0.5, fy0: 0.5, fx1: 0.54, fy1: 0.48 },
-  { k: 'cutscene/still-04-walk', a: 4.85, b: 6.45, z0: 1.0, z1: 1.1, fx0: 0.4, fy0: 0.52, fx1: 0.6, fy1: 0.5 },
-  { k: 'cutscene/still-05-handshake', a: 6.5, b: 9.5, z0: 1.0, z1: 1.12, fx0: 0.5, fy0: 0.5, fx1: 0.5, fy1: 0.46 },
-  { k: 'cutscene/still-06-diploma', a: 9.5, b: 12.0, z0: 1.12, z1: 1.0, fx0: 0.5, fy0: 0.5, fx1: 0.5, fy1: 0.5 },
-  { k: 'cutscene/still-07-hats', a: 11.9, b: 13.85, z0: 1.0, z1: 1.1, fx0: 0.5, fy0: 0.6, fx1: 0.5, fy1: 0.45 },
-  { k: 'cutscene/still-08-face', a: 13.75, b: 15.3, z0: 1.0, z1: 1.08, fx0: 0.5, fy0: 0.45, fx1: 0.5, fy1: 0.45 },
+  { k: 'cutscene/still-02c-coffee', a: 2.35, b: 3.0, z0: 1.0, z1: 1.08, fx0: 0.36, fy0: 0.45, fx1: 0.36, fy1: 0.55, mem: 1 },
+  { k: 'cutscene/still-02d-allnighter', a: 2.9, b: 3.55, z0: 1.06, z1: 1.0, fx0: 0.56, fy0: 0.55, fx1: 0.5, fy1: 0.5, mem: 1 },
+  { k: 'cutscene/still-03-wings', a: 3.5, b: 5.0, z0: 1.0, z1: 1.1, fx0: 0.3, fy0: 0.5, fx1: 0.6, fy1: 0.48, fx: 'dust' },
+  { k: 'cutscene/still-04-walk', a: 4.85, b: 6.45, z0: 1.0, z1: 1.1, fx0: 0.44, fy0: 0.52, fx1: 0.64, fy1: 0.5, fx: 'dust' },
+  { k: 'cutscene/still-05-handshake', a: 6.5, b: 9.5, z0: 1.0, z1: 1.12, fx0: 0.5, fy0: 0.5, fx1: 0.5, fy1: 0.46, fx: 'dust' },
+  { k: 'cutscene/still-06-diploma', a: 9.5, b: 12.0, z0: 1.12, z1: 1.0, fx0: 0.52, fy0: 0.5, fx1: 0.5, fy1: 0.5, fx: 'dust' },
+  { k: 'cutscene/still-07-hats', a: 11.9, b: 13.85, z0: 1.0, z1: 1.1, fx0: 0.5, fy0: 0.6, fx1: 0.5, fy1: 0.45, fx: 'conf' },
+  { k: 'cutscene/still-08-face', a: 13.75, b: 15.3, z0: 1.0, z1: 1.08, fx0: 0.5, fy0: 0.45, fx1: 0.5, fy1: 0.45, fx: 'conf' },
   { k: 'cutscene/still-09-sunset', a: 15.3, b: 19.7, z0: 1.0, z1: 1.12, fx0: 0.5, fy0: 0.55, fx1: 0.5, fy1: 0.5, card: 1 }
 ];
 

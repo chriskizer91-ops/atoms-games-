@@ -51,14 +51,17 @@ function titleFrame(dt) {
     }
     CAM.x = clamp(TITLE.x, 0, Math.max(0, WORLD.w - vw)); CAM.y = clamp(BAND1 + 96 - vh, 0, 400); CAM.k = k; CAM.vw = vw; CAM.vh = vh;
     FX.demo = true; FX.fade = 0;
-    // optional key art (title/hero-wide, title/hero-tall) fades in over the live town, then replaces it
-    const hero = ART.on ? ART.get(sz.h > sz.w * 1.05 ? 'title/hero-tall' : 'title/hero-wide') : null;
+    // optional key art (title/hero-wide, title/hero-tall) fades in over the live town, then replaces it; a tall screen without
+    // hero-tall crops hero-wide around the street (fx), once hero-tall is known to be missing
+    const tall = sz.h > sz.w * 1.05;
+    let hero = ART.on ? ART.get(tall ? 'title/hero-tall' : 'title/hero-wide') : null, hfx = 0.5;
+    if (!hero && tall && ART.missing('title/hero-tall')) { hero = ART.get('title/hero-wide'); hfx = 0.6; }
     if (hero) TITLE.heroA = Math.min(1, TITLE.heroA + (REDUCED ? 1 : dt * 0.9)); else TITLE.heroA = 0;
     if (TITLE.heroA < 1) paintTown(TITLE.c, cv, sz, k, dt);
     if (hero && TITLE.heroA > 0) {
       const c = TITLE.c, e = TITLE.x / Math.max(1, WORLD.w - vw);
       c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = TITLE.heroA;
-      ART.cover(c, hero, 0, 0, cv.width, cv.height, 0.5 + (e - 0.5) * 0.06, 0.5, 1.04 + 0.03 * (TITLE.dir > 0 ? e : 1 - e));
+      ART.cover(c, hero, 0, 0, cv.width, cv.height, hfx + (e - 0.5) * 0.06, 0.5, 1.04 + 0.03 * (TITLE.dir > 0 ? e : 1 - e));
       c.globalAlpha = 1;
     }
     TITLE.drawn = true; TITLE.w = cv.clientWidth; TITLE.h = cv.clientHeight;

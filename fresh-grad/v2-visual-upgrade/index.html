@@ -7596,14 +7596,17 @@ function titleFrame(dt) {
     }
     CAM.x = clamp(TITLE.x, 0, Math.max(0, WORLD.w - vw)); CAM.y = clamp(BAND1 + 96 - vh, 0, 400); CAM.k = k; CAM.vw = vw; CAM.vh = vh;
     FX.demo = true; FX.fade = 0;
-    // optional key art (title/hero-wide, title/hero-tall) fades in over the live town, then replaces it
-    const hero = ART.on ? ART.get(sz.h > sz.w * 1.05 ? 'title/hero-tall' : 'title/hero-wide') : null;
+    // optional key art (title/hero-wide, title/hero-tall) fades in over the live town, then replaces it; a tall screen without
+    // hero-tall crops hero-wide around the street (fx), once hero-tall is known to be missing
+    const tall = sz.h > sz.w * 1.05;
+    let hero = ART.on ? ART.get(tall ? 'title/hero-tall' : 'title/hero-wide') : null, hfx = 0.5;
+    if (!hero && tall && ART.missing('title/hero-tall')) { hero = ART.get('title/hero-wide'); hfx = 0.6; }
     if (hero) TITLE.heroA = Math.min(1, TITLE.heroA + (REDUCED ? 1 : dt * 0.9)); else TITLE.heroA = 0;
     if (TITLE.heroA < 1) paintTown(TITLE.c, cv, sz, k, dt);
     if (hero && TITLE.heroA > 0) {
       const c = TITLE.c, e = TITLE.x / Math.max(1, WORLD.w - vw);
       c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = TITLE.heroA;
-      ART.cover(c, hero, 0, 0, cv.width, cv.height, 0.5 + (e - 0.5) * 0.06, 0.5, 1.04 + 0.03 * (TITLE.dir > 0 ? e : 1 - e));
+      ART.cover(c, hero, 0, 0, cv.width, cv.height, hfx + (e - 0.5) * 0.06, 0.5, 1.04 + 0.03 * (TITLE.dir > 0 ? e : 1 - e));
       c.globalAlpha = 1;
     }
     TITLE.drawn = true; TITLE.w = cv.clientWidth; TITLE.h = cv.clientHeight;
@@ -18854,21 +18857,23 @@ const CUT_CAPS = [
 ];
 const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
 
-/* Optional illustrated stills (IMAGE_PROMPTS.md section 3). Each cross-fades over the procedural scene during its window with a
-   slow Ken-Burns move: z0 -> z1 zoom, (fx0, fy0) -> (fx1, fy1) focus as fractions of the picture. mem = faded "memory" grade.
-   A missing file is simply skipped and the procedural shot plays unchanged. */
+/* Optional illustrated stills (IMAGE_PROMPTS.md P01). Each cross-fades in over the procedural scene during its window with a
+   slow Ken-Burns move: z0 -> z1 zoom, (fx0, fy0) -> (fx1, fy1) focus as fractions of the picture (the focus is what a tall phone
+   screen keeps, so it sits on the subject). mem = faded "memory" grade; fx = live layer drawn over the still ('dust' warm motes,
+   'conf' confetti). A still dissolves straight into the next one, and holds over a short missing successor (see cinStillPlan);
+   any other gap, or a missing file, leaves the procedural shot playing unchanged. */
 const CUT_SHOTS = [
-  { k: 'cutscene/still-01-quad', a: 0.0, b: 1.4, z0: 1.0, z1: 1.09, fx0: 0.5, fy0: 0.55, fx1: 0.5, fy1: 0.5 },
-  { k: 'cutscene/still-02a-lecture', a: 1.25, b: 1.9, z0: 1.0, z1: 1.07, fx0: 0.45, fy0: 0.5, fx1: 0.55, fy1: 0.5, mem: 1 },
+  { k: 'cutscene/still-01-quad', a: 0.0, b: 1.4, z0: 1.0, z1: 1.09, fx0: 0.56, fy0: 0.55, fx1: 0.6, fy1: 0.5 },
+  { k: 'cutscene/still-02a-lecture', a: 1.25, b: 1.9, z0: 1.0, z1: 1.07, fx0: 0.2, fy0: 0.5, fx1: 0.26, fy1: 0.5, mem: 1, fx: 'dust' },
   { k: 'cutscene/still-02b-group', a: 1.8, b: 2.45, z0: 1.07, z1: 1.0, fx0: 0.55, fy0: 0.5, fx1: 0.45, fy1: 0.5, mem: 1 },
-  { k: 'cutscene/still-02c-coffee', a: 2.35, b: 3.0, z0: 1.0, z1: 1.08, fx0: 0.5, fy0: 0.45, fx1: 0.5, fy1: 0.55, mem: 1 },
-  { k: 'cutscene/still-02d-allnighter', a: 2.9, b: 3.55, z0: 1.06, z1: 1.0, fx0: 0.5, fy0: 0.55, fx1: 0.42, fy1: 0.5, mem: 1 },
-  { k: 'cutscene/still-03-wings', a: 3.5, b: 5.0, z0: 1.0, z1: 1.1, fx0: 0.5, fy0: 0.5, fx1: 0.54, fy1: 0.48 },
-  { k: 'cutscene/still-04-walk', a: 4.85, b: 6.45, z0: 1.0, z1: 1.1, fx0: 0.4, fy0: 0.52, fx1: 0.6, fy1: 0.5 },
-  { k: 'cutscene/still-05-handshake', a: 6.5, b: 9.5, z0: 1.0, z1: 1.12, fx0: 0.5, fy0: 0.5, fx1: 0.5, fy1: 0.46 },
-  { k: 'cutscene/still-06-diploma', a: 9.5, b: 12.0, z0: 1.12, z1: 1.0, fx0: 0.5, fy0: 0.5, fx1: 0.5, fy1: 0.5 },
-  { k: 'cutscene/still-07-hats', a: 11.9, b: 13.85, z0: 1.0, z1: 1.1, fx0: 0.5, fy0: 0.6, fx1: 0.5, fy1: 0.45 },
-  { k: 'cutscene/still-08-face', a: 13.75, b: 15.3, z0: 1.0, z1: 1.08, fx0: 0.5, fy0: 0.45, fx1: 0.5, fy1: 0.45 },
+  { k: 'cutscene/still-02c-coffee', a: 2.35, b: 3.0, z0: 1.0, z1: 1.08, fx0: 0.36, fy0: 0.45, fx1: 0.36, fy1: 0.55, mem: 1 },
+  { k: 'cutscene/still-02d-allnighter', a: 2.9, b: 3.55, z0: 1.06, z1: 1.0, fx0: 0.56, fy0: 0.55, fx1: 0.5, fy1: 0.5, mem: 1 },
+  { k: 'cutscene/still-03-wings', a: 3.5, b: 5.0, z0: 1.0, z1: 1.1, fx0: 0.3, fy0: 0.5, fx1: 0.6, fy1: 0.48, fx: 'dust' },
+  { k: 'cutscene/still-04-walk', a: 4.85, b: 6.45, z0: 1.0, z1: 1.1, fx0: 0.44, fy0: 0.52, fx1: 0.64, fy1: 0.5, fx: 'dust' },
+  { k: 'cutscene/still-05-handshake', a: 6.5, b: 9.5, z0: 1.0, z1: 1.12, fx0: 0.5, fy0: 0.5, fx1: 0.5, fy1: 0.46, fx: 'dust' },
+  { k: 'cutscene/still-06-diploma', a: 9.5, b: 12.0, z0: 1.12, z1: 1.0, fx0: 0.52, fy0: 0.5, fx1: 0.5, fy1: 0.5, fx: 'dust' },
+  { k: 'cutscene/still-07-hats', a: 11.9, b: 13.85, z0: 1.0, z1: 1.1, fx0: 0.5, fy0: 0.6, fx1: 0.5, fy1: 0.45, fx: 'conf' },
+  { k: 'cutscene/still-08-face', a: 13.75, b: 15.3, z0: 1.0, z1: 1.08, fx0: 0.5, fy0: 0.45, fx1: 0.5, fy1: 0.45, fx: 'conf' },
   { k: 'cutscene/still-09-sunset', a: 15.3, b: 19.7, z0: 1.0, z1: 1.12, fx0: 0.5, fy0: 0.55, fx1: 0.5, fy1: 0.5, card: 1 }
 ];
 
@@ -19236,8 +19241,9 @@ function cinRender(c, cv, ct) {
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   c.fillStyle = '#05070d'; c.fillRect(0, 0, pw, ph);
   if (ct >= 15.4) { cinCards(c, V, ct); cinFxDom(V, ct); return; }
-  cinScene(c, V, ct);
-  cinStills(c, V, ct);
+  const still = cinStillPlan(ct);
+  if (!still.cover) cinScene(c, V, ct);
+  cinStills(c, V, ct, still);
   cinPost(c, V, ct);
   cinFxDom(V, ct);
 }
@@ -19279,29 +19285,86 @@ function cinScene(c, V, ct) {
 }
 
 /* ---------- optional stills, cross-faded over the procedural scene ---------- */
-function cinStills(c, V, ct) {
-  CN.stillA = 0;
-  if (!ART.on) return;
-  const bar = V.bar, top = bar, hgt = V.ph - bar * 2;
-  for (let i = 0; i < CUT_SHOTS.length; i++) {
-    const s = CUT_SHOTS[i];
-    if (s.card || ct < s.a - 0.01 || ct > s.b + 0.01) continue;
+const CIN_STILL_HOLD = 1.6;   // a still may stay up this much past its own window to cover a successor whose file is missing
+/* which stills show at ct: opacity and Ken-Burns progress of each, bottom to top. cover = an opaque still fills the frame, so the
+   set underneath is not drawn. Consecutive stills dissolve straight into each other (the outgoing one stays up until the incoming
+   one is fully in), so the film never dips back into the procedural set between two illustrations. */
+function cinStillPlan(ct) {
+  const plan = { list: [], cover: false };
+  if (!ART.on) return plan;
+  const shots = CN.stillShots || (CN.stillShots = CUT_SHOTS.filter(s => !s.card));
+  for (let i = 0; i < shots.length; i++) {
+    const s = shots[i];
+    if (ct < s.a - 0.01) break;
     const img = ART.get(s.k);
     if (!img) continue;
-    const u = clamp((ct - s.a) / (s.b - s.a), 0, 1), f = Math.min(0.2, (s.b - s.a) * 0.3);
-    const al = Math.min(cnS5((ct - s.a) / f), 1 - cnS5((ct - (s.b - f)) / f));
+    let b = s.b, j = i + 1;
+    while (j < shots.length && ART.missing(shots[j].k) && shots[j].b <= s.b + CIN_STILL_HOLD) { b = shots[j].b; j++; }
+    const nx = j < shots.length ? shots[j] : null;
+    const f = Math.min(0.2, (s.b - s.a) * 0.3), nf = nx ? Math.min(0.2, (nx.b - nx.a) * 0.3) : 0;
+    const dissolve = !!(nx && nx.a <= b + 0.25 && ART.get(nx.k));   // touching or a hair apart: dissolve, never dip
+    const end = dissolve ? Math.max(b, nx.a + nf) : b;
+    if (ct > end + 0.01) continue;
+    let al = cnS5((ct - s.a) / f);
+    if (!dissolve) al = Math.min(al, 1 - cnS5((ct - (b - f)) / f));
     if (al <= 0.003) continue;
+    plan.list.push({ s, img, al, u: clamp((ct - s.a) / (end - s.a), 0, 1) });
+    if (al >= 0.999) plan.cover = true;
+  }
+  return plan;
+}
+function cinStills(c, V, ct, plan) {
+  CN.stillA = 0;
+  if (!plan || !plan.list.length) return;
+  const top = V.bar, hgt = V.ph - V.bar * 2;
+  for (let i = 0; i < plan.list.length; i++) {
+    const it = plan.list[i], s = it.s, al = it.al;
     CN.stillA = Math.max(CN.stillA, al);
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.save(); c.beginPath(); c.rect(0, top, V.pw, hgt); c.clip();
     c.globalAlpha = al;
-    const e = REDUCED ? u : cnS5(u);
-    ART.cover(c, img, 0, top, V.pw, hgt, lerp(s.fx0, s.fx1, e), lerp(s.fy0, s.fy1, e), lerp(s.z0, s.z1, e));
+    const e = REDUCED ? it.u : cnS5(it.u);
+    ART.cover(c, it.img, 0, top, V.pw, hgt, lerp(s.fx0, s.fx1, e), lerp(s.fy0, s.fy1, e), lerp(s.z0, s.z1, e));
     c.globalAlpha = 1;
     if (s.mem) { // faded warm "memory" grade + soft edge
       c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgba(255,226,186,' + (0.55 * al).toFixed(3) + ')'; c.fillRect(0, top, V.pw, hgt);
       c.globalCompositeOperation = 'source-over'; c.fillStyle = 'rgba(40,24,12,' + (0.18 * al).toFixed(3) + ')'; c.fillRect(0, top, V.pw, hgt);
     }
+    if (s.fx === 'dust') cinStillDust(c, V, ct, al, top, hgt);
+    else if (s.fx === 'conf') cinStillConfetti(c, V, ct, al, top, hgt);
+    c.restore();
+  }
+}
+/* warm dust motes drifting up through the light in front of a still (screen space, a pure function of ct) */
+function cinStillDust(c, V, ct, al, top, hgt) {
+  const S = CN.S;
+  if (!S.glowW) return;
+  const n = REDUCED ? 8 : 22, k = hgt / 720;
+  c.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const sp = 6 + hash01(i, 41, 1) * 16;
+    const x = (hash01(i, 42, 2) * 1.1 - 0.05) * V.pw + Math.sin(ct * (0.3 + hash01(i, 43, 3) * 0.5) + i) * 18 * k;
+    const y = top + ((((hash01(i, 44, 4) * 760 - ct * sp) % 760) + 760) % 760 - 20) * k;
+    const r = (1.6 + hash01(i, 45, 5) * 4.4) * k, tw = 0.35 + 0.65 * Math.sin(ct * (0.8 + hash01(i, 46, 6)) + i * 2.1) ** 2;
+    c.globalAlpha = al * tw * (0.16 + hash01(i, 47, 7) * 0.22);
+    c.drawImage(i % 3 ? S.glowW : S.glowA, x - r * 4, y - r * 4, r * 8, r * 8);
+  }
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+}
+/* big confetti tumbling in front of a still: the painted confetti is frozen, this keeps the air moving (continuous across stills) */
+function cinStillConfetti(c, V, ct, al, top, hgt) {
+  const conf = CUT.conf;
+  if (!conf || !conf.length) return;
+  const n = REDUCED ? 16 : 40, k = hgt / 720, t = ct - 11.9, span = 840;
+  for (let i = 0; i < n; i++) {
+    const p = conf[(i * 7) % conf.length], sp = 60 + hash01(i, 51, 1) * 110;
+    const y = top + ((((hash01(i, 52, 2) * span + t * sp) % span) + span) % span - 60) * k;
+    const x = hash01(i, 53, 3) * V.pw + Math.sin(t * p.sf + p.ph) * p.sw * 1.8 * k;
+    const near = hash01(i, 54, 4), sc = (1.6 + near * 2.6) * k, flip = Math.cos(t * p.fr * 0.45 + p.ph);
+    const hh = Math.max(0.8 * k, p.h * sc * Math.abs(flip));
+    c.save(); c.translate(x, y); c.rotate(p.rot + t * p.vr * 0.35);
+    c.globalAlpha = al * (0.95 - near * 0.3); c.fillStyle = p.col; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh);
+    if (flip < 0) { c.globalAlpha *= 0.35; c.fillStyle = '#fff'; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh); }
     c.restore();
   }
 }

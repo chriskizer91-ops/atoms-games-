@@ -294,8 +294,9 @@ function cinRender(c, cv, ct) {
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   c.fillStyle = '#05070d'; c.fillRect(0, 0, pw, ph);
   if (ct >= 15.4) { cinCards(c, V, ct); cinFxDom(V, ct); return; }
-  cinScene(c, V, ct);
-  cinStills(c, V, ct);
+  const still = cinStillPlan(ct);
+  if (!still.cover) cinScene(c, V, ct);
+  cinStills(c, V, ct, still);
   cinPost(c, V, ct);
   cinFxDom(V, ct);
 }
@@ -337,29 +338,86 @@ function cinScene(c, V, ct) {
 }
 
 /* ---------- optional stills, cross-faded over the procedural scene ---------- */
-function cinStills(c, V, ct) {
-  CN.stillA = 0;
-  if (!ART.on) return;
-  const bar = V.bar, top = bar, hgt = V.ph - bar * 2;
-  for (let i = 0; i < CUT_SHOTS.length; i++) {
-    const s = CUT_SHOTS[i];
-    if (s.card || ct < s.a - 0.01 || ct > s.b + 0.01) continue;
+const CIN_STILL_HOLD = 1.6;   // a still may stay up this much past its own window to cover a successor whose file is missing
+/* which stills show at ct: opacity and Ken-Burns progress of each, bottom to top. cover = an opaque still fills the frame, so the
+   set underneath is not drawn. Consecutive stills dissolve straight into each other (the outgoing one stays up until the incoming
+   one is fully in), so the film never dips back into the procedural set between two illustrations. */
+function cinStillPlan(ct) {
+  const plan = { list: [], cover: false };
+  if (!ART.on) return plan;
+  const shots = CN.stillShots || (CN.stillShots = CUT_SHOTS.filter(s => !s.card));
+  for (let i = 0; i < shots.length; i++) {
+    const s = shots[i];
+    if (ct < s.a - 0.01) break;
     const img = ART.get(s.k);
     if (!img) continue;
-    const u = clamp((ct - s.a) / (s.b - s.a), 0, 1), f = Math.min(0.2, (s.b - s.a) * 0.3);
-    const al = Math.min(cnS5((ct - s.a) / f), 1 - cnS5((ct - (s.b - f)) / f));
+    let b = s.b, j = i + 1;
+    while (j < shots.length && ART.missing(shots[j].k) && shots[j].b <= s.b + CIN_STILL_HOLD) { b = shots[j].b; j++; }
+    const nx = j < shots.length ? shots[j] : null;
+    const f = Math.min(0.2, (s.b - s.a) * 0.3), nf = nx ? Math.min(0.2, (nx.b - nx.a) * 0.3) : 0;
+    const dissolve = !!(nx && nx.a <= b + 0.25 && ART.get(nx.k));   // touching or a hair apart: dissolve, never dip
+    const end = dissolve ? Math.max(b, nx.a + nf) : b;
+    if (ct > end + 0.01) continue;
+    let al = cnS5((ct - s.a) / f);
+    if (!dissolve) al = Math.min(al, 1 - cnS5((ct - (b - f)) / f));
     if (al <= 0.003) continue;
+    plan.list.push({ s, img, al, u: clamp((ct - s.a) / (end - s.a), 0, 1) });
+    if (al >= 0.999) plan.cover = true;
+  }
+  return plan;
+}
+function cinStills(c, V, ct, plan) {
+  CN.stillA = 0;
+  if (!plan || !plan.list.length) return;
+  const top = V.bar, hgt = V.ph - V.bar * 2;
+  for (let i = 0; i < plan.list.length; i++) {
+    const it = plan.list[i], s = it.s, al = it.al;
     CN.stillA = Math.max(CN.stillA, al);
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.save(); c.beginPath(); c.rect(0, top, V.pw, hgt); c.clip();
     c.globalAlpha = al;
-    const e = REDUCED ? u : cnS5(u);
-    ART.cover(c, img, 0, top, V.pw, hgt, lerp(s.fx0, s.fx1, e), lerp(s.fy0, s.fy1, e), lerp(s.z0, s.z1, e));
+    const e = REDUCED ? it.u : cnS5(it.u);
+    ART.cover(c, it.img, 0, top, V.pw, hgt, lerp(s.fx0, s.fx1, e), lerp(s.fy0, s.fy1, e), lerp(s.z0, s.z1, e));
     c.globalAlpha = 1;
     if (s.mem) { // faded warm "memory" grade + soft edge
       c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgba(255,226,186,' + (0.55 * al).toFixed(3) + ')'; c.fillRect(0, top, V.pw, hgt);
       c.globalCompositeOperation = 'source-over'; c.fillStyle = 'rgba(40,24,12,' + (0.18 * al).toFixed(3) + ')'; c.fillRect(0, top, V.pw, hgt);
     }
+    if (s.fx === 'dust') cinStillDust(c, V, ct, al, top, hgt);
+    else if (s.fx === 'conf') cinStillConfetti(c, V, ct, al, top, hgt);
+    c.restore();
+  }
+}
+/* warm dust motes drifting up through the light in front of a still (screen space, a pure function of ct) */
+function cinStillDust(c, V, ct, al, top, hgt) {
+  const S = CN.S;
+  if (!S.glowW) return;
+  const n = REDUCED ? 8 : 22, k = hgt / 720;
+  c.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const sp = 6 + hash01(i, 41, 1) * 16;
+    const x = (hash01(i, 42, 2) * 1.1 - 0.05) * V.pw + Math.sin(ct * (0.3 + hash01(i, 43, 3) * 0.5) + i) * 18 * k;
+    const y = top + ((((hash01(i, 44, 4) * 760 - ct * sp) % 760) + 760) % 760 - 20) * k;
+    const r = (1.6 + hash01(i, 45, 5) * 4.4) * k, tw = 0.35 + 0.65 * Math.sin(ct * (0.8 + hash01(i, 46, 6)) + i * 2.1) ** 2;
+    c.globalAlpha = al * tw * (0.16 + hash01(i, 47, 7) * 0.22);
+    c.drawImage(i % 3 ? S.glowW : S.glowA, x - r * 4, y - r * 4, r * 8, r * 8);
+  }
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+}
+/* big confetti tumbling in front of a still: the painted confetti is frozen, this keeps the air moving (continuous across stills) */
+function cinStillConfetti(c, V, ct, al, top, hgt) {
+  const conf = CUT.conf;
+  if (!conf || !conf.length) return;
+  const n = REDUCED ? 16 : 40, k = hgt / 720, t = ct - 11.9, span = 840;
+  for (let i = 0; i < n; i++) {
+    const p = conf[(i * 7) % conf.length], sp = 60 + hash01(i, 51, 1) * 110;
+    const y = top + ((((hash01(i, 52, 2) * span + t * sp) % span) + span) % span - 60) * k;
+    const x = hash01(i, 53, 3) * V.pw + Math.sin(t * p.sf + p.ph) * p.sw * 1.8 * k;
+    const near = hash01(i, 54, 4), sc = (1.6 + near * 2.6) * k, flip = Math.cos(t * p.fr * 0.45 + p.ph);
+    const hh = Math.max(0.8 * k, p.h * sc * Math.abs(flip));
+    c.save(); c.translate(x, y); c.rotate(p.rot + t * p.vr * 0.35);
+    c.globalAlpha = al * (0.95 - near * 0.3); c.fillStyle = p.col; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh);
+    if (flip < 0) { c.globalAlpha *= 0.35; c.fillStyle = '#fff'; c.fillRect(-p.w * sc / 2, -hh / 2, p.w * sc, hh); }
     c.restore();
   }
 }
