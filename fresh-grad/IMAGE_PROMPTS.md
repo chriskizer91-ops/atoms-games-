@@ -1,5 +1,7 @@
 # Fresh Grad — Image Generation Master File
 
+> **Superseded order (October 2026): work from [`ART_SHORTLIST.md`](ART_SHORTLIST.md) instead.** The opening is finished (38 images delivered, see `v2-visual-upgrade/notes/art-drops.md`); the short list keeps 25 core + 21 optional images and drops the rest. This file stays as the full reference for style, cast, sizes and prompt wording.
+
 One self-contained brief for the image-generation session. It contains the **style rules**, **every prompt** (about 500 images in priority order), the **file naming**, and the **packaging into zip files of at most 20 MB each**. Read §0–§3 once, then work through the packs in §5 in order.
 
 *Fresh Grad* is a small, warm life-sim about your first real job: you graduate, pick a degree, rent an apartment in the town of Maple Court, walk its streets, eat three meals a day, work shifts, make friends, fish, watch movies and try to get some sleep. The pictures below replace or enrich parts of the game's own hand-drawn graphics: the opening graduation cutscene, the title screen, character faces, dream and scene backdrops, icons, textures. Every colour, name and prop here comes from the game itself, so the art slots straight in.

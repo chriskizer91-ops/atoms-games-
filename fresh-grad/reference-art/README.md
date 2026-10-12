@@ -11,6 +11,6 @@ They are not loaded by the game; they are looked at while drawing and polishing 
 | `p00-c-icons-faces.webp` | P00-C | Style anchor: twelve icons and six townspeople portraits |
 | `ch-01-grad-sheet.webp` | CH-01 | The Graduate's model sheet (front, 3/4, side, back, cap, stole) |
 | `ch-04-dean-sheet.webp` | CH-04 | The Dean's model sheet (front, 3/4, side, back) |
+| `ch-02-grad-faces.webp` | CH-02 | The Graduate's eight expressions (gown and cap) |
 
 Attach `ch-01-grad-sheet` / `ch-04-dean-sheet` as character references, and the three P00 anchors as style references, to every later prompt.
-| `ch-02-grad-faces.webp` | CH-02 | The Graduate's eight expressions (gown and cap) |
