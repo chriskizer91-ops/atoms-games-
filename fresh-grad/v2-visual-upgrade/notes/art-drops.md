@@ -119,3 +119,14 @@ The first delivery made from `ART_SHORTLIST.md`: already WebP (q88, 1672x941) un
 `bg/levelup`, `bg/promotion`. **`bg/dream-calm` arrived as a 0-byte file** (the zip lists it with size 0, the manifest says 316 KB), so it
 was left out: the quiet nap keeps its procedural backdrop until a good copy arrives. Checked in the dream, recap, level-up, promotion and
 shift-intro screens at 1280x720 and 390x844: text stays readable over every plate, no page errors.
+
+## Drop 5 (freshgrad-remaining-backgrounds / -portraits)
+- **Backgrounds zip (complete, 12):** the replacement `bg/dream-calm`, `bg/fishing-day|dusk|night|ice` and the seven empty activity sets
+  `bg/scene-cinema|laundry|read|salon|dentist|music|hang`. Already WebP under their keys, checksums match; copied in unchanged.
+- **Portraits zip (cut off at 12.7 MB, no central directory):** 8 portraits recovered intact from their local headers (dot, sal, bianca,
+  hank, mrs-reyes, luna, agnes, dr-chen), converted from 1254 px PNG to 1024 px WebP with alpha. `ms-park` was only partly there and
+  `greta` not at all; both conversations keep the faceless header until good copies arrive.
+- Checked in the game: every regular's conversation header (desktop and phone), the quiet-nap dream, fishing by day, night and on ice (the
+  game's ice hole sits on the clean ice), and all seven activity scenes with their animated props on top. No page errors, and no request
+  for a missing file other than the two absent portraits.
+- The portraits fill more of their frame than the brief's 12 % head margin; in the 82 px header that reads well (hair just reaches the top).

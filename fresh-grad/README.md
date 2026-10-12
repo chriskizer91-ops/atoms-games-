@@ -10,7 +10,7 @@ A small life-sim about your first real job: pick a degree, rent a place, eat thr
 | `v2-visual-upgrade/DESIGN.md` | The visual direction and the rules the upgrade followed. |
 | `v2-visual-upgrade/notes/` | Per-pass briefs and change notes. |
 | `v2-visual-upgrade/assets/` | Drop zone for optional illustrated art (see below). |
-| `ART_SHORTLIST.md` | **The images still worth making** (1 core re-send + 21 optional), with prompts. Start here. |
+| `ART_SHORTLIST.md` | **The images still worth making** (only 2 portraits left to re-send), with prompts. Start here. |
 | `IMAGE_PROMPTS.md` | **One self-contained brief for the image-generation session**: style rules, ~500 prompts in priority order, file keys, and packaging into zips of at most 20 MB (`tools/package_art.py`). |
 | `reference-art/` | Reference boards produced from those prompts (looked at while polishing, not loaded by the game). |
 | `v2-visual-upgrade/CHANGELOG.md` | What changed in v2, per area, and known limitations. |
