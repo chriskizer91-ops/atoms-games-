@@ -11,6 +11,16 @@ and §4 (cast). Attach the delivered style anchors (`reference-art/p00-*`) and m
 All backdrops are `1920×1080 · opaque · [SCENE]`, no people unless stated, **no text**, and keep the **centre and lower third calm**
 (the game puts text and animation there).
 
+## Already received — do not resend
+| Zip | What was in it |
+|---|---|
+| `freshgrad-art-recovered-01.zip` | Golden Hour on Main Street · Graduate Meets Dean on Commencement Stage · Cozy life-sim icons and town portraits · Fresh Graduate Character Turnaround Sheet · Kind Dean Turnaround Model Sheet · Commencement Morning in the Quad · Back-row lecture hall in golden light · Midnight Coffee by the Rainy Window |
+| `freshgrad-art-recovered-02.zip` | All-nighter under a desk lamp · Graduate backstage before the spotlight · Dusk study crew and cardboard prototype · Midnight coffee on a rainy desk · Sleepy All-Nighter at the Desk · Graduate's walk toward the dean · A heartfelt graduation handshake · Golden Diploma Handoff · Tossed Caps, Bright Beginnings |
+| `freshgrad-art-recovered-03.zip` | Graduation caps, diplomas, and confetti · Graduation Walk Into Golden Hour · Confetti, tears, and new beginnings · Cheering audience with colorful blank signs · Family cheers, tears, and balloons · Relaxed Graduate in Navy and Gold · Wooden podium with golden medallion · Empty Commencement Stage with Bunting · Distant cheering crowd with balloons · Eight moods, one graduate |
+| `freshgrad-art-recovered-04.zip` | Joyful Graduate Tossing Mortarboard · Cheering Graduate with Diploma · Kind Dean in Graduation Robes · Wooden podium with gold medallion · Fresh Graduate Handshake Pose · Nervous Graduate With Swaying Tassel · Confident graduate striding forward · Eight-expression portrait grid · Graduate waving with diploma · Crisp character cutout with cap and tassel · Mid-stride graduate character |
+
+A zip with a different name (for example `-05`) is new: send it. Anything in it that is not on this page will be skipped.
+
 ## Core — 25 images
 
 | # | Key | Where it shows | Prompt |
