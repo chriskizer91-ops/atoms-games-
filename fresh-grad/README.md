@@ -10,16 +10,16 @@ A small life-sim about your first real job: pick a degree, rent a place, eat thr
 | `v2-visual-upgrade/DESIGN.md` | The visual direction and the rules the upgrade followed. |
 | `v2-visual-upgrade/notes/` | Per-pass briefs and change notes. |
 | `v2-visual-upgrade/assets/` | Drop zone for optional illustrated art (see below). |
-| `IMAGE_PROMPTS.md` | Prompts for an image-generation agent: cutscene stills, character sheets and paper-doll parts, title/diploma art, reference boards, backdrops, icons. |
+| `IMAGE_PROMPTS.md` | **One self-contained brief for the image-generation session**: style rules, ~500 prompts in priority order, file keys, and packaging into zips of at most 20 MB (`tools/package_art.py`). |
 | `reference-art/` | Reference boards produced from those prompts (looked at while polishing, not loaded by the game). |
 | `v2-visual-upgrade/CHANGELOG.md` | What changed in v2, per area, and known limitations. |
-| `tools/` | `build.js`, `tour.js` (drives every screen headlessly and captures screenshots + errors), `playthrough.js` (real clicks/keys through the core loop; run on v1 and v2 for identical results), `parity.js` (proves the game logic is unchanged vs v1), `perf.js` (frame cost). |
+| `tools/` | `package_art.py` (convert generated art to WebP and pack into zips of at most 19 MB), `slice_parts.py`, `build.js`, `tour.js` (drives every screen headlessly and captures screenshots + errors), `playthrough.js` (real clicks/keys through the core loop; run on v1 and v2 for identical results), `parity.js` (proves the game logic is unchanged vs v1), `perf.js` (frame cost). |
 
 ## Rules the upgrade follows
 No new features, no new things to do, nothing removed, save format unchanged. Only drawing and presentation code changes; `tools/parity.js` compares every top-level function against v1 and must report nothing removed and every logic-looking change explained.
 
 ## Optional illustrated art
-Any PNG listed in `IMAGE_PROMPTS.md` §11, dropped into `v2-visual-upgrade/assets/` with that exact relative name, is picked up automatically (cutscene stills, character poses, title art, diploma…). Missing files are skipped and the game's own procedural art is used. Add `?noart` to the URL to force the procedural look.
+Any WebP (or PNG) image from `IMAGE_PROMPTS.md`, dropped into `v2-visual-upgrade/assets/` with that exact relative name, is picked up automatically (cutscene stills, character poses, title art, diploma…); WebP is tried first. Missing files are skipped and the game's own procedural art is used. Add `?noart` to the URL to force the procedural look.
 
 ## Working on it
 ```
