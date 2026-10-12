@@ -1,8 +1,8 @@
 # Fresh Grad — remaining image requests
 
 **Make only the images on this page.** Everything else from the old ~500-image plan (`IMAGE_PROMPTS.md`) is either delivered or cut.
-The opening cutscene, the title screen, the diploma and the cast sheets are done (45 of the 52 images received are in the game; the rest were near-duplicates or unusable).
-What is left: **23 core images**, plus **21 optional** ones if you want more.
+The opening cutscene, the title screen, the diploma, the cast sheets, the morning recaps, eleven dreams, the shift intros and the level-up / promotion cards are done (67 of the 75 images received are in the game; the other 8 were near-duplicates, damaged or empty).
+What is left: **1 core image** (it arrived empty), plus **21 optional** ones if you want more.
 
 **Rules for every image**
 - **One take per image: no second takes, no near-duplicates.**
@@ -30,40 +30,14 @@ anime eyes, heavy black outline, extra fingers, malformed hands, cropped head, d
 
 ---
 
-## Core — 23 images
+## Core — 1 image left (22 of 23 are in the game)
 
-| # | Key | Where it shows | Prompt (after the `[SCENE]` block) |
-|---|---|---|---|
-| 1-4 | `bg/recap-spring`, `bg/recap-summer`, `bg/recap-autumn`, `bg/recap-winter` | The morning card, **every morning** | A morning window sill with a coffee cup and a folded newspaper (blank, no print), the season outside the window: spring blossom / bright summer green / falling autumn leaves / snow. |
-| 5-16 | `bg/dream-<id>` (12, below) | One dream **every night's sleep** | Good dreams luminous, pink-and-amber; bad dreams unsettling but gentle (red vignette, long shadows), never gory. On phones only the centre column shows, so keep the subject central. |
-| 17-21 | `bg/job-<id>` (5, below) | Shift intro, **every workday** | A cosy illustration of that workplace in the job's colours, no people. The game shows it as a wide strip, so keep the key details in the **middle horizontal band**. |
-| 22 | `bg/levelup` | Level-up card | A violet-and-gold radial burst with ribbons and sparkles. |
-| 23 | `bg/promotion` | Promotion card | A gold-and-purple laurel burst. |
+| Key | Where it shows | Prompt (after the `[SCENE]` block) |
+|---|---|---|
+| `bg/dream-calm` | The quiet nap (no dream), after many naps | A warm quiet dark with soft floating particles and a faint horizon glow. Keep the subject central (phones show only the centre column). |
 
-**Dreams**
-| Key | Prompt |
-|---|---|
-| `bg/dream-fly` | A luminous dusk sky, clouds like pillows, a tiny glowing town far below, a sense of weightless flight. |
-| `bg/dream-feast` | A diner counter and booths heaped with pancakes, pie and a never-empty milkshake, warm glow, nobody drawn. |
-| `bg/dream-grad` | An impossibly vast auditorium full of smiling faces, caps rising in golden light. |
-| `bg/dream-perfect` | A flawless sunny day, a huge sun with soft rays over a tidy sparkling town. |
-| `bg/dream-pond` | A still pond at golden hour, ducks in a row, a picnic blanket and basket on the bank. |
-| `bg/dream-late` | A street stretching away, a giant clock face looming, buildings sliding backward, red-tinted. |
-| `bg/dream-hall` | A corridor of locked doors in receding red-lit frames, the far end always further. |
-| `bg/dream-rent` | Paper pouring under a door, the long shadow of feet in the gap, red tint. |
-| `bg/dream-empty` | A long table of empty plates under flickering light, every other place closed and dark. |
-| `bg/dream-alarm` | A room where an alarm-clock face looms from the walls, pulsing rings, hallucinatory. |
-| `bg/dream-dry` | A cracked dry fountain and a shrinking pond, sand, harsh amber light. |
-| `bg/dream-calm` | A warm quiet dark with soft floating particles and a faint horizon glow. |
-
-**Workplaces**
-| Key | Prompt |
-|---|---|
-| `bg/job-cs` | A bright open-plan software office with glowing server racks, beanbags and a whiteboard (blue-grey #5f7fa8, cyan #6fd1ff). |
-| `bg/job-eng` | A machine shop with a CNC mill, lathe, blueprint board and amber work lights (#8a8f98, #ffb347). |
-| `bg/job-nurse` | A hospital ward with beds, a nurses' station and soft teal light (#e8eef0, #c9444f). |
-| `bg/job-biz` | A boardroom with a long table, a view over the city and a targets board (#9b7bb0, plum). |
-| `bg/job-cook` | A busy restaurant kitchen at rush with ranges, pans, flames and a ticket rail (#c46a3b, copper). |
+**Why it is listed again:** in `freshgrad-shortlist-core-01.zip` this file is **0 bytes** (empty), although the manifest says 316 KB.
+Re-export or regenerate just this one; everything else in that zip is fine.
 
 ---
 
@@ -102,7 +76,7 @@ anime eyes, heavy black outline, extra fingers, malformed hands, cropped head, d
 ---
 
 ## Do not make
-- Anything for the opening cutscene, the title screen, the diploma, paper textures or character sheets: **done**.
+- Anything for the opening cutscene, the title screen, the diploma, paper textures, character sheets, morning recaps, the other eleven dreams, workplaces, level-up or promotion: **done**.
 - Icons, badges, logos, food, stamps, trophies, mini-game pieces, fish, kids, the other ~70 portraits, reference boards, textures, light
   sprites, posters, phone wallpaper, passport cover, `bg/job-edu` (a teacher never sees that screen): **cut**.
 
@@ -115,5 +89,7 @@ anime eyes, heavy black outline, extra fingers, malformed hands, cropped head, d
 | `-04` | 11: Graduate poses (cap toss, cheering, handshake, nervous, two walks, waving, two idles), Dean idle, second podium, second expression grid |
 | `-05` | 10: Graduate on main street (title), Dean handshake / applauding / gesturing, Dean announcing with the Graduate, three classmate lineups, everyday outfit sheet, turnaround sheet |
 | `-06` | **Arrived cut off at 10.9 MB.** Recovered: Golden-hour graduation on Main Street (phone title), Ornate Blank Diploma with Wax Seal, Seamless cream cotton paper texture (a pattern of mugs and books, not paper; not used). Navy velvet paper was damaged. Anything after it was lost; it is only worth re-sending if it held something from this page. |
+| `shortlist-core-01` | 16: four morning recaps and twelve dreams. **`dream-calm` is empty (0 bytes)**; the other 15 are in the game. |
+| `shortlist-core-02` | 7: five workplaces, level-up, promotion. All in the game. |
 
 Every slot in the game is optional: a missing file keeps the game's own drawing, so stopping at any point is safe.

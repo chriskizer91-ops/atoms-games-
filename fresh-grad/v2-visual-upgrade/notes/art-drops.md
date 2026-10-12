@@ -112,3 +112,10 @@ velvet paper with gold flecks* (damaged in the cut-off zip; only drawn when the 
 
 Code: the diploma plate now keeps its own proportions (`--dp-ar`, set from the file) and the typed text sits in the blank field above
 the wax seal, with smaller type on phones. The Dean poses and classmate lineups, like the other poses, only load if a cutscene still is missing.
+
+## Drop 4 (freshgrad-shortlist-core-01 / -02)
+The first delivery made from `ART_SHORTLIST.md`: already WebP (q88, 1672x941) under the exact keys, so the files were copied in unchanged.
+22 of the 23 core images are in the game: `bg/recap-spring|summer|autumn|winter`, eleven `bg/dream-*`, `bg/job-cs|eng|nurse|biz|cook`,
+`bg/levelup`, `bg/promotion`. **`bg/dream-calm` arrived as a 0-byte file** (the zip lists it with size 0, the manifest says 316 KB), so it
+was left out: the quiet nap keeps its procedural backdrop until a good copy arrives. Checked in the dream, recap, level-up, promotion and
+shift-intro screens at 1280x720 and 390x844: text stays readable over every plate, no page errors.

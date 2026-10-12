@@ -1,6 +1,6 @@
 # Fresh Grad — Image Generation Master File
 
-> **Superseded order (October 2026): work from [`ART_SHORTLIST.md`](ART_SHORTLIST.md) instead.** The opening, title and diploma are finished (45 images in the game, see `v2-visual-upgrade/notes/art-drops.md`); the short list keeps 23 core + 21 optional images and drops the rest. This file stays as the full reference for style, cast, sizes and prompt wording.
+> **Superseded order (October 2026): work from [`ART_SHORTLIST.md`](ART_SHORTLIST.md) instead.** The opening, title, diploma, dreams, recaps, shift intros and celebration cards are finished (67 images in the game, see `v2-visual-upgrade/notes/art-drops.md`); the short list now holds 1 core image (re-send) + 21 optional ones; everything else is done or cut. This file stays as the full reference for style, cast, sizes and prompt wording.
 
 One self-contained brief for the image-generation session. It contains the **style rules**, **every prompt** (about 500 images in priority order), the **file naming**, and the **packaging into zip files of at most 20 MB each**. Read §0–§3 once, then work through the packs in §5 in order.
 
