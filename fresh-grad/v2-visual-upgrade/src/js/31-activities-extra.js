@@ -236,7 +236,7 @@ function fishChoice(k) {
   $('#fishResult').hidden = true; FS.phase = 'cast'; FS.t = 0; setFishMsg('Tap to cast');
 }
 function endFishing() { FS.on = false; $('#fishing').hidden = true; G.menu = false; updateHud(); AK.dropLayers('fv|'); FD.fx.length = 0; FD.last = ''; }
-function drawFishPic(c, f, x, y, s) { fishArt(c, f, x, y, s); }
+function drawFishPic(c, f, x, y, s) { fishArt(c, f, x, y, s); agFishCard(c, f, x, y, s); }
 function drawFishing(dt) { fishView(dt); }
 function bindFishing() {
   const cv = $('#fishCv');
