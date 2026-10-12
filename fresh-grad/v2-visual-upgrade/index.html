@@ -1947,6 +1947,17 @@ const ART = {
   },
   has(key) { return !!this.get(key); },
   preload(keys) { keys.forEach(k => this.get(k)); },
+  /* true once every extension has failed for this key (the procedural drawing is final) */
+  missing(key) { const e = this.cache.get(key); return !!(e && e.bad); },
+  /* for DOM art: the URL that loaded for this key, or null while loading / missing / ?noart */
+  url(key) { const img = this.get(key); return img ? img.src : null; },
+  /* call fn(img) once the key has loaded (right away if it already has); never called when the file is missing */
+  when(key, fn) {
+    const img = this.get(key);
+    if (img) { fn(img); return; }
+    const e = this.cache.get(key);
+    if (e && !e.bad) e.img.addEventListener('load', () => fn(e.img), { once: true });
+  },
   /* draw an image to cover a w x h box (like CSS object-fit: cover), with a focal point 0..1 and a zoom >= 1 */
   cover(c, img, x, y, w, h, fx, fy, zoom) {
     const z = zoom || 1, s = Math.max(w / img.naturalWidth, h / img.naturalHeight) * z;
