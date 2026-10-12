@@ -143,6 +143,7 @@ function renderPanel() {
   $('#pSub').hidden = !spec.sub;
   $('#pSub').className = spec.sub === 'Closed' ? 'closed' : '';
   { const gl = panelGlyph(id, spec); $('#pGlyph').innerHTML = uiIcon(gl); $('#pMark').innerHTML = uiIcon(gl, '', 1.1); }
+  artBackdrop($('#panel'), artPanelBackdrop(id, spec));
   const body = $('#pBody'); body.innerHTML = '';
   if (spec.note) body.appendChild(el('div', 'note' + (spec.bad ? ' bad' : ''), spec.note));
   if (spec.stock) {
@@ -157,7 +158,7 @@ function renderPanel() {
       const b = el('button', 'opt' + (it.off ? ' locked' : '')); b.type = 'button';
       b.dataset.i = PANEL_ITEMS.length; PANEL_ITEMS.push(it);
       const oi = optIcon(it, id.startsWith('npc:') ? 'chat' : ''), ic = el('span', 'oi'); ic.style.setProperty('--oc', it.off ? '#8fa5b6' : oi[1]); ic.innerHTML = uiIcon(it.off ? 'lock' : oi[0]); ic.setAttribute('aria-hidden', 'true');
-      b.appendChild(ic);
+      b.appendChild(ic); artSlot(ic, artFoodKey(id, it), 'food');
       b.appendChild(el('b', '', it.t));
       b.appendChild(el('small', it.off ? 'why' : '', it.off || it.d || ''));
       if (it.tag) b.appendChild(tagPills(it.tag));

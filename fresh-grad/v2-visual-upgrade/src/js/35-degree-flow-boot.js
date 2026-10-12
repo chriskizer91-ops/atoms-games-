@@ -126,6 +126,7 @@ function showOver() {
   [['Days lived', S.day], ['Cash on hand', fmt(Math.round(S.money))], ['Savings', fmt(Math.round(S.bank ? S.bank.bal : 0))], ['Places visited', PASSPORT.filter(p => S.stamps && S.stamps[p]).length + ' of ' + PASSPORT.length], ['Total earned', fmt(Math.round(S.stats.earned))], ['Meals eaten', S.stats.mealsEaten], ['Hours slept', Math.round(S.stats.slept / 60)], ['Blackouts', S.stats.collapses]].forEach(r => {
     const d = el('div'); d.appendChild(el('b', '', String(r[1]))); d.appendChild(el('small', '', r[0])); st.appendChild(d);
   });
+  artBackdrop($('#over'), 'bg/evicted');
   $('#over').hidden = false;
 }
 
