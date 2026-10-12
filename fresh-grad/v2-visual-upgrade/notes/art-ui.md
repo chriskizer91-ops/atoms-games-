@@ -13,7 +13,7 @@ All slots are lazy. A screen asks `ART` for its keys when it is built. When a fi
 
 **Also wired as P06 cards (not in the KEEP or DROP list), harmless when the file is missing:** `bg/evicted` (game-over `#over`, dim red scrim) and `bg/blackout` (the "You blacked out" notice panel only; every other panel clears it).
 
-**DROP list: implemented and tested before the cut, left in because missing art gives the identical look (verified below).** The coordinator said they will not get art for now.
+**DROP list: implemented and tested before the cut, then removed at merge by the integrator.** These images were cut from the art plan (`ART_SHORTLIST.md`), and each slot would only have fired two failed file requests per key whenever its screen opened (the trophy shelf alone asked for 24 keys). The design notes below are kept in case they come back; the code is in commit 41fd31b.
 - `icons/perks/<id>` (16): level-up perk cards and phone perk chips. Drawn over the 96px medallion canvas at 1.25x zoom. All 16 game ids match the brief exactly.
 - `icons/stamps/<id>` (18): passport list in the phone Map tab. Same per-place tilt as the drawn stamp. A stamp not yet collected is a faint grey ghost. All 18 `PASSPORT` ids match.
 - `icons/trophies/<id>` (24): phone trophy shelf (76px image on the 58px slot; locked ones are greyed with the lock kept) and the trophy toast badge. All 24 `ACH` ids match.

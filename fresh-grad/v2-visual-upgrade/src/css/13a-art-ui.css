@@ -1,7 +1,6 @@
-/* optional illustrated art in overlays, cards, the phone and option rows (js/36a-art-ui.js). Every rule here only applies once
-   a file has loaded (.art-bd / .art-wall / .art-cover / .has-art are added by JS), so without art nothing changes. */
+/* optional illustrated backdrops behind overlay cards (js/36a-art-ui.js). The rules only apply once a file has loaded (.art-bd is
+   added by JS), so without art nothing changes. */
 @keyframes art-in{from{opacity:0}to{opacity:1}}
-.art-ic{display:block;max-width:none;pointer-events:none;user-select:none;-webkit-user-drag:none;animation:art-in .24s ease-out both}
 
 /* P06 backdrops: a full-screen 16:9 plate behind the card, under a scrim in the overlay's own tint so the card stays the focus */
 .overlay.art-bd::before{content:"";position:absolute;inset:0;pointer-events:none;
@@ -12,36 +11,4 @@
 #over.art-bd{--bd-scrim:radial-gradient(110% 90% at 50% 38%,rgba(70,14,20,.36),rgba(4,6,14,.78))}
 #panel.art-bd{--bd-scrim:radial-gradient(120% 90% at 50% 40%,rgba(8,12,26,.38),rgba(4,7,16,.74))}
 
-/* P04 phone wallpaper (portrait plate, cover-fit) under a navy scrim that deepens toward the tab bar */
-.ph-screen.art-wall{background:
-  linear-gradient(180deg,rgba(16,20,46,.42) 0,rgba(14,18,40,.62) 36%,rgba(10,14,30,.84) 100%),
-  var(--art-wall) 50% 50%/cover no-repeat,#141a36}
-/* P04 passport cover: the booklet's middle band (emblem) shows on the right, text side darkened for the gold title */
-.pp-cover.art-cover{background:
-  linear-gradient(90deg,rgba(12,22,48,.86) 0,rgba(12,22,48,.6) 55%,rgba(12,22,48,.22) 100%),
-  var(--art-cover) 50% 40%/cover no-repeat,linear-gradient(145deg,#27487a,#16294b 60%,#0f1d38)}
-
-/* P07 food on option rows: the item art replaces the glyph in the 40px tile (subject ~32px); locked rows dim it and wear a lock */
-.opt .oi.has-art{position:relative}
-.opt .oi.has-art>svg{display:none}
-.opt .oi .art-ic{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
-.opt:disabled .oi .art-ic{filter:grayscale(.85) opacity(.55)}
-.opt:disabled .oi.has-art::before{content:"";position:absolute;z-index:1;right:-4px;bottom:-4px;width:18px;height:18px;border-radius:50%;background:#0b1422;box-shadow:0 0 0 1px rgba(255,255,255,.22)}
-.opt:disabled .oi.has-art::after{content:"";position:absolute;z-index:2;right:0;bottom:0;width:10px;height:10px;background:#9ba9c4;-webkit-mask:var(--i-lock) center/contain no-repeat;mask:var(--i-lock) center/contain no-repeat}
-
-/* P07 trophies on the phone shelf: the gold-foil art replaces the drawn medal (subject ~53px on the 58px slot) */
-.ph-troph .tmed.has-art{overflow:visible;background:none;box-shadow:none}
-.ph-troph .tmed.has-art>svg{display:none}
-.ph-troph .tmed .art-ic{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
-.ph-troph .tr:not(.got) .tmed .art-ic{filter:grayscale(1) brightness(.62) opacity(.5)}
-.ph-troph .tr.got .tmed.has-art::before{display:none}
-/* the trophy toast shows the same art in its badge slot */
-.toast.trophy.has-art::before{background:none;box-shadow:none}
-.toast.trophy.has-art::after{opacity:0}
-.toast.trophy .art-ic{position:absolute;left:4px;top:50%;width:56px;height:56px;margin-top:-28px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
-
-/* P05 portraits in phone texts: head-and-shoulders bust cropped to the face inside the 36px avatar disc */
-.msg .av.has-art{position:relative;overflow:hidden;color:transparent;text-shadow:none}
-.msg .av .art-ic{position:absolute;left:50%;top:1px;width:150%;height:150%;margin-left:-75%;object-fit:cover;object-position:50% 0}
-
-@media (prefers-reduced-motion:reduce){.art-ic,.overlay.art-bd::before{animation:none}}
+@media (prefers-reduced-motion:reduce){.overlay.art-bd::before{animation:none}}

@@ -191,7 +191,6 @@ function trophyToast(name, desc) {
   const t = el('div', 'toast trophy');
   t.appendChild(el('b', '', 'Trophy unlocked: ' + name)); t.appendChild(el('span', '', desc));
   box.appendChild(t);
-  { const a = ACH.find(x => x[1] === name); if (a) artSlot(t, 'icons/trophies/' + a[0], 'tt'); }
   setTimeout(() => t.classList.add('out'), 4200); setTimeout(() => t.remove(), 4700);
 }
 
@@ -236,7 +235,7 @@ function showRecap() {
   $('#recapSub').textContent = DOW_LONG[weekdayOf(S.day)] + ', day ' + S.day + ' · ' + SEASON_NAME[season()];
   const fc = forecast(S.day);
   const fx = el('div', 'rc-fc'); fx.dataset.k = fc[1];
-  const ic = document.createElement('canvas'); ic.width = 152; ic.height = 152; ic.setAttribute('aria-hidden', 'true'); drawWeatherIcon(ic.getContext('2d'), fc[1], 76, 76, 3.1); artCanvas(ic, 'icons/weather/' + fc[1], { z: 1.05 }); fx.appendChild(ic);
+  const ic = document.createElement('canvas'); ic.width = 152; ic.height = 152; ic.setAttribute('aria-hidden', 'true'); drawWeatherIcon(ic.getContext('2d'), fc[1], 76, 76, 3.1); fx.appendChild(ic);
   const ft = el('div'); ft.appendChild(el('b', '', fc[0])); ft.appendChild(el('small', '', season() === 'winter' ? 'Bundle up. The pond is frozen.' : season() === 'autumn' ? 'Leaves everywhere. Perfect for a walk.' : season() === 'spring' ? 'Blossoms in the park.' : 'Warm and bright.'));
   fx.appendChild(ft); box.appendChild(fx);
   box.appendChild(el('h3', '', 'Yesterday'));
@@ -320,7 +319,7 @@ function showLevelUp() {
   }
   ch.forEach(p => {
     const b = el('button', 'perk'); b.type = 'button';
-    const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96; perkIcon(cv.getContext('2d'), p.ic); artCanvas(cv, 'icons/perks/' + p.id, { z: 1.25 }); b.appendChild(cv);
+    const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96; perkIcon(cv.getContext('2d'), p.ic); b.appendChild(cv);
     b.appendChild(el('b', '', p.n)); b.appendChild(el('span', '', p.d));
     b.addEventListener('click', () => { S.perks.push(p.id); S.perkPicks--; SFX.chime('pay'); toast('New perk: ' + p.n + '. ' + p.d, 'good'); closeLevelUp(); });
     row.appendChild(b);
@@ -387,7 +386,6 @@ function closePhone() { if (!G.phone) return; G.phone = false; G.menu = false; $
 function renderPhone() {
   $('#phTime').textContent = clockStr(S.t).replace(' ', ' ');
   $$('#phone .ph-tabs button').forEach(b => { b.classList.toggle('on', b.dataset.tab === PHONE.tab); const n = b.dataset.tab === 'msgs' ? unread() : 0; b.dataset.n = n ? String(n) : ''; });
-  artSkin($('#phone .ph-screen'), 'ui/phone-wallpaper', 'art-wall', '--art-wall');
   const box = $('#phBody'); box.innerHTML = ''; box.scrollTop = 0;
   ({ today: phToday, map: phMap, msgs: phMsgs, career: phCareer, trophies: phTrophies })[PHONE.tab](box);
 }
@@ -403,7 +401,7 @@ function drawStampArt(c, id, got) {
     c.strokeStyle = 'rgba(95,72,40,.42)'; c.lineWidth = 2; c.setLineDash([4, 4]); c.beginPath(); c.arc(0, 0, 38, 0, 7); c.stroke(); c.setLineDash([]);
     c.strokeStyle = 'rgba(95,72,40,.2)'; c.lineWidth = 1; c.beginPath(); c.arc(0, 0, 31, 0, 7); c.stroke();
     placeIcon(c, P[1], 0, 0, 1.7, 'rgba(95,72,40,.3)');
-    c.restore(); artStamp(c, id, got); return;
+    c.restore(); return;
   }
   const ink = uiShade(P[0], 0.72);
   c.shadowColor = ink; c.shadowBlur = 3.2; c.strokeStyle = ink; c.fillStyle = ink;
@@ -421,7 +419,6 @@ function drawStampArt(c, id, got) {
     c.globalAlpha = 0.25 + hash01(k, id.length, 2) * 0.55; c.beginPath(); c.arc(Math.cos(a) * r, Math.sin(a) * r, 0.6 + hash01(k, 4, id.length) * 1.5, 0, 7); c.fill();
   }
   c.restore();
-  artStamp(c, id, got);
 }
 function uiShade(hex, k) {
   const h = String(hex).replace('#', ''), f = h.length === 3 ? h.split('').map(x => x + x).join('') : h;
@@ -445,7 +442,7 @@ function phToday(box) {
   const fc = forecast(S.day);
   info.appendChild(el('span', 'muted', SEASON_NAME[season()] + ' · ' + fc[0] + ' · Mood ' + Math.round(S.mood)));
   hd.appendChild(info);
-  { const wx = document.createElement('canvas'); wx.width = 92; wx.height = 92; wx.className = 'ph-wx'; wx.setAttribute('aria-hidden', 'true'); drawWeatherIcon(wx.getContext('2d'), fc[1], 46, 46, 2); artCanvas(wx, 'icons/weather/' + fc[1], { z: 1.05 }); hd.appendChild(wx); }
+  { const wx = document.createElement('canvas'); wx.width = 92; wx.height = 92; wx.className = 'ph-wx'; wx.setAttribute('aria-hidden', 'true'); drawWeatherIcon(wx.getContext('2d'), fc[1], 46, 46, 2); hd.appendChild(wx); }
   box.appendChild(hd);
   if (S.perkPicks > 0) { const b = el('button', 'btn ph-cta', 'Choose your level ' + (S.lvl - S.perkPicks + 1) + ' perk'); b.type = 'button'; b.addEventListener('click', () => { closePhone(); showLevelUp(); }); box.appendChild(b); }
   ensureGoals();
@@ -461,7 +458,7 @@ function phToday(box) {
   if (ev.length) { box.appendChild(el('h4', '', 'Around town today')); const u = el('ul', 'ph-ev'); ev.forEach(e => u.appendChild(el('li', '', e))); box.appendChild(u); }
   if (S.perks.length) {
     box.appendChild(el('h4', '', 'Your perks')); const w = el('div', 'ph-perks');
-    S.perks.forEach(id => { const p = perkById(id); const c2 = el('span'); const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96; perkIcon(cv.getContext('2d'), p.ic); artCanvas(cv, 'icons/perks/' + id, { z: 1.25 }); c2.appendChild(cv); c2.appendChild(document.createTextNode(p.n)); c2.title = p.d; w.appendChild(c2); });
+    S.perks.forEach(id => { const p = perkById(id); const c2 = el('span'); const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96; perkIcon(cv.getContext('2d'), p.ic); c2.appendChild(cv); c2.appendChild(document.createTextNode(p.n)); c2.title = p.d; w.appendChild(c2); });
     box.appendChild(w);
   }
 }
@@ -486,7 +483,7 @@ function phMap(box) {
   /* the passport: a navy cover and a paper page of stamps */
   const n = PASSPORT.filter(p => S.stamps[p]).length;
   const book = el('div', 'pp-book');
-  const cover = el('div', 'pp-cover'); artSkin(cover, 'ui/passport-cover', 'art-cover', '--art-cover');
+  const cover = el('div', 'pp-cover');
   const emb = el('span', 'pp-emb'); emb.innerHTML = uiIcon('stamp', '', 1.6); cover.appendChild(emb);
   const ct = el('div'); ct.style.flex = '1'; ct.appendChild(el('b', '', 'Town passport')); ct.appendChild(el('small', '', n + ' of ' + PASSPORT.length + ' stamps'));
   const pg = el('div', 'pp-prog'); const pgs = el('span'); pg.style.setProperty('--w', (100 * n / PASSPORT.length).toFixed(1) + '%'); pg.appendChild(pgs); ct.appendChild(pg); cover.appendChild(ct);
@@ -511,7 +508,6 @@ function phMsgs(box) {
   ms.forEach(m => {
     const r = el('div', 'msg' + (m.read ? '' : ' new'));
     const av = el('span', 'av', m.from.replace(/^(Mr\.|Mrs\.|Ms\.|Dr\.|Nurse|Chef|Head Nurse|Principal)\s+/, '').charAt(0)); { const hu = Math.round(hash01(m.from.length, m.from.charCodeAt(0), 3) * 360); av.style.backgroundColor = 'hsl(' + hu + ',55%,45%)'; }
-    artSlot(av, artPortraitKey(m.from), 'pt');
     r.appendChild(av);
     const tx = el('div'); const hd = el('div', 'mh'); hd.appendChild(el('b', '', m.from)); hd.appendChild(el('small', '', (m.day === S.day ? 'Today' : 'Day ' + m.day) + ' · ' + clockStr(m.t))); tx.appendChild(hd);
     const bub = el('div', 'bub'); bub.appendChild(el('p', '', m.text));
@@ -550,7 +546,7 @@ function phTrophies(box) {
   const got = ACH.filter(a => S.ach[a[0]]).length;
   box.appendChild(el('p', 'muted', got + ' of ' + ACH.length + ' trophies'));
   const g = el('div', 'ph-troph');
-  ACH.forEach(a => { const d = el('div', 'tr' + (S.ach[a[0]] ? ' got' : '')); const m = el('span', 'tmed'); m.innerHTML = uiIcon(TROPHY_GLYPH[a[0]] || 'trophy', '', 1.9); m.setAttribute('aria-hidden', 'true'); artSlot(m, 'icons/trophies/' + a[0], 'tm'); d.appendChild(m); d.appendChild(el('b', '', a[1])); d.appendChild(el('small', '', a[2])); g.appendChild(d); });
+  ACH.forEach(a => { const d = el('div', 'tr' + (S.ach[a[0]] ? ' got' : '')); const m = el('span', 'tmed'); m.innerHTML = uiIcon(TROPHY_GLYPH[a[0]] || 'trophy', '', 1.9); m.setAttribute('aria-hidden', 'true'); d.appendChild(m); d.appendChild(el('b', '', a[1])); d.appendChild(el('small', '', a[2])); g.appendChild(d); });
   box.appendChild(g);
 }
 function bindPhone() {

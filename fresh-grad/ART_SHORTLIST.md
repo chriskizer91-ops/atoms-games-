@@ -61,7 +61,7 @@ A zip with a different name (for example `-05`) is new: send it. Anything in it 
 ## Optional — 21 images, only if you want more
 | Keys | Where it shows | Prompt |
 |---|---|---|
-| `bg/fishing-day`, `bg/fishing-dusk`, `bg/fishing-night`, `bg/fishing-ice` (4) | Fishing | A pond seen from the bank, sky with clouds, a far bank of round trees, water with depth and sun glints, lily pads, reeds with cattails in the foreground; keep the water surface open. Ice: a pale ice sheet, snow mounds, a dark fishing hole with a white rim, bare snowy trees. |
+| `bg/fishing-day`, `bg/fishing-dusk`, `bg/fishing-night`, `bg/fishing-ice` (4) | Fishing | A pond seen from the bank, sky with clouds, a far bank of round trees, water with depth and sun glints, lily pads, reeds with cattails in the foreground; keep the water surface open. Ice: a pale ice sheet, snow mounds, bare snowy trees, **no fishing hole** (the game draws its own where the line lands). |
 | `bg/scene-cinema`, `-laundry`, `-read`, `-salon`, `-dentist`, `-music`, `-hang` (7) | Activities | Cinema auditorium from the back with maroon seats and a huge blank glowing screen · washers with round windows, steam and soap bubbles · a reading nook with a lamp pool, steaming mug and open book · a gold oval mirror on a blush striped wall · a ceiling view with a round surgical lamp and a clouds poster · a small stage with a spotlight cone and silhouetted crowd · a small round cafe table with two mugs, cosy light. |
 | `portraits/dot`, `sal`, `bianca`, `hank`, `mrs-reyes`, `luna`, `agnes`, `dr-chen`, `ms-park`, `greta` (10, 1024×1024 transparent, `[PORTRAIT]`) | Conversations with the ten regulars | Use each person's row in `IMAGE_PROMPTS.md` §5 P05 (shirt, hair, skin, trait). Identical framing for all ten. |
 
