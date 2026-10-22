@@ -226,15 +226,22 @@ CC.ITEMS = {
   master: { name: 'Master Cube', price: 0, cube: 999, icon: 'ui/cube-master', info: 'The legendary cube. It never fails.' },
   potion: { name: 'Potion', price: 60, heal: 30, icon: 'items/potion', info: 'Restores 30 HP to one creature.' },
   superpotion: { name: 'Super Potion', price: 180, heal: 80, icon: 'items/super-potion', info: 'Restores 80 HP to one creature.' },
+  // key items: shown while their flag is set, never sold or used up
+  whistle: { name: 'Wooden Whistle', key: 'fly', icon: 'items/whistle', info: 'Blow it to call Timberowl and fly to a place you have been.' },
+  vaultkey: { name: 'Vault Key', key: 'vaultKey', icon: 'items/vault-key', info: 'Opens the Cube Vault from the menu, anywhere.' },
 };
 CC.CUBE_KINDS = ['cube', 'great', 'ultra', 'master'];
 CC.bagScreen = async function () {
   while (true) {
-    var keys = Object.keys(CC.ITEMS).filter(function (k) { return CC.state.bag[k] > 0; });
+    var keys = Object.keys(CC.ITEMS).filter(function (k) { var it = CC.ITEMS[k]; return it.key ? CC.state.flags[it.key] : CC.state.bag[k] > 0; });
     if (!keys.length) { await CC.say('Your bag is empty.'); return; }
-    var c = await CC.menu(keys.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + CC.state.bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Bag', w: 150 });
+    var c = await CC.menu(keys.map(function (k) { var it = CC.ITEMS[k]; return { label: it.name, right: it.key ? '' : 'x' + CC.state.bag[k], icon: it.icon }; }), { title: 'Bag', w: 150 });
     if (c < 0) return;
     var k = keys[c], it = CC.ITEMS[k];
+    if (k === 'whistle') {
+      if (CC.MAPS[CC.state.map].indoors) { await CC.say('Timberowl can\'t fit in here. Try it outside!'); continue; }
+      CC.sfx('select'); await CC.say('You blew the Wooden Whistle. Timberowl swoops down!'); await CC.flyScreen(); return;
+    }
     if (it.heal) {
       var i = await CC.partyScreen('pick', { title: 'Use a ' + it.name + ' on...' });
       if (i < 0) continue;

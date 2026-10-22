@@ -113,3 +113,12 @@ They're generated in `creature-catch/src/js/12-data-creatures.js` and `11-data-m
 - **Interiors:** every village building and outpost has a room. The Healing Hut's Cube Vault is a machine you use in person.
 - **Cube tiers:** Great Cubes and Super Potions go on sale after the first trial. Ultra Cubes come from Wandering Merchant Tobias later (not built yet). There's one Master Cube in the story (not built yet).
 - **Duskfang** has art (the optional middle stage). The Fangling line is still 2-stage until you decide.
+
+
+---
+
+## 12. Added in v5
+
+- **The vampire line is 3 stages:** Fangling (Shadow) → **Duskfang** (Shadow, Lv 33) → **Rosferatu** (Shadow / Plant, Lv 42). The levels sit above the Night Ruins' wild range (Lv 28 to 35), so a caught Fangling still has growing to do. Base totals are 240 / 340 / 450.
+- **Fly is earned halfway:** after Dusty's Cave trial (region 4 of 8), Ranger Oakley's Timberowl takes a liking to you, and you get the **Wooden Whistle**. Fly only goes to places you have already visited. The `FLY` code opens every place, and places that aren't built yet say so.
+- **Creature lore** is in `src/js/13-data-lore.js` (a lore line and a field note for each creature). The Field Guide shows it, and an in-game Creature Log can use it later.

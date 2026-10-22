@@ -79,7 +79,7 @@ CC.CODES = [
   } },
   { words: ['RICH', 'MONEY'], needsGame: true, help: 'RICH: 999,999 coins', run: function () { CC.state.coins = 999999; return 'Coins: 999,999.'; } },
   { words: ['STOCKUP', 'ITEMS'], needsGame: true, help: 'STOCKUP: 99 of every item and cube (Master Cubes too)', run: function () {
-    Object.keys(CC.ITEMS).forEach(function (k) { CC.state.bag[k] = 99; }); return 'Your bag is stuffed: 99 of everything.';
+    Object.keys(CC.ITEMS).forEach(function (k) { if (!CC.ITEMS[k].key) CC.state.bag[k] = 99; }); return 'Your bag is stuffed: 99 of everything.';
   } },
   { words: ['INFINITE', 'INF'], help: 'INFINITE: cubes and potions never run out / normal', run: function () {
     CC.dev.infItems = !CC.dev.infItems; return 'Bottomless bag ' + (CC.dev.infItems ? 'ON.' : 'OFF.');
@@ -87,10 +87,9 @@ CC.CODES = [
   { words: ['GODMODE', 'GOD'], help: 'GODMODE: your creatures take no damage / normal', run: function () {
     CC.dev.god = !CC.dev.god; return 'God mode ' + (CC.dev.god ? 'ON.' : 'OFF.');
   } },
-  { words: ['FLY'], needsGame: true, help: 'FLY: unlock Fly (R button or the menu) and every place you could fly to', run: function () {
-    CC.state.flags.fly = true; CC.state.visited = CC.state.visited || {};
-    CC.FLY_SPOTS.forEach(function (p) { if (p.map) CC.state.visited[p.map] = 1; });
-    return 'You can Fly! Press R (or MENU > Fly) on the map.';
+  { words: ['FLY'], needsGame: true, help: 'FLY: get the Wooden Whistle (Fly) and open every place on the map', run: function () {
+    CC.state.flags.fly = true; CC.state.flags.flyAll = true;
+    return 'You can Fly anywhere! Press R (or MENU > Fly) on the map.';
   } },
   { words: ['ZOOKEEPER'], needsGame: true, help: 'ZOOKEEPER: one of every creature goes into your Vault (Lv 5)', run: function () {
     CC.CREATURE_ORDER.forEach(function (id) { CC.state.vault.push(CC.mon.make(id, 5)); CC.markCaught(id); });

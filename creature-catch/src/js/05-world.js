@@ -601,7 +601,7 @@ CC.world = {
     if (inp.pressed.start && inp.held.l && inp.held.r) { CC.sfx('catch'); this.run(async function () { await CC.openCodes(); await CC.runCodeQueue(); }); return; }
     if (inp.pressed.start) { CC.sfx('select'); this.run(CC.fieldMenu); return; }
     // R: Fly (once you can), L: your party
-    if (inp.pressed.r && !inp.held.l && CC.state.flags.fly) { CC.sfx('select'); this.run(CC.flyScreen); return; }
+    if (inp.pressed.r && !inp.held.l && CC.state.flags.fly && !this.map.indoors) { CC.sfx('select'); this.run(CC.flyScreen); return; }
     if (inp.pressed.l && !inp.held.r) { CC.sfx('select'); this.run(function () { return CC.partyScreen('field'); }); return; }
     if (inp.pressed.a) { this.interact(); return; }
     var dir = inp.held.up ? 'up' : inp.held.down ? 'down' : inp.held.left ? 'left' : inp.held.right ? 'right' : null;
@@ -911,7 +911,7 @@ CC.fieldMenu = async function () {
   while (true) {
     var items = ['Party', 'Bag'];
     if (CC.state.flags.vaultKey) items.push('Vault');
-    if (CC.state.flags.fly) items.push('Fly');
+    if (CC.state.flags.fly && !CC.MAPS[CC.state.map].indoors) items.push('Fly');
     items.push('Save', 'Close');
     var c = await CC.menu(items, { x: 158, y: 6, w: 76, startCloses: true });
     var pick = items[c];

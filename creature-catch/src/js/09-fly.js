@@ -1,5 +1,6 @@
-// Fly: later in the game you can ride a big bird between places you've been. Open it with R on the map (or MENU > Fly)
-// once state.flags.fly is set (the FLY code sets it now). Places sit on the world-map picture at x, y (240 x 160).
+// Fly: halfway through the story (after Dusty's Cave trial) you get the Wooden Whistle, which calls Timberowl to carry
+// you between places you have already been. Open it with R on the map, MENU > Fly, or the whistle in your Bag.
+// The FLY code also sets flags.flyAll, which opens every place. Places sit on the world-map picture at x, y (240 x 160).
 var CC = window.CC || (window.CC = {});
 
 // map: the field map you land on (null = not built yet); land: where you land on it
@@ -21,20 +22,21 @@ CC.flyScreen = function () {
     var s = CC.state, visited = s.visited || {};
     var here = CC.FLY_SPOTS.findIndex(function (p) { return p.map === s.map; });
     if (here < 0) here = 0;
-    var sel = here, phase = 'pick', t = 0, from = CC.FLY_SPOTS[here], to = null;
-    var canGo = function (p) { return p.map && visited[p.map]; };
+    var sel = here, phase = 'pick', t = 0, from = CC.FLY_SPOTS[here], to = null, note = null;
+    var canGo = function (p) { return s.flags.flyAll || (p.map && visited[p.map]); };
     var scr = {
       name: 'fly', opaque: true,
       update: function (dt) {
         t += dt;
         if (phase !== 'pick') return;
         var step = CC.repeat('right') || CC.repeat('down') ? 1 : CC.repeat('left') || CC.repeat('up') ? -1 : 0;
-        if (step) { sel = (sel + step + CC.FLY_SPOTS.length) % CC.FLY_SPOTS.length; CC.sfx('blip'); }
+        if (step) { sel = (sel + step + CC.FLY_SPOTS.length) % CC.FLY_SPOTS.length; CC.sfx('blip'); note = null; }
         if (CC.input.pressed.b) { CC.sfx('back'); CC.pop(scr); resolve(); }
         if (CC.input.pressed.a) {
           var p = CC.FLY_SPOTS[sel];
-          if (!canGo(p)) { CC.sfx('bump'); return; }
+          if (!canGo(p)) { CC.sfx('bump'); note = 'You can only fly to places you have been.'; return; }
           if (sel === here) { CC.sfx('bump'); return; }
+          if (!p.map) { CC.sfx('bump'); note = p.name + ' isn\'t built yet. It comes in a later version.'; return; }
           CC.sfx('throw'); to = p; phase = 'fly'; t = 0;
         }
       },
@@ -55,12 +57,12 @@ CC.flyScreen = function () {
         });
         if (phase === 'pick') {
           var p = CC.FLY_SPOTS[sel], ok = canGo(p);
-          var label = p.name + (sel === here ? ' (you are here)' : ok ? '' : p.map ? ' (not visited yet)' : ' (not explored yet)');
+          var label = p.name + (sel === here ? ' (you are here)' : ok ? '' : ' (not visited yet)');
           var w = CC.textWidth(label) + 16;
           CC.box(Math.round(CC.clamp(p.x - w / 2, 2, 238 - w)), p.y > 40 ? p.y - 30 : p.y + 10, w, 18);
           CC.text(label, Math.round(CC.clamp(p.x - w / 2, 2, 238 - w)) + 8, (p.y > 40 ? p.y - 30 : p.y + 10) + 3, ok ? '#2a2230' : '#8a7a70');
           CC.box(0, 136, 240, 24);
-          CC.text('Fly where? Arrows to pick, A to fly, B to stay.', 8, 141, '#2a2230', { size: 9 });
+          CC.text(note || 'Fly where? Arrows to pick, A to fly, B to stay.', 8, 141, note ? '#a83a3a' : '#2a2230', { size: 9 });
         } else {
           // Timberowl carries you along an arc to the new place
           var k = CC.clamp(t / 1.4, 0, 1), e = CC.ease(k);

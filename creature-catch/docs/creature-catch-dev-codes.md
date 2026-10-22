@@ -34,7 +34,7 @@ Codes typed on the title screen wait until you start or continue a game, then th
 | `STOCKUP` (or `ITEMS`) | 99 of every item: all four cube tiers (Master Cubes too), Potions, Super Potions |
 | `INFINITE` | Cubes and potions never run out, or back to normal |
 | `GODMODE` | Your creatures take no damage, or back to normal |
-| `FLY` | Unlocks Fly and every place you could fly to. Press **R** on the map, or MENU then Fly |
+| `FLY` | Gives you the Wooden Whistle (Fly) and opens every place on the map. Press **R** outside, MENU then Fly, or use the whistle in your Bag. Normally you only get Fly halfway through the story, and only to places you've been |
 | `ZOOKEEPER` | One of every creature goes into your Vault at Lv 5 |
 | `CUBES 50` / `POTIONS 20` / `COINS 5000` | Sets items or coins |
 | `GOTO GRASSLAND` | Warps to VILLAGE, MEADOW or GRASSLAND (optionally add X Y) |

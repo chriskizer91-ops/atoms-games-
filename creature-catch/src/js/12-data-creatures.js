@@ -94,7 +94,9 @@ var ROWS = [
   ['pebbleton', 'Pebbleton', ['Earth'], 9, 'solo', 'tank', 'runeslam', null, ['biped', '#8a8a90', '#4ae0c8']],
   ['bonecat', 'Bonecat', ['Shadow'], 9, 'base', 'fast', 'bonerattle', ['bonepanther', 30], ['quad', '#f0e8d0', '#b46ae0']],
   ['bonepanther', 'Bonepanther', ['Shadow'], 9, 'final', 'glass', 'bonerattle', null, ['quad', '#e8e0c8', '#8a3ad0']],
-  ['fangling', 'Fangling', ['Shadow'], 9, 'base', 'fast', 'thornkiss', ['rosferatu', 32], ['bird', '#7a5a8a', '#c82a3a']],
+  // the vampire line: three stages, late game (it's caught in the Night Ruins at Lv 28 to 35)
+  ['fangling', 'Fangling', ['Shadow'], 9, 'base', 'fast', 'thornkiss', ['duskfang', 33], ['bird', '#7a5a8a', '#c82a3a']],
+  ['duskfang', 'Duskfang', ['Shadow'], 9, 'mid', 'glass', 'thornkiss', ['rosferatu', 42], ['bird', '#6a4a7a', '#c82a3a']],
   ['rosferatu', 'Rosferatu', ['Shadow', 'Plant'], 9, 'final', 'atk', 'thornkiss', null, ['biped', '#6a4a7a', '#c82a3a']],
   ['moonlynx', 'Moonlynx', ['Lumen'], 9, 'solo', 'fast', 'crescentclaw', null, ['quad', '#c8ccd8', '#f8e8a0']],
 ];
@@ -104,7 +106,9 @@ function budget(kind, r, id) {
   if (kind === 'starter1') return 210;
   if (kind === 'starter2') return 330;
   if (kind === 'starter3') return 450;
-  var base = id === 'fangling' || id === 'rosferatu' ? 250 : 170 + 10 * r;
+  var VAMPIRE = { fangling: 240, duskfang: 340, rosferatu: 450 };
+  if (VAMPIRE[id]) return VAMPIRE[id];
+  var base = 170 + 10 * r;
   if (kind === 'base') return base;
   if (kind === 'final') return Math.round(base * 1.6);
   return 195 + 16 * r + (id === 'moonlynx' ? 20 : 0); // Solo

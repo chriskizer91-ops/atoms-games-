@@ -14,6 +14,10 @@ Open **`creature-catch.html`** in any browser. It's one file and works offline. 
 | Enter | MENU | Party, Bag, Vault, Fly, Save |
 | Q / E | L / R | L: your party. R: Fly (once you can) |
 
+## Field Guide
+
+`companion/creature-catch-field-guide.html` is a separate offline page: lore, stats, moves and evolutions for every creature, plus the type chart, regions, and items. Rebuild it with `node tools/build-companion.mjs`.
+
 ## Dev codes
 
 Hold L + R and press MENU (or press Up Up Down Down Left Right Left Right B A on the title screen). See `docs/creature-catch-dev-codes.md`.
@@ -48,6 +52,7 @@ What's drawn in code on top of the art: path edges and shorelines, NPC breathing
 ```
 node tools/build.mjs        # writes creature-catch.html from src/ and art/
 node tools/roster-doc.mjs   # writes docs/creature-catch-roster.md from the game data
+node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.html
 ```
 
 ## Layout
@@ -61,4 +66,5 @@ node tools/roster-doc.mjs   # writes docs/creature-catch-roster.md from the game
   2. `creature-catch-handoff.md`: the full design.
   3. `creature-catch-roster.md`: every creature's stats, learnset, and moves (generated).
   4. `creature-catch-design-doc.md`: the first draft, partly replaced.
-  5. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).
+  5. `creature-catch-missing-images.md`: the images still needed, with prompts.
+  6. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).

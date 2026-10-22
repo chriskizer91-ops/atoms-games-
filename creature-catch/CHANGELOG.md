@@ -2,6 +2,13 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
+## v5
+- **The vampire line is 3 stages:** Fangling → Duskfang (Lv 33) → Rosferatu (Lv 42). Duskfang has its own art and stats.
+- **Fly follows the story rule:** you get the Wooden Whistle halfway through the game (after Dusty's Cave trial) and can only fly to places you've already been. It shows in your Bag as a key item. The `FLY` code opens every place on the map.
+- **The Creature Catch Field Guide** (`companion/creature-catch-field-guide.html`): a separate offline page with lore, stats, signature moves and evolution chains for all 67 creatures, plus the type chart, regions, and cubes and items. Built by `tools/build-companion.mjs` from the game's own data and art.
+- **Lore** for every creature now lives in the game data (`src/js/13-data-lore.js`), ready for an in-game Creature Log.
+- `docs/creature-catch-missing-images.md` lists every image still needed, with prompts.
+
 ## v4
 - **New art:** all 24 evolutions and the vampire line (Fangling, Rosferatu, and the optional Duskfang), attack particles and strong-move bursts in battle, painted portraits, Juniper's walk and battle pose, your explorer throwing the cube at the start of each battle, type badges, item icons, emotes, trail charms, cube tiers, the outpost hut, signposts, the log gate, and the world map.
 - **Interiors:** walk into Elder Willow's house (with the starter table), the Healing Hut and the Grassland Outpost (talk across the counter; the Cube Vault is a machine), Pip's shop, and your home (rest in your bed). Juniper walks in through the door for the starter scene.

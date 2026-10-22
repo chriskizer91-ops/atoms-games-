@@ -149,7 +149,7 @@ function paintStandIn(c) {
   var gr = new Grid(64), body = BODIES[c.look.body] || BODIES.round;
   body(gr, c.look.main, c.look.accent);
   // evolved forms get a little crest so they read as bigger
-  if (c.kind === 'final' || c.kind === 'starter2' || c.kind === 'starter3') {
+  if (c.kind === 'final' || c.kind === 'mid' || c.kind === 'starter2' || c.kind === 'starter3') {
     var ac = c.look.accent;
     gr.fill(poly([[30, 6], [33, 0], [36, 6]]), ac);
   }
