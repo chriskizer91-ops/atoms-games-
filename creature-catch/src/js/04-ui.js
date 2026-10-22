@@ -26,7 +26,7 @@ CC.say = function (text, opts) {
         CC.box(0, 112, 240, 48);
         var pageText = lines.slice(page * 2, page * 2 + 2).join('\n').slice(0, Math.floor(shown));
         pageText.split('\n').forEach(function (l, i) { CC.text(l, 9, 119 + i * 15, '#2a2230'); });
-        if (opts.who) { var w = CC.textWidth(opts.who, 9) + 10; CC.box(4, 101, w, 14, { fill: '#f0e2c8' }); CC.text(opts.who, 9, 103, '#6a3a2a', { size: 9 }); }
+        if (opts.who) speakerTag(opts.who);
         var done = Math.floor(shown) >= lines.slice(page * 2, page * 2 + 2).join('\n').length;
         if (done && opts.auto == null && Math.floor(CC.time * 3) % 2) { CC.rect(226, 149, 6, 2, '#6a3a2a'); CC.rect(228, 151, 2, 2, '#6a3a2a'); }
       },
@@ -34,6 +34,20 @@ CC.say = function (text, opts) {
     CC.push(scr);
   });
 };
+// A speaker's face beside the dialog box, cut from the top of their character art
+CC.portrait = function (who, x, y, size) {
+  var id = CC.PORTRAITS && CC.PORTRAITS[who], art = id && CC.img('people/' + id);
+  if (!art) return false;
+  var side = Math.min(art.width, Math.round(art.height * 0.42)), sx = Math.round((art.width - side) / 2);
+  CC.box(x, y, size, size, { fill: '#e8f0f8' });
+  CC.g.drawImage(art, sx, 0, side, side, x + 3, y + 3, size - 6, size - 6);
+  return true;
+};
+function speakerTag(who) {
+  var w = CC.textWidth(who, 9) + 10, hasFace = CC.portrait(who, 4, 63, 40);
+  CC.box(hasFace ? 46 : 4, 101, w, 14, { fill: '#f0e2c8' }); CC.text(who, (hasFace ? 46 : 4) + 5, 103, '#6a3a2a', { size: 9 });
+}
+
 // several lines in a row, each its own box
 CC.talk = async function (who, lines) {
   for (var i = 0; i < lines.length; i++) await CC.say(lines[i], { who: who });
@@ -86,7 +100,7 @@ CC.ask = function (question, options, who) {
   var under = function () {
     CC.box(0, 112, 240, 48);
     lines.slice(0, 2).forEach(function (l, i) { CC.text(l, 9, 119 + i * 15, '#2a2230'); });
-    if (who) { var w = CC.textWidth(who, 9) + 10; CC.box(4, 101, w, 14, { fill: '#f0e2c8' }); CC.text(who, 9, 103, '#6a3a2a', { size: 9 }); }
+    if (who) speakerTag(who);
   };
   return CC.menu(options, { under: under, y: 108 - (options.length * 14 + 10) });
 };
@@ -102,6 +116,8 @@ var STATUS_TAG = { burn: ['BRN', '#e0582a'], freeze: ['FRZ', '#5ab0e0'], shock: 
 CC.statusTag = function (st, x, y) {
   if (!st) return;
   var t = STATUS_TAG[st]; CC.rect(x, y, 20, 9, t[1]); CC.text(t[0], x + 2, y, '#ffffff', { size: 8, shadow: false });
+  var icon = CC.img('ui/status-' + st);
+  if (icon) CC.g.drawImage(icon, x - 10, y - 1, icon.width * 10 / icon.height, 10);
 };
 
 // ---------- party ----------
@@ -148,7 +164,7 @@ CC.partyScreen = function (mode, opts) {
           var bx = 72; sp.types.forEach(function (t) { bx += CC.typeBadge(t, bx, y + 15) + 2; });
           CC.text('HP', 140, y + 4, '#6a5a50', { size: 9 });
           CC.bar(156, y + 8, 70, m.hp / st.hp);
-          CC.text(m.hp + '/' + st.hp, 226, y + 14, '#2a2230', { size: 10, align: 'right' });
+          CC.num(m.hp + '/' + st.hp, 226, y + 16, '#2a2230', 'right');
           CC.statusTag(m.hp <= 0 ? null : m.status, 140, y + 16);
           if (m.hp <= 0) CC.text('FAINTED', 140, y + 15, '#c83a3a', { size: 8 });
         });
@@ -176,7 +192,7 @@ CC.summary = function (m) {
         CC.bar(8, 142, 80, m.lv >= 50 ? 1 : (m.xp - CC.mon.xpFor(m.lv)) / (CC.mon.xpFor(m.lv + 1) - CC.mon.xpFor(m.lv)), '#48a8e8');
         CC.box(100, 6, 134, 56);
         [['HP', m.hp + '/' + st.hp], ['Attack', st.atk], ['Defense', st.def], ['Speed', st.spd]].forEach(function (r, i) {
-          CC.text(r[0], 108, 11 + i * 12, '#6a5a50', { size: 9 }); CC.text(String(r[1]), 226, 10 + i * 12, '#2a2230', { size: 10, align: 'right' });
+          CC.text(r[0], 108, 11 + i * 12, '#6a5a50', { size: 9 }); CC.num(String(r[1]), 226, 13 + i * 12, '#2a2230', 'right');
         });
         CC.box(100, 66, 134, 88);
         m.moves.forEach(function (mv, i) {

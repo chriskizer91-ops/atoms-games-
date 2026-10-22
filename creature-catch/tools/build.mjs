@@ -1,7 +1,7 @@
 // Builds the one-file game: creature-catch.html, from src/ (shell, scripts, font) and art/.
 //   node tools/build.mjs
-// Art: any art/creatures/<creature id>.png (or .webp / .jpg) is packed in and replaces that creature's
-// code-drawn stand-in. White or magenta backgrounds are removed in the game.
+// Art: everything under art/ (made by tools/import-art.py) is packed in. A creature without a picture in
+// art/creatures/ keeps its code-drawn stand-in.
 import fs from 'node:fs';
 import path from 'node:path';
 import { SRC } from './load-data.mjs';
@@ -9,11 +9,13 @@ import { SRC } from './load-data.mjs';
 const ROOT = path.join(SRC, '..');
 const MIME = { '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
 
+// every picture under art/, keyed by folder/name (art/creatures/drizzlon.png -> 'creatures/drizzlon')
 const art = {};
 let artBytes = 0;
-for (const folder of ['creatures']) {
-  const dir = path.join(ROOT, 'art', folder);
-  if (!fs.existsSync(dir)) continue;
+const artDir = path.join(ROOT, 'art');
+for (const folder of fs.existsSync(artDir) ? fs.readdirSync(artDir).sort() : []) {
+  const dir = path.join(artDir, folder);
+  if (!fs.statSync(dir).isDirectory()) continue;
   for (const f of fs.readdirSync(dir).sort()) {
     const ext = path.extname(f).toLowerCase();
     if (!MIME[ext]) continue;

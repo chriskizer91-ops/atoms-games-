@@ -23,7 +23,16 @@ Open **`creature-catch.html`** in any browser. It's one file and works offline. 
 
 ## Art
 
-There are no images yet: every creature is drawn by code as a stand-in. To use real art, drop a sprite in `art/creatures/<id>.png` (for example `art/creatures/drizzlon.png`) and rebuild. White or magenta backgrounds are removed automatically. The ids are the lowercase names in `docs/creature-catch-roster.md`.
+Generated art goes through `tools/import-art.py`, which removes the white backgrounds, shrinks each picture back to its true pixel size, and cuts sheets (walk cycles, tilesets, props, villagers, icons) into pieces:
+
+```
+python3 tools/import-art.py <folder with the unzipped art packs>
+node tools/build.mjs
+```
+
+The results land in `art/` (creatures, people, walk, tiles, bg, buildings, props, ui). Anything without art yet (most evolved forms, for now) uses a code-drawn stand-in.
+
+What's drawn in code on top of the art: path edges and shorelines, NPC breathing and hops, chimney smoke, butterflies, lantern glow, cloud shadows, every battle animation, and the dialog portraits (cut from the character art).
 
 ## Building
 
@@ -36,7 +45,7 @@ node tools/roster-doc.mjs   # writes docs/creature-catch-roster.md from the game
 
 - `creature-catch.html`: the built game.
 - `src/shell.html`: the page around the game. `src/js/`: the game, in load order. `src/fonts/`: Pixelify Sans (SIL Open Font License).
-- `art/`: sprites to pack into the game.
+- `art/`: game-ready pictures made by `tools/import-art.py` (`MANIFEST.json` lists them).
 - `tools/`: build and doc scripts.
 - `docs/`: design and prompts. Read in this order:
   1. `creature-catch-decisions-2.md`: the latest decisions. It wins over everything below.

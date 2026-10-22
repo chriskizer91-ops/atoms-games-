@@ -3,7 +3,7 @@
 var CC = window.CC || (window.CC = {});
 
 (function () {
-  var FOE = { x: 176, y: 72 }, ALLY = { x: 62, y: 114 };
+  var FOE = { x: 172, y: 66 }, ALLY = { x: 62, y: 116 };
 
   function stageMult(n) { return n >= 0 ? 1 + 0.25 * n : 1 / (1 + 0.25 * -n); }
   function freshStages() { return { atk: 0, def: 0, spd: 0, acc: 0 }; }
@@ -38,8 +38,15 @@ var CC = window.CC || (window.CC = {});
   };
 
   // ---------- drawing ----------
+  // which battle picture goes with which place
+  var BG_ART = { meadow: 'grassland', grassland: 'grassland', village: 'village-training', forest: 'forest', water: 'water', cave: 'cave', desert: 'desert', snow: 'snow', swamp: 'swamp', ruins: 'night-ruins' };
   function drawBackground() {
-    var g = CC.g, bg = B.bg;
+    var g = CC.g, bg = B.bg, art = CC.img('bg/' + (BG_ART[bg] || bg));
+    if (art) {
+      // shifted up so the arena sits above the text box
+      g.drawImage(art, 0, -26, 240, 160);
+      return;
+    }
     var sky = bg === 'meadow' ? ['#a8e0f8', '#e0f4ff'] : ['#90d0f8', '#d8f0ff'];
     var grd = g.createLinearGradient(0, 0, 0, 90); grd.addColorStop(0, sky[0]); grd.addColorStop(1, sky[1]);
     g.fillStyle = grd; g.fillRect(0, 0, 240, 112);
@@ -75,8 +82,9 @@ var CC = window.CC || (window.CC = {});
     // shadow
     CC.g.fillStyle = 'rgba(0,0,0,0.18)'; CC.g.beginPath(); CC.g.ellipse(s.home.x, s.home.y - 1, 22 * s.scale, 4 * s.scale, 0, 0, Math.PI * 2); CC.g.fill();
     var bob = sp.look.body === 'ghost' || sp.look.body === 'bird' && m.status !== 'sleep' ? Math.sin(t * 2.2) * 2 : 0;
+    var size = s.foe ? 0.86 : 1; // the far one is a little smaller
     CC.drawSprite(sprite, x, y + bob - (ghosty ? 2 : 0), {
-      flip: !s.foe, sx: s.sx * s.scale * (1 - breathe * 0.5) * (1 + low), sy: s.sy * s.scale * (1 + breathe), alpha: s.alpha,
+      scale: size, flip: !s.foe, sx: s.sx * s.scale * (1 - breathe * 0.5) * (1 + low), sy: s.sy * s.scale * (1 + breathe), alpha: s.alpha,
       flash: s.flash, id: m.id + (s.foe ? 'f' : 'a'), wave: s.wave || ghosty, waveSpeed: ghosty && !s.wave ? 3 : 14,
       overlay: frozen ? ['#9adcf0', 0.45] : s.overlay,
     });
@@ -101,7 +109,7 @@ var CC = window.CC || (window.CC = {});
     CC.text('HP', x + 6, y + 15, '#c86a2a', { size: 8 });
     CC.bar(x + 20, y + 18, w - 28, s.hpShown / max);
     if (ally) {
-      CC.text(Math.ceil(s.hpShown) + ' / ' + max, x + w - 8, y + 21, '#2a2230', { size: 10, align: 'right' });
+      CC.num(Math.ceil(s.hpShown) + '/' + max, x + w - 8, y + 23, '#2a2230', 'right');
       var lo = CC.mon.xpFor(m.lv), hi = CC.mon.xpFor(m.lv + 1);
       CC.rect(x + 6, y + h - 5, w - 12, 2, '#5a5060');
       CC.rect(x + 6, y + h - 5, Math.round((w - 12) * CC.clamp((s.xpShown != null ? s.xpShown : m.xp) - lo, 0, hi - lo) / (hi - lo || 1)), 2, '#48a8e8');
@@ -119,8 +127,15 @@ var CC = window.CC || (window.CC = {});
       if (B.shake > 0) { g.translate(Math.round(CC.rand(-B.shake, B.shake)), Math.round(CC.rand(-B.shake, B.shake) * 0.5)); B.shake = Math.max(0, B.shake - CC.dt * 14); }
       drawBackground();
       if (B.trainerShown && B.trainer) {
-        var p = CC.person(B.trainer.look, 'down', 0);
-        g.drawImage(p, FOE.x - 30 + B.trainerX, FOE.y - 60, 60, 60);
+        var tart = B.trainer.art && CC.img('people/' + B.trainer.art);
+        if (tart) {
+          var th = 74, tk = th / tart.height;
+          g.fillStyle = 'rgba(0,0,0,0.2)'; g.beginPath(); g.ellipse(FOE.x + B.trainerX, FOE.y - 1, 18, 4, 0, 0, Math.PI * 2); g.fill();
+          g.drawImage(tart, FOE.x + B.trainerX - tart.width * tk / 2, FOE.y - th * (1 + Math.sin(CC.time * 2.4) * 0.012), tart.width * tk, th * (1 + Math.sin(CC.time * 2.4) * 0.012));
+        } else {
+          var p = CC.person(B.trainer.look, 'down', 0);
+          g.drawImage(p, FOE.x - 30 + B.trainerX, FOE.y - 60, 60, 60);
+        }
       }
       drawMon(B.foe);
       drawMon(B.ally);

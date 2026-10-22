@@ -159,57 +159,33 @@ function paintStandIn(c) {
   return cv;
 }
 
-// ---------- real sprites ----------
-// Generated art arrives on white or magenta. Remove the background by flood fill from the edges (so white
-// inside the bold outline stays), then fit it into 64x64.
-function keyAndFit(img, size) {
-  var w = img.naturalWidth, h = img.naturalHeight;
-  var cv = CC.makeCanvas(w, h), x = cv.getContext('2d');
-  x.drawImage(img, 0, 0);
-  var d = x.getImageData(0, 0, w, h), p = d.data;
-  var bg = [p[0], p[1], p[2]];
-  var isBg = function (i) { return p[i + 3] < 20 || (Math.abs(p[i] - bg[0]) + Math.abs(p[i + 1] - bg[1]) + Math.abs(p[i + 2] - bg[2]) < 60); };
-  if (p[3] > 200) { // only key out when the picture has no transparency of its own
-    var seen = new Uint8Array(w * h), stack = [];
-    for (var i = 0; i < w; i++) { stack.push(i, (h - 1) * w + i); }
-    for (var j = 0; j < h; j++) { stack.push(j * w, j * w + w - 1); }
-    while (stack.length) {
-      var q = stack.pop();
-      if (seen[q]) continue; seen[q] = 1;
-      if (!isBg(q * 4)) continue;
-      p[q * 4 + 3] = 0;
-      var qx = q % w, qy = (q - qx) / w;
-      if (qx > 0) stack.push(q - 1); if (qx < w - 1) stack.push(q + 1);
-      if (qy > 0) stack.push(q - w); if (qy < h - 1) stack.push(q + w);
-    }
-    x.putImageData(d, 0, 0);
-  }
-  // crop to what's left, then fit
-  var minX = w, minY = h, maxX = 0, maxY = 0;
-  for (var yy = 0; yy < h; yy++) for (var xx = 0; xx < w; xx++) if (p[(yy * w + xx) * 4 + 3] > 20) {
-    if (xx < minX) minX = xx; if (yy < minY) minY = yy; if (xx > maxX) maxX = xx; if (yy > maxY) maxY = yy;
-  }
-  if (maxX < minX) { minX = 0; minY = 0; maxX = w - 1; maxY = h - 1; }
-  var cw = maxX - minX + 1, ch = maxY - minY + 1, s = Math.min(size / cw, size / ch);
-  var out = CC.makeCanvas(size, size), o = out.getContext('2d');
-  o.imageSmoothingEnabled = s < 1; // shrinking a big picture needs smoothing; tiny pixel art stays hard-edged
-  var dw = Math.round(cw * s), dh = Math.round(ch * s);
-  o.drawImage(cv, minX, minY, cw, ch, Math.round((size - dw) / 2), size - dh, dw, dh);
-  return out;
-}
+// ---------- pictures from art/ (packed into the page by tools/build.mjs) ----------
+CC.IMG = {};
+CC.loadArt = function () {
+  var keys = Object.keys(CC.ART || {});
+  return Promise.all(keys.map(function (k) {
+    return new Promise(function (res) {
+      var im = new Image();
+      im.onload = function () { CC.IMG[k] = im; res(); };
+      im.onerror = function () { res(); };
+      im.src = CC.ART[k];
+    });
+  }));
+};
+CC.img = function (key) { return CC.IMG[key] || null; };
 
+// A creature's sprite: its picture if there is one (made by tools/import-art.py: true pixel size, no
+// background), else the code-drawn stand-in. sprite.fit scales a picture to the 64 px battle size.
 var spriteCache = {};
 CC.creatureSprite = function (id) {
   if (spriteCache[id]) return spriteCache[id];
-  var c = CC.CREATURES[id];
-  spriteCache[id] = paintStandIn(c);
-  var src = CC.ART && CC.ART['creatures/' + id];
-  if (src) {
-    var img = new Image();
-    img.onload = function () { spriteCache[id] = keyAndFit(img, 64); tintCache = {}; };
-    img.src = src;
-  }
-  return spriteCache[id];
+  var im = CC.img('creatures/' + id), cv;
+  if (im) {
+    cv = CC.makeCanvas(im.width, im.height); cv.getContext('2d').drawImage(im, 0, 0);
+    cv.fit = Math.min(70 / im.width, 66 / im.height);
+  } else cv = paintStandIn(CC.CREATURES[id]);
+  spriteCache[id] = cv;
+  return cv;
 };
 
 // a solid-color copy of a sprite (white flash on hits, shadows, the evolution silhouette)
@@ -229,7 +205,7 @@ CC.tinted = function (sprite, color, key) {
 CC.drawSprite = function (sprite, x, y, o) {
   o = o || {};
   var g = CC.g, w = sprite.width, h = sprite.height;
-  var sx = (o.sx || 1) * (o.scale || 1), sy = (o.sy || 1) * (o.scale || 1);
+  var fit = sprite.fit || 1, sx = (o.sx || 1) * (o.scale || 1) * fit, sy = (o.sy || 1) * (o.scale || 1) * fit;
   g.save();
   g.globalAlpha = o.alpha == null ? 1 : o.alpha;
   g.translate(Math.round(x), Math.round(y));
@@ -251,6 +227,15 @@ CC.drawSprite = function (sprite, x, y, o) {
 CC.drawCube = function (x, y, size, o) {
   o = o || {};
   var g = CC.g, s = size || 8, h = s / 2;
+  var art = CC.img(o.open ? 'ui/cube-open' : 'ui/cube');
+  if (art) { // the generated cube, a little bigger than the code one so its detail reads
+    var k = s * 1.5 / art.width;
+    g.save(); g.translate(Math.round(x), Math.round(y)); if (o.rot) g.rotate(o.rot);
+    g.drawImage(art, -art.width * k / 2, -art.height * k + s * 0.75, art.width * k, art.height * k);
+    if (o.glow) { g.globalAlpha = o.glow * 0.8; g.drawImage(CC.tinted(art, '#ffffff', 'cube' + (o.open ? 'o' : '')), -art.width * k / 2, -art.height * k + s * 0.75, art.width * k, art.height * k); }
+    g.restore();
+    return;
+  }
   g.save(); g.translate(Math.round(x), Math.round(y)); if (o.rot) g.rotate(o.rot);
   g.fillStyle = '#1e1626'; g.fillRect(-h - 1, -h - 1, s + 2, s + 2);
   var open = o.open || 0;

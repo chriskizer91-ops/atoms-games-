@@ -118,12 +118,35 @@ CC.easeOut = function (k) { return 1 - (1 - k) * (1 - k); };
 CC.FONT = 'Pixelify';
 CC.text = function (str, x, y, color, opts) {
   var g = CC.g; opts = opts || {};
+  str = String(str).replace(/f([filt])/g, 'f\u200c$1'); // break the font's ligatures
   g.font = (opts.size || 10) + 'px ' + CC.FONT + ', monospace';
   g.textBaseline = 'top';
   g.textAlign = opts.align || 'left';
   if (opts.shadow !== false) { g.fillStyle = opts.shadow || 'rgba(0,0,0,0.18)'; g.fillText(str, x + 0.5, y + 0.6); }
   g.fillStyle = color || '#2a2230';
   g.fillText(str, x, y);
+};
+// Numbers in a hand-made 5 x 7 pixel font: the main font's small "2" reads as an "8".
+var DIGITS = {
+  '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'], '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+  '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'], '3': ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+  '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'], '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+  '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'], '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+  '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'], '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+  '/': ['00001', '00010', '00010', '00100', '01000', '01000', '10000'], ' ': ['', '', '', '', '', '', ''],
+};
+CC.numWidth = function (str) { return String(str).length * 6 - 1; };
+// draws digits (and / and spaces); x is the left edge, or the right edge with align 'right'
+CC.num = function (str, x, y, color, align) {
+  var g = CC.g; str = String(str);
+  if (align === 'right') x -= CC.numWidth(str);
+  for (var pass = 0; pass < 2; pass++) {
+    g.fillStyle = pass ? (color || '#2a2230') : 'rgba(0,0,0,0.15)';
+    for (var i = 0; i < str.length; i++) {
+      var rows = DIGITS[str[i]] || DIGITS[' '];
+      for (var r = 0; r < 7; r++) for (var c = 0; c < 5; c++) if (rows[r][c] === '1') g.fillRect(Math.round(x) + i * 6 + c + (pass ? 0 : 0.5), Math.round(y) + r + (pass ? 0 : 0.5), 1, 1);
+    }
+  }
 };
 CC.textWidth = function (str, size) {
   CC.g.font = (size || 10) + 'px ' + CC.FONT + ', monospace';

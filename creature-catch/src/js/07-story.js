@@ -25,33 +25,44 @@ CC.fight = async function (opts) {
 CC.NPCS = {
   village: [
     {
-      x: 12, y: 1, look: 'tinker', dir: 'down', talk: async function () {
+      x: 12, y: 1, look: 'tinker', art: 'tinker', h: 22, dir: 'down', talk: async function () {
         if (!F().starter) await CC.say('Elder Willow is looking for you! His house is the big one with the mossy roof.', { who: 'Tinker' });
         else await CC.talk('Tinker', ['Creatures hide in tall grass. Walk through it and one might jump out!', 'Knock it down a bit, then throw a cube. Sleeping or frozen ones are easiest to catch!']);
       },
     },
+    { x: 7, y: 4, look: 'willow', art: 'willow', h: 27, dir: 'down', talk: function () { return willowHouse(); } },
+    { x: 14, y: 4, look: 'pip', art: 'pip', h: 24, dir: 'down', talk: function () { return CC.enterDoor('village', 'shop'); } },
+    { x: 14, y: 11, look: 'hazel', art: 'hazel', h: 25, dir: 'down', talk: function () { return CC.enterDoor('village', 'hut'); } },
     {
-      x: 9, y: 13, look: 'rosa', dir: 'down', talk: async function () {
+      x: 9, y: 2, look: 'juniper', art: 'juniper', h: 26, dir: 'down', when: function () { return F().starter && !F().trial1; }, talk: async function () {
+        await CC.talk('Juniper', F().juniper1 === 'won'
+          ? ['Don\'t get cocky. That was a warm-up!', 'I\'m off to beat Farmer Bramble\'s trial before you. See ya!']
+          : ['Still thinking about our battle? Ha!', 'Type advantage matters, but so does training. Catch more creatures!']);
+      },
+    },
+    {
+      x: 9, y: 13, look: 'rosa', art: 'rosa', h: 25, dir: 'down', talk: async function () {
         await CC.talk('Rosa', ['Lovely day for the Meadow Path.', 'The creatures out there are plain Normal types. They don\'t care whether you picked water, fire or plant, so it\'s fair training for everyone.']);
       },
     },
   ],
+  // (village people continue below)
   meadow: [
     {
-      x: 3, y: 8, look: 'ranger', dir: 'right', talk: async function () {
-        await CC.talk('Hiker', ['Every region has an outpost with a Healing Hut. The Grassland one is just north of here.', 'You can swap creatures with the Cube Vault at any Healing Hut.']);
+      x: 3, y: 8, look: 'ranger', art: 'oakley', h: 27, dir: 'right', talk: async function () {
+        await CC.talk('Ranger Oakley', ['I\'m Ranger Oakley. I keep the Forest, but I like to scout the meadow.', 'Every region has an outpost with a Healing Hut. The Grassland one is just north of here.', 'You can swap creatures with the Cube Vault at any Healing Hut.']);
       },
     },
   ],
   grassland: [
     {
-      x: 12, y: 1, look: 'bramble', dir: 'down', id: 'bramble', talk: async function () {
+      x: 12, y: 1, look: 'bramble', art: 'bramble', h: 26, dir: 'down', id: 'bramble', talk: async function () {
         if (F().trial1) { await CC.say('The Forest trail is all yours. Mind the owls!', { who: 'Farmer Bramble' }); return; }
         await CC.talk('Farmer Bramble', ['Howdy! I\'m Farmer Bramble, guide of the Grassland.', 'That fallen log is the only way into the Forest, and I only clear it for trainers who can handle the creatures out there.']);
         if (!(await CC.yesNo('Ready for my trail trial?', 'Farmer Bramble'))) { await CC.say('Come back when you\'re ready. The outpost will patch you up.', { who: 'Farmer Bramble' }); return; }
         var r = await CC.fight({
           trainer: {
-            name: 'Farmer Bramble', look: 'bramble', coins: 240,
+            name: 'Farmer Bramble', look: 'bramble', art: 'bramble', coins: 240,
             intro: 'My critters have been working the fields all morning. Show me what you\'ve got!',
             winText: 'Well I\'ll be! You\'ve earned it.', loseText: 'Ha! Not quite yet. Rest up and try again.',
             team: [CC.mon.make('hopsprout', 7), CC.mon.make('pebblepup', 7), CC.mon.make('tuftail', 8)],
@@ -73,7 +84,7 @@ CC.NPCS = {
       },
     },
     {
-      x: 6, y: 11, look: 'tinker', dir: 'right', talk: async function () {
+      x: 6, y: 11, look: 'tinker', art: 'villager-2', h: 21, dir: 'right', talk: async function () {
         await CC.talk('Farm Kid', ['Dandylion lives here, but it\'s super rare. I\'ve only seen its fluffy mane once!', 'Tuftail loves the tall grass by the trees.']);
       },
     },
@@ -83,6 +94,12 @@ function B_moveAside() {
   var b = CC.NPCS.grassland.find(function (n) { return n.id === 'bramble'; });
   b.x = 15; b.y = 2; b.dir = 'left';
 }
+
+// who speaks -> whose picture shows beside the dialog box
+CC.PORTRAITS = {
+  'Elder Willow': 'willow', 'Juniper': 'juniper', 'Pip': 'pip', 'Hazel': 'hazel', 'Farmer Bramble': 'bramble',
+  'Tinker': 'tinker', 'Rosa': 'rosa', 'Ranger Oakley': 'oakley', 'Farm Kid': 'villager-2', 'Fern': 'villager-7',
+};
 
 CC.SIGNS = {
   'village:6,7': 'Home Village. Elder Willow: top left. Pip\'s Cube Shop: top right. Healing Hut: bottom right. Meadow Path: north.',
@@ -175,9 +192,9 @@ async function willowHouse() {
     'Let\'s see whose creature is tougher. Battle me!',
   ]);
   var result = await CC.fight({
-    canLose: true,
+    canLose: true, bg: 'village',
     trainer: {
-      name: 'Juniper', look: 'juniper', coins: 100,
+      name: 'Juniper', look: 'juniper', art: 'juniper', coins: 100,
       winText: 'What?! I had the type advantage! Next time, I\'m winning.',
       loseText: 'Ha! Told you. Type advantage, baby!',
       team: [CC.mon.make(rival, 5)],
@@ -260,7 +277,17 @@ CC.titleScreen = function () {
         if (CC.input.pressed.a || CC.input.pressed.start) { CC.sfx('select'); CC.pop(scr); resolve(items[sel]); }
       },
       draw: function () {
-        var g = CC.g;
+        var g = CC.g, art = CC.img('bg/title');
+        if (art) {
+          g.drawImage(art, 0, 0, 240, 160);
+          CC.text('Creature Catch', 120, 10, '#ffffff', { size: 22, align: 'center', shadow: '#5a2a6e' });
+          g.globalAlpha = 0.85; CC.box(120 - 40, 104, 80, items.length * 14 + 8); g.globalAlpha = 1;
+          items.forEach(function (it, i) {
+            CC.text(it, 120, 108 + i * 14, '#2a2230', { align: 'center' });
+            if (i === sel) CC.cursor(120 - CC.textWidth(it) / 2 - 10, 110 + i * 14);
+          });
+          return;
+        }
         var grd = g.createLinearGradient(0, 0, 0, 160); grd.addColorStop(0, '#f8b070'); grd.addColorStop(0.55, '#f8e0a0'); grd.addColorStop(1, '#a8d880');
         g.fillStyle = grd; g.fillRect(0, 0, 240, 160);
         g.fillStyle = '#8ab8a0'; g.beginPath(); g.moveTo(0, 96); for (var x = 0; x <= 240; x += 10) g.lineTo(x, 86 + Math.sin(x * 0.04) * 8); g.lineTo(240, 160); g.lineTo(0, 160); g.fill();
@@ -287,8 +314,41 @@ CC.titleScreen = function () {
   });
 };
 
+// pick which explorer you are (Player A or Player B art)
+function chooseExplorer() {
+  return new Promise(function (resolve) {
+    var sel = 0, looks = ['player-a', 'player-b'];
+    var scr = {
+      name: 'explorer', opaque: true,
+      update: function () {
+        if (CC.input.pressed.left || CC.input.pressed.right) { sel ^= 1; CC.sfx('blip'); }
+        if (CC.input.pressed.a) { CC.sfx('select'); CC.pop(scr); resolve(looks[sel]); }
+      },
+      draw: function () {
+        var bg = CC.img('bg/title');
+        if (bg) { CC.g.drawImage(bg, 0, 0, 240, 160); CC.g.globalAlpha = 0.55; CC.rect(0, 0, 240, 160, '#1b1626'); CC.g.globalAlpha = 1; }
+        else CC.rect(0, 0, 240, 160, '#2a2440');
+        CC.text('Which explorer are you?', 120, 8, '#ffffff', { align: 'center', shadow: '#000000' });
+        looks.forEach(function (l, i) {
+          var x = 70 + i * 100, on = i === sel, art = CC.img('people/' + l);
+          if (on) { CC.g.fillStyle = 'rgba(255,240,180,0.25)'; CC.g.beginPath(); CC.g.ellipse(x, 126, 30, 7, 0, 0, Math.PI * 2); CC.g.fill(); }
+          if (art) {
+            var h = on ? 96 : 84, k = h / art.height, bob = on ? Math.abs(Math.sin(CC.time * 4)) * -3 : 0;
+            CC.g.globalAlpha = on ? 1 : 0.6;
+            CC.g.drawImage(art, x - art.width * k / 2, 126 - h + bob, art.width * k, h);
+            CC.g.globalAlpha = 1;
+          } else CC.g.drawImage(CC.person('player', 'down', 0), x - 24, 78, 48, 48);
+        });
+        CC.text('Left / right to choose, A to start.', 120, 142, '#fff4c0', { size: 9, align: 'center', shadow: '#000000' });
+      },
+    };
+    CC.push(scr);
+  });
+}
+
 CC.newGame = async function () {
   CC.state = CC.newState();
+  CC.state.look = await chooseExplorer();
   CC.world.enter('village', 4, 12, 'down');
   CC.push(CC.world);
   await CC.world.run(async function () {
