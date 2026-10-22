@@ -23,6 +23,7 @@ var CC = window.CC || (window.CC = {});
         foeTeam: opts.wild ? [opts.wild] : opts.trainer.team, foeIndex: 0,
         allyIndex: CC.firstHealthy(), runs: 0, fought: {}, leveled: {}, shake: 0, flashScreen: 0, intro: 0, trainerShown: !!opts.trainer,
         bg: opts.bg || (CC.world.map && CC.world.map.spawns) || 'grassland',
+        noCatch: opts.noCatch, noRun: opts.noRun, introText: opts.introText, boss: opts.boss,
       };
       B.foe = side(B.foeTeam[0], true);
       B.ally = side(null, false);
@@ -39,7 +40,7 @@ var CC = window.CC || (window.CC = {});
 
   // ---------- drawing ----------
   // which battle picture goes with which place
-  var BG_ART = { meadow: 'grassland', grassland: 'grassland', village: 'village-training', forest: 'forest', water: 'water', cave: 'cave', desert: 'desert', snow: 'snow', swamp: 'swamp', ruins: 'night-ruins' };
+  var BG_ART = { meadow: 'grassland', grassland: 'grassland', village: 'village-training', forest: 'forest', water: 'water', cave: 'cave', desert: 'desert', snow: 'snow', swamp: 'swamp', ruins: 'night-ruins', spire: 'moonlit-spire' };
   function drawBackground() {
     var g = CC.g, bg = B.bg, art = CC.img('bg/' + (BG_ART[bg] || bg));
     if (art) {
@@ -82,7 +83,7 @@ var CC = window.CC || (window.CC = {});
     // shadow
     CC.g.fillStyle = 'rgba(0,0,0,0.18)'; CC.g.beginPath(); CC.g.ellipse(s.home.x, s.home.y - 1, 22 * s.scale, 4 * s.scale, 0, 0, Math.PI * 2); CC.g.fill();
     var bob = sp.look.body === 'ghost' || sp.look.body === 'bird' && m.status !== 'sleep' ? Math.sin(t * 2.2) * 2 : 0;
-    var size = s.foe ? 0.86 : 1; // the far one is a little smaller
+    var size = s.foe ? (B.boss ? 1.12 : 0.86) : 1; // the far one is a little smaller
     CC.drawSprite(sprite, x, y + bob - (ghosty ? 2 : 0), {
       scale: size, flip: !s.foe, sx: s.sx * s.scale * (1 - breathe * 0.5) * (1 + low), sy: s.sy * s.scale * (1 + breathe), alpha: s.alpha,
       flash: s.flash, id: m.id + (s.foe ? 'f' : 'a'), wave: s.wave || ghosty, waveSpeed: ghosty && !s.wave ? 3 : 14,
@@ -468,6 +469,7 @@ var CC = window.CC || (window.CC = {});
         if (mv) return { kind: 'move', move: mv };
       } else if (a === 1) {
         if (!B.wild) { await CC.say('You can\'t catch another trainer\'s creature!'); continue; }
+        if (B.noCatch) { await CC.say(B.noCatch); continue; }
         var have = CC.CUBE_KINDS.filter(function (k) { return CC.state.bag[k] > 0; });
         if (!have.length) { await CC.say('You don\'t have any cubes!'); continue; }
         if (have.length === 1) return { kind: 'cube', cube: have[0] };
@@ -478,6 +480,7 @@ var CC = window.CC || (window.CC = {});
         if (i >= 0) return { kind: 'swap', index: i };
       } else if (a === 3) {
         if (!B.wild) { await CC.say('No running from a trainer battle!'); continue; }
+        if (B.noRun) { await CC.say(B.noRun); continue; }
         return { kind: 'run' };
       }
     }
@@ -581,8 +584,9 @@ var CC = window.CC || (window.CC = {});
     if (B.wild) {
       B.foe.scale = 1;
       await CC.tween(0.25, function (k) { B.foe.sy = 1 + Math.sin(k * Math.PI) * 0.2; B.foe.oy = -Math.sin(k * Math.PI) * 10; });
-      CC.burst('Plant', FOE.x, FOE.y - 4, 10, 50, { kind: 'grass', grav: 150 });
-      await CC.say('A wild ' + CC.mon.name(B.foe.mon) + ' jumped out!');
+      if (B.boss) { CC.sfx('encounter'); B.shake = 6; CC.burst('Shadow', FOE.x, FOE.y - 20, 24, 70); }
+      else CC.burst('Plant', FOE.x, FOE.y - 4, 10, 50, { kind: 'grass', grav: 150 });
+      await CC.say(B.introText || 'A wild ' + CC.mon.name(B.foe.mon) + ' jumped out!');
     } else {
       B.trainerX = 0;
       await CC.say(B.trainer.name + ' wants to battle!');

@@ -238,6 +238,11 @@ CC.bar = function (x, y, w, k, color) {
       case 'evolve': [262, 330, 392, 523, 392, 523, 659, 784, 1047].forEach(function (f, i) { tone(f, 0.16, 'triangle', 0.06, 0, i * 0.14); }); break;
       case 'status': tone(300, 0.2, 'sawtooth', 0.04, 0.6); break;
       case 'shoot': noise(0.1, 0.05); tone(700, 0.12, 'square', 0.03, 0.5); break;
+      case 'gate': noise(0.5, 0.12); tone(70, 0.5, 'triangle', 0.1, 0.6); tone(55, 0.4, 'square', 0.04, 0.8, 0.2); break;
+      case 'chest': [392, 523, 659, 1047].forEach(function (f, i) { tone(f, 0.09, 'square', 0.045, 0, i * 0.07); }); break;
+      case 'charm': [523, 523, 523, 659, 784, 659, 784, 1047].forEach(function (f, i) { tone(f, i === 7 ? 0.4 : 0.11, 'square', 0.05, 0, [0, 0.12, 0.24, 0.36, 0.48, 0.66, 0.78, 0.96][i]); }); break;
+      case 'moon': [659, 784, 988, 1319, 988, 1319, 1568].forEach(function (f, i) { tone(f, 0.5, 'sine', 0.05, 0, i * 0.22); }); break;
+      case 'boss': [110, 104, 98, 92].forEach(function (f, i) { tone(f, 0.35, 'sawtooth', 0.06, 0.9, i * 0.3); }); noise(1.2, 0.08); break;
     }
   };
 })();

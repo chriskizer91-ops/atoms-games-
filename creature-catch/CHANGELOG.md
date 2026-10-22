@@ -2,7 +2,16 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
-## v6 (in progress, not delivered yet)
+## v6: the full game
+- **The whole world:** seven new regions in a straight line north of the Grassland: the Forest, Lakeshore, Crystal Cave, Sunscorch Desert, Frostpeak Pass, Murkmire Swamp and the Night Ruins. Each has its own tileset, hiding spots (tall grass, glowing moss, dry grass, snow drifts, reeds), weather drawn in code (falling leaves, gulls, cave dark with glowing crystals, desert heat and blowing sand, snowfall, swamp fog and fireflies, the night over the ruins), a landmark (the Elder Tree, the lighthouse, the oasis, the frozen falls, the Moon Altar), an outpost with a Healing Hut keeper and the Cube Vault, a guide's home with their journal, two route trainers, and treasure chests.
+- **Guide trials:** Ranger Oakley (Lv 12), Fisher Gus (15), Dusty (20), Safi (24), Frida (28), Granny Moss (32) and Night Watchman Corvin (37). Each win gives a trail charm, a piece of the moon's story, and opens their gate: the rope bridge, the rockslide, the sandstorm, the ice wall, the boardwalk and the rune gate.
+- **Fly in the story:** Dusty hands you the Wooden Whistle after the Cave trial. Every region is on the Fly map.
+- **14 route trainers** spot you, walk over with a "!", and battle.
+- **Juniper's rival battles** at the Forest (Lv 12), the Cave (22), the snow pass (32, older Juniper and the rivals still) and the Night Ruins (40). Her team covers your starter's weaknesses.
+- **The Fading Moon:** story stills at the start, for Elder Willow's legend, on the mountain, at the ruins, for the guardian, and the ending. The finale is a boss battle with the Dimmed Lunarion on the Moon Altar; calm it, and Lunarion can be caught. Then the credits.
+- **After the story:** the Moonlit Spire opens beside the altar, with wild creatures at Lv 38 to 48, rematches with all seven guides at Lv 44 to 47, a last battle with Juniper at Lv 50, and Lunarion waiting at the top if it got away.
+- **New items:** Tonic, Full Tonic, Cure Herb, Revive, the Sun Shard (Desert chest) and Moon Shards (Swamp and Night Ruins chests), used from the Bag. Wandering Merchant Tobias sells Ultra Cubes at the outposts from the Desert on. Corvin gives you the Master Cube.
+- **New codes:** `GOTO` any region, `TRIAL <region>` / `TRIAL ALL`, `FINALE` and `ENDING`.
 - **Every creature has art now:** Mudgator, Mireling, Wispkin, Pebbleton, Bonecat and Moonlynx arrived in the repair pack.
 - **The grass-spawn picture** shakes in the tall grass before a creature jumps out.
 - **Fern** has her own art and portrait, and Bramble and Tinker have painted portraits.

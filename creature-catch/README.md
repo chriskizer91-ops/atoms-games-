@@ -26,13 +26,17 @@ Hold L + R and press MENU (or press Up Up Down Down Left Right Left Right B A on
 
 The current version is in `VERSION` and shows on the title screen. `CHANGELOG.md` lists what each version changed.
 
-## What's in the first slice
+## What's in the game (v6, the full game)
 
-- **Home Village:** Elder Willow gives you your starter, Juniper picks the one that beats yours and battles you, Pip runs the cube shop, Hazel's Healing Hut heals you and holds the Cube Vault, and you can rest at home.
-- **Meadow Path:** the first route. Only Normal-type creatures live here (Clovermouse, Hopsprout), so no starter has an edge.
-- **Grassland:** Tuftail, Pebblepup, Bumblop, and the rare Dandylion. There's an outpost Healing Hut with Vault access, and Farmer Bramble's trail trial, which opens the fallen log to the Forest and gives you the Vault Key.
-- **Battles:** Fight / Cube / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP, level-ups, learning moves, evolving after a battle, and the catch formula with a wobbling cube.
-- **Code-drawn life:** creatures breathe, bob, lunge, flash, shake, and faint. Attacks throw type particles, strong moves charge up and burst, and status effects smoke, bubble, and spark.
+**The Fading Moon.** The moon over the land is dimming, and frightened creatures hide in the tall grass. Elder Willow gives you your first creature and sends you north to find out why.
+
+- **10 places in a straight line:** Home Village, Meadow Path, Grassland, Forest, Lakeshore, Crystal Cave, Sunscorch Desert, Frostpeak Pass, Murkmire Swamp and the Night Ruins. Each region has its own tiles, weather and landmark, an outpost (Healing Hut keeper and Cube Vault), a guide's home, route trainers and treasure chests.
+- **8 guide trials** (Bramble, Oakley, Gus, Dusty, Safi, Frida, Granny Moss, Corvin). Each gives a trail charm and a piece of the story, and opens the gate north.
+- **Juniper**, your rival, battles you five times with a team built against your starter.
+- **Fly** comes from Dusty after the Cave trial: the Wooden Whistle takes you to any place you've been.
+- **The finale** at the Moon Altar: calm the Dimmed Lunarion, then try to catch it. Then the credits, and the **Moonlit Spire** after the story (Lv 38 to 48 wilds, guide rematches, Juniper at Lv 50).
+- **Battles:** Fight / Cube / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP, level-ups, learning moves, evolving after a battle (or with the Sun and Moon Shards), four cube tiers, and the catch formula with a wobbling cube.
+- **Code-drawn life:** creatures breathe, bob, lunge, flash, shake and faint; attacks throw type particles and bursts; the maps have smoke, butterflies, falling leaves, snow, fog, fireflies, heat shimmer and glowing crystals.
 
 ## Art
 
@@ -43,7 +47,7 @@ python3 tools/import-art.py <folder with the unzipped art packs>
 node tools/build.mjs
 ```
 
-The results land in `art/` (creatures, people, walk, tiles, bg, buildings, props, ui). Anything without art yet (most evolved forms, for now) uses a code-drawn stand-in.
+The results land in `art/` (creatures, people, walk, tiles, bg, buildings, props, ui). Every creature has art; the code-drawn stand-ins only show if a picture is missing.
 
 What's drawn in code on top of the art: path edges and shorelines, NPC breathing and hops, chimney smoke, butterflies, lantern glow, cloud shadows, every battle animation, and the dialog portraits (cut from the character art).
 

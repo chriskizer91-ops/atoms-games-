@@ -169,7 +169,13 @@ CC.MAPS['home-in'] = room('Your House', [
 // which room each door opens
 CC.DOORS = { willow: 'willow-in', hut: 'hut-in', shop: 'shop-in', home: 'home-in', outpost: 'outpost-in' };
 
-var SOLID = { T: 1, '~': 1, o: 1, S: 1, '=': 1, '#': 1, W: 1, w: 1, P: 1 };
+var SOLID = { T: 1, '~': 1, o: 1, S: 1, '=': 1, '#': 1, W: 1, w: 1, P: 1, L: 1 };
+// is this tile a wall? (region maps can make more letters solid in their legend)
+CC.tileSolid = function (map, t) {
+  if (SOLID[t]) return true;
+  var e = map.legend && CC.LEGENDS[map.legend][t];
+  return !!(e && e.solid);
+};
 var T = 16;
 
 function hash(x, y) { var h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; }
@@ -177,7 +183,7 @@ function hash(x, y) { var h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >
 CC.tileAt = function (map, x, y) {
   if (y < 0 || y >= map.rows.length || x < 0 || x >= map.rows[0].length) return null;
   var t = map.rows[y][x];
-  if (t === '=' && CC.state.flags.logCleared) return ':';
+  if (t === '=' && CC.state.flags[map.gateFlag || 'logCleared']) return ':';
   return t;
 };
 
@@ -253,8 +259,8 @@ function drawDirt(g, x, y, map, ts) {
       g.fillStyle = 'rgba(70,45,20,0.28)'; g.fillRect(px + sh[0], py + sh[1], sh[2], sh[3]);
       atlasTile(g, ts.atlas, ts.grass, px, py, r[0], r[1], r[2], r[3]);
       // a darker blade tip now and then so the edge reads as grass, not a cut line
-      if (hash(i, x + y * 7 + s[0] * 3) < 0.3) {
-        g.fillStyle = 'rgba(30,90,30,0.7)';
+      if (ts.tip !== 'none' && hash(i, x + y * 7 + s[0] * 3) < 0.3) {
+        g.fillStyle = ts.tip || 'rgba(30,90,30,0.7)';
         if (s[1]) g.fillRect(px + i, s[1] < 0 ? py + depth : py + TP - depth - 1, 1, 1); else g.fillRect(s[0] < 0 ? px + depth : px + TP - depth - 1, py + i, 1, 1);
       }
     }
@@ -332,6 +338,7 @@ function drawInteriorTile(g, t, x, y, map) {
 
 function drawArtTile(g, t, x, y, map) {
   if (map.indoors) return drawInteriorTile(g, t, x, y, map);
+  if (map.legend) return drawLegendTile(g, t, x, y, map);
   var ts = TILESET[map.tileset || 'grass'], px = x * TP, py = y * TP, r = hash(x, y);
   var grass = function () { return variedTile(g, ts.atlas, ts.grass, x, y); };
   switch (t) {
@@ -348,6 +355,82 @@ function drawArtTile(g, t, x, y, map) {
     case 'S': grass(); return standOnTile(g, CC.img(map.signArt || 'props/village-props-11') || CC.img('props/village-props-1'), x, y, map.signArt ? 17 : 15);
   }
   return false;
+}
+
+// ---------- region maps: tiles come from the map's legend (CC.LEGENDS in 14-regions.js) ----------
+// one tile from an atlas, picked by a hash from a list; ground tiles mirror both ways, standing things only sideways
+// inset: trims a frame some tiles were drawn with; turn: lays the tile on its side
+function legendPiece(g, atlas, cols, list, x, y, flip, inset, turn) {
+  var a = CC.img('tiles/' + atlas);
+  if (!a || !list || !list.length) return false;
+  var idx = list[Math.floor(hash(x * 7 + 3, y * 13 + 1) * list.length)], n = inset || 0;
+  var fx = flip && hash(x * 3 + 1, y) < 0.5, fy = flip === 2 && hash(x, y * 5 + 2) < 0.5;
+  g.save(); g.translate(x * TP + TP / 2, y * TP + TP / 2); g.scale(fx ? -1 : 1, fy ? -1 : 1);
+  if (turn) g.rotate(Math.PI / 2);
+  g.drawImage(a, (idx % cols) * 32 + n, Math.floor(idx / cols) * 32 + n, 32 - 2 * n, 32 - 2 * n, -16, -16, 32, 32);
+  g.restore();
+  return true;
+}
+function legendGround(g, lg, x, y) {
+  if (lg.fill) { g.fillStyle = lg.fill; g.fillRect(x * TP, y * TP, TP, TP); }
+  return legendPiece(g, lg.groundAtlas || lg.atlas, lg.cols || 4, lg.ground, x, y, 2) || !!lg.fill;
+}
+// cave walls: dark rock with a lit rocky face wherever the floor is below, and a rim along the floor beside it
+function drawCaveWall(g, x, y, map, lg) {
+  var px = x * TP, py = y * TP, wall = function (dx, dy) { var t = CC.tileAt(map, x + dx, y + dy); return t === null || t === 'T'; };
+  g.fillStyle = '#17141f'; g.fillRect(px, py, TP, TP);
+  for (var i = 0; i < 5; i++) { g.fillStyle = i % 2 ? '#221d2c' : '#1d1926'; g.fillRect(px + Math.floor(hash(x * 5 + i, y) * 26), py + Math.floor(hash(x, y * 5 + i) * 26), 5, 3); }
+  var a = CC.img('tiles/' + lg.atlas);
+  if (!a) return;
+  // the rocky rim from the cave atlas: tile 7 is void above a rim, tile 4 is void beside a rim
+  if (!wall(0, 1)) g.drawImage(a, 96, 32, 32, 26, px, py + 6, 32, 26);
+  if (!wall(0, -1)) { g.save(); g.translate(px, py + 26); g.scale(1, -1); g.drawImage(a, 96, 40, 32, 18, 0, 0, 32, 18); g.restore(); }
+  if (!wall(1, 0)) g.drawImage(a, 0, 32, 16, 32, px + 16, py, 16, 32);
+  if (!wall(-1, 0)) { g.save(); g.translate(px + 16, py); g.scale(-1, 1); g.drawImage(a, 0, 32, 16, 32, 0, 0, 16, 32); g.restore(); }
+}
+function drawLegendTile(g, t, x, y, map) {
+  var lg = CC.LEGENDS[map.legend], e = lg[t], cols = lg.cols || 4;
+  var isPath = function (dx, dy) { var n = CC.tileAt(map, x + dx, y + dy); return n === ':' || n === '='; };
+  var piece = function (en, flip, turn) { return legendPiece(g, en.atlas || lg.atlas, en.atlas ? 4 : cols, en.i, x, y, en.noflip ? 0 : flip, en.inset, turn); };
+  var path = function () {
+    var pe = lg[':'];
+    if (pe && pe.deck) { // a wide wooden deck: the planks from a boardwalk tile, with dark edges and posts where it ends
+      var da = CC.img('tiles/' + lg.atlas), di = pe.deck, turn = (isPath(-1, 0) || isPath(1, 0)) && !isPath(0, -1) && !isPath(0, 1);
+      if (!da) return legendGround(g, lg, x, y);
+      g.save(); g.translate(x * TP + 16, y * TP + 16); if (turn) g.rotate(Math.PI / 2);
+      g.drawImage(da, (di % 4) * 32 + 7, Math.floor(di / 4) * 32 + (hash(x, y) < 0.5 ? 0 : 0), 18, 32, -16, -16, 32, 32);
+      g.restore();
+      var px = x * TP, py = y * TP;
+      g.fillStyle = 'rgba(30,20,10,0.55)';
+      if (!isPath(-1, 0)) g.fillRect(px, py, 3, TP);
+      if (!isPath(1, 0)) g.fillRect(px + TP - 3, py, 3, TP);
+      if (!isPath(0, -1)) g.fillRect(px, py, TP, 2);
+      if (!isPath(0, 1)) { g.fillStyle = 'rgba(30,20,10,0.4)'; g.fillRect(px, py + TP - 3, TP, 3); }
+      g.fillStyle = '#4a3220';
+      if (!isPath(-1, 0) && y % 2 === 0) g.fillRect(px, py + 2, 4, 5);
+      if (!isPath(1, 0) && y % 2 === 0) g.fillRect(px + TP - 4, py + 2, 4, 5);
+      return true;
+    }
+    if (pe && pe.i) {
+      if (pe.under) legendGround(g, lg, x, y);
+      return piece(pe, 1, pe.turns && (isPath(-1, 0) || isPath(1, 0)) && !isPath(0, -1) && !isPath(0, 1));
+    }
+    if (lg.pathTint) { legendGround(g, lg, x, y); g.fillStyle = lg.pathTint; g.fillRect(x * TP, y * TP, TP, TP); return true; }
+    if (lg.dirtFrom == null) return legendGround(g, lg, x, y);
+    drawDirt(g, x, y, map, { atlas: lg.groundAtlas || lg.atlas, grass: lg.ground[0], dirtFrom: lg.dirtFrom, tip: lg.tip });
+    return true;
+  };
+  switch (t) {
+    case ':': case '=': return path();
+    case '~': if (e && e.water) return drawWater(g, x, y, map); break;
+    case 'T': if (lg.wall) { drawCaveWall(g, x, y, map, lg); return true; } if (lg.trees) return legendGround(g, lg, x, y); break;
+    case 'S': legendGround(g, lg, x, y); return standOnTile(g, CC.img(map.signArt) || CC.img('props/village-props-11'), x, y, 17);
+    case 'L': case '.': return legendGround(g, lg, x, y);
+  }
+  if (!e) return legendGround(g, lg, x, y);
+  if (e.prop) { legendGround(g, lg, x, y); return standOnTile(g, CC.img(e.prop), x, y, e.h || 14); }
+  if (e.under) legendGround(g, lg, x, y);
+  return piece(e, t === ',' || t === 'r' || t === '~' ? 2 : 1) || legendGround(g, lg, x, y);
 }
 
 // ---------- the code-drawn tiles (used when the tileset art is missing) ----------
@@ -458,10 +541,18 @@ var BUILDING_ART = {
   home: { art: 'player-house', door: 0.33, smoke: [0.78, 0.13] },
   hut: { art: 'healing-hut', door: 0.5 }, outpost: { art: 'outpost-hut', door: 0.55, fallback: 'healing-hut' }, inn: { art: 'inn', door: 0.36, smoke: [0.73, 0.03] },
 };
+// buildings on the region maps name their picture (art) and these say how wide it is drawn and where its door sits
+var ART_INFO = {
+  'bramble-farmhouse': { door: 0.42, smoke: null }, 'oakley-ranger-station': { door: 0.45 }, 'gus-dock-shack': { door: 0.5 },
+  'dusty-mine-office': { door: 0.5 }, 'safi-nomad-tent': { door: 0.45 }, 'frida-log-cabin': { door: 0.42, smoke: [0.27, 0.02] },
+  'granny-moss-hut': { door: 0.5 }, 'corvin-watchtower': { door: 0.5, width: 34 }, 'moonlit-spire': { door: 0.5, width: 44 },
+  'outpost-hut': { door: 0.55, fallback: 'healing-hut' },
+};
 function drawBuildingArt(g, b) {
-  var info = BUILDING_ART[b.id], img = info && (CC.img('buildings/' + info.art) || (info.fallback && CC.img('buildings/' + info.fallback)));
+  var info = BUILDING_ART[b.id] || (b.art && Object.assign({ art: b.art, door: 0.5 }, ART_INFO[b.art] || {}));
+  var img = info && (CC.img('buildings/' + info.art) || (info.fallback && CC.img('buildings/' + info.fallback)));
   if (!img) return false;
-  var w = (b.w * T + (b.small ? 4 : 10)) * R, k = w / img.width, h = img.height * k;
+  var w = (info.width || b.w * T + (b.small ? 4 : 10)) * R, k = w / img.width, h = img.height * k;
   var doorX = (b.door[0] * T + T / 2) * R, left = doorX - info.door * w, bottom = (b.y + b.h) * TP + 3 * R;
   g.fillStyle = 'rgba(20,30,10,0.25)'; g.beginPath(); g.ellipse(left + w / 2, bottom - 3 * R, w * 0.46, 5 * R, 0, 0, Math.PI * 2); g.fill();
   g.drawImage(img, left, bottom - h, w, h);
@@ -479,7 +570,8 @@ CC.buildMapPicture = function (id) {
     if (!drawArtTile(g, t, x, y, map)) { g.save(); g.scale(R, R); drawTile(g, t, x, y, map); g.restore(); }
   }
   // tall grass spills a few blades over the edge above it and shades the ground below it
-  var tall = CC.img('tiles/' + TILESET.grass.atlas), ti = TILESET.grass.tall;
+  var lg = map.legend && CC.LEGENDS[map.legend];
+  var tall = (!lg || lg.grassy) && CC.img('tiles/' + TILESET.grass.atlas), ti = TILESET.grass.tall;
   for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
     if (map.rows[y][x] !== ',' || !tall) continue;
     var above = CC.tileAt(map, x, y - 1), below = CC.tileAt(map, x, y + 1);
@@ -505,20 +597,34 @@ CC.buildMapPicture = function (id) {
       g.drawImage(ra, sx0, e, e, 32 - 2 * e, rx, ry + e, e, rh - 2 * e); g.drawImage(ra, sx0 + 32 - e, e, e, 32 - 2 * e, rx + rw - e, ry + e, e, rh - 2 * e);
     }
   }
-  (map.decor || []).forEach(function (d) { if (d.img) standOnTile(g, CC.img(d.img), d.x, d.y, d.h, d.dx, d.dy); });
-  var oak = CC.img('props/trees-1'), pine = CC.img('props/trees-2');
+  (map.decor || []).forEach(function (d) {
+    var img = d.chest ? (CC.state.flags['chest:' + d.chest] ? 'props/treasure-chest-and-pickups-2' : 'props/treasure-chest-and-pickups-1') : d.img;
+    if (img) standOnTile(g, CC.img(img), d.x, d.y, d.h || (d.chest ? 12 : 14), d.dx, d.dy);
+  });
+  var oak = CC.img(lg && lg.trees ? lg.trees[1] || lg.trees[0] : 'props/trees-1'), pine = CC.img(lg && lg.trees ? lg.trees[0] : 'props/trees-2');
+  var pines = lg && lg.trees ? lg.pines : map.pines || 0.2;
   for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
-    if (map.rows[y][x] !== 'T') continue;
-    var tree = hash(x * 5, y * 11) < (map.pines || 0.2) ? pine : oak;
+    if (map.rows[y][x] !== 'T' || (lg && !lg.trees)) continue;
+    var tree = hash(x * 5, y * 11) < pines ? pine : oak;
     if (!standOnTile(g, tree, x, y, 22, Math.round((hash(x, y * 3) - 0.5) * 3), 3)) { g.save(); g.scale(R, R); drawTile(g, 'T', x, y, map); g.restore(); }
   }
-  map.buildings.forEach(function (b) { if (!drawBuildingArt(g, b)) { g.save(); g.scale(R, R); drawBuilding(g, b); g.restore(); } });
-  // the fallen log across the trail north (one picture over the whole gate)
-  var gate = CC.img('props/gate-log'), gx = map.rows[0].indexOf('=');
-  if (gate && gx >= 0 && !CC.state.flags.logCleared) {
-    var gw = (map.rows[0].lastIndexOf('=') - gx + 1) * TP + 12, gh = gate.height * gw / gate.width;
-    g.drawImage(gate, gx * TP - 6, TP - gh + 6, gw, gh);
+  // the landmark (a big picture over its L block), then buildings
+  var lm = map.landmarkAt, limg = lm && CC.img(map.landmark);
+  if (limg) {
+    var lw = (lm.w * T + 12) * R, lh = limg.height * lw / limg.width, lbx = (lm.x + lm.w / 2) * TP, lby = (lm.y + lm.h) * TP + 2 * R;
+    g.fillStyle = 'rgba(10,20,10,0.22)'; g.beginPath(); g.ellipse(lbx, lby - 3 * R, lw * 0.45, 5 * R, 0, 0, Math.PI * 2); g.fill();
+    g.drawImage(limg, lbx - lw / 2, lby - lh, lw, lh);
   }
+  map.buildings.forEach(function (b) { if (!drawBuildingArt(g, b)) { g.save(); g.scale(R, R); drawBuilding(g, b); g.restore(); } });
+  // the gate across the trail (one picture over the whole gate) until its guide opens it
+  var gate = CC.img(map.gateArt || 'props/gate-log'), gy = map.rows.findIndex(function (r) { return r.indexOf('=') >= 0; });
+  if (gate && gy >= 0 && !CC.state.flags[map.gateFlag || 'logCleared']) {
+    var gx = map.rows[gy].indexOf('='), gw = (map.rows[gy].lastIndexOf('=') - gx + 1) * TP + 12, gh = gate.height * gw / gate.width;
+    g.drawImage(gate, gx * TP - 6, (gy + 1) * TP - gh + 6, gw, gh);
+  }
+  // spots that glow on the map (crystals, runes)
+  map.glows = [];
+  if (lg) for (y = 0; y < h; y++) for (x = 0; x < w; x++) { var ge = lg[map.rows[y][x]]; if (ge && ge.glow) map.glows.push({ x: x, y: y, c: ge.glow }); }
   map.picture = cv;
 };
 
@@ -543,7 +649,7 @@ CC.world = {
   solidAt: function (x, y) {
     var t = CC.tileAt(this.map, x, y);
     if (t === null) return true;
-    if (SOLID[t]) return true;
+    if (CC.tileSolid(this.map, t)) return true;
     if (this.buildingAt(x, y)) return true;
     if ((this.map.decor || []).some(function (d) { return d.x === x && d.y === y && d.solid !== false; })) return true;
     return !!this.npcAt(x, y);
@@ -620,10 +726,11 @@ CC.world = {
   afterStep: function () {
     var s = CC.state; s.steps++;
     if (this.cooldown > 0) this.cooldown--;
-    var trig = CC.TRIGGERS[this.mapId] && CC.TRIGGERS[this.mapId](s.x, s.y);
+    var trig = (CC.TRIGGERS[this.mapId] && CC.TRIGGERS[this.mapId](s.x, s.y)) || (CC.trainerSight && CC.trainerSight(this.mapId, s.x, s.y));
     if (trig) { this.run(trig); return; }
     if (CC.tileAt(this.map, s.x, s.y) === ',') {
-      for (var i = 0; i < 4; i++) CC.fx.add({ x: this.screenX(s.x * T + 8), y: this.screenY(s.y * T + 12), vx: CC.rand(-20, 20), vy: CC.rand(-30, -10), life: 0.3, kind: 'grass', color: '#5ab848', size: 3, grav: 120 });
+      var rc = CC.rustleColors(this.map);
+      for (var i = 0; i < 4; i++) CC.fx.add({ x: this.screenX(s.x * T + 8), y: this.screenY(s.y * T + 12), vx: CC.rand(-20, 20), vy: CC.rand(-30, -10), life: 0.3, kind: 'grass', color: rc[i % 3], size: 3, grav: 120 });
       if (this.map.spawns && !CC.dev.noWild && CC.firstHealthy() >= 0 && this.cooldown <= 0 && Math.random() < 0.12) {
         var self = this; this.run(function () { return CC.wildEncounter(self.map.spawns); });
       }
@@ -633,6 +740,7 @@ CC.world = {
   interact: function () {
     var s = CC.state, d = CC.DIRS[s.dir], fx = s.x + d[0], fy = s.y + d[1];
     var deco = (this.map.decor || []).find(function (o) { return o.x === fx && o.y === fy; });
+    if (deco && deco.chest) { this.run(function () { return CC.openChest(deco); }); return; }
     // talking across a counter
     var n = this.npcAt(fx, fy) || (deco && deco.counter && this.npcAt(fx + d[0], fy + d[1]));
     if (!n && deco && deco.talk) { this.run(function () { return CC.useFurniture(deco); }); return; }
@@ -659,7 +767,9 @@ CC.world = {
 
   draw: function () {
     var g = CC.g, cx = Math.round(this.camX()), cy = Math.round(this.camY()), s = CC.state, self = this, pic = this.map.picture;
-    CC.rect(0, 0, CC.W, CC.H, this.map.indoors ? '#120b08' : '#2a6e34');
+    if (this.shakeT && CC.time < this.shakeT) { cx += Math.round(CC.rand(-2, 2)); cy += Math.round(CC.rand(-1, 1)); }
+    var lgd = this.map.legend && CC.LEGENDS[this.map.legend];
+    CC.rect(0, 0, CC.W, CC.H, this.map.indoors ? '#120b08' : lgd && lgd.backdrop || '#2a6e34');
     g.drawImage(pic, 0, 0, pic.width, pic.height, -cx, -cy, pic.width / R, pic.height / R);
     // water glints
     var rows = this.map.rows;
@@ -673,7 +783,10 @@ CC.world = {
     // people, sorted by y
     var who = this.npcs.filter(function (n) { return !n.when || n.when(); }).map(function (n) {
       var p = self.npcPos(n), fr = n.mv ? [0, 1, 2, 1][Math.floor(n.mv.k * 4) % 4] : 1;
-      return { y: p[1], draw: function () { self.drawPerson(n, n.dir || 'down', p[0], p[1], fr); } };
+      return { y: p[1], draw: function () {
+        self.drawPerson(n, n.dir || 'down', p[0], p[1], fr);
+        if (n.emote) { var em = CC.img('ui/emote-' + n.emote), ex = self.screenX(p[0] + 8), ey = self.screenY(p[1] - 22) - Math.abs(Math.sin(CC.time * 10)) * 2; if (em) g.drawImage(em, ex - 7, ey - 9, 14, 14 * em.height / em.width); }
+      } };
     });
     var frame = this.moving ? [0, 1, 2, 1][Math.floor(this.stepAnim * 2.2) % 4] : 1;
     var landing = this.arrive ? (CC.time - this.arrive) / 1.1 : 2;
@@ -720,7 +833,8 @@ CC.world = {
   drawAmbient: function (cx, cy) {
     var g = CC.g, map = this.map, dt = CC.dt || 0.016, t = CC.time;
     var amb = map.amb || (map.amb = { smoke: [], flies: [] });
-    if (!amb.flies.length && !map.indoors) {
+    var wx = map.weather, calm = { cave: 1, snow: 1, night: 1, spire: 1, fog: 1 }[wx];
+    if (!amb.flies.length && !map.indoors && !calm) {
       var W = map.rows[0].length * T, H = map.rows.length * T;
       for (var i = 0; i < 4; i++) amb.flies.push({ x: CC.rand(32, W - 32), y: CC.rand(32, H - 32), ph: CC.rand(0, 9), c: CC.pick(['#ffffff', '#f8e070', '#f8a8d0', '#a8d8ff']), vx: 0, vy: 0 });
     }
@@ -758,13 +872,109 @@ CC.world = {
       g.fillStyle = '#3a2a22'; g.fillRect(x, y - 1, 1, 2);
     });
     // big soft cloud shadows sliding across
-    if (!map.indoors) {
+    if (!map.indoors && !{ cave: 1, spire: 1, night: 1 }[wx]) {
       for (var c = 0; c < 3; c++) {
         var span = map.rows[0].length * T + 200, sx = ((t * 6 + c * 157) % span) - 100 - cx, sy = (c * 97 + 40) % (map.rows.length * T) - cy;
         g.fillStyle = 'rgba(20,40,60,0.07)';
         g.beginPath(); g.ellipse(sx, sy, 46, 22, 0, 0, Math.PI * 2); g.ellipse(sx + 30, sy + 8, 30, 16, 0, 0, Math.PI * 2); g.fill();
       }
     }
+    if (wx) this.drawWeather(wx, amb, cx, cy, dt);
+  },
+
+  // Each region's air, in code: falling leaves, cave dark, desert heat, snow, swamp fog, the night over the ruins.
+  drawWeather: function (wx, amb, cx, cy, dt) {
+    var g = CC.g, t = CC.time, W = CC.W, H = CC.H, self = this, map = this.map;
+    var pxl = this.screenX(this.px + 8), pyl = this.screenY(this.py + 6);
+    var glowAt = function (x, y, r, col, a) {
+      var grd = g.createRadialGradient(x, y, 0, x, y, r);
+      grd.addColorStop(0, col.replace(')', ',' + a + ')').replace('rgb', 'rgba')); grd.addColorStop(1, col.replace(')', ',0)').replace('rgb', 'rgba'));
+      g.fillStyle = grd; g.fillRect(x - r, y - r, r * 2, r * 2);
+    };
+    var rgb = function (hex) { var n = parseInt(hex.slice(1), 16); return 'rgb(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ')'; };
+    // drifting bits in screen space that wrap around and slide a little with the camera
+    var bits = function (n, make) { if (!amb.bits) { amb.bits = []; for (var i = 0; i < n; i++) amb.bits.push(make(i)); } return amb.bits; };
+    var wrapX = function (b) { return ((b.x - cx * (b.par || 0.6)) % (W + 20) + W + 20) % (W + 20) - 10; };
+    var wrapY = function (b) { return ((b.y - cy * (b.par || 0.6)) % (H + 20) + H + 20) % (H + 20) - 10; };
+    var lights = function () { (map.glows || []).forEach(function (q) {
+      var x = self.screenX(q.x * T + 8), y = self.screenY(q.y * T + 8);
+      if (x < -30 || y < -30 || x > W + 30 || y > H + 30) return;
+      glowAt(x, y, 16 + Math.sin(t * 2 + q.x) * 3, rgb(q.c), 0.35);
+    }); };
+    if (wx === 'leaves') {
+      bits(14, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), c: CC.pick(['#d8782a', '#e8a838', '#8ab840', '#b85a2a']) }; }).forEach(function (b) {
+        b.y += dt * 14; b.x += dt * (6 + Math.sin(t + b.ph) * 10);
+        var x = wrapX(b), y = wrapY(b), flip = Math.sin(t * 4 + b.ph) > 0;
+        g.fillStyle = b.c; g.fillRect(Math.round(x), Math.round(y), flip ? 3 : 2, flip ? 1 : 2);
+      });
+    } else if (wx === 'breeze') {
+      bits(10, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), par: 1 }; }).forEach(function (b) {
+        var k = (t * 0.5 + b.ph) % 3; if (k > 1) return;
+        g.globalAlpha = Math.sin(k * Math.PI) * 0.6; g.fillStyle = '#ffffff';
+        var x = wrapX(b), y = wrapY(b); g.fillRect(Math.round(x), Math.round(y), 1, 1); g.fillRect(Math.round(x) - 1, Math.round(y) + 1, 3, 1); g.globalAlpha = 1;
+      });
+      // gulls' shadows gliding over
+      for (var q = 0; q < 2; q++) { var gx = (t * 22 + q * 140) % (W + 80) - 40, gy = 30 + q * 70 + Math.sin(t * 0.5 + q) * 10; g.fillStyle = 'rgba(20,40,60,0.18)'; g.fillRect(gx - 3, gy, 3, 1); g.fillRect(gx + 1, gy, 3, 1); g.fillRect(gx, gy + 1, 1, 1); }
+    } else if (wx === 'cave') {
+      lights();
+      bits(6, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 5), par: 1 }; }).forEach(function (b) { // water drips
+        var k = (t * 0.6 + b.ph) % 2.5; if (k > 1) return;
+        var x = wrapX(b), y = wrapY(b) + k * 18; g.fillStyle = 'rgba(160,210,255,' + (1 - k) * 0.8 + ')'; g.fillRect(Math.round(x), Math.round(y), 1, 2);
+      });
+      var dark = g.createRadialGradient(pxl, pyl, 24, pxl, pyl, 120);
+      dark.addColorStop(0, 'rgba(8,6,16,0)'); dark.addColorStop(1, 'rgba(8,6,16,0.62)');
+      g.fillStyle = dark; g.fillRect(0, 0, W, H);
+    } else if (wx === 'heat') {
+      g.fillStyle = 'rgba(255,170,70,0.07)'; g.fillRect(0, 0, W, H);
+      bits(24, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), s: CC.rand(30, 60) }; }).forEach(function (b) {
+        b.x += dt * b.s; b.y += Math.sin(t * 2 + b.ph) * dt * 4;
+        g.fillStyle = 'rgba(230,190,120,0.7)'; g.fillRect(Math.round(wrapX(b)), Math.round(wrapY(b)), 2, 1);
+      });
+      for (var hy = 0; hy < 3; hy++) { // shimmer bands
+        var by = (t * 10 + hy * 55) % (H + 20) - 10; g.fillStyle = 'rgba(255,240,200,0.05)'; g.fillRect(0, by, W, 3 + Math.sin(t * 3 + hy) * 1.5);
+      }
+    } else if (wx === 'snow') {
+      g.fillStyle = 'rgba(200,220,255,0.07)'; g.fillRect(0, 0, W, H);
+      bits(46, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), s: CC.rand(12, 26), z: Math.random() < 0.3 }; }).forEach(function (b) {
+        b.y += dt * b.s; b.x += dt * (Math.sin(t * 1.3 + b.ph) * 8 - 4);
+        g.fillStyle = b.z ? '#ffffff' : 'rgba(255,255,255,0.75)'; g.fillRect(Math.round(wrapX(b)), Math.round(wrapY(b)), b.z ? 2 : 1, b.z ? 2 : 1);
+      });
+    } else if (wx === 'fog') {
+      for (var f = 0; f < 4; f++) {
+        var fx = ((t * (5 + f * 2) + f * 90) % (W + 160)) - 80, fy = 20 + f * 38 + Math.sin(t * 0.4 + f) * 8;
+        g.fillStyle = 'rgba(200,220,190,0.08)'; g.beginPath(); g.ellipse(fx, fy, 90, 12, 0, 0, Math.PI * 2); g.ellipse(fx + 40, fy + 6, 60, 9, 0, 0, Math.PI * 2); g.fill();
+      }
+      this.fireflies(amb, '#d8f070', cx, cy, dt);
+      g.fillStyle = 'rgba(30,50,30,0.12)'; g.fillRect(0, 0, W, H);
+    } else if (wx === 'night') {
+      var nd = g.createRadialGradient(pxl, pyl, 30, pxl, pyl, 150);
+      nd.addColorStop(0, 'rgba(14,14,50,0.12)'); nd.addColorStop(1, 'rgba(10,10,40,0.5)');
+      g.fillStyle = nd; g.fillRect(0, 0, W, H);
+      lights();
+      this.fireflies(amb, '#9ad0ff', cx, cy, dt);
+    } else if (wx === 'spire') {
+      for (var m = 0; m < 3; m++) { // moonbeams through the windows
+        var mx = 40 + m * 80 + Math.sin(t * 0.3 + m) * 6, grd = g.createLinearGradient(mx, 0, mx + 30, H);
+        grd.addColorStop(0, 'rgba(200,230,255,0.16)'); grd.addColorStop(1, 'rgba(200,230,255,0)');
+        g.fillStyle = grd; g.beginPath(); g.moveTo(mx, 0); g.lineTo(mx + 14, 0); g.lineTo(mx + 44, H); g.lineTo(mx + 22, H); g.fill();
+      }
+      lights();
+      bits(18, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), par: 0.3 }; }).forEach(function (b) {
+        b.y -= dt * 6; var tw = Math.sin(t * 3 + b.ph) > 0.3;
+        g.fillStyle = tw ? '#ffffff' : '#a8d8ff'; g.fillRect(Math.round(wrapX(b)), Math.round(wrapY(b)), 1, tw ? 2 : 1);
+      });
+    }
+  },
+  fireflies: function (amb, col, cx, cy, dt) {
+    var g = CC.g, t = CC.time, map = this.map;
+    if (!amb.ff) { amb.ff = []; var W = map.rows[0].length * T, H = map.rows.length * T; for (var i = 0; i < 14; i++) amb.ff.push({ x: CC.rand(16, W - 16), y: CC.rand(16, H - 16), ph: CC.rand(0, 9) }); }
+    amb.ff.forEach(function (f) {
+      f.x += Math.sin(t * 0.6 + f.ph) * dt * 8; f.y += Math.cos(t * 0.5 + f.ph * 2) * dt * 6;
+      var a = 0.5 + Math.sin(t * 2.5 + f.ph) * 0.5, x = Math.round(f.x - cx), y = Math.round(f.y - cy);
+      if (x < -6 || y < -6 || x > CC.W + 6 || y > CC.H + 6) return;
+      g.globalAlpha = a * 0.35; g.fillStyle = col; g.fillRect(x - 2, y - 2, 5, 5);
+      g.globalAlpha = a; g.fillRect(x, y, 1, 1); g.globalAlpha = 1;
+    });
   },
 
   // Rooms: a warm lamp-lit vignette, and fireplaces that flicker
@@ -790,6 +1000,13 @@ CC.world = {
     var g = CC.g, fx = this.screenX(x) + 8, fy = this.screenY(y) + 15;
     if (fx < -30 || fy < -10 || fx > CC.W + 30 || fy > CC.H + 40) return;
     g.fillStyle = 'rgba(0,0,0,0.22)'; g.beginPath(); g.ellipse(fx, fy, 6, 2, 0, 0, Math.PI * 2); g.fill();
+    if (npc && npc.creature) { // a creature standing on the map, glowing softly
+      var gr = g.createRadialGradient(fx, fy - 10, 0, fx, fy - 10, 22);
+      gr.addColorStop(0, 'rgba(220,235,255,' + (0.35 + Math.sin(CC.time * 2) * 0.1) + ')'); gr.addColorStop(1, 'rgba(220,235,255,0)');
+      g.fillStyle = gr; g.fillRect(fx - 22, fy - 32, 44, 44);
+      CC.drawSprite(CC.creatureSprite(npc.creature), fx, fy - 2 - Math.abs(Math.sin(CC.time * 1.5)) * 2, { scale: 0.42, sy: 1 + Math.sin(CC.time * 2.4) * 0.03, id: npc.creature });
+      return;
+    }
     var sheet = npc ? npc.sheet && CC.img('walk/' + npc.sheet) : CC.img('walk/' + (CC.state.look || 'player-a'));
     var art = npc && npc.art && CC.img('people/' + npc.art);
     if (sheet) {
@@ -819,7 +1036,6 @@ CC.world = {
 CC.DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
 CC.useExit = async function (ex, nx) {
-  if (ex.to === 'forest') { await CC.forestGate(); return; }
   var dest = CC.MAPS[ex.to];
   if (CC.MAPS[CC.world.mapId].indoors) CC.sfx('back');
   await CC.fade(0.25, true);
@@ -875,6 +1091,11 @@ CC.rollSpawn = function (key) {
   if (!sp[tier].length) tier = 'common';
   return { id: CC.pick(sp[tier]), lv: CC.randi(sp.levels[0], sp.levels[1]) };
 };
+// the bits that fly up from a region's hiding spots
+CC.rustleColors = function (map) {
+  var lg = map.legend && CC.LEGENDS[map.legend];
+  return (lg && lg.rustle) || ['#5ab848', '#90e070', '#2f7a2a'];
+};
 CC.wildEncounter = async function (key) {
   var w = CC.world, s = CC.state, roll = CC.rollSpawn(key);
   w.cooldown = 3;
@@ -883,7 +1104,8 @@ CC.wildEncounter = async function (key) {
   if (CC.tileAt(w.map, hx, hy) !== ',') { hx = s.x; hy = s.y; }
   CC.sfx('rustle');
   w.grassFx = { x: hx, y: hy, t: CC.time };
-  for (var i = 0; i < 10; i++) CC.fx.add({ x: w.screenX(hx * T + 8), y: w.screenY(hy * T + 10), vx: CC.rand(-40, 40), vy: CC.rand(-60, -20), life: 0.5, kind: 'grass', color: CC.pick(['#5ab848', '#90e070', '#2f7a2a']), size: 4, grav: 160, spin: 8 });
+  var rc = CC.rustleColors(w.map);
+  for (var i = 0; i < 10; i++) CC.fx.add({ x: w.screenX(hx * T + 8), y: w.screenY(hy * T + 10), vx: CC.rand(-40, 40), vy: CC.rand(-60, -20), life: 0.5, kind: 'grass', color: CC.pick(rc), size: 4, grav: 160, spin: 8 });
   w.emote = true; CC.sfx('encounter');
   await CC.sleep(0.35);
   w.hop = { id: roll.id, x: hx, y: hy, k: 0 };

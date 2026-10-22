@@ -122,3 +122,12 @@ They're generated in `creature-catch/src/js/12-data-creatures.js` and `11-data-m
 - **The vampire line is 3 stages:** Fangling (Shadow) → **Duskfang** (Shadow, Lv 33) → **Rosferatu** (Shadow / Plant, Lv 42). The levels sit above the Night Ruins' wild range (Lv 28 to 35), so a caught Fangling still has growing to do. Base totals are 240 / 340 / 450.
 - **Fly is earned halfway:** after Dusty's Cave trial (region 4 of 8), Ranger Oakley's Timberowl takes a liking to you, and you get the **Wooden Whistle**. Fly only goes to places you have already visited. The `FLY` code opens every place, and places that aren't built yet say so.
 - **Creature lore** is in `src/js/13-data-lore.js` (a lore line and a field note for each creature). The Field Guide shows it, and an in-game Creature Log can use it later.
+
+## 13. Added in v6 (the full game)
+
+- **Story:** "The Fading Moon" (option 1 in section 8). Willow tells the legend after you get your starter, each guide adds a piece after their trial (and in the journal in their home), and the finale is at the Moon Altar.
+- **Finale:** the Dimmed Lunarion (Shadow / Lumen, Lv 40) can't be caught and you can't run. Win, and it turns back into Lunarion (Lumen, Lv 40), which you can try to catch. If it gets away, it waits at the top of the Moonlit Spire (Lv 45). Losing the first battle sends you to heal; the altar waits.
+- **Gates:** log (Bramble), rope bridge (Oakley), rockslide (Gus), sandstorm (Dusty), ice wall (Safi), boardwalk (Frida), rune gate (Moss, into the Night Ruins), and Corvin's rune gate in the middle of the ruins (to the altar).
+- **Rewards:** Dusty gives the Wooden Whistle (Fly), Corvin the Master Cube. The Sun Shard is in a Desert chest; Moon Shards are in the Swamp and the Night Ruins.
+- **Tobias** sells Ultra Cubes, tonics and Revives at the outposts from the Desert on.
+- **Post-game:** the Moonlit Spire (wilds Lv 38 to 48, seven guide rematches at Lv 44 to 47, Juniper at Lv 50).

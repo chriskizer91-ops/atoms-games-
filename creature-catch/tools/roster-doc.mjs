@@ -7,7 +7,7 @@ import { loadData, SRC } from './load-data.mjs';
 const CC = loadData();
 const M = CC.MOVES;
 const L = [];
-const kindName = { starter1: 'Starter 1', starter2: 'Starter 2', starter3: 'Starter 3', base: 'Base', mid: 'Middle', final: 'Evolved', solo: 'Solo' };
+const kindName = { starter1: 'Starter 1', starter2: 'Starter 2', starter3: 'Starter 3', base: 'Base', mid: 'Middle', final: 'Evolved', solo: 'Solo', legend: 'Legendary' };
 const evoText = (e) => !e ? '' : typeof e.at === 'number' ? `${CC.CREATURES[e.into].name} at Lv ${e.at}` : `${CC.CREATURES[e.into].name} with ${e.at === 'sunshard' ? 'Sun Shard' : 'Moon Shard'}`;
 const fxText = (fx) => {
   if (!fx) return '';

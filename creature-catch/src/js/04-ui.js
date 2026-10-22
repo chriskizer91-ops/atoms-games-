@@ -226,6 +226,12 @@ CC.ITEMS = {
   master: { name: 'Master Cube', price: 0, cube: 999, icon: 'ui/cube-master', info: 'The legendary cube. It never fails.' },
   potion: { name: 'Potion', price: 60, heal: 30, icon: 'items/potion', info: 'Restores 30 HP to one creature.' },
   superpotion: { name: 'Super Potion', price: 180, heal: 80, icon: 'items/super-potion', info: 'Restores 80 HP to one creature.' },
+  tonic: { name: 'Tonic', price: 320, heal: 150, icon: 'items/tonic', info: 'Restores 150 HP to one creature.' },
+  fulltonic: { name: 'Full Tonic', price: 700, heal: 999, cure: true, icon: 'items/full-tonic', info: 'Restores all HP and cures any status.' },
+  cureherb: { name: 'Cure Herb', price: 100, cure: true, icon: 'items/cure-herb', info: 'Cures sleep, poison, burn, freeze or shock.' },
+  revive: { name: 'Revive', price: 900, revive: true, icon: 'items/revive', info: 'Wakes a fainted creature with half its HP.' },
+  sunshard: { name: 'Sun Shard', price: 0, shard: true, icon: 'items/sun-shard', info: 'A warm golden shard. Some creatures evolve when they touch it.' },
+  moonshard: { name: 'Moon Shard', price: 0, shard: true, icon: 'items/moon-shard', info: 'A cool silver shard. Some creatures evolve when they touch it.' },
   // key items: shown while their flag is set, never sold or used up
   whistle: { name: 'Wooden Whistle', key: 'fly', icon: 'items/whistle', info: 'Blow it to call Timberowl and fly to a place you have been.' },
   vaultkey: { name: 'Vault Key', key: 'vaultKey', icon: 'items/vault-key', info: 'Opens the Cube Vault from the menu, anywhere.' },
@@ -242,20 +248,43 @@ CC.bagScreen = async function () {
       if (CC.MAPS[CC.state.map].indoors) { await CC.say('Timberowl can\'t fit in here. Try it outside!'); continue; }
       CC.sfx('select'); await CC.say('You blew the Wooden Whistle. Timberowl swoops down!'); await CC.flyScreen(); return;
     }
-    if (it.heal) {
+    if (it.heal || it.cure || it.revive || it.shard) {
       var i = await CC.partyScreen('pick', { title: 'Use a ' + it.name + ' on...' });
       if (i < 0) continue;
-      var m = CC.state.party[i], max = CC.mon.maxHp(m);
-      if (m.hp <= 0) { await CC.say('A ' + it.name + ' can\'t wake a fainted creature.'); continue; }
-      if (m.hp >= max) { await CC.say(CC.mon.name(m) + ' is already at full HP.'); continue; }
-      var before = m.hp; m.hp = Math.min(max, m.hp + it.heal); if (!CC.dev.infItems) CC.state.bag[k]--;
-      CC.sfx('heal'); await CC.say(CC.mon.name(m) + ' got back ' + (m.hp - before) + ' HP.');
+      var m = CC.state.party[i], max = CC.mon.maxHp(m), used = CC.useItemOn(k, m);
+      if (typeof used === 'string') { await CC.say(used); continue; }
+      if (!CC.dev.infItems) CC.state.bag[k]--;
+      if (it.shard) { await CC.evolveScene(m); continue; }
+      CC.sfx('heal'); await CC.say(used.text);
     } else await CC.say(it.info);
   }
 };
 
-CC.shopScreen = async function () {
-  var stock = ['cube', 'potion'].concat(CC.state.flags.trial1 ? ['great', 'superpotion'] : []);
+// what an item does to a creature: a string says why it can't be used, else { text }
+CC.useItemOn = function (k, m) {
+  var it = CC.ITEMS[k], max = CC.mon.maxHp(m), name = CC.mon.name(m);
+  if (it.shard) {
+    var e = CC.CREATURES[m.id].evo;
+    if (!e || e.at !== k) return 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.';
+    return { text: '' };
+  }
+  if (it.revive) {
+    if (m.hp > 0) return name + ' hasn\'t fainted.';
+    m.hp = Math.ceil(max / 2); m.status = null; return { text: name + ' woke up!' };
+  }
+  if (m.hp <= 0) return 'A ' + it.name + ' can\'t wake a fainted creature.';
+  if (it.heal && m.hp >= max && !(it.cure && m.status)) return name + ' is already at full HP.';
+  if (!it.heal && !m.status) return name + ' is feeling fine.';
+  var before = m.hp, parts = [];
+  if (it.heal) { m.hp = Math.min(max, m.hp + it.heal); if (m.hp > before) parts.push('got back ' + (m.hp - before) + ' HP'); }
+  if (it.cure && m.status) { m.status = null; m.sleep = 0; parts.push('is cured'); }
+  return { text: name + ' ' + parts.join(' and ') + '.' };
+};
+
+// a shop: stock is a list of item keys; who is the shopkeeper
+CC.shopScreen = async function (stock, who) {
+  who = who || 'Pip';
+  stock = stock || ['cube', 'potion'].concat(CC.state.flags.trial1 ? ['great', 'superpotion', 'cureherb'] : []).concat(CC.state.flags.trialCave ? ['tonic'] : []);
   while (true) {
     var c = await CC.menu(stock.map(function (k) { return { label: CC.ITEMS[k].name, right: CC.ITEMS[k].price + 'c', icon: CC.ITEMS[k].icon }; }),
       { title: 'Coins: ' + CC.state.coins, w: 140, x: 96, y: 8 });
@@ -265,7 +294,7 @@ CC.shopScreen = async function () {
     if (qty < 0) continue;
     var n = [1, 5, 10][qty];
     CC.state.coins -= it.price * n; CC.state.bag[stock[c]] = (CC.state.bag[stock[c]] || 0) + n;
-    CC.sfx('buy'); await CC.say('Here you go! ' + n + ' x ' + it.name + '.', { who: 'Pip' });
+    CC.sfx('buy'); await CC.say('Here you go! ' + n + ' x ' + it.name + '.', { who: who });
   }
 };
 

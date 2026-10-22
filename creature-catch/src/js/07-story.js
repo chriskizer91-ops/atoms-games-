@@ -1,4 +1,4 @@
-// The first playable slice: Home Village, Meadow Path, Grassland. People, signs, doors and story beats.
+// The opening: Home Village, Meadow Path and Grassland. People, signs, doors and the first story beats (the rest is in 15-story-full.js).
 var CC = window.CC || (window.CC = {});
 
 var STARTERS = ['drizzlon', 'mossback', 'embroak'];
@@ -58,7 +58,7 @@ CC.NPCS = {
   } }],
   meadow: [
     {
-      x: 3, y: 8, look: 'ranger', art: 'oakley', h: 27, dir: 'right', talk: async function () {
+      x: 3, y: 8, look: 'ranger', art: 'oakley', h: 27, dir: 'right', when: function () { return !F().trial1; }, talk: async function () {
         await CC.talk('Ranger Oakley', ['I\'m Ranger Oakley. I keep the Forest, but I like to scout the meadow.', 'Every region has an outpost with a Healing Hut. The Grassland one is just north of here.', 'You can swap creatures with the Cube Vault at any Healing Hut.']);
       },
     },
@@ -149,9 +149,9 @@ async function restAndHeal() {
   await CC.say('Your creatures are healed and full of energy!');
 }
 
-async function healingHut(who, spot) {
+async function healingHut(who, spot, greeting) {
   CC.state.lastHeal = spot;
-  await CC.say(who === 'Hazel' ? 'Welcome to the Healing Hut! I\'m Hazel.' : 'Welcome to the Grassland Outpost! I\'m Fern, Hazel\'s cousin.', { who: who });
+  await CC.say(greeting || (who === 'Hazel' ? 'Welcome to the Healing Hut! I\'m Hazel.' : 'Welcome to the Grassland Outpost! I\'m Fern, Hazel\'s cousin.'), { who: who });
   while (true) {
     var c = await CC.ask('How can I help?', ['Heal my creatures', 'Cube Vault', 'Bye']);
     if (c === 0) {
@@ -166,14 +166,17 @@ async function healingHut(who, spot) {
   }
 }
 
+CC.healingHut = healingHut;
+
 // ---------- the starter ----------
 async function willowHouse() {
   if (F().starter) {
-    var caught = Object.keys(CC.state.caught).length;
-    await CC.talk('Elder Willow', [
-      'How is your Creature Log coming along? ' + caught + ' caught so far!',
-      F().trial1 ? 'Bramble tells me you passed the trail trial. The Forest awaits!' : 'Farmer Bramble guards the trail at the top of the Grassland. Beat his trial and he\'ll open the way to the Forest.',
-    ]);
+    var caught = Object.keys(CC.state.caught).length, charms = ['trial1', 'trialForest', 'trialWater', 'trialCave', 'trialDesert', 'trialSnow', 'trialSwamp', 'trialRuins'].filter(function (k) { return F()[k]; }).length;
+    var next = F().moonRestored ? 'The moon is whole again, thanks to you. The Moonlit Spire stands open beside the altar.'
+      : charms >= 8 ? 'Corvin opened the rune gate? Then the Moon Altar is all that\'s left. Be gentle with the guardian.'
+      : charms >= 1 ? 'You have ' + charms + ' of the 8 trail charms. Keep heading north. Each guide knows a piece of the moon\'s story.'
+      : 'Farmer Bramble guards the trail at the top of the Grassland. Beat his trial and he\'ll open the way to the Forest.';
+    await CC.talk('Elder Willow', ['How is your Creature Log coming along? ' + caught + ' caught so far!', next]);
     return;
   }
   await CC.talk('Elder Willow', [
@@ -219,9 +222,16 @@ async function willowHouse() {
   CC.state.bag.cube += 5; CC.state.bag.potion += 3;
   CC.sfx('buy');
   await CC.say('Elder Willow gave you 5 Basic Cubes and 3 Potions!');
+  await CC.say('Now, sit a moment. There is something you should know before you go.', { who: 'Elder Willow' });
+  await CC.showStill('still-2', [
+    'Long ago, the old book says, a guardian kept the moon alight: Lunarion, a silver wolf with wings full of stars.',
+    'Each night it flew up from the Moon Altar, far north in the Night Ruins, and the moon shone bright.',
+    'Now the moon fades a little more every night, and the creatures hide in the grass, afraid.',
+    'I\'m too old for the journey. But a trainer with a good heart might reach the altar and find out why.',
+  ], { who: 'Elder Willow' });
   await CC.talk('Elder Willow', [
     'Cubes catch wild creatures. Weaken one first, and catching gets much easier.',
-    'Head north through the Meadow Path to the Grassland. Farmer Bramble keeps the trail to the Forest. Show him what you can do!',
+    'Head north through the Meadow Path to the Grassland. Each region has a guide who keeps the trail. Win their trials, and they\'ll open the way to the Moon Altar.',
   ]);
 }
 
@@ -268,13 +278,6 @@ function starterSelect() {
     CC.push(scr);
   });
 }
-
-// ---------- the end of the slice ----------
-CC.forestGate = async function () {
-  await CC.say('The Forest trail stretches north under tall dark trees...');
-  await CC.say('That\'s the end of this first slice! The Forest, Ranger Oakley, and Juniper\'s next battle come next.');
-  CC.state.y = 1; CC.world.py = 16;
-};
 
 // ---------- title ----------
 CC.titleScreen = function () {
@@ -373,6 +376,10 @@ CC.newGame = async function () {
   await CC.world.run(async function () {
     await CC.applyPendingCodes();
     if (CC.state.flags.starter) return; // a STARTER code skipped the intro
+    await CC.showStill('still-1', [
+      'For many nights now, the moon over Home Village has been growing dimmer.',
+      'The villagers look up and worry. Out in the tall grass, the creatures hide and tremble.',
+    ]);
     await CC.say('Welcome to Home Village! Creatures live in the wild all around here, hiding in the tall grass.');
     await CC.say('Arrows (or the pad) to walk, A (Z key) to talk, B (X key) to go back or run, and MENU (Enter) for your party and saves.');
     await CC.say('Elder Willow lives in the big house with the mossy roof. Go and say hello!');

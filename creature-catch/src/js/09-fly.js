@@ -8,13 +8,13 @@ CC.FLY_SPOTS = [
   { name: 'Home Village', map: 'village', x: 30, y: 128, land: [10, 6] },
   { name: 'Meadow Path', map: 'meadow', x: 44, y: 112, land: [7, 12] },
   { name: 'Grassland', map: 'grassland', x: 56, y: 96, land: [18, 12] },
-  { name: 'Forest', map: null, x: 44, y: 66 },
-  { name: 'Water', map: null, x: 84, y: 68 },
-  { name: 'Cave', map: null, x: 116, y: 60 },
-  { name: 'Desert', map: null, x: 156, y: 62 },
-  { name: 'Snow', map: null, x: 130, y: 22 },
-  { name: 'Swamp', map: null, x: 186, y: 56 },
-  { name: 'Night Ruins', map: null, x: 214, y: 20 },
+  { name: 'Forest', map: 'forest', x: 44, y: 66, land: [16, 15] },
+  { name: 'Lakeshore', map: 'water', x: 84, y: 68, land: [19, 15] },
+  { name: 'Crystal Cave', map: 'cave', x: 116, y: 60, land: [20, 15] },
+  { name: 'Sunscorch Desert', map: 'desert', x: 156, y: 62, land: [14, 15] },
+  { name: 'Frostpeak Pass', map: 'snow', x: 130, y: 22, land: [11, 15] },
+  { name: 'Murkmire Swamp', map: 'swamp', x: 186, y: 56, land: [20, 15] },
+  { name: 'Night Ruins', map: 'ruins', x: 214, y: 20, land: [13, 20] },
 ];
 
 CC.flyScreen = function () {

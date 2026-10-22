@@ -34,7 +34,7 @@ const fxText = (fx) => {
   return s.join(', ');
 };
 const how = (at) => typeof at === 'number' ? `Lv ${at}` : at === 'sunshard' ? 'Sun Shard' : 'Moon Shard';
-const STAGE = { starter1: 'Starter', starter2: 'Starter, stage 2', starter3: 'Starter, stage 3', base: 'First form', mid: 'Middle form', final: 'Evolved', solo: 'Solo (no evolution)' };
+const STAGE = { starter1: 'Starter', starter2: 'Starter, stage 2', starter3: 'Starter, stage 3', base: 'First form', mid: 'Middle form', final: 'Evolved', solo: 'Solo (no evolution)', legend: 'Legendary' };
 const RARITY = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', veryrare: 'Very rare' };
 
 // where each base form lives (evolved forms take their line's home)
@@ -49,9 +49,9 @@ const creatures = CC.CREATURE_ORDER.map((id, i) => {
   const lore = CC.LORE[id] || { lore: '', note: '' };
   return {
     id, num: i + 1, name: c.name, types: c.types, stage: STAGE[c.kind] || c.kind,
-    where: c.kind.startsWith('starter') ? 'Elder Willow (starter)' : home[id] || home[r] || CC.REGIONS[c.region],
-    rarity: c.from ? 'Evolves from ' + CC.CREATURES[c.from].name : RARITY[CC.RARITY[id]] || (c.kind.startsWith('starter') ? 'Gift' : ''),
-    kind: c.kind.startsWith('starter') ? 'starter' : c.kind === 'solo' ? 'solo' : c.from ? 'evolved' : 'first',
+    where: c.kind.startsWith('starter') ? 'Elder Willow (starter)' : c.kind === 'legend' ? 'The Moon Altar, Night Ruins' : home[id] || home[r] || CC.REGIONS[c.region],
+    rarity: c.kind === 'legend' ? (id === 'lunarion' ? 'One of a kind: calm it, then catch it' : 'The final battle: it can\'t be caught') : c.from ? 'Evolves from ' + CC.CREATURES[c.from].name : RARITY[CC.RARITY[id]] || (c.kind.startsWith('starter') ? 'Gift' : ''),
+    kind: c.kind.startsWith('starter') ? 'starter' : c.kind === 'legend' ? 'legend' : c.kind === 'solo' ? 'solo' : c.from ? 'evolved' : 'first',
     base: c.base, total: c.total, lore: lore.lore, note: lore.note,
     sig: { name: sig.name, type: sig.type, power: sig.power || null, acc: sig.acc || null, pp: sig.pp, fx: fxText(sig.fx) },
     chain: chain.length > 1 ? chain : null, img: uri('creatures/' + id),
@@ -63,7 +63,7 @@ const chart = types.map((a) => types.map((d) => CC.typeVs(a, d)));
 const typeIcons = Object.fromEntries(types.map((t) => [t, uri('ui/type-' + t)]));
 const typeColors = CC.TYPE_COLORS;
 const GUIDES = { meadow: '', grassland: 'Farmer Bramble', forest: 'Ranger Oakley', water: 'Fisher Gus', cave: 'Dusty the Miner', desert: 'Safi the Nomad', snow: 'Frida the Explorer', swamp: 'Granny Moss', ruins: 'Night Watchman Corvin' };
-const BUILT = { meadow: 1, grassland: 1 };
+const BUILT = { meadow: 1, grassland: 1, forest: 1, water: 1, cave: 1, desert: 1, snow: 1, swamp: 1, ruins: 1 };
 const regions = Object.entries(CC.SPAWNS).map(([k, s]) => ({
   key: k, name: s.name, levels: s.levels, guide: GUIDES[k], built: !!BUILT[k],
   tiers: ['common', 'uncommon', 'rare'].map((t) => ({ tier: RARITY[t], ids: s[t] })).filter((t) => t.ids.length),
@@ -206,7 +206,7 @@ footer { padding: 30px 0 50px; color: var(--soft); font-size: 13px; text-align: 
     <select id="region" aria-label="Region"></select>
     <select id="stage" aria-label="Stage">
       <option value="">Every stage</option><option value="starter">Starters</option><option value="first">First forms</option>
-      <option value="evolved">Evolved forms</option><option value="solo">Solo (no evolution)</option>
+      <option value="evolved">Evolved forms</option><option value="solo">Solo (no evolution)</option><option value="legend">Legendary</option>
     </select>
   </div>
   <div class="filters"><div class="chips" id="typechips"></div><span class="count" id="count"></span></div>
