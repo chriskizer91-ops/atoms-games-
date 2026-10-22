@@ -99,6 +99,9 @@ var ROWS = [
   ['duskfang', 'Duskfang', ['Shadow'], 9, 'mid', 'glass', 'thornkiss', ['rosferatu', 42], ['bird', '#6a4a7a', '#c82a3a']],
   ['rosferatu', 'Rosferatu', ['Shadow', 'Plant'], 9, 'final', 'atk', 'thornkiss', null, ['biped', '#6a4a7a', '#c82a3a']],
   ['moonlynx', 'Moonlynx', ['Lumen'], 9, 'solo', 'fast', 'crescentclaw', null, ['quad', '#c8ccd8', '#f8e8a0']],
+  // the moon's guardian: the dimmed form is the final battle; calmed, it becomes Lunarion and can be caught
+  ['lunariond', 'Dimmed Lunarion', ['Shadow', 'Lumen'], 9, 'legend', 'bulk', 'eclipsefang', null, ['quad', '#2a2a5a', '#8a6ad8']],
+  ['lunarion', 'Lunarion', ['Lumen'], 9, 'legend', 'bal', 'moonsong', null, ['quad', '#e8eef8', '#f8e8a0']],
 ];
 
 // Stat budget (base total). docs/creature-catch-decisions-2.md section 10.
@@ -106,6 +109,7 @@ function budget(kind, r, id) {
   if (kind === 'starter1') return 210;
   if (kind === 'starter2') return 330;
   if (kind === 'starter3') return 450;
+  if (kind === 'legend') return 500;
   var VAMPIRE = { fangling: 240, duskfang: 340, rosferatu: 450 };
   if (VAMPIRE[id]) return VAMPIRE[id];
   var base = 170 + 10 * r;

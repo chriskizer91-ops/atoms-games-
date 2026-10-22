@@ -158,7 +158,7 @@ def main(src):
     import re
     data = open(os.path.join(ROOT, 'src', 'js', '12-data-creatures.js')).read()
     ids = set(re.findall(r"^  \['(\w+)', '", data, re.M)) | {'duskfang'}
-    alias = {'optional-middle-stage-duskfang': 'duskfang'}
+    alias = {'optional-middle-stage-duskfang': 'duskfang', 'lunarion-dimmed': 'lunariond'}
     for name, path in sorted(files.items()):
         base = alias.get(name[:-4], name[:-4])
         if '-' in base and base.split('-')[0].isdigit(): base = base.split('-', 1)[1]
@@ -353,6 +353,47 @@ def main(src):
     if '10-world-map.png' in files:
         im = Image.open(files['10-world-map.png']).convert('RGB')
         made.append(save(im.resize((240, 160), Image.BOX).quantize(96, dither=Image.Dither.NONE).convert('RGB'), 'bg/world-map.png'))
+
+    # ---------- the full-game pack ----------
+    for name in ['bramble-farmhouse', 'oakley-ranger-station', 'gus-dock-shack', 'dusty-mine-office', 'safi-nomad-tent',
+                 'frida-log-cabin', 'granny-moss-hut', 'corvin-watchtower', 'moonlit-spire']:
+        if name + '.png' in files: made.append(save(sprite(files[name + '.png'], 13, 48), f'buildings/{name}.png'))
+    for name in ['landmark-elder-tree', 'landmark-lighthouse', 'landmark-oasis', 'landmark-frozen-falls', 'landmark-moon-altar']:
+        if name + '.png' in files: made.append(save(sprite(files[name + '.png'], 10, 48), f'props/{name}.png'))
+    for f, key in (('timberowl-flying.png', 'fx/timberowl-flying.png'), ('juniper-older.png', 'people/juniper-older.png'),
+                   ('juniper-older-battle-pose.png', 'people/juniper-older-battle.png')):
+        if f in files: made.append(save(sprite(files[f], 13), key))
+    for i, f in enumerate(['trainers-sheet-1.png', 'trainers-sheet-2.png']):
+        if f not in files: continue
+        # the figures are evenly spaced but some hands touch, so cut the sheet into 7 equal columns
+        sheet = key_white(Image.open(files[f])); cw = sheet.width / 7
+        for j in range(7):
+            col = sheet.crop((round(j * cw), 0, round((j + 1) * cw), sheet.height))
+            parts = components(col, 0.0005, 4)  # keep the biggest shape: drops slivers of the neighbor's cube
+            bb = max(parts, key=lambda q: (q[2] - q[0]) * (q[3] - q[1])) if parts else bbox(col)
+            if bb: made.append(save(shrink(col.crop(bb), height=84, colors=32), f'people/trainer-{i * 7 + j + 1}.png'))
+        log('trainers', f, 7)
+    for f, key in (('interior-rustic-pieces.png', 'furniture/rustic'), ('interior-stone-pieces.png', 'furniture/stone'), ('interior-inn-pieces.png', 'furniture/inn')):
+        if f not in files: continue
+        sheet, boxes = pieces(f, 6, 0.002)
+        for i, b in enumerate(boxes): made.append(save(shrink(sheet.crop(b), 6.5, 40), f'{key}-{i + 1}.png'))
+        log('furniture', f, len(boxes))
+    for f, key in [('battle-moon-altar.png', 'moon-altar'), ('battle-moonlit-spire.png', 'moonlit-spire')] + [(f'still-{n}.png', f'still-{n.split("-")[0]}') for n in
+                   ['1-opening', '2-willow-story', '3-rivals', '4-the-ruins', '5-the-guardian', '6-ending']]:
+        if f in files:
+            im = Image.open(files[f]).convert('RGB')
+            made.append(save(im.resize((240, 160), Image.BOX).quantize(96, dither=Image.Dither.NONE).convert('RGB'), f'bg/{key}.png'))
+    if 'moonlit-spire-tileset.png' in files:
+        im = Image.open(files['moonlit-spire-tileset.png']).convert('RGB')
+        rows = rows_then_cols(components(key_white(im, 30), 0.003, 4))
+        cols = max(len(r) for r in rows)
+        atlas = Image.new('RGB', (32 * cols, 32 * len(rows)))
+        for ri, r in enumerate(rows):
+            for ci, b in enumerate(r):
+                inset = int((b[2] - b[0]) * 0.03)
+                atlas.paste(im.crop((b[0] + inset, b[1] + inset, b[2] - inset, b[3] - inset)).resize((32, 32), Image.BOX), (ci * 32, ri * 32))
+        made.append(save(atlas.quantize(64, dither=Image.Dither.NONE).convert('RGB'), 'tiles/moonlit-spire.png'))
+        log('spire tiles', [len(r) for r in rows])
 
     with open(os.path.join(ART, 'MANIFEST.json'), 'w') as fh:
         json.dump(sorted(made), fh, indent=1)

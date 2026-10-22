@@ -90,6 +90,8 @@ CC.MOVES = {
   cavedive: { name: 'Cave Dive', type: 'Shadow', tier: 'sig', power: 70, acc: 90, pp: 15 },
   boggrasp: { name: 'Bog Grasp', type: 'Shadow', tier: 'sig', power: 55, acc: 100, pp: 15, fx: { stat: 'spd', stages: -1 } },
   lurelight: { name: 'Lure Light', type: 'Lumen', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { stat: 'acc', stages: -1, chance: 30 } },
+  eclipsefang: { name: 'Eclipse Fang', type: 'Shadow', tier: 'sig', power: 90, acc: 95, pp: 10, fx: { stat: 'acc', stages: -1, chance: 30 } },
+  moonsong: { name: 'Moonsong', type: 'Lumen', tier: 'sig', power: 90, acc: 100, pp: 10, fx: { drain: 0.5 } },
   crescentclaw: { name: 'Crescent Claw', type: 'Lumen', tier: 'sig', power: 75, acc: 100, pp: 10, fx: { crit: true } },
 };
 
