@@ -36,7 +36,13 @@ CC.say = function (text, opts) {
 };
 // A speaker's face beside the dialog box, cut from the top of their character art
 CC.portrait = function (who, x, y, size) {
-  var id = CC.PORTRAITS && CC.PORTRAITS[who], art = id && CC.img('people/' + id);
+  var id = CC.PORTRAITS && CC.PORTRAITS[who], face = id && CC.img('portraits/' + id);
+  if (face) { // a painted portrait
+    CC.box(x, y, size, size, { fill: '#e8f0f8' });
+    CC.g.drawImage(face, x + 3, y + 3, size - 6, size - 6);
+    return true;
+  }
+  var art = id && CC.img('people/' + id);
   if (!art) return false;
   var side = Math.min(art.width, Math.round(art.height * 0.42)), sx = Math.round((art.width - side) / 2);
   CC.box(x, y, size, size, { fill: '#e8f0f8' });
@@ -61,7 +67,7 @@ CC.menu = function (items, opts) {
   return new Promise(function (resolve) {
     var sel = opts.start || 0, rowH = opts.rowH || 14;
     var labels = items.map(function (it) { return typeof it === 'string' ? { label: it } : it; });
-    var w = opts.w || Math.max.apply(null, labels.map(function (l) { return CC.textWidth(l.label, 10) + (l.right ? CC.textWidth(l.right, 10) + 12 : 0); })) + 26;
+    var w = opts.w || Math.max.apply(null, labels.map(function (l) { return CC.textWidth(l.label, 10) + (l.right ? CC.textWidth(l.right, 10) + 12 : 0) + (l.icon ? 14 : 0); })) + 26;
     var h = labels.length * rowH + 10 + (opts.title ? 14 : 0);
     var x = opts.x != null ? opts.x : CC.W - w - 2, y = opts.y != null ? opts.y : 110 - h;
     var scr = {
@@ -80,7 +86,10 @@ CC.menu = function (items, opts) {
         var ty = y + 6;
         if (opts.title) { CC.text(opts.title, x + 8, ty, '#6a3a2a', { size: 9 }); ty += 14; }
         labels.forEach(function (l, i) {
-          CC.text(l.label, x + 16, ty + i * rowH, l.disabled ? '#a89c90' : '#2a2230');
+          var icon = l.icon && CC.img(l.icon), tx = x + 16;
+          if (icon) { var k = 11 / Math.max(icon.width, icon.height); CC.g.drawImage(icon, tx, ty + i * rowH + 1, icon.width * k, icon.height * k); }
+          if (labels.some(function (o) { return o.icon; })) tx += 14;
+          CC.text(l.label, tx, ty + i * rowH, l.disabled ? '#a89c90' : '#2a2230');
           if (l.right) CC.text(l.right, x + w - 8, ty + i * rowH, '#6a5a50', { align: 'right' });
         });
         CC.cursor(x + 7, ty + sel * rowH + 2);
@@ -107,9 +116,10 @@ CC.ask = function (question, options, who) {
 
 // ---------- small creature card pieces ----------
 CC.typeBadge = function (type, x, y) {
-  var c = CC.TYPE_COLORS[type] || CC.TYPE_COLORS.Normal, w = CC.textWidth(type.toUpperCase(), 8) + 6;
+  var c = CC.TYPE_COLORS[type] || CC.TYPE_COLORS.Normal, icon = CC.img('ui/type-' + type), iw = icon ? 9 : 0, w = CC.textWidth(type.toUpperCase(), 8) + 6 + iw;
   CC.rect(x, y, w, 10, c[2]); CC.rect(x + 1, y + 1, w - 2, 8, c[1]);
-  CC.text(type.toUpperCase(), x + 3, y + 1, '#ffffff', { size: 8, shadow: c[2] });
+  if (icon) CC.g.drawImage(icon, x + 1, y + 1, 8, 8);
+  CC.text(type.toUpperCase(), x + 3 + iw, y + 1, '#ffffff', { size: 8, shadow: c[2] });
   return w;
 };
 var STATUS_TAG = { burn: ['BRN', '#e0582a'], freeze: ['FRZ', '#5ab0e0'], shock: ['SHK', '#d8b010'], poison: ['PSN', '#9a4ac8'], sleep: ['SLP', '#8a8aa0'] };
@@ -208,33 +218,39 @@ CC.summary = function (m) {
 };
 
 // ---------- bag ----------
+// cube: its catch bonus (master always catches). icon: a picture key.
 CC.ITEMS = {
-  cube: { name: 'Basic Cube', price: 50, info: 'Throw it at a weakened wild creature to catch it.' },
-  potion: { name: 'Potion', price: 60, info: 'Restores 30 HP to one creature.' },
+  cube: { name: 'Basic Cube', price: 50, cube: 0, icon: 'ui/cube', info: 'Throw it at a weakened wild creature to catch it.' },
+  great: { name: 'Great Cube', price: 150, cube: 15, icon: 'ui/cube-great', info: 'A sturdier cube with a silver band. Better odds than a Basic Cube.' },
+  ultra: { name: 'Ultra Cube', price: 400, cube: 30, icon: 'ui/cube-ultra', info: 'A gold-banded cube. Much better odds.' },
+  master: { name: 'Master Cube', price: 0, cube: 999, icon: 'ui/cube-master', info: 'The legendary cube. It never fails.' },
+  potion: { name: 'Potion', price: 60, heal: 30, icon: 'items/potion', info: 'Restores 30 HP to one creature.' },
+  superpotion: { name: 'Super Potion', price: 180, heal: 80, icon: 'items/super-potion', info: 'Restores 80 HP to one creature.' },
 };
+CC.CUBE_KINDS = ['cube', 'great', 'ultra', 'master'];
 CC.bagScreen = async function () {
   while (true) {
     var keys = Object.keys(CC.ITEMS).filter(function (k) { return CC.state.bag[k] > 0; });
     if (!keys.length) { await CC.say('Your bag is empty.'); return; }
-    var c = await CC.menu(keys.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + CC.state.bag[k] }; }), { title: 'Bag', w: 130 });
+    var c = await CC.menu(keys.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + CC.state.bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Bag', w: 150 });
     if (c < 0) return;
-    var k = keys[c];
-    if (k === 'potion') {
-      var i = await CC.partyScreen('pick', { title: 'Use a Potion on...' });
+    var k = keys[c], it = CC.ITEMS[k];
+    if (it.heal) {
+      var i = await CC.partyScreen('pick', { title: 'Use a ' + it.name + ' on...' });
       if (i < 0) continue;
       var m = CC.state.party[i], max = CC.mon.maxHp(m);
-      if (m.hp <= 0) { await CC.say('A Potion can\'t wake a fainted creature.'); continue; }
+      if (m.hp <= 0) { await CC.say('A ' + it.name + ' can\'t wake a fainted creature.'); continue; }
       if (m.hp >= max) { await CC.say(CC.mon.name(m) + ' is already at full HP.'); continue; }
-      var before = m.hp; m.hp = Math.min(max, m.hp + 30); CC.state.bag.potion--;
+      var before = m.hp; m.hp = Math.min(max, m.hp + it.heal); if (!CC.dev.infItems) CC.state.bag[k]--;
       CC.sfx('heal'); await CC.say(CC.mon.name(m) + ' got back ' + (m.hp - before) + ' HP.');
-    } else await CC.say(CC.ITEMS[k].info);
+    } else await CC.say(it.info);
   }
 };
 
 CC.shopScreen = async function () {
-  var stock = ['cube', 'potion'];
+  var stock = ['cube', 'potion'].concat(CC.state.flags.trial1 ? ['great', 'superpotion'] : []);
   while (true) {
-    var c = await CC.menu(stock.map(function (k) { return { label: CC.ITEMS[k].name, right: CC.ITEMS[k].price + 'c' }; }),
+    var c = await CC.menu(stock.map(function (k) { return { label: CC.ITEMS[k].name, right: CC.ITEMS[k].price + 'c', icon: CC.ITEMS[k].icon }; }),
       { title: 'Coins: ' + CC.state.coins, w: 140, x: 96, y: 8 });
     if (c < 0) return;
     var it = CC.ITEMS[stock[c]];

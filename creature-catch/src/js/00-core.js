@@ -10,7 +10,7 @@ CC.W = 240; CC.H = 160;
 
   CC.resize = function () {
     var touch = document.body.classList.contains('touch');
-    var availW = window.innerWidth, availH = window.innerHeight - (touch ? 200 : 0);
+    var availW = window.innerWidth, availH = window.innerHeight - (touch ? 210 : 0);
     var s = Math.min(availW / CC.W, availH / CC.H);
     if (s >= 2) s = Math.floor(s); // whole pixels when there's room
     var cssW = Math.floor(CC.W * s), cssH = Math.floor(CC.H * s);
@@ -27,6 +27,7 @@ CC.W = 240; CC.H = 160;
   var KEYS = {
     ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
     KeyZ: 'a', Space: 'a', KeyJ: 'a', KeyX: 'b', Escape: 'b', Backspace: 'b', KeyK: 'b', Enter: 'start', KeyM: 'start',
+    KeyQ: 'l', KeyU: 'l', KeyE: 'r', KeyO: 'r',
   };
   var held = {}, pressed = {}, repeatT = {};
   CC.input = { held: held, pressed: pressed };
@@ -40,7 +41,7 @@ CC.W = 240; CC.H = 160;
   window.addEventListener('blur', function () { for (var k in held) held[k] = false; });
 
   // on-screen pad for touch
-  var PAD = { bUp: 'up', bDown: 'down', bLeft: 'left', bRight: 'right', bA: 'a', bB: 'b', bStart: 'start' };
+  var PAD = { bUp: 'up', bDown: 'down', bLeft: 'left', bRight: 'right', bA: 'a', bB: 'b', bStart: 'start', bL: 'l', bR: 'r' };
   function enableTouch() {
     if (document.body.classList.contains('touch')) return;
     document.body.classList.add('touch'); CC.resize();

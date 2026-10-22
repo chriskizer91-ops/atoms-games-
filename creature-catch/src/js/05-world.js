@@ -42,7 +42,7 @@ CC.MAPS = {
     exits: [{ side: 'top', x0: 10, x1: 11, to: 'meadow', tx0: 7, ty: 17 }],
   },
   meadow: {
-    name: 'Meadow Path', spawns: 'meadow', pines: 0.25,
+    name: 'Meadow Path', spawns: 'meadow', pines: 0.25, signArt: 'props/signpost-grassland',
     decor: [
       { x: 13, y: 4, img: 'props/rocks-and-bushes-5', h: 13 }, { x: 2, y: 9, img: 'props/rocks-and-bushes-7', h: 13 },
       { x: 13, y: 8, img: 'props/rocks-and-bushes-2', h: 11 },
@@ -75,7 +75,7 @@ CC.MAPS = {
     ],
   },
   grassland: {
-    name: 'Grassland', spawns: 'grassland', pines: 0.3,
+    name: 'Grassland', spawns: 'grassland', pines: 0.3, signArt: 'props/signpost-grassland',
     decor: [
       { x: 21, y: 10, img: 'props/village-props-19', h: 11 }, { x: 20, y: 12, img: 'props/village-props-18', h: 22 },
       { x: 7, y: 4, img: 'props/rocks-and-bushes-5', h: 13 }, { x: 17, y: 5, img: 'props/rocks-and-bushes-6', h: 13 },
@@ -115,7 +115,61 @@ CC.MAPS = {
   },
 };
 
-var SOLID = { T: 1, '~': 1, o: 1, S: 1, '=': 1 };
+// Rooms. Tiles: # dark (walls beyond) W plaster wall w wall with a window . wood floor c checker floor m doormat (walk out)
+// Furniture is decor; counter: true lets you talk to whoever stands behind it; talk: runs when you face it and press A.
+function room(name, rows, door, decor, extra) {
+  var r = { name: name, indoors: true, tileset: 'interior', rows: rows, buildings: [], decor: decor || [] };
+  var my = rows.length - 1, mx = rows[my].indexOf('m');
+  r.exits = [{ side: 'bottom', x0: mx, x1: rows[my].lastIndexOf('m'), to: door[0], tx0: door[1], ty: door[2], fixedX: true }];
+  r.inside = [mx, my - 1];
+  for (var k in extra || {}) r[k] = extra[k];
+  return r;
+}
+CC.MAPS['willow-in'] = room('Elder Willow\'s House', [
+  '#PPPPPPPPPP#', '#WWwWWWWwWW#', '#..........#', '#..........#', '#..........#', '#..........#', '#..........#', '#####mm#####',
+], ['village', 4, 5], [
+  { x: 2, y: 2, img: 'furniture/furn-3', h: 24, talk: 'Old books on creatures. One is titled "The Long Dusk".' },
+  { x: 8, y: 2, img: 'furniture/furn-6', h: 22, glow: true }, { x: 10, y: 2, img: 'furniture/furn-7', h: 22, talk: 'Tick, tock. The clock is a little fast.' },
+  { x: 1, y: 6, img: 'furniture/furn-5', h: 15 },
+  { x: 5, y: 4, img: 'props/starter-table', h: 20, dx: 8, counter: true }, { x: 6, y: 4, counter: true },
+], { rug: [4, 3, 4, 3] });
+CC.MAPS['hut-in'] = room('Healing Hut', [
+  '#PPPPPPPPPP#', '#WWWwWWwWWW#', '#cccccccccc#', '#cccccccccc#', '#cccccccccc#', '#cccccccccc#', '#cccccccccc#', '#####mm#####',
+], ['village', 17, 12], [
+  { x: 5, y: 3, img: 'furniture/heal-1', h: 22, dx: 8, counter: true }, { x: 6, y: 3, counter: true },
+  { x: 8, y: 2, img: 'furniture/heal-2', h: 18, talk: 'The healing machine hums softly.' },
+  { x: 10, y: 2, img: 'furniture/heal-3', h: 26, talk: 'vault' },
+  { x: 2, y: 2, img: 'furniture/heal-5', h: 24, talk: 'Jars of dried herbs: moonleaf, sunpetal, bitterroot.' },
+  { x: 3, y: 1, img: 'furniture/heal-6', h: 14, solid: false, dy: 4 },
+  { x: 1, y: 5, img: 'furniture/heal-4', h: 18, talk: 'A soft cot. Creatures rest here after a long day.' },
+  { x: 10, y: 6, img: 'furniture/furn-5', h: 15 },
+]);
+CC.MAPS['outpost-in'] = room('Grassland Outpost', [
+  '#PPPPPPPP#', '#WWwWWwWW#', '#cccccccc#', '#cccccccc#', '#cccccccc#', '#cccccccc#', '####mm####',
+], ['grassland', 18, 12], [
+  { x: 4, y: 3, img: 'furniture/heal-1', h: 22, dx: 8, counter: true }, { x: 5, y: 3, counter: true },
+  { x: 7, y: 2, img: 'furniture/heal-3', h: 26, talk: 'vault' }, { x: 2, y: 2, img: 'furniture/heal-5', h: 24 },
+  { x: 8, y: 5, img: 'furniture/furn-5', h: 15 },
+]);
+CC.MAPS['shop-in'] = room('Pip\'s Cube Shop', [
+  '#PPPPPPPP#', '#WwWWWWwW#', '#........#', '#........#', '#........#', '#........#', '####mm####',
+], ['village', 17, 5], [
+  { x: 4, y: 3, img: 'furniture/furn-9', h: 17, dx: 8, counter: true }, { x: 5, y: 3, counter: true },
+  { x: 1, y: 2, img: 'furniture/furn-10', h: 20, talk: 'Shelves of cubes, stacked in neat purple-and-blue rows.' },
+  { x: 7, y: 2, img: 'furniture/furn-10', h: 20 }, { x: 8, y: 2, img: 'furniture/furn-10', h: 20 },
+  { x: 8, y: 5, img: 'furniture/furn-5', h: 15 },
+], { rug: [3, 4, 4, 1] });
+CC.MAPS['home-in'] = room('Your House', [
+  '#PPPPPPPP#', '#WWwWWwWW#', '#........#', '#........#', '#........#', '#........#', '####mm####',
+], ['village', 4, 12], [
+  { x: 1, y: 2, img: 'furniture/furn-1', h: 22, talk: 'bed' }, { x: 3, y: 2, img: 'furniture/furn-8', h: 18, talk: 'Your clothes, folded. Mostly.' },
+  { x: 7, y: 2, img: 'furniture/furn-4', h: 22, talk: 'Something good was cooked here this morning.' },
+  { x: 5, y: 4, img: 'furniture/furn-2', h: 16, dx: 8 }, { x: 6, y: 4 }, { x: 8, y: 5, img: 'furniture/furn-5', h: 15 },
+], { rug: [4, 3, 4, 3] });
+// which room each door opens
+CC.DOORS = { willow: 'willow-in', hut: 'hut-in', shop: 'shop-in', home: 'home-in', outpost: 'outpost-in' };
+
+var SOLID = { T: 1, '~': 1, o: 1, S: 1, '=': 1, '#': 1, W: 1, w: 1, P: 1 };
 var T = 16;
 
 function hash(x, y) { var h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; }
@@ -243,7 +297,41 @@ function standOnTile(g, img, x, y, h, dx, dy) {
   return true;
 }
 
+// interior atlas (8 across): wood 0 1, checker 2 3, rug 4, plaster wall 12, wall with window 13, doormat 24
+function drawInteriorTile(g, t, x, y, map) {
+  var px = x * TP, py = y * TP;
+  var a = CC.img('tiles/interior');
+  if (!a) return false;
+  var at = function (i) { g.drawImage(a, (i % 8) * 32, Math.floor(i / 8) * 32, 32, 32, px, py, 32, 32); };
+  switch (t) {
+    case '#':
+      g.fillStyle = '#2a1a12'; g.fillRect(px, py, TP, TP);
+      g.fillStyle = '#3a2618'; for (var i = 0; i < TP; i += 8) g.fillRect(px, py + i, TP, 1);
+      if (CC.tileAt(map, x, y + 1) === '.' || CC.tileAt(map, x, y + 1) === 'c') { g.fillStyle = '#5a3a22'; g.fillRect(px, py + TP - 3, TP, 3); }
+      if (CC.tileAt(map, x + 1, y) && '.cmPWw'.indexOf(CC.tileAt(map, x + 1, y)) >= 0) { g.fillStyle = '#4a3020'; g.fillRect(px + TP - 3, py, 3, TP); }
+      if (CC.tileAt(map, x - 1, y) && '.cmPWw'.indexOf(CC.tileAt(map, x - 1, y)) >= 0) { g.fillStyle = '#4a3020'; g.fillRect(px, py, 3, TP); }
+      return true;
+    case 'P': // the upper wall: plain plaster from the wall tile, with a beam along the ceiling
+      g.drawImage(a, 12 % 8 * 32 + 4, Math.floor(12 / 8) * 32 + 2, 24, 10, px, py, 32, 32);
+      g.fillStyle = '#4a2e1c'; g.fillRect(px, py, 32, 4); g.fillStyle = '#6a4428'; g.fillRect(px, py + 4, 32, 1);
+      g.fillStyle = 'rgba(60,30,10,0.12)'; g.fillRect(px, py + 5, 32, 6);
+      return true;
+    case 'W': at(12); return true;
+    case 'w': at(13); return true;
+    case 'm': at(24); return true;
+    case '.': at(hash(x, y) < 0.5 ? 0 : 1); break;
+    case 'c': at(2); break;
+    default: return false;
+  }
+  // a soft shadow along the walls
+  if ('#WwP'.indexOf(CC.tileAt(map, x, y - 1)) >= 0) { var grd = g.createLinearGradient(0, py, 0, py + 10); grd.addColorStop(0, 'rgba(30,15,5,0.45)'); grd.addColorStop(1, 'rgba(30,15,5,0)'); g.fillStyle = grd; g.fillRect(px, py, TP, 10); }
+  if (CC.tileAt(map, x - 1, y) === '#') { g.fillStyle = 'rgba(30,15,5,0.25)'; g.fillRect(px, py, 5, TP); }
+  if (CC.tileAt(map, x + 1, y) === '#') { g.fillStyle = 'rgba(30,15,5,0.25)'; g.fillRect(px + TP - 5, py, 5, TP); }
+  return true;
+}
+
 function drawArtTile(g, t, x, y, map) {
+  if (map.indoors) return drawInteriorTile(g, t, x, y, map);
   var ts = TILESET[map.tileset || 'grass'], px = x * TP, py = y * TP, r = hash(x, y);
   var grass = function () { return variedTile(g, ts.atlas, ts.grass, x, y); };
   switch (t) {
@@ -252,12 +340,12 @@ function drawArtTile(g, t, x, y, map) {
     case ',': return variedTile(g, TILESET.grass.atlas, TILESET.grass.tall, x, y);
     case ':': drawDirt(g, x, y, map, ts); return true;
     case '=': drawDirt(g, x, y, map, ts);
-      if (!CC.state.flags.logCleared) atlasTile(g, 'forest', 5, px, py);
+      if (!CC.state.flags.logCleared && !CC.img('props/gate-log')) atlasTile(g, 'forest', 5, px, py);
       return true;
     case '~': return drawWater(g, x, y, map);
     case 'o': grass(); return atlasTile(g, TILESET.grass.atlas, TILESET.grass.rock, px, py);
     case 'T': return grass(); // trees come in their own pass so they overlap
-    case 'S': grass(); return standOnTile(g, CC.img('props/village-props-11') || CC.img('props/village-props-1'), x, y, 15);
+    case 'S': grass(); return standOnTile(g, CC.img(map.signArt || 'props/village-props-11') || CC.img('props/village-props-1'), x, y, map.signArt ? 17 : 15);
   }
   return false;
 }
@@ -368,10 +456,10 @@ function drawBuilding(g, b) {
 var BUILDING_ART = {
   willow: { art: 'elder-s-house', door: 0.5, smoke: [0.73, 0.04] }, shop: { art: 'cube-shop', door: 0.5, smoke: [0.73, 0.03] },
   home: { art: 'player-house', door: 0.33, smoke: [0.78, 0.13] },
-  hut: { art: 'healing-hut', door: 0.5 }, outpost: { art: 'healing-hut', door: 0.5 }, inn: { art: 'inn', door: 0.36, smoke: [0.73, 0.03] },
+  hut: { art: 'healing-hut', door: 0.5 }, outpost: { art: 'outpost-hut', door: 0.55, fallback: 'healing-hut' }, inn: { art: 'inn', door: 0.36, smoke: [0.73, 0.03] },
 };
 function drawBuildingArt(g, b) {
-  var info = BUILDING_ART[b.id], img = info && CC.img('buildings/' + info.art);
+  var info = BUILDING_ART[b.id], img = info && (CC.img('buildings/' + info.art) || (info.fallback && CC.img('buildings/' + info.fallback)));
   if (!img) return false;
   var w = (b.w * T + (b.small ? 4 : 10)) * R, k = w / img.width, h = img.height * k;
   var doorX = (b.door[0] * T + T / 2) * R, left = doorX - info.door * w, bottom = (b.y + b.h) * TP + 3 * R;
@@ -406,7 +494,18 @@ CC.buildMapPicture = function (id) {
     }
   }
   // decorations, then trees row by row (lower ones in front), then buildings
-  (map.decor || []).forEach(function (d) { standOnTile(g, CC.img(d.img), d.x, d.y, d.h, d.dx, d.dy); });
+  if (map.rug) { // a rug: the rug tile's border and middle stretched over a few tiles
+    var ra = CC.img('tiles/interior'), rg = map.rug;
+    if (ra) {
+      var rx = rg[0] * TP, ry = rg[1] * TP, rw = rg[2] * TP, rh = rg[3] * TP, sx0 = 4 * 32, e = 8;
+      g.drawImage(ra, sx0 + e, e, 32 - 2 * e, 32 - 2 * e, rx + e, ry + e, rw - 2 * e, rh - 2 * e);
+      g.drawImage(ra, sx0, 0, e, e, rx, ry, e, e); g.drawImage(ra, sx0 + 32 - e, 0, e, e, rx + rw - e, ry, e, e);
+      g.drawImage(ra, sx0, 32 - e, e, e, rx, ry + rh - e, e, e); g.drawImage(ra, sx0 + 32 - e, 32 - e, e, e, rx + rw - e, ry + rh - e, e, e);
+      g.drawImage(ra, sx0 + e, 0, 32 - 2 * e, e, rx + e, ry, rw - 2 * e, e); g.drawImage(ra, sx0 + e, 32 - e, 32 - 2 * e, e, rx + e, ry + rh - e, rw - 2 * e, e);
+      g.drawImage(ra, sx0, e, e, 32 - 2 * e, rx, ry + e, e, rh - 2 * e); g.drawImage(ra, sx0 + 32 - e, e, e, 32 - 2 * e, rx + rw - e, ry + e, e, rh - 2 * e);
+    }
+  }
+  (map.decor || []).forEach(function (d) { if (d.img) standOnTile(g, CC.img(d.img), d.x, d.y, d.h, d.dx, d.dy); });
   var oak = CC.img('props/trees-1'), pine = CC.img('props/trees-2');
   for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
     if (map.rows[y][x] !== 'T') continue;
@@ -414,6 +513,12 @@ CC.buildMapPicture = function (id) {
     if (!standOnTile(g, tree, x, y, 22, Math.round((hash(x, y * 3) - 0.5) * 3), 3)) { g.save(); g.scale(R, R); drawTile(g, 'T', x, y, map); g.restore(); }
   }
   map.buildings.forEach(function (b) { if (!drawBuildingArt(g, b)) { g.save(); g.scale(R, R); drawBuilding(g, b); g.restore(); } });
+  // the fallen log across the trail north (one picture over the whole gate)
+  var gate = CC.img('props/gate-log'), gx = map.rows[0].indexOf('=');
+  if (gate && gx >= 0 && !CC.state.flags.logCleared) {
+    var gw = (map.rows[0].lastIndexOf('=') - gx + 1) * TP + 12, gh = gate.height * gw / gate.width;
+    g.drawImage(gate, gx * TP - 6, TP - gh + 6, gw, gh);
+  }
   map.picture = cv;
 };
 
@@ -430,7 +535,8 @@ CC.world = {
     if (!this.map.picture) CC.buildMapPicture(mapId);
     this.px = x * T; this.py = y * T; this.moving = null;
     this.npcs = (CC.NPCS[mapId] || []);
-    this.banner = { text: this.map.name, t: 2.2 };
+    if (!this.map.indoors) { s.visited = s.visited || {}; s.visited[mapId] = 1; }
+    this.banner = this.map.indoors ? null : { text: this.map.name, t: 2.2 };
   },
   refresh: function () { CC.buildMapPicture(this.mapId); },
 
@@ -463,8 +569,23 @@ CC.world = {
   },
 
   update: function (dt) {
-    var s = CC.state, inp = CC.input;
+    var s = CC.state, inp = CC.input, self = this;
     s.playTime += dt;
+    // people who walk: a step in progress, or (when nothing else is going on) the next step of their patrol
+    this.npcs.forEach(function (n) {
+      if (n.mv) { n.mv.k += dt * (n.mv.speed || 3.2); if (n.mv.k >= 1) { n.x = n.mv.tx; n.y = n.mv.ty; var done = n.mv.done; n.mv = null; if (done) done(); } return; }
+      if (!n.patrol || self.busy || (n.when && !n.when())) return;
+      n.wait = (n.wait || 1.5) - dt;
+      if (n.wait > 0) return;
+      n.wait = CC.rand(1.2, 2.6);
+      n.leg = n.leg || 0;
+      var goal = n.patrol[n.leg];
+      if (goal[0] === n.x && goal[1] === n.y) { n.leg = (n.leg + 1) % n.patrol.length; goal = n.patrol[n.leg]; }
+      var dx = Math.sign(goal[0] - n.x), dy = dx ? 0 : Math.sign(goal[1] - n.y);
+      var nx = n.x + dx, ny = n.y + dy;
+      n.dir = dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
+      if ((dx || dy) && !(nx === s.x && ny === s.y) && !self.solidAt(nx, ny)) { n.mv = { fx: n.x, fy: n.y, tx: nx, ty: ny, k: 0 }; n.wait = 0.05 + (n.leg === 0 ? 0 : 0); }
+    });
     if (this.busy) return;
     if (this.moving) {
       var mv = this.moving, speed = inp.held.b ? 8 : 4.4;
@@ -476,7 +597,12 @@ CC.world = {
       } else { this.px = CC.lerp(mv.fx, mv.tx, mv.k) * T; this.py = CC.lerp(mv.fy, mv.ty, mv.k) * T; return; }
       if (this.busy) return;
     }
+    // hold L + R and press MENU: the hidden dev code box
+    if (inp.pressed.start && inp.held.l && inp.held.r) { CC.sfx('catch'); this.run(async function () { await CC.openCodes(); await CC.runCodeQueue(); }); return; }
     if (inp.pressed.start) { CC.sfx('select'); this.run(CC.fieldMenu); return; }
+    // R: Fly (once you can), L: your party
+    if (inp.pressed.r && !inp.held.l && CC.state.flags.fly) { CC.sfx('select'); this.run(CC.flyScreen); return; }
+    if (inp.pressed.l && !inp.held.r) { CC.sfx('select'); this.run(function () { return CC.partyScreen('field'); }); return; }
     if (inp.pressed.a) { this.interact(); return; }
     var dir = inp.held.up ? 'up' : inp.held.down ? 'down' : inp.held.left ? 'left' : inp.held.right ? 'right' : null;
     if (!dir) { this.stepAnim = 0; return; }
@@ -506,7 +632,10 @@ CC.world = {
 
   interact: function () {
     var s = CC.state, d = CC.DIRS[s.dir], fx = s.x + d[0], fy = s.y + d[1];
-    var n = this.npcAt(fx, fy);
+    var deco = (this.map.decor || []).find(function (o) { return o.x === fx && o.y === fy; });
+    // talking across a counter
+    var n = this.npcAt(fx, fy) || (deco && deco.counter && this.npcAt(fx + d[0], fy + d[1]));
+    if (!n && deco && deco.talk) { this.run(function () { return CC.useFurniture(deco); }); return; }
     if (n) {
       var back = { up: 'down', down: 'up', left: 'right', right: 'left' };
       n.dir = back[s.dir]; n.hop = CC.time; n.flip = s.dir === 'left';
@@ -517,6 +646,11 @@ CC.world = {
     var b = this.buildingAt(fx, fy);
     if (b && b.door[0] === fx && b.door[1] === fy) { var self = this; this.run(function () { return CC.enterDoor(self.mapId, b.id); }); }
   },
+  // where a person is drawn (between tiles while they walk)
+  npcPos: function (n) {
+    if (!n.mv) return [n.x * T, n.y * T];
+    return [CC.lerp(n.mv.fx, n.mv.tx, n.mv.k) * T, CC.lerp(n.mv.fy, n.mv.ty, n.mv.k) * T];
+  },
 
   camX: function () { var w = this.map.rows[0].length * T; return w <= CC.W ? (w - CC.W) / 2 : CC.clamp(this.px + 8 - CC.W / 2, 0, w - CC.W); },
   camY: function () { var h = this.map.rows.length * T; return h <= CC.H ? (h - CC.H) / 2 : CC.clamp(this.py + 8 - CC.H / 2, 0, h - CC.H); },
@@ -525,7 +659,7 @@ CC.world = {
 
   draw: function () {
     var g = CC.g, cx = Math.round(this.camX()), cy = Math.round(this.camY()), s = CC.state, self = this, pic = this.map.picture;
-    CC.rect(0, 0, CC.W, CC.H, '#2a6e34');
+    CC.rect(0, 0, CC.W, CC.H, this.map.indoors ? '#120b08' : '#2a6e34');
     g.drawImage(pic, 0, 0, pic.width, pic.height, -cx, -cy, pic.width / R, pic.height / R);
     // water glints
     var rows = this.map.rows;
@@ -538,10 +672,12 @@ CC.world = {
     }
     // people, sorted by y
     var who = this.npcs.filter(function (n) { return !n.when || n.when(); }).map(function (n) {
-      return { y: n.y * T, draw: function () { self.drawPerson(n, n.dir || 'down', n.x * T, n.y * T, 1); } };
+      var p = self.npcPos(n), fr = n.mv ? [0, 1, 2, 1][Math.floor(n.mv.k * 4) % 4] : 1;
+      return { y: p[1], draw: function () { self.drawPerson(n, n.dir || 'down', p[0], p[1], fr); } };
     });
     var frame = this.moving ? [0, 1, 2, 1][Math.floor(this.stepAnim * 2.2) % 4] : 1;
-    who.push({ y: this.py, draw: function () { self.drawPerson(null, s.dir, self.px, self.py, frame); } });
+    var landing = this.arrive ? (CC.time - this.arrive) / 1.1 : 2;
+    if (landing >= 0.45) who.push({ y: this.py, draw: function () { self.drawPerson(null, s.dir, self.px, self.py, frame); } });
     who.sort(function (a, b) { return a.y - b.y; }).forEach(function (o) { o.draw(); });
     // a creature hopping out of the grass
     if (this.hop) {
@@ -550,12 +686,21 @@ CC.world = {
       g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(hx, hy, 6, 2, 0, 0, Math.PI * 2); g.fill();
       CC.drawSprite(CC.creatureSprite(h.id), hx, hy - arc, { scale: 0.34 + k * 0.08, sy: 1 + Math.sin(CC.time * 20) * 0.08 * (1 - k), id: h.id });
     }
+    // after Fly: the big bird swoops down, drops you off, and flies away
+    if (landing < 1) {
+      var lx = this.screenX(this.px + 8), ly = this.screenY(this.py + 2), down = landing < 0.45 ? landing / 0.45 : 1 - (landing - 0.45) / 0.55;
+      var oy = ly - 14 - (1 - down) * 90, ox = lx + (landing < 0.45 ? 0 : (landing - 0.45) * 160);
+      g.fillStyle = 'rgba(0,0,0,' + (0.25 * down) + ')'; g.beginPath(); g.ellipse(lx, ly + 12, 10 * down, 3 * down, 0, 0, Math.PI * 2); g.fill();
+      CC.drawSprite(CC.creatureSprite('timberowl'), ox, oy, { scale: 0.42, sy: 1 + Math.sin(CC.time * 18) * 0.12, id: 'timberowl' });
+      if (landing > 0.44 && landing < 0.5) for (var q = 0; q < 6; q++) CC.fx.add({ x: lx + CC.rand(-8, 8), y: ly + 12, vx: CC.rand(-30, 30), vy: CC.rand(-15, -5), life: 0.4, kind: 'dust', size: 4 });
+    } else this.arrive = null;
     this.drawAmbient(cx, cy);
     if (this.emote) {
-      var ex = this.screenX(this.px + 8), ey = this.screenY(this.py - 22) - Math.abs(Math.sin(CC.time * 10)) * 2;
-      CC.rect(ex - 5, ey - 6, 11, 12, '#3a2a22'); CC.rect(ex - 4, ey - 5, 9, 10, '#ffffff');
-      CC.rect(ex - 1, ey - 4, 3, 5, '#e84838'); CC.rect(ex - 1, ey + 2, 3, 2, '#e84838');
+      var ex = this.screenX(this.px + 8), ey = this.screenY(this.py - 22) - Math.abs(Math.sin(CC.time * 10)) * 2, em = CC.img('ui/emote-exclaim');
+      if (em) g.drawImage(em, ex - 7, ey - 9, 14, 14 * em.height / em.width);
+      else { CC.rect(ex - 5, ey - 6, 11, 12, '#3a2a22'); CC.rect(ex - 4, ey - 5, 9, 10, '#ffffff'); CC.rect(ex - 1, ey - 4, 3, 5, '#e84838'); CC.rect(ex - 1, ey + 2, 3, 2, '#e84838'); }
     }
+    if (this.map.indoors) this.drawIndoorLight(cx, cy);
     if (this.banner) { this.banner.t -= CC.dt || 0; if (this.banner.t <= 0) this.banner = null; }
     if (this.banner) {
       var a = Math.min(1, this.banner.t * 2, (2.2 - this.banner.t) * 4);
@@ -615,17 +760,34 @@ CC.world = {
     }
   },
 
+  // Rooms: a warm lamp-lit vignette, and fireplaces that flicker
+  drawIndoorLight: function (cx, cy) {
+    var g = CC.g;
+    (this.map.decor || []).forEach(function (d) {
+      if (!d.glow) return;
+      var fx = d.x * T + 8 - cx, fy = (d.y + 1) * T - 8 - cy, r = 30 + Math.sin(CC.time * 9) * 2 + Math.sin(CC.time * 23) * 1.5;
+      var grd = g.createRadialGradient(fx, fy, 0, fx, fy, r);
+      grd.addColorStop(0, 'rgba(255,170,80,0.28)'); grd.addColorStop(1, 'rgba(255,140,60,0)');
+      g.fillStyle = grd; g.fillRect(fx - r, fy - r, r * 2, r * 2);
+      if (Math.random() < 0.2) CC.fx.add({ x: fx + CC.rand(-3, 3), y: fy - 4, vx: CC.rand(-4, 4), vy: -CC.rand(10, 20), life: 0.6, kind: 'star', color: '#ffb040', size: 1.5 });
+    });
+    var w = this.map.rows[0].length * T, h = this.map.rows.length * T, mx = w / 2 - cx, my = h / 2 - cy;
+    var v = g.createRadialGradient(mx, my, 30, mx, my, Math.max(w, h) * 0.75);
+    v.addColorStop(0, 'rgba(255,220,160,0.06)'); v.addColorStop(1, 'rgba(40,20,10,0.35)');
+    g.fillStyle = v; g.fillRect(0, 0, CC.W, CC.H);
+  },
+
   // The player walks with the walk-sheet art; everyone else is their character art with a little life added
   // in code (breathing, a hop when you talk to them). Without art, the code-drawn people stand in.
   drawPerson: function (npc, dir, x, y, frame) {
     var g = CC.g, fx = this.screenX(x) + 8, fy = this.screenY(y) + 15;
     if (fx < -30 || fy < -10 || fx > CC.W + 30 || fy > CC.H + 40) return;
     g.fillStyle = 'rgba(0,0,0,0.22)'; g.beginPath(); g.ellipse(fx, fy, 6, 2, 0, 0, Math.PI * 2); g.fill();
-    var sheet = !npc && CC.img('walk/' + (CC.state.look || 'player-a'));
+    var sheet = npc ? npc.sheet && CC.img('walk/' + npc.sheet) : CC.img('walk/' + (CC.state.look || 'player-a'));
     var art = npc && npc.art && CC.img('people/' + npc.art);
     if (sheet) {
       var cw = sheet.width / 3, ch = sheet.height / 4, row = { down: 0, left: 1, right: 2, up: 3 }[dir], k = 27 / ch;
-      var bounce = this.moving && frame !== 1 ? -0.5 : 0;
+      var bounce = (npc ? npc.mv : this.moving) && frame !== 1 ? -0.5 : 0;
       g.drawImage(sheet, frame * cw, row * ch, cw, ch, Math.round(fx - cw * k / 2), Math.round(fy - ch * k + bounce), cw * k, ch * k);
     } else if (art) {
       var hgt = npc.h || 26, kk = hgt / art.height;
@@ -652,12 +814,38 @@ CC.DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 CC.useExit = async function (ex, nx) {
   if (ex.to === 'forest') { await CC.forestGate(); return; }
   var dest = CC.MAPS[ex.to];
+  if (CC.MAPS[CC.world.mapId].indoors) CC.sfx('back');
   await CC.fade(0.25, true);
-  var x = ex.tx0 + (nx - ex.x0);
+  var x = ex.fixedX ? ex.tx0 : ex.tx0 + (nx - ex.x0);
   CC.world.enter(ex.to, x, ex.ty, ex.side === 'top' ? 'up' : 'down');
   CC.world.cooldown = 2;
   await CC.fade(0.25, false);
   return dest;
+};
+
+// walking into a building: the room behind its door
+CC.enterRoom = async function (roomId) {
+  var r = CC.MAPS[roomId];
+  CC.sfx('select');
+  await CC.fade(0.25, true);
+  CC.world.enter(roomId, r.inside[0], r.inside[1], 'up');
+  await CC.fade(0.25, false);
+};
+// furniture you can look at (talk: a line to say, or 'vault' / 'bed')
+CC.useFurniture = async function (d) {
+  if (d.talk === 'vault') {
+    if (!CC.state.party.length) { await CC.say('The Cube Vault. It stores the creatures you catch once your party of 4 is full.'); return; }
+    await CC.say('You switched on the Cube Vault.'); CC.sfx('select'); await CC.vaultScreen(); return;
+  }
+  if (d.talk === 'bed') {
+    if (await CC.yesNo('Your bed. Take a rest?')) {
+      await CC.fade(0.4, true); CC.healParty(); CC.sfx('heal'); await CC.sleep(1); CC.unfade();
+      CC.state.lastHeal = { map: 'home-in', x: 2, y: 3 };
+      await CC.say('You feel rested. Your creatures are healed!');
+    }
+    return;
+  }
+  await CC.say(d.talk);
 };
 
 // A screen-wide fade. Fading to black leaves the black layer up (it blocks input) until a fade back
@@ -723,14 +911,15 @@ CC.fieldMenu = async function () {
   while (true) {
     var items = ['Party', 'Bag'];
     if (CC.state.flags.vaultKey) items.push('Vault');
-    items.push('Save', 'Codes', 'Close');
+    if (CC.state.flags.fly) items.push('Fly');
+    items.push('Save', 'Close');
     var c = await CC.menu(items, { x: 158, y: 6, w: 76, startCloses: true });
     var pick = items[c];
     if (c < 0 || pick === 'Close') return;
     if (pick === 'Party') await CC.partyScreen('field');
     if (pick === 'Bag') await CC.bagScreen();
     if (pick === 'Vault') await CC.vaultScreen();
-    if (pick === 'Codes') { await CC.openCodes(); if (await CC.runCodeQueue()) return; }
+    if (pick === 'Fly') { await CC.flyScreen(); return; }
     if (pick === 'Save') {
       var seen = Object.keys(CC.state.seen).length, caught = Object.keys(CC.state.caught).length;
       if (await CC.yesNo('Save your game? (Creature Log: ' + caught + ' caught, ' + seen + ' seen. Coins: ' + CC.state.coins + '.)')) {

@@ -1,9 +1,9 @@
-// Dev codes: typed (or pasted) into the code box from the menu's "Codes", or from the title screen with
-// Up Up Down Down Left Right Left Right B A. Several codes can go in at once, split by ";" or new lines.
+// Dev codes: typed (or pasted) into the hidden code box. Open it by holding L + R and pressing MENU in a game,
+// or on the title screen with Up Up Down Down Left Right Left Right B A. Several codes can go in at once, split by ";" or new lines.
 // Codes typed before a game starts wait and apply as soon as it does.
 var CC = window.CC || (window.CC = {});
 
-CC.dev = { noWild: false, catchAll: false, oneHit: false, speed: 1, pending: [], queue: null };
+CC.dev = { noWild: false, catchAll: false, oneHit: false, god: false, infItems: false, speed: 1, pending: [], queue: null };
 
 function creatureId(word) {
   if (!word) return null;
@@ -73,6 +73,29 @@ CC.CODES = [
     CC.dev.queue = function () { return CC.evolveScene(m); };
     return 'Here it goes...';
   } },
+  // ---- the old-school cheats ----
+  { words: ['MAX', 'LV50'], needsGame: true, help: 'MAX: your whole party goes to Lv 50', run: function () {
+    CC.state.party.forEach(function (m) { setLevel(m, 50); }); return 'Your party is Lv 50!';
+  } },
+  { words: ['RICH', 'MONEY'], needsGame: true, help: 'RICH: 999,999 coins', run: function () { CC.state.coins = 999999; return 'Coins: 999,999.'; } },
+  { words: ['STOCKUP', 'ITEMS'], needsGame: true, help: 'STOCKUP: 99 of every item and cube (Master Cubes too)', run: function () {
+    Object.keys(CC.ITEMS).forEach(function (k) { CC.state.bag[k] = 99; }); return 'Your bag is stuffed: 99 of everything.';
+  } },
+  { words: ['INFINITE', 'INF'], help: 'INFINITE: cubes and potions never run out / normal', run: function () {
+    CC.dev.infItems = !CC.dev.infItems; return 'Bottomless bag ' + (CC.dev.infItems ? 'ON.' : 'OFF.');
+  } },
+  { words: ['GODMODE', 'GOD'], help: 'GODMODE: your creatures take no damage / normal', run: function () {
+    CC.dev.god = !CC.dev.god; return 'God mode ' + (CC.dev.god ? 'ON.' : 'OFF.');
+  } },
+  { words: ['FLY'], needsGame: true, help: 'FLY: unlock Fly (R button or the menu) and every place you could fly to', run: function () {
+    CC.state.flags.fly = true; CC.state.visited = CC.state.visited || {};
+    CC.FLY_SPOTS.forEach(function (p) { if (p.map) CC.state.visited[p.map] = 1; });
+    return 'You can Fly! Press R (or MENU > Fly) on the map.';
+  } },
+  { words: ['ZOOKEEPER'], needsGame: true, help: 'ZOOKEEPER: one of every creature goes into your Vault (Lv 5)', run: function () {
+    CC.CREATURE_ORDER.forEach(function (id) { CC.state.vault.push(CC.mon.make(id, 5)); CC.markCaught(id); });
+    return 'The Vault now holds one of all ' + CC.CREATURE_ORDER.length + ' creatures.';
+  } },
   { words: ['CUBES'], needsGame: true, help: 'CUBES 50: set your Basic Cubes', run: function (a) { CC.state.bag.cube = num(a[0], 0, 999, 99); return 'Cubes: ' + CC.state.bag.cube + '.'; } },
   { words: ['POTIONS'], needsGame: true, help: 'POTIONS 20: set your Potions', run: function (a) { CC.state.bag.potion = num(a[0], 0, 999, 99); return 'Potions: ' + CC.state.bag.potion + '.'; } },
   { words: ['COINS'], needsGame: true, help: 'COINS 5000: set your coins', run: function (a) { CC.state.coins = num(a[0], 0, 999999, 9999); return 'Coins: ' + CC.state.coins + '.'; } },
@@ -110,7 +133,8 @@ CC.CODES = [
     CC.dev.queue = function () { return CC.zoo(); }; return 'Opening the zoo...';
   } },
   { words: ['DEV', 'STATUS'], help: 'DEV: show which codes are on', run: function () {
-    return 'Wild ' + (CC.dev.noWild ? 'off' : 'on') + ', sure catch ' + (CC.dev.catchAll ? 'on' : 'off') + ', one-hit ' + (CC.dev.oneHit ? 'on' : 'off') + ', speed x' + CC.dev.speed + '.' +
+    return 'Wild ' + (CC.dev.noWild ? 'off' : 'on') + ', sure catch ' + (CC.dev.catchAll ? 'on' : 'off') + ', one-hit ' + (CC.dev.oneHit ? 'on' : 'off') +
+      ', god ' + (CC.dev.god ? 'on' : 'off') + ', bottomless bag ' + (CC.dev.infItems ? 'on' : 'off') + ', speed x' + CC.dev.speed + '.' +
       (CC.dev.pending.length ? '\nWaiting for a game: ' + CC.dev.pending.join('; ') : '');
   } },
 ];

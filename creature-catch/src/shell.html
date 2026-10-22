@@ -22,6 +22,10 @@ body.touch #pad { display: block; }
 #bB { right: 108px; top: 96px; width: 60px; height: 60px; background: #3a4a7a; }
 #bStart { right: 40px; top: 152px; width: 84px; height: 30px; border-radius: 15px; font-size: 14px; }
 #bA.on { background: #a44e94; } #bB.on { background: #5468a8; }
+.shoulder { top: 4px; width: 92px; height: 30px; border-radius: 15px 15px 6px 6px; font-size: 14px; background: #4a4060; }
+#bL { left: 14px; } #bR { right: 14px; }
+#bUp { top: 40px !important; } #bDown { top: 148px !important; } #bLeft, #bRight { top: 94px !important; } #bA { top: 70px !important; } #bB { top: 110px !important; } #bStart { top: 168px !important; }
+#pad { height: 210px !important; }
 /* the dev code box (a real text box so phone keyboards and paste work) */
 #codes { display: none; position: fixed; inset: 0; background: rgba(15,10,25,0.7); align-items: center; justify-content: center; z-index: 10; }
 #codes.open { display: flex; }
@@ -40,6 +44,7 @@ body.touch #pad { display: block; }
   <div class="btn dir" id="bUp">&#9650;</div><div class="btn dir" id="bDown">&#9660;</div>
   <div class="btn dir" id="bLeft">&#9664;</div><div class="btn dir" id="bRight">&#9654;</div>
   <div class="btn" id="bB">B</div><div class="btn" id="bA">A</div><div class="btn" id="bStart">MENU</div>
+  <div class="btn shoulder" id="bL">L</div><div class="btn shoulder" id="bR">R</div>
 </div>
 <div id="codes"><div class="panel">
   <h2>Dev codes</h2>

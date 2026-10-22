@@ -227,7 +227,7 @@ CC.drawSprite = function (sprite, x, y, o) {
 CC.drawCube = function (x, y, size, o) {
   o = o || {};
   var g = CC.g, s = size || 8, h = s / 2;
-  var art = CC.img(o.open ? 'ui/cube-open' : 'ui/cube');
+  var art = CC.img(o.open ? 'ui/cube-open' : o.kind && o.kind !== 'cube' ? 'ui/cube-' + o.kind : 'ui/cube');
   if (art) { // the generated cube, a little bigger than the code one so its detail reads
     var k = s * 1.5 / art.width;
     g.save(); g.translate(Math.round(x), Math.round(y)); if (o.rot) g.rotate(o.rot);
@@ -319,12 +319,44 @@ CC.fx = {
       if (p.drag) { p.vx *= 1 - p.drag * dt; p.vy *= 1 - p.drag * dt; }
       var k = p.life / p.max;
       g.save(); g.globalAlpha = p.fade === false ? 1 : Math.min(1, k * 2);
-      CC.drawParticle(p.kind, p.x, p.y, p.size * (p.grow ? 1 + (1 - k) * p.grow : 1), p.color, p.rot);
+      if (p.anim) drawAnim(p, 1 - k);
+      else if (p.img) drawImgParticle(p, p.size * (p.grow ? 1 + (1 - k) * p.grow : 1));
+      else CC.drawParticle(p.kind, p.x, p.y, p.size * (p.grow ? 1 + (1 - k) * p.grow : 1), p.color, p.rot);
       g.restore();
       return true;
     });
   },
 };
+// a particle that is one of the attack-effect pictures (fx/<type>-n), `s` is roughly its size in pixels
+function drawImgParticle(p, s) {
+  var g = CC.g, im = p.img, k = s * 2 / Math.max(im.width, im.height);
+  g.translate(Math.round(p.x), Math.round(p.y)); if (p.rot) g.rotate(p.rot);
+  g.drawImage(im, -im.width * k / 2, -im.height * k / 2, im.width * k, im.height * k);
+}
+// a strong-move burst: a strip of frames played once over its life (k goes 0 to 1)
+function drawAnim(p, k) {
+  var g = CC.g, im = p.anim, n = p.frames, f = Math.min(n - 1, Math.floor(k * n)), cw = im.width / n, h = p.h, w = cw * h / im.height;
+  g.globalAlpha = k > 0.85 ? (1 - k) / 0.15 : 1;
+  g.drawImage(im, f * cw, 0, cw, im.height, Math.round(p.x - w / 2), Math.round(p.y - h / 2), w, h);
+}
+// the attack-effect pictures for a type, if there are any
+var fxCache = {};
+CC.typeImages = function (type) {
+  var key = (type || 'Normal').toLowerCase();
+  if (fxCache[key]) return fxCache[key];
+  var out = [];
+  for (var i = 1; i <= 12; i++) { var im = CC.img('fx/' + key + '-' + i); if (im) out.push(im); }
+  return (fxCache[key] = out);
+};
+// play a type's strong-move burst over a spot
+CC.playBurst = function (type, x, y, h) {
+  var im = CC.img('burst/' + (type || '').toLowerCase());
+  if (!im) return false;
+  var frames = (type || '').toLowerCase() === 'bolt' ? 3 : 4; // two of the bolt frames came out joined
+  CC.fx.add({ x: x, y: y, vx: 0, vy: 0, life: 0.6, anim: im, frames: frames, h: h || 64, fade: false });
+  return true;
+};
+
 CC.drawParticle = function (kind, x, y, s, color, rot) {
   var g = CC.g;
   g.translate(Math.round(x), Math.round(y)); if (rot) g.rotate(rot);
@@ -400,12 +432,14 @@ CC.TYPE_FX = {
 };
 CC.burst = function (type, x, y, n, speed, opts) {
   var f = CC.TYPE_FX[type] || CC.TYPE_FX.Normal; opts = opts || {};
+  var imgs = opts.kind ? [] : CC.typeImages(type);
   for (var i = 0; i < n; i++) {
     var a = Math.random() * Math.PI * 2, v = speed * (0.4 + Math.random() * 0.8);
     CC.fx.add({
       x: x + CC.rand(-3, 3), y: y + CC.rand(-3, 3), vx: Math.cos(a) * v, vy: Math.sin(a) * v - (opts.up || 0),
       life: CC.rand(0.35, 0.7) * (opts.life || 1), kind: opts.kind || f.kind, color: CC.pick(f.colors),
-      size: CC.rand(3, 6) * (opts.size || 1), grav: opts.grav || 0, spin: CC.rand(-6, 6), drag: 2,
+      img: imgs.length && Math.random() < 0.8 ? CC.pick(imgs) : null,
+      size: CC.rand(3, 6) * (opts.size || 1), grav: opts.grav || 0, spin: CC.rand(-3, 3), drag: 2,
     });
   }
 };

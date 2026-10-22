@@ -127,7 +127,7 @@ var CC = window.CC || (window.CC = {});
       if (B.shake > 0) { g.translate(Math.round(CC.rand(-B.shake, B.shake)), Math.round(CC.rand(-B.shake, B.shake) * 0.5)); B.shake = Math.max(0, B.shake - CC.dt * 14); }
       drawBackground();
       if (B.trainerShown && B.trainer) {
-        var tart = B.trainer.art && CC.img('people/' + B.trainer.art);
+        var tart = B.trainer.art && (CC.img('people/' + B.trainer.art + '-battle') || CC.img('people/' + B.trainer.art));
         if (tart) {
           var th = 74, tk = th / tart.height;
           g.fillStyle = 'rgba(0,0,0,0.2)'; g.beginPath(); g.ellipse(FOE.x + B.trainerX, FOE.y - 1, 18, 4, 0, 0, Math.PI * 2); g.fill();
@@ -139,7 +139,11 @@ var CC = window.CC || (window.CC = {});
       }
       drawMon(B.foe);
       drawMon(B.ally);
-      if (B.cube) CC.drawCube(B.cube.x, B.cube.y, 8, { rot: B.cube.rot, open: B.cube.open, glow: B.cube.glow });
+      if (B.thrower) {
+        var ta = CC.img('throw/' + (CC.state.look || 'player-a')), cells = 3, cw = ta.width / cells, th = 66, tw = cw * th / ta.height;
+        g.drawImage(ta, B.thrower.frame * cw, 0, cw, ta.height, Math.round(B.thrower.x - tw / 2), ALLY.y + 4 - th, tw, th);
+      }
+      if (B.cube) CC.drawCube(B.cube.x, B.cube.y, 8, { rot: B.cube.rot, open: B.cube.open, glow: B.cube.glow, kind: B.cube.kind });
       g.restore();
       drawPlate(B.foe, 6, 8, false);
       drawPlate(B.ally, 124, 72, true);
@@ -218,7 +222,8 @@ var CC = window.CC || (window.CC = {});
       });
       await CC.tween(0.14, function (k) { user.ox = dir * 30 * k; user.oy = -dir * 14 * k; user.sx = user.sy = 1.1 - k * 0.1; });
       B.flashScreen = 0.5; B.flashColor = CC.TYPE_COLORS[type] ? CC.TYPE_COLORS[type][0] : '#ffffff';
-      CC.burst(type, tx, ty, 30, 110, { size: 1.4 });
+      CC.playBurst(type, tx, ty - 4, 70);
+      CC.burst(type, tx, ty, 22, 110, { size: 1.3 });
       CC.fx.add({ x: tx, y: ty, vx: 0, vy: 0, life: 0.35, kind: 'ring', color: '#ffffff', size: 6, grow: 4 });
       await CC.tween(0.2, function (k) { user.ox = dir * 30 * (1 - k); user.oy = -dir * 14 * (1 - k); });
       user.ox = user.oy = 0; user.sx = user.sy = 1;
@@ -236,7 +241,8 @@ var CC = window.CC || (window.CC = {});
       user.sx = user.sy = 1;
       for (var i = 0; i < 6; i++) {
         var t0 = 0.28;
-        CC.fx.add({ x: ux, y: uy + CC.rand(-4, 4), vx: (tx - ux) / t0, vy: (ty - uy) / t0 + CC.rand(-15, 15), life: t0, kind: f.kind, color: CC.pick(f.colors), size: 5, fade: false, spin: 10 });
+        var pics = CC.typeImages(type);
+        CC.fx.add({ x: ux, y: uy + CC.rand(-4, 4), vx: (tx - ux) / t0, vy: (ty - uy) / t0 + CC.rand(-15, 15), life: t0, kind: f.kind, color: CC.pick(f.colors), img: pics.length ? CC.pick(pics) : null, size: 6, fade: false, spin: pics.length ? 2 : 10 });
         await CC.sleep(0.04);
       }
       await CC.sleep(0.22);
@@ -270,6 +276,7 @@ var CC = window.CC || (window.CC = {});
     var stab = move.type && CC.mon.sp(user.mon).types.indexOf(move.type) >= 0 ? 1.25 : 1;
     var dmg = (((2 * L / 5 + 2) * move.power * a.atk / d.def) / 50 + 2) * mult * stab * CC.rand(0.9, 1) * (crit ? 1.5 : 1);
     if (CC.dev.oneHit && user === B.ally) return { dmg: target.mon.hp, mult: mult };
+    if (CC.dev.god && target === B.ally) return { dmg: 0, mult: mult };
     return { dmg: mult === 0 ? 0 : Math.max(1, Math.floor(dmg)), mult: mult };
   }
 
@@ -345,7 +352,7 @@ var CC = window.CC || (window.CC = {});
           await CC.say(nm(target) + ' had its energy drained!');
         }
       }
-      if (fx.recoil && user.mon.hp > 0) {
+      if (fx.recoil && user.mon.hp > 0 && !(CC.dev.god && user === B.ally)) {
         user.mon.hp = Math.max(0, user.mon.hp - Math.max(1, Math.floor(total * fx.recoil)));
         await Promise.all([hitFx(user, 1, false, 'Normal'), hpTo(user)]);
         await CC.say(nm(user) + ' is hit with recoil!');
@@ -369,7 +376,7 @@ var CC = window.CC || (window.CC = {});
 
   async function residual(s) {
     var m = s.mon;
-    if (m.hp <= 0 || (m.status !== 'burn' && m.status !== 'poison')) return;
+    if (m.hp <= 0 || (m.status !== 'burn' && m.status !== 'poison') || (CC.dev.god && s === B.ally)) return;
     var max = CC.mon.maxHp(m), d = Math.max(1, Math.floor(max / (m.status === 'burn' ? 16 : 8)));
     CC.burst(m.status === 'burn' ? 'Fire' : 'Shadow', s.home.x, s.home.y - 24, 8, 30, m.status === 'poison' ? { kind: 'bubble' } : {});
     m.hp = Math.max(0, m.hp - d);
@@ -461,8 +468,11 @@ var CC = window.CC || (window.CC = {});
         if (mv) return { kind: 'move', move: mv };
       } else if (a === 1) {
         if (!B.wild) { await CC.say('You can\'t catch another trainer\'s creature!'); continue; }
-        if (!CC.state.bag.cube) { await CC.say('You don\'t have any cubes!'); continue; }
-        return { kind: 'cube' };
+        var have = CC.CUBE_KINDS.filter(function (k) { return CC.state.bag[k] > 0; });
+        if (!have.length) { await CC.say('You don\'t have any cubes!'); continue; }
+        if (have.length === 1) return { kind: 'cube', cube: have[0] };
+        var pick = await CC.menu(have.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + CC.state.bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Throw which?', y: 40 });
+        if (pick >= 0) return { kind: 'cube', cube: have[pick] };
       } else if (a === 2) {
         var i = await CC.partyScreen('battle', { active: B.allyIndex, title: 'Swap in which?' });
         if (i >= 0) return { kind: 'swap', index: i };
@@ -476,16 +486,19 @@ var CC = window.CC || (window.CC = {});
   // ---------- catching ----------
   var RARITY_BONUS = { common: 25, uncommon: 10, rare: -5, veryrare: -15 };
   function catchChance(m) {
-    if (CC.dev.catchAll) return 100;
+    var bonus = CC.ITEMS[B.cubeKind || 'cube'].cube;
+    if (CC.dev.catchAll || bonus >= 999) return 100;
     var max = CC.mon.maxHp(m), st = m.status;
-    var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[CC.RARITY[m.id]] || 0);
+    var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[CC.RARITY[m.id]] || 0) + bonus;
     return CC.clamp(c, 5, 95);
   }
-  async function throwCube() {
-    CC.state.bag.cube--;
-    await CC.say('You threw a Basic Cube!', { auto: 0.2 });
+  async function throwCube(kind) {
+    kind = kind || 'cube';
+    if (!CC.dev.infItems) CC.state.bag[kind]--;
+    B.cubeKind = kind;
+    await CC.say('You threw a ' + CC.ITEMS[kind].name + '!', { auto: 0.2 });
     var f = B.foe, to = { x: f.home.x, y: f.home.y - 30 };
-    B.cube = { x: 30, y: 120, rot: 0, open: 0 };
+    B.cube = { x: 30, y: 120, rot: 0, open: 0, kind: kind };
     CC.sfx('throw');
     await CC.tween(0.55, function (k) { B.cube.x = CC.lerp(30, to.x, k); B.cube.y = CC.lerp(120, to.y, k) - Math.sin(k * Math.PI) * 50; B.cube.rot = k * 12; });
     B.cube.rot = 0; B.cube.open = 4; B.cube.glow = 0.7;
@@ -580,8 +593,20 @@ var CC = window.CC || (window.CC = {});
       await sendOut(B.foe);
     }
     B.ally = side(CC.state.party[B.allyIndex], false);
-    await CC.say('Go, ' + nmShort(B.ally) + '!', { auto: 0.3 });
-    await sendOut(B.ally);
+    // you, seen from behind, wind up and throw the cube; then step out of the way
+    var throwArt = CC.img('throw/' + (CC.state.look || 'player-a'));
+    if (throwArt) {
+      B.thrower = { x: ALLY.x - 4, frame: 0 };
+      await CC.say('Go, ' + nmShort(B.ally) + '!', { auto: 0.05 });
+      await CC.sleep(0.15); B.thrower.frame = 1; await CC.sleep(0.18); B.thrower.frame = 2;
+      var throwDone = sendOut(B.ally, { x: ALLY.x + 12, y: ALLY.y - 52 });
+      await CC.tween(0.45, function (k) { B.thrower.x = ALLY.x - 4 - k * 90; });
+      B.thrower = null;
+      await throwDone;
+    } else {
+      await CC.say('Go, ' + nmShort(B.ally) + '!', { auto: 0.3 });
+      await sendOut(B.ally);
+    }
     B.fought[B.allyIndex] = true;
 
     while (true) {
@@ -593,7 +618,7 @@ var CC = window.CC || (window.CC = {});
         if (a >= b || Math.random() * 100 < 50 + 10 * B.runs) { CC.sfx('back'); await CC.say('Got away safely!'); return 'run'; }
         await CC.say('Couldn\'t get away!');
       } else if (act.kind === 'cube') {
-        if (await throwCube()) { await afterWin(); return 'caught'; }
+        if (await throwCube(act.cube)) { await afterWin(); return 'caught'; }
       } else if (act.kind === 'swap') {
         await CC.say('Come back, ' + nmShort(B.ally) + '!', { auto: 0.3 });
         await withdraw(B.ally);

@@ -103,3 +103,13 @@ They're generated in `creature-catch/src/js/12-data-creatures.js` and `11-data-m
 
 - **Starters open with Tackle and Growl and learn their type move at Lv 6.** That way Juniper's type advantage doesn't decide the first rival fight (Lv 5). In testing, the type-advantaged starter otherwise won in 2 hits against 5.
 - **Every creature has a signature move**, one per evolution line or Solo creature (41 in all).
+
+
+---
+
+## 11. Added in v4
+
+- **Fly** is a late-game travel option across the visited places, shown on the world map. How you earn it in the story is still open. It could be Timberowl's gift after the Snow region, or a reward from a guide near the end. For now the `FLY` code unlocks it.
+- **Interiors:** every village building and outpost has a room. The Healing Hut's Cube Vault is a machine you use in person.
+- **Cube tiers:** Great Cubes and Super Potions go on sale after the first trial. Ultra Cubes come from Wandering Merchant Tobias later (not built yet). There's one Master Cube in the story (not built yet).
+- **Duskfang** has art (the optional middle stage). The Fangling line is still 2-stage until you decide.

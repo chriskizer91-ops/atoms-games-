@@ -30,11 +30,8 @@ CC.NPCS = {
         else await CC.talk('Tinker', ['Creatures hide in tall grass. Walk through it and one might jump out!', 'Knock it down a bit, then throw a cube. Sleeping or frozen ones are easiest to catch!']);
       },
     },
-    { x: 7, y: 4, look: 'willow', art: 'willow', h: 27, dir: 'down', talk: function () { return willowHouse(); } },
-    { x: 14, y: 4, look: 'pip', art: 'pip', h: 24, dir: 'down', talk: function () { return CC.enterDoor('village', 'shop'); } },
-    { x: 14, y: 11, look: 'hazel', art: 'hazel', h: 25, dir: 'down', talk: function () { return CC.enterDoor('village', 'hut'); } },
     {
-      x: 9, y: 2, look: 'juniper', art: 'juniper', h: 26, dir: 'down', when: function () { return F().starter && !F().trial1; }, talk: async function () {
+      x: 9, y: 2, look: 'juniper', art: 'juniper', sheet: 'juniper', patrol: [[8, 2], [12, 2], [12, 3], [8, 3]], h: 26, dir: 'down', when: function () { return F().starter && !F().trial1; }, talk: async function () {
         await CC.talk('Juniper', F().juniper1 === 'won'
           ? ['Don\'t get cocky. That was a warm-up!', 'I\'m off to beat Farmer Bramble\'s trial before you. See ya!']
           : ['Still thinking about our battle? Ha!', 'Type advantage matters, but so does training. Catch more creatures!']);
@@ -47,6 +44,18 @@ CC.NPCS = {
     },
   ],
   // (village people continue below)
+  // inside the buildings: the people behind the counters
+  'willow-in': [
+    { x: 5, y: 3, look: 'willow', art: 'willow', h: 27, dir: 'down', talk: function () { return willowHouse(); } },
+    { x: 5, y: 7, id: 'juniperIn', look: 'juniper', art: 'juniper', sheet: 'juniper', h: 26, dir: 'up', when: function () { return F().juniperIn; }, talk: function () {} },
+  ],
+  'hut-in': [{ x: 5, y: 2, look: 'hazel', art: 'hazel', h: 25, dir: 'down', talk: function () { return healingHut('Hazel', { map: 'hut-in', x: 5, y: 4 }); } }],
+  'outpost-in': [{ x: 4, y: 2, look: 'hazel', art: 'villager-7', h: 25, dir: 'down', talk: function () { return healingHut('Fern', { map: 'outpost-in', x: 4, y: 4 }); } }],
+  'shop-in': [{ x: 4, y: 2, look: 'pip', art: 'pip', h: 24, dir: 'down', talk: async function () {
+    await CC.say('Welcome to Pip\'s Cube Shop! Cubes, potions, all fresh.', { who: 'Pip' });
+    await CC.shopScreen();
+    await CC.say('Come again!', { who: 'Pip' });
+  } }],
   meadow: [
     {
       x: 3, y: 8, look: 'ranger', art: 'oakley', h: 27, dir: 'right', talk: async function () {
@@ -121,20 +130,15 @@ CC.world.blockScript = function (nx, ny) {
 };
 
 // ---------- doors ----------
-CC.enterDoor = async function (mapId, id) {
-  if (id === 'willow') return willowHouse();
-  if (id === 'shop') {
-    await CC.say('Welcome to Pip\'s Cube Shop! Cubes, potions, all fresh.', { who: 'Pip' });
-    await CC.shopScreen();
-    await CC.say('Come again!', { who: 'Pip' });
-    return;
+CC.enterDoor = function (mapId, id) {
+  if (CC.DOORS[id]) return CC.enterRoom(CC.DOORS[id]);
+};
+// a person walks a list of steps ('up', 'left', ...) with their walk sheet
+CC.npcWalk = async function (n, steps) {
+  for (var i = 0; i < steps.length; i++) {
+    var d = CC.DIRS[steps[i]]; n.dir = steps[i];
+    await new Promise(function (res) { n.mv = { fx: n.x, fy: n.y, tx: n.x + d[0], ty: n.y + d[1], k: 0, speed: 3.6, done: res }; });
   }
-  if (id === 'home') {
-    if (await CC.yesNo('Your home, sweet home. Take a rest?')) { await restAndHeal(); CC.state.lastHeal = { map: 'village', x: 4, y: 12 }; }
-    return;
-  }
-  if (id === 'hut') return healingHut('Hazel', { map: 'village', x: 17, y: 12 });
-  if (id === 'outpost') return healingHut('Fern', { map: 'grassland', x: 18, y: 12 });
 };
 
 async function restAndHeal() {
@@ -184,8 +188,13 @@ async function willowHouse() {
   CC.sfx('catch');
   await CC.say('You received ' + CC.CREATURES[pick].name + '!');
   await CC.say('A fine choice. Look after each other.', { who: 'Elder Willow' });
-  // Juniper bursts in
-  var rival = RIVAL_PICK[pick];
+  // Juniper bursts in through the door and marches up beside you
+  var rival = RIVAL_PICK[pick], jun = CC.NPCS['willow-in'].find(function (n) { return n.id === 'juniperIn'; });
+  jun.x = 5; jun.y = 7; jun.dir = 'up'; F().juniperIn = true;
+  CC.sfx('bump');
+  await CC.say('BANG! The door flies open.');
+  await CC.npcWalk(jun, ['up', 'right', 'up']);
+  jun.dir = 'left';
   await CC.talk('Juniper', [
     'Gramps! I\'m here for my creature! Oh. You beat me to it?',
     'Fine! Then I\'ll take ' + CC.CREATURES[rival].name + '. ' + CC.CREATURES[rival].types[0] + ' beats ' + CC.CREATURES[pick].types[0] + ', you know!',
@@ -205,6 +214,8 @@ async function willowHouse() {
   await CC.say(result === 'win' ? 'Ha ha! What a match. Let me patch up your creatures.' : 'Don\'t be glum. Losing teaches you things. Let me patch you both up.', { who: 'Elder Willow' });
   CC.sfx('heal');
   await CC.say('I\'ll be ahead of you the whole way! See you out there!', { who: 'Juniper' });
+  await CC.npcWalk(jun, ['down', 'left', 'down']);
+  F().juniperIn = false;
   CC.state.bag.cube += 5; CC.state.bag.potion += 3;
   CC.sfx('buy');
   await CC.say('Elder Willow gave you 5 Basic Cubes and 3 Potions!');

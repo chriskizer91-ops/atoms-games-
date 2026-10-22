@@ -11,11 +11,12 @@ Open **`creature-catch.html`** in any browser. It's one file and works offline. 
 | Arrows / WASD | D-pad | Walk, move the cursor |
 | Z / Space | A | Talk, confirm |
 | X / Esc | B | Back. Hold it to run |
-| Enter | MENU | Party, Bag, Vault, Save |
+| Enter | MENU | Party, Bag, Vault, Fly, Save |
+| Q / E | L / R | L: your party. R: Fly (once you can) |
 
 ## Dev codes
 
-Press MENU, then Codes (or Up Up Down Down Left Right Left Right B A on the title screen). See `docs/creature-catch-dev-codes.md`.
+Hold L + R and press MENU (or press Up Up Down Down Left Right Left Right B A on the title screen). See `docs/creature-catch-dev-codes.md`.
 
 ## Versions
 

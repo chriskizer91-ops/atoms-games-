@@ -1,16 +1,18 @@
 # Creature Catch: Dev Codes
 
-Codes for testing. They work in any build from v3 on.
+Codes for testing. They work in any build from v3 on. From v4 on they're hidden behind a button combo.
 
 ## Opening the code box
 
-- **In a game:** MENU, then **Codes**.
-- **On the title screen:** press **Up Up Down Down Left Right Left Right B A** (keys or the on-screen pad).
+The codes are hidden. There are two ways in:
+
+- **In a game:** hold **L + R** and press **MENU** (keys Q + E + Enter, or the shoulder buttons on the touch pad).
+- **On the title screen:** press **Up Up Down Down Left Right Left Right B A**.
 
 Type a code and press Enter. Codes don't care about upper or lower case. Paste several at once by putting `;` between them, for example:
 
 ```
-starter embroak; level 15; cubes 30; nowild
+starter embroak; max; rich; stockup; fly
 ```
 
 Codes typed on the title screen wait until you start or continue a game, then they all apply. That means you can jump straight past the intro.
@@ -27,6 +29,13 @@ Codes typed on the title screen wait until you start or continue a game, then th
 | `STARTER EMBROAK` | Skips Elder Willow and Juniper's first battle and starts you with that starter |
 | `TEACH THORN KISS` | Your lead creature learns any move (replaces its last move if it already knows 4) |
 | `EVOLVE` | Your lead creature evolves now, if it has an evolution |
+| `MAX` (or `LV50`) | Your whole party goes to Lv 50 |
+| `RICH` (or `MONEY`) | 999,999 coins |
+| `STOCKUP` (or `ITEMS`) | 99 of every item: all four cube tiers (Master Cubes too), Potions, Super Potions |
+| `INFINITE` | Cubes and potions never run out, or back to normal |
+| `GODMODE` | Your creatures take no damage, or back to normal |
+| `FLY` | Unlocks Fly and every place you could fly to. Press **R** on the map, or MENU then Fly |
+| `ZOOKEEPER` | One of every creature goes into your Vault at Lv 5 |
 | `CUBES 50` / `POTIONS 20` / `COINS 5000` | Sets items or coins |
 | `GOTO GRASSLAND` | Warps to VILLAGE, MEADOW or GRASSLAND (optionally add X Y) |
 | `WILD DANDYLION 6` | Starts a wild battle with that creature at that level |
@@ -41,7 +50,7 @@ Codes typed on the title screen wait until you start or continue a game, then th
 
 Creature names can be shortened to their start (`WILD DANDY 6`).
 
-The toggles (`NOWILD`, `CATCHALL`, `ONEHIT`, `FAST`) last until you reload the page. They aren't saved. Everything else changes your save the next time you save.
+The toggles (`NOWILD`, `CATCHALL`, `ONEHIT`, `FAST`, `INFINITE`, `GODMODE`) last until you reload the page. They aren't saved. Everything else changes your save the next time you save.
 
 ## Ideas for later (not built yet)
 
