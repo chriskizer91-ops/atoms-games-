@@ -23,7 +23,7 @@ CC.LEGENDS = {
   cave: {
     rustle: ['#5ac8f0', '#3a8ee8', '#8ae0ff'],
     atlas: 'cave', ground: [0], dirtFrom: null, wall: true, backdrop: '#17141f', pathTint: 'rgba(150,140,170,0.16)',
-    ',': { i: [1], tile: 'tiles/cave-mushroom-patch', glow: '#7ae8c8' }, o: { i: [9, 10], solid: true }, x: { i: [8], solid: true, glow: '#5ac8f0' }, '*': { i: [10] }, '~': { i: [11], solid: true, glow: '#3a8ee8' },
+    ',': { i: [1], tile: 'tiles/cave-mushroom-patch' }, o: { i: [9, 10], solid: true }, x: { i: [8], solid: true, glow: '#5ac8f0' }, '*': { i: [10] }, '~': { i: [11], solid: true, glow: '#3a8ee8' },
   },
   desert: {
     rustle: ['#d8b070', '#b89050', '#e8d090'],

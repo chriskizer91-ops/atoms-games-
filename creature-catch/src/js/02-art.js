@@ -284,6 +284,14 @@ CC.drawSprite = function (sprite, x, y, o) {
   g.restore();
 };
 
+// draws a banner picture stretched to width w by stretching only its middle (its ends keep their shape)
+CC.drawStretched = function (img, x, y, w, h, edge) {
+  var g = CC.g, k = h / img.height, e = edge || Math.round(img.width * 0.25), ew = Math.round(e * k), mid = img.width - e * 2;
+  g.drawImage(img, 0, 0, e, img.height, x, y, ew, h);
+  g.drawImage(img, e, 0, mid, img.height, x + ew, y, Math.max(0, w - ew * 2), h);
+  g.drawImage(img, img.width - e, 0, e, img.height, x + w - ew, y, ew, h);
+};
+
 // the sprite falling apart into pixels, top first (fainting)
 var dissolveCache = {};
 function dissolved(img, k) {

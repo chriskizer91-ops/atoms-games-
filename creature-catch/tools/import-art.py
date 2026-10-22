@@ -424,11 +424,19 @@ def main(src):
     for who in ('juniper-older', 'bramble', 'oakley', 'gus', 'dusty', 'safi', 'frida', 'moss', 'corvin'):
         f = pick(f'walk-{who}')
         if not f or 'side-walk' in os.path.basename(f).lower(): continue
-        files['__walk'] = f
-        sheet, boxes = pieces('__walk', 6, 0.0015)
-        rows = rows_then_cols(boxes)
-        frames = [shrink(sheet.crop(b), 4.6, colors=24) for r in rows[:4] for b in r[:3]]
-        made.append(save(cells(frames, 3), f'walk/{who}.png')); log('walk', who, [len(r) for r in rows])
+        # the figures are evenly spaced, but rods and staffs come apart into separate shapes, so cut a 3 x 4 grid
+        sheet = key_white(Image.open(f)); bb = bbox(sheet)
+        gw = (bb[2] - bb[0]) / 3; gh = (bb[3] - bb[1]) / 4
+        frames = []
+        for r in range(4):
+            for c in range(3):
+                cell = sheet.crop((round(bb[0] + c * gw), round(bb[1] + r * gh), round(bb[0] + (c + 1) * gw), round(bb[1] + (r + 1) * gh)))
+                parts = [q for q in components(cell, 0.002, 4)]  # drop specks and slivers of the neighbors
+                if not parts: continue
+                big = max((q[2] - q[0]) * (q[3] - q[1]) for q in parts)
+                keep = [q for q in parts if (q[2] - q[0]) * (q[3] - q[1]) > big * 0.04]
+                frames.append(shrink(cell.crop((min(q[0] for q in keep), min(q[1] for q in keep), max(q[2] for q in keep), max(q[3] for q in keep))), 4.6, colors=24))
+        made.append(save(cells(frames, 3), f'walk/{who}.png')); log('walk', who, len(frames), 'frames')
     f = pick('mega-potion')
     if f: made.append(save(shrink(key_white(Image.open(f)).crop(bbox(key_white(Image.open(f)))), height=16, colors=24), 'items/mega-potion.png'))
     for key, out_key in (('creature-log-book', 'ui/creature-log-book.png'), ('vs-trainer', 'bg/vs-trainer.png'), ('vs-guide', 'bg/vs-guide.png'),

@@ -1,5 +1,7 @@
 # Creature Catch: Polish Pack Prompts
 
+> **Done.** All 24 images arrived and are in v7.
+
 The images for the polish pass (v7). The game already works without them: each one has a code stand-in, and the real picture replaces it when it arrives. **Start with section 1**: it fixes the left and right walk.
 
 **How to send them:** any file names work, but keeping the name in **bold** in the file name (like `side-walk-player-a.png`) lets the import tool place each one automatically. A solid magenta #FF00FF background is best (white works too). Zips are fine.

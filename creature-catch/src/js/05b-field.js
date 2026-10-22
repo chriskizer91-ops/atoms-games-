@@ -105,6 +105,10 @@ var CC = window.CC || (window.CC = {});
     var sp = CC.creatureSprite(m.id, m.shiny), body = CC.mon.sp(m).look.body;
     var fly = body === 'ghost' || body === 'bird' ? 3 + Math.sin(CC.time * 3) * 1.5 : 0;
     CC.drawSprite(sp, fx, fy - hop - fly, { scale: 0.3, flip: fol.dir === 'right', sy: 1 + (walking ? 0 : Math.sin(CC.time * 3) * 0.03), id: m.id + 'fol' });
+    if (m.shiny && Math.random() < 0.03) {
+      var spk = CC.img('fx/field-6');
+      CC.fx.add({ x: fx + CC.rand(-8, 8), y: fy - CC.rand(6, 20), vx: 0, vy: -8, life: 0.6, img: spk, kind: spk ? null : 'sparkle', color: '#f8e050', size: 3 });
+    }
     if (fol.heart && CC.time - fol.heart < 1.2) {
       var em = CC.img('ui/emote-heart'), ey = fy - 30 - (CC.time - fol.heart) * 6;
       if (em) g.drawImage(em, fx - 6, ey, 12, 12 * em.height / em.width);
@@ -130,14 +134,18 @@ var CC = window.CC || (window.CC = {});
       if (f.prints.length > 50) f.prints.shift();
     }
     if (running && !w.map.indoors) {
-      var cols = DUST[lg] || ['#e0d4b8', '#c8b898'];
-      for (var i = 0; i < 4; i++) CC.fx.add({ x: w.screenX(from.x * 16 + 8) + CC.rand(-4, 4), y: w.screenY(from.y * 16 + 14), vx: CC.rand(-12, 12), vy: -CC.rand(4, 14), life: 0.45, kind: 'dust', color: CC.pick(cols), size: CC.rand(2, 4) });
+      var cols = DUST[lg] || ['#e0d4b8', '#c8b898'], puff = !lg || lg === 'desert' || lg === 'forest' || lg === 'water' ? CC.img('fx/field-5') : null;
+      if (puff) CC.fx.add({ x: w.screenX(from.x * 16 + 8), y: w.screenY(from.y * 16 + 12), vx: 0, vy: -6, life: 0.4, img: puff, size: 4, grow: 0.6 });
+      for (var i = 0; i < (puff ? 2 : 4); i++) CC.fx.add({ x: w.screenX(from.x * 16 + 8) + CC.rand(-4, 4), y: w.screenY(from.y * 16 + 14), vx: CC.rand(-12, 12), vy: -CC.rand(4, 14), life: 0.45, kind: 'dust', color: CC.pick(cols), size: CC.rand(2, 4) });
     }
     // stepping onto a dock or the boardwalk sends ripples out into the water beside it
     var t = CC.tileAt(w.map, CC.state.x, CC.state.y);
     if (t === 'd' || (t === ':' && lg === 'swamp')) {
       [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
-        if (CC.tileAt(w.map, CC.state.x + d[0], CC.state.y + d[1]) === '~') f.ripples.push({ x: (CC.state.x + d[0]) * 16 + 8 - d[0] * 5, y: (CC.state.y + d[1]) * 16 + 9, t: CC.time });
+        if (CC.tileAt(w.map, CC.state.x + d[0], CC.state.y + d[1]) !== '~') return;
+        f.ripples.push({ x: (CC.state.x + d[0]) * 16 + 8 - d[0] * 5, y: (CC.state.y + d[1]) * 16 + 9, t: CC.time });
+        var splash = CC.img('fx/field-3');
+        if (splash && Math.random() < 0.35) CC.fx.add({ x: w.screenX((CC.state.x + d[0]) * 16 + 8 - d[0] * 5), y: w.screenY((CC.state.y + d[1]) * 16 + 6), vx: 0, vy: -4, life: 0.35, img: splash, size: 4 });
       });
     }
   };
@@ -150,15 +158,20 @@ var CC = window.CC || (window.CC = {});
     f.prints.forEach(function (p) {
       var a = 1 - (CC.time - p.t) / 8, x = p.x * 16 + 8 - cx, y = p.y * 16 + 11 - cy, side = p.dir === 'left' || p.dir === 'right';
       g.globalAlpha = a;
-      if (art) { g.drawImage(art, x - 5, y - 5, 10, 10); g.globalAlpha = 1; return; }
+      if (art) { // the prints point the way you walked
+        g.save(); g.translate(x, y); g.rotate({ up: 0, down: Math.PI, left: -Math.PI / 2, right: Math.PI / 2 }[p.dir] || 0);
+        g.drawImage(art, -5, -4, 10, 10 * art.height / art.width); g.restore(); g.globalAlpha = 1; return;
+      }
       g.fillStyle = p.c;
       if (side) { g.fillRect(x - 5, y - 2 + (p.alt ? 2 : 0), 4, 2); g.fillRect(x + 1, y + (p.alt ? -2 : 0), 4, 2); }
       else { g.fillRect(x - 3, y - 4 + (p.alt ? 4 : 0), 2, 4); g.fillRect(x + 1, y + (p.alt ? -4 : 0), 2, 4); }
       g.globalAlpha = 1;
     });
     f.ripples = f.ripples.filter(function (r) { return CC.time - r.t < 0.9; });
+    var ring = CC.img('fx/field-4');
     f.ripples.forEach(function (r) {
       var k = (CC.time - r.t) / 0.9;
+      if (ring) { g.globalAlpha = 1 - k; var rw = 6 + k * 12, rh = rw * ring.height / ring.width; g.drawImage(ring, r.x - cx - rw / 2, r.y - cy - rh / 2, rw, rh); g.globalAlpha = 1; return; }
       g.strokeStyle = 'rgba(255,255,255,' + (0.7 * (1 - k)) + ')'; g.lineWidth = 1;
       g.beginPath(); g.ellipse(r.x - cx, r.y - cy, 2 + k * 7, 1 + k * 3, 0, 0, Math.PI * 2); g.stroke();
     });
@@ -218,7 +231,7 @@ var CC = window.CC || (window.CC = {});
     var w = Math.max(96, CC.textWidth(b.text) + 30), h = 24, x = Math.round(120 - w / 2), y = Math.round(-h - 4 + drop * (h + 10));
     var swing = Math.sin(age * 6) * Math.max(0, 1 - age) * 0.04;
     g.save(); g.translate(120, y - 6); g.rotate(swing); g.translate(-120, -(y - 6));
-    if (art) g.drawImage(art, x, y, w, h);
+    if (art) CC.drawStretched(art, x, y, w, h, 14);
     else if (b.stone) {
       CC.rect(x, y, w, h, '#2a2834'); CC.rect(x + 1, y + 1, w - 2, h - 2, '#6a6878'); CC.rect(x + 2, y + 2, w - 4, 2, '#8a889a');
       CC.rect(x + 2, y + h - 4, w - 4, 2, '#4a4858');
