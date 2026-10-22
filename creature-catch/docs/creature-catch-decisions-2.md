@@ -100,3 +100,6 @@ Wild creatures top out at Lv 35, Juniper's final team is Lv 40, and the level ca
 ## 10. Stats and Movesets
 
 They're generated in `creature-catch/src/js/12-data-creatures.js` and `11-data-moves.js`. The readable version is `creature-catch-roster.md`, which `node creature-catch/tools/roster-doc.mjs` writes.
+
+- **Starters open with Tackle and Growl and learn their type move at Lv 6.** That way Juniper's type advantage doesn't decide the first rival fight (Lv 5). In testing, the type-advantaged starter otherwise won in 2 hits against 5.
+- **Every creature has a signature move**, one per evolution line or Solo creature (41 in all).

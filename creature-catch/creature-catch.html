@@ -1502,12 +1502,16 @@ CC.useExit = async function (ex, nx) {
   return dest;
 };
 
-// a screen-wide fade
+// A screen-wide fade. Fading to black leaves the black layer up (it blocks input) until a fade back
+// or CC.unfade() takes it away.
 CC.fade = function (sec, toBlack) {
-  var k = toBlack ? 0 : 1;
-  var scr = { draw: function () { CC.g.globalAlpha = k; CC.rect(0, 0, CC.W, CC.H, '#000'); CC.g.globalAlpha = 1; }, update: function () {} };
-  CC.push(scr);
-  return CC.tween(sec, function (t) { k = toBlack ? t : 1 - t; }).then(function () { if (!toBlack) CC.pop(scr); else CC.fadeScreen = scr; });
+  var scr = CC.fadeScreen;
+  if (!scr) {
+    scr = CC.fadeScreen = { name: 'fade', k: toBlack ? 0 : 1, update: function () {}, draw: function () { CC.g.globalAlpha = scr.k; CC.rect(0, 0, CC.W, CC.H, '#000'); CC.g.globalAlpha = 1; } };
+    CC.push(scr);
+  }
+  var from = scr.k, to = toBlack ? 1 : 0;
+  return CC.tween(sec, function (t) { scr.k = CC.lerp(from, to, t); }).then(function () { if (!toBlack) CC.unfade(); });
 };
 CC.unfade = function () { if (CC.fadeScreen) { CC.pop(CC.fadeScreen); CC.fadeScreen = null; } };
 
