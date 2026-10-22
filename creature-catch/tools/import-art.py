@@ -395,6 +395,64 @@ def main(src):
         made.append(save(atlas.quantize(64, dither=Image.Dither.NONE).convert('RGB'), 'tiles/moonlit-spire.png'))
         log('spire tiles', [len(r) for r in rows])
 
+    # ---------- the polish pack (docs/creature-catch-polish-prompts.md) ----------
+    def pick(key):
+        """The file for a prompt name: exactly <key>.png, else a name ending in it, else one containing it."""
+        if key + '.png' in files: return files[key + '.png']
+        ends = [f for f in files if f[:-4].endswith(key)]
+        if ends: return files[sorted(ends)[0]]
+        has = [f for f in files if key in f[:-4] and not f[:-4].split(key, 1)[1].startswith('-older')]
+        return files[sorted(has)[0]] if has else None
+    def cells(frames, n_cols):
+        """Frames in equal cells, centered, feet on the bottom."""
+        cw = max(x.width for x in frames); ch = max(x.height for x in frames)
+        rows_n = (len(frames) + n_cols - 1) // n_cols
+        out = Image.new('RGBA', (cw * n_cols, ch * rows_n), (0, 0, 0, 0))
+        for i, x in enumerate(frames): out.paste(x, ((i % n_cols) * cw + (cw - x.width) // 2, (i // n_cols) * ch + ch - x.height))
+        return out
+    # side walks: one row of 4 frames facing left -> walk/side-<who>.png, the figures as tall as the old walk sheet's
+    for who in ('player-a', 'player-b', 'juniper', 'juniper-older'):
+        f = pick(f'side-walk-{who}')
+        if not f: continue
+        files['__side'] = f
+        sheet, boxes = pieces('__side', 6, 0.002)
+        old = os.path.join(ART, 'walk', f'{who}.png')
+        fig = Image.open(old).height // 4 - 2 if os.path.exists(old) else 62
+        frames = [shrink(sheet.crop(b), height=fig, colors=24) for b in boxes[:4]]
+        made.append(save(cells(frames, len(frames)), f'walk/side-{who}.png')); log('side walk', who, len(boxes), 'frames, height', fig)
+    # walk sheets for older Juniper and the guides: 4 rows x 3 frames like the others
+    for who in ('juniper-older', 'bramble', 'oakley', 'gus', 'dusty', 'safi', 'frida', 'moss', 'corvin'):
+        f = pick(f'walk-{who}')
+        if not f or 'side-walk' in os.path.basename(f).lower(): continue
+        files['__walk'] = f
+        sheet, boxes = pieces('__walk', 6, 0.0015)
+        rows = rows_then_cols(boxes)
+        frames = [shrink(sheet.crop(b), 4.6, colors=24) for r in rows[:4] for b in r[:3]]
+        made.append(save(cells(frames, 3), f'walk/{who}.png')); log('walk', who, [len(r) for r in rows])
+    f = pick('mega-potion')
+    if f: made.append(save(shrink(key_white(Image.open(f)).crop(bbox(key_white(Image.open(f)))), height=16, colors=24), 'items/mega-potion.png'))
+    for key, out_key in (('creature-log-book', 'ui/creature-log-book.png'), ('vs-trainer', 'bg/vs-trainer.png'), ('vs-guide', 'bg/vs-guide.png'),
+                         ('vs-rival', 'bg/vs-rival.png'), ('vs-boss', 'bg/vs-boss.png')):
+        f = pick(key)
+        if f: made.append(save(Image.open(f).convert('RGB').resize((240, 160), Image.BOX).quantize(96, dither=Image.Dither.NONE).convert('RGB'), out_key))
+    f = pick('name-plate')
+    if f:
+        im = key_white(Image.open(f)); im = im.crop(bbox(im))
+        made.append(save(shrink(im, height=20, colors=24), 'ui/name-plate.png'))
+    for key, out_key, n, h in (('menu-icons', 'ui/menu-icon', 8, 14), ('region-signs', 'ui/region-sign', 2, 24), ('field-fx', 'fx/field', 6, 12)):
+        f = pick(key)
+        if not f: continue
+        files['__sheet'] = f
+        sheet, boxes = pieces('__sheet', 6, 0.0008)
+        for i, b in enumerate(boxes[:n]): made.append(save(shrink(sheet.crop(b), height=h, colors=24), f'{out_key}-{i + 1}.png'))
+        log(key, len(boxes), 'for', n)
+    f = pick('cave-mushroom-patch')
+    if f:
+        im = Image.open(f).convert('RGB'); bb = bbox(key_white(im, 30)) or (0, 0, im.width, im.height)
+        inset = int((bb[2] - bb[0]) * 0.035)
+        tile = im.crop((bb[0] + inset, bb[1] + inset, bb[2] - inset, bb[3] - inset)).resize((32, 32), Image.BOX)
+        made.append(save(tile.quantize(32, dither=Image.Dither.NONE).convert('RGB'), 'tiles/cave-mushroom-patch.png'))
+
     with open(os.path.join(ART, 'MANIFEST.json'), 'w') as fh:
         json.dump(sorted(made), fh, indent=1)
     total = sum(os.path.getsize(os.path.join(ART, m)) for m in made)

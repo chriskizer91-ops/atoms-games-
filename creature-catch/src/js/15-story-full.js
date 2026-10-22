@@ -152,7 +152,7 @@ var CC = window.CC || (window.CC = {});
     if (F()[gd.flag]) { await CC.talk(gd.name, gd.lore.slice(0, 1).concat(['The way on is open. Good luck out there!'])); return; }
     await CC.talk(gd.name, gd.hello);
     if (!(await CC.yesNo('Ready for my trail trial?', gd.name))) { await CC.say('Come back when you\'re ready.', { who: gd.name }); return; }
-    var r = await CC.fight({ trainer: { name: gd.name, art: gd.art, look: gd.art, coins: gd.coins, intro: gd.intro, winText: gd.winText, loseText: gd.loseText, team: team(gd.team) } });
+    var r = await CC.fight({ vs: 'guide', trainer: { name: gd.name, art: gd.art, look: gd.art, coins: gd.coins, intro: gd.intro, winText: gd.winText, loseText: gd.loseText, team: team(gd.team) } });
     if (r !== 'win') return;
     F()[gd.flag] = true;
     CC.sfx('charm');
@@ -290,7 +290,7 @@ var CC = window.CC || (window.CC = {});
     faceEach(n);
     await CC.talk('Juniper', L.hi);
     var older = no >= 4;
-    var r = await CC.fight({ trainer: { name: 'Juniper', art: older ? 'juniper-older' : 'juniper', look: 'juniper', coins: 300 * no, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][no]) } });
+    var r = await CC.fight({ vs: 'rival', trainer: { name: 'Juniper', art: older ? 'juniper-older' : 'juniper', look: 'juniper', coins: 300 * no, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][no]) } });
     if (r !== 'win') { n.show = false; return; }
     F()['juniper' + no] = true;
     await CC.talk('Juniper', L.bye);
@@ -344,7 +344,7 @@ var CC = window.CC || (window.CC = {});
     } }];
     if (TOBIAS_FROM[k]) CC.NPCS[room].push({ x: 7, y: 4, art: 'tobias', h: 26, dir: 'left', talk: async function () {
       await CC.say('Tobias, traveling merchant! Finest gold-banded cubes this side of the dunes.', { who: 'Tobias' });
-      await CC.shopScreen(['ultra', 'great', 'superpotion', 'tonic', 'fulltonic', 'revive', 'cureherb'], 'Tobias');
+      await CC.shopScreen(['ultra', 'great', 'superpotion', 'megapotion', 'tonic', 'fulltonic', 'revive', 'cureherb'], 'Tobias');
       await CC.say('Pleasure doing business!', { who: 'Tobias' });
     } });
   });
@@ -443,6 +443,7 @@ var CC = window.CC || (window.CC = {});
     CC.state.dir = 'up';
     await CC.say('...');
     CC.sfx('boss');
+    if (CC.music) CC.music.play('boss');
     await CC.showStill('still-5', ['A huge shadow rises over the altar: a winged wolf, its crescent crest cracked and flickering.', 'Lunarion, guardian of the moon. Its eyes are wild with fear.'], {});
     if (jun) { jun.show = true; jun.x = 12; jun.y = 6; jun.dir = 'up'; }
     await CC.say('It\'s scared! Calm it down. You can do this!', { who: 'Juniper' });
@@ -458,7 +459,7 @@ var CC = window.CC || (window.CC = {});
     await CC.say('The shadow pours out of Lunarion like smoke and drifts away into the night.');
     await CC.say('Its crest mends with a bright chime. Silver light spills across the ruins!');
     var r2 = await CC.fight({
-      wild: CC.mon.make('lunarion', 40), bg: 'moon-altar', boss: true, canLose: true,
+      wild: CC.mon.make('lunarion', 40), bg: 'moon-altar', boss: true, canLose: true, noVs: true,
       introText: 'Lunarion, shining silver again, looks at you calmly. It seems to be waiting.',
     });
     if (r2 === 'caught') await CC.say('Lunarion is calm in its cube. You can feel moonlight humming inside it.');
@@ -468,6 +469,7 @@ var CC = window.CC || (window.CC = {});
       CC.healParty();
     }
     await CC.talk('Juniper', ['You did it! Look up!']);
+    if (CC.music) CC.music.play('credits');
     await CC.showStill('still-6', ['The moon shines full and bright again.', 'Back home, the villagers light lanterns, and creatures of every kind come out of the tall grass to see.'], { keepBlack: true });
     await credits();
     CC.unfade();
@@ -487,6 +489,7 @@ var CC = window.CC || (window.CC = {});
   }
   // the credits roll over the night sky with Lunarion flying across
   function credits() {
+    if (CC.music) CC.music.play('credits');
     return new Promise(function (resolve) {
       var t = 0, lines = [
         ['Creature Catch', 22], ['', 0], ['The Fading Moon', 14], ['', 0], ['', 0],
@@ -530,14 +533,14 @@ var CC = window.CC || (window.CC = {});
     var r = REMATCH[id];
     return { x: r[2], y: r[3], art: id, h: 26, dir: 'down', talk: async function () {
       if (!(await CC.yesNo('The view from up here is something, eh? Fancy a rematch? My team has grown too.', r[0]))) return;
-      var res = await CC.fight({ trainer: { name: r[0], art: id, look: id, coins: 1500, winText: 'Still the best. Come back anytime!', team: team(r[1]) } });
+      var res = await CC.fight({ vs: 'guide', trainer: { name: r[0], art: id, look: id, coins: 1500, winText: 'Still the best. Come back anytime!', team: team(r[1]) } });
       if (res === 'win') F()['rematch:' + id] = (F()['rematch:' + id] || 0) + 1;
     } };
   });
   CC.NPCS.spire.push({ x: 8, y: 1, art: 'juniper-older', h: 27, dir: 'down', talk: async function () {
     var L = rivalLines(6);
     await CC.talk('Juniper', F().juniper6 ? ['Back for more? Let\'s go!'] : L.hi);
-    var r = await CC.fight({ trainer: { name: 'Juniper', art: 'juniper-older', look: 'juniper', coins: 5000, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][6]) } });
+    var r = await CC.fight({ vs: 'rival', trainer: { name: 'Juniper', art: 'juniper-older', look: 'juniper', coins: 5000, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][6]) } });
     if (r === 'win') { if (!F().juniper6) { F().juniper6 = true; await CC.talk('Juniper', L.bye); } }
   } });
   CC.NPCS.spire.push({ x: 11, y: 1, creature: 'lunarion', h: 30, dir: 'down', when: function () { return F().lunarionSpire && !CC.state.caught.lunarion; }, talk: async function () {

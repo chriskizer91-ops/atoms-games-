@@ -10,6 +10,7 @@ function F() { return CC.state.flags; }
 
 // a battle that sends you back to the last Healing Hut if you lose (unless losing is part of the story)
 CC.fight = async function (opts) {
+  if ((opts.trainer || opts.boss) && !opts.noVs && CC.vsIntro) await CC.vsIntro(opts);
   var result = await CC.startBattle(opts);
   if (result === 'lose' && !opts.canLose) {
     await CC.fade(0.4, true);
@@ -70,6 +71,7 @@ CC.NPCS = {
         await CC.talk('Farmer Bramble', ['Howdy! I\'m Farmer Bramble, guide of the Grassland.', 'That fallen log is the only way into the Forest, and I only clear it for trainers who can handle the creatures out there.']);
         if (!(await CC.yesNo('Ready for my trail trial?', 'Farmer Bramble'))) { await CC.say('Come back when you\'re ready. The outpost will patch you up.', { who: 'Farmer Bramble' }); return; }
         var r = await CC.fight({
+          vs: 'guide',
           trainer: {
             name: 'Farmer Bramble', look: 'bramble', art: 'bramble', coins: 240,
             intro: 'My critters have been working the fields all morning. Show me what you\'ve got!',
@@ -204,7 +206,7 @@ async function willowHouse() {
     'Let\'s see whose creature is tougher. Battle me!',
   ]);
   var result = await CC.fight({
-    canLose: true, bg: 'village',
+    canLose: true, bg: 'village', vs: 'rival',
     trainer: {
       name: 'Juniper', look: 'juniper', art: 'juniper', coins: 100,
       winText: 'What?! I had the type advantage! Next time, I\'m winning.',
@@ -282,7 +284,8 @@ function starterSelect() {
 // ---------- title ----------
 CC.titleScreen = function () {
   return new Promise(function (resolve) {
-    var hasSave = CC.hasSave(), sel = hasSave ? 0 : 0, items = hasSave ? ['Continue', 'New Game'] : ['New Game'];
+    var hasSave = CC.hasSave(), sel = hasSave ? 0 : 0, items = (hasSave ? ['Continue', 'New Game'] : ['New Game']).concat(['Options']);
+    if (CC.music) CC.music.play('title');
     var critters = ['drizzlon', 'mossback', 'embroak', 'tuftail', 'bumblop', 'clovermouse'];
     // the secret: Up Up Down Down Left Right Left Right B A opens the dev code box
     var SECRET = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'b', 'a'], typed = [];
@@ -294,6 +297,8 @@ CC.titleScreen = function () {
         ['up', 'down', 'left', 'right', 'a', 'b'].forEach(function (k) { if (CC.input.pressed[k]) typed.push(k); });
         typed = typed.slice(-SECRET.length);
         if (CC.input.pressed.down || CC.input.pressed.up) { sel = (sel + 1) % items.length; CC.sfx('blip'); }
+        if (scr.busy) return;
+        if ((CC.input.pressed.a || CC.input.pressed.start) && items[sel] === 'Options') { CC.sfx('select'); scr.busy = true; CC.optionsScreen().then(function () { scr.busy = false; }); return; }
         if (CC.input.pressed.a || CC.input.pressed.start) { CC.sfx('select'); CC.pop(scr); resolve(items[sel]); }
       },
       draw: function () {

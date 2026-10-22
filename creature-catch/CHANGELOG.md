@@ -2,6 +2,19 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
+## v7 (in progress, not delivered yet: waiting on the polish-pack art)
+- **Music:** a chiptune soundtrack made in code, 16 tracks: title, village, outposts, routes, cave, snow, swamp, ruins, the Spire, wild, trainer, guide, rival and boss battles, victory, and the credits.
+- **Options** (MENU > Options, or on the title screen): music volume, sound volume, text speed, the creature that follows you, and day and night.
+- **The Bag in battle:** Cube became Bag, with a Cubes pocket and an Items pocket. Using an item takes your turn.
+- **Items:** Tonic now restores 10 PP to each move, Full Tonic restores all HP and PP and cures status, and the new Mega Potion heals 150 HP. Pip sells Tonics after the Forest trial and Mega Potions and Revives after the Cave trial; Tobias sells them all.
+- **XP:** catching a creature gives XP, and XP is split between every creature that fought.
+- **Battle polish:** a VS splash before trainer, guide, rival and boss battles; CRITICAL!, SUPER EFFECTIVE!, MISS and stat words that pop up; a screen flash on big hits; a stat panel on level-up; a clearer EXP bar; sparkles on a catch; creatures that faint come apart into pixels.
+- **Shiny creatures:** about 1 in 160 wild creatures has a different palette and arrives in sparkles. The Creature Log marks shiny catches.
+- **Creature Log** (MENU > Log): every creature you've seen or caught, with its picture, types, field note and lore.
+- **On the map:** your lead creature follows you (talk to it!); the side walk has a real "feet together" step; people without walk sheets bounce and sway as they walk; footprints in snow and sand, dust when you run, ripples by docks; day and night by your clock (lanterns and doorways glow); the place name hangs on a wooden or stone sign; the cave's hiding spots are glowing mushrooms.
+- **New codes:** `SHINY`, `NIGHT`, `DAY`, `DUSK`, `CLOCK`.
+- **Ready for the polish-pack art** (`docs/creature-catch-polish-prompts.md`): 4-frame side walks, guide walk sheets, the Mega Potion icon, the Creature Log book, menu icons, VS backgrounds and name plate, region signs, the cave mushroom tile, and field effects. Each one replaces its code stand-in as soon as it's imported.
+
 ## v6: the full game
 - **The whole world:** seven new regions in a straight line north of the Grassland: the Forest, Lakeshore, Crystal Cave, Sunscorch Desert, Frostpeak Pass, Murkmire Swamp and the Night Ruins. Each has its own tileset, hiding spots (tall grass, glowing moss, dry grass, snow drifts, reeds), weather drawn in code (falling leaves, gulls, cave dark with glowing crystals, desert heat and blowing sand, snowfall, swamp fog and fireflies, the night over the ruins), a landmark (the Elder Tree, the lighthouse, the oasis, the frozen falls, the Moon Altar), an outpost with a Healing Hut keeper and the Cube Vault, a guide's home with their journal, two route trainers, and treasure chests.
 - **Guide trials:** Ranger Oakley (Lv 12), Fisher Gus (15), Dusty (20), Safi (24), Frida (28), Granny Moss (32) and Night Watchman Corvin (37). Each win gives a trail charm, a piece of the moon's story, and opens their gate: the rope bridge, the rockslide, the sandstorm, the ice wall, the boardwalk and the rune gate.

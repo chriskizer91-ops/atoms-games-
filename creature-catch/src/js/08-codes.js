@@ -122,7 +122,7 @@ CC.CODES = [
     var id = creatureId(a[0]); if (!id) return 'No creature called "' + (a[0] || '') + '".';
     if (CC.firstHealthy() < 0) return 'You need a creature that can fight.';
     var lv = num(a[1], 1, 50, 5);
-    CC.dev.queue = function () { return CC.fight({ wild: CC.mon.make(id, lv) }); };
+    CC.dev.queue = function () { var m = CC.mon.make(id, lv); if (CC.dev.shinyNext) { m.shiny = true; CC.dev.shinyNext = false; } return CC.fight({ wild: m }); };
     return 'A wild ' + CC.CREATURES[id].name + ' is coming...';
   } },
   { words: ['TRIAL', 'TRIALS'], needsGame: true, help: 'TRIAL DONE (Bramble), TRIAL CAVE (every trial up to that region), TRIAL ALL, or TRIAL RESET', run: function (a) {
@@ -145,6 +145,10 @@ CC.CODES = [
     CC.state.flags.moonRestored = true; if (!CC.state.caught.lunarion) CC.state.flags.lunarionSpire = true;
     return 'The moon is whole again. GOTO SPIRE to climb the tower.';
   } },
+  { words: ['NIGHT', 'DAY', 'DUSK', 'CLOCK'], help: 'NIGHT / DAY / DUSK: force the time of day (CLOCK goes back to the real clock)', run: function (a, w) {
+    var t = (w || 'clock').toLowerCase(); CC.dev.time = t === 'clock' ? null : t; return t === 'clock' ? 'Back to the real clock.' : 'It is now ' + t + '.';
+  } },
+  { words: ['SHINY'], help: 'SHINY: the next wild creature is shiny', run: function () { CC.dev.shinyNext = true; return 'The next wild creature will be shiny.'; } },
   { words: ['DEX', 'LOG'], needsGame: true, help: 'DEX: mark every creature as seen', run: function () {
     CC.CREATURE_ORDER.forEach(function (id) { CC.state.seen[id] = 1; }); return 'All ' + CC.CREATURE_ORDER.length + ' creatures marked seen.';
   } },
@@ -173,7 +177,7 @@ CC.runCodes = function (text) {
     var w = words[0].toUpperCase(), code = CC.CODES.find(function (c) { return c.words.indexOf(w) >= 0; });
     if (!code) { out.push('"' + line.trim() + '": no such code. Type HELP.'); return; }
     if (code.needsGame && !CC.state) { CC.dev.pending.push(line.trim()); out.push(line.trim().toUpperCase() + ': will happen when your game starts.'); return; }
-    try { out.push(code.run(words.slice(1))); } catch (e) { out.push(w + ' failed: ' + e.message); }
+    try { out.push(code.run(words.slice(1), w)); } catch (e) { out.push(w + ' failed: ' + e.message); }
   });
   return out.join('\n');
 };

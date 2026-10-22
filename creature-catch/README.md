@@ -11,7 +11,7 @@ Open **`creature-catch.html`** in any browser. It's one file and works offline. 
 | Arrows / WASD | D-pad | Walk, move the cursor |
 | Z / Space | A | Talk, confirm |
 | X / Esc | B | Back. Hold it to run |
-| Enter | MENU | Party, Bag, Vault, Fly, Save |
+| Enter | MENU | Party, Bag, Creature Log, Vault, Fly, Save, Options |
 | Q / E | L / R | L: your party. R: Fly (once you can) |
 
 ## Field Guide
@@ -35,7 +35,8 @@ The current version is in `VERSION` and shows on the title screen. `CHANGELOG.md
 - **Juniper**, your rival, battles you five times with a team built against your starter.
 - **Fly** comes from Dusty after the Cave trial: the Wooden Whistle takes you to any place you've been.
 - **The finale** at the Moon Altar: calm the Dimmed Lunarion, then try to catch it. Then the credits, and the **Moonlit Spire** after the story (Lv 38 to 48 wilds, guide rematches, Juniper at Lv 50).
-- **Battles:** Fight / Cube / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP, level-ups, learning moves, evolving after a battle (or with the Sun and Moon Shards), four cube tiers, and the catch formula with a wobbling cube.
+- **Music and options:** a chiptune soundtrack made in code, and an Options screen for volumes, text speed, the follower, and day and night.
+- **Battles:** Fight / Bag / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP, level-ups, learning moves, evolving after a battle (or with the Sun and Moon Shards), four cube tiers, and the catch formula with a wobbling cube.
 - **Code-drawn life:** creatures breathe, bob, lunge, flash, shake and faint; attacks throw type particles and bursts; the maps have smoke, butterflies, falling leaves, snow, fog, fireflies, heat shimmer and glowing crystals.
 
 ## Art
@@ -70,5 +71,5 @@ node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.ht
   2. `creature-catch-handoff.md`: the full design.
   3. `creature-catch-roster.md`: every creature's stats, learnset, and moves (generated).
   4. `creature-catch-design-doc.md`: the first draft, partly replaced.
-  5. `creature-catch-full-game-prompts.md`: the image pack for the rest of the game (`creature-catch-missing-images.md` is done).
+  5. `creature-catch-polish-prompts.md`: the polish pack (side walks, guide walk sheets, Mega Potion, Creature Log, menu icons, VS intros, region signs). The full-game pack (`creature-catch-full-game-prompts.md`) and `creature-catch-missing-images.md` are done.
   6. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).

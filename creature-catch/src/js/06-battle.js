@@ -25,6 +25,7 @@ var CC = window.CC || (window.CC = {});
         bg: opts.bg || (CC.world.map && CC.world.map.spawns) || 'grassland',
         noCatch: opts.noCatch, noRun: opts.noRun, introText: opts.introText, boss: opts.boss,
       };
+      if (CC.music) CC.music.play(CC.battleTrack(opts));
       B.foe = side(B.foeTeam[0], true);
       B.ally = side(null, false);
       B.foe.scale = 0;
@@ -33,6 +34,7 @@ var CC = window.CC || (window.CC = {});
       CC.push(screen);
       battle().catch(function (e) { console.error(e); }).then(function (result) {
         CC.pop(screen); CC.fx.clear();
+        if (CC.music && CC.state) CC.music.play(CC.mapTrack(CC.state.map));
         var r = B.resolve; B = null; r(result);
       });
     });
@@ -72,7 +74,7 @@ var CC = window.CC || (window.CC = {});
 
   function drawMon(s) {
     if (!s.mon || s.scale <= 0) return;
-    var m = s.mon, sprite = CC.creatureSprite(m.id), sp = CC.mon.sp(m);
+    var m = s.mon, sprite = CC.creatureSprite(m.id, m.shiny), sp = CC.mon.sp(m);
     var t = CC.time + (s.foe ? 1.3 : 0);
     var frozen = m.status === 'freeze', asleep = m.status === 'sleep';
     var breathe = frozen ? 0 : Math.sin(t * (asleep ? 1.4 : 2.6)) * (asleep ? 0.04 : 0.028);
@@ -87,7 +89,8 @@ var CC = window.CC || (window.CC = {});
     CC.drawSprite(sprite, x, y + bob - (ghosty ? 2 : 0), {
       scale: size, flip: !s.foe, sx: s.sx * s.scale * (1 - breathe * 0.5) * (1 + low), sy: s.sy * s.scale * (1 + breathe), alpha: s.alpha,
       flash: s.flash, id: m.id + (s.foe ? 'f' : 'a'), wave: s.wave || ghosty, waveSpeed: ghosty && !s.wave ? 3 : 14,
-      overlay: frozen ? ['#9adcf0', 0.45] : s.overlay,
+      overlay: frozen ? ['#9adcf0', 0.45] : s.overlay || (s.levelGlow && CC.time - s.levelGlow < 0.9 ? ['#fff080', 0.6 * (1 - (CC.time - s.levelGlow) / 0.9)] : null),
+      dissolve: s.dissolve,
     });
     // status particles
     if (m.hp > 0 && Math.random() < 0.06) {
@@ -111,12 +114,16 @@ var CC = window.CC || (window.CC = {});
     CC.bar(x + 20, y + 18, w - 28, s.hpShown / max);
     if (ally) {
       CC.num(Math.ceil(s.hpShown) + '/' + max, x + w - 8, y + 23, '#2a2230', 'right');
-      var lo = CC.mon.xpFor(m.lv), hi = CC.mon.xpFor(m.lv + 1);
-      CC.rect(x + 6, y + h - 5, w - 12, 2, '#5a5060');
-      CC.rect(x + 6, y + h - 5, Math.round((w - 12) * CC.clamp((s.xpShown != null ? s.xpShown : m.xp) - lo, 0, hi - lo) / (hi - lo || 1)), 2, '#48a8e8');
+      var lo = CC.mon.xpFor(m.lv), hi = CC.mon.xpFor(m.lv + 1), bw = w - 30;
+      var xk = m.lv >= 50 ? 1 : CC.clamp((s.xpShown != null ? s.xpShown : m.xp) - lo, 0, hi - lo) / (hi - lo || 1);
+      CC.text('EXP', x + 6, y + h - 9, '#4878b8', { size: 7 });
+      CC.rect(x + 23, y + h - 7, bw + 2, 5, '#3a2a22'); CC.rect(x + 24, y + h - 6, bw, 3, '#5a5060');
+      CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 3, '#48a8e8'); CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 1, '#a8dcff');
+      if (s.xpShown != null) { var sw = (CC.time * 90) % (bw + 12) - 6; CC.g.globalAlpha = 0.6; CC.rect(x + 24 + CC.clamp(sw, 0, bw * xk), y + h - 6, 2, 3, '#ffffff'); CC.g.globalAlpha = 1; }
     } else if (CC.state.caught[m.id] && B.wild) {
       CC.drawCube(x + w - 54, y + 8, 5);
     }
+    if (m.shiny) { CC.g.save(); CC.drawParticle('sparkle', x + w - 3, y + 2, 4, '#f8e050'); CC.g.restore(); }
   }
 
   var screen = {
@@ -148,13 +155,33 @@ var CC = window.CC || (window.CC = {});
       g.restore();
       drawPlate(B.foe, 6, 8, false);
       drawPlate(B.ally, 124, 72, true);
+      drawPops();
       if (B.flashScreen > 0) { g.globalAlpha = Math.min(1, B.flashScreen); CC.rect(0, 0, 240, 160, B.flashColor || '#ffffff'); g.globalAlpha = 1; B.flashScreen -= CC.dt * 4; }
       if (B.intro < 1) { // the bars from the transition opening up
         for (var i = 0; i < 10; i++) { var w = CC.W * (1 - CC.ease(CC.clamp(B.intro * 1.6 - i * 0.06, 0, 1))); CC.rect(i % 2 ? CC.W - w : 0, i * 16, w, 16, '#1e1626'); }
       }
-      if (!CC.top().isDialog && CC.top() === screen) CC.box(0, 112, 240, 48);
+      var tp = CC.top();
+      if (tp === screen || (tp.name !== 'say' && !tp.opaque)) CC.box(0, 112, 240, 48); // menus and panels over the battle keep the text box under them
     },
   };
+
+  // ---------- pop-up words: CRITICAL!, SUPER EFFECTIVE!, LEVEL UP! ----------
+  function pop(text, x, y, color, size) {
+    B.pops = B.pops || [];
+    B.pops.push({ text: text, x: CC.clamp(x, 50, 190), y: y, color: color, size: size || 11, t: CC.time });
+  }
+  function drawPops() {
+    var g = CC.g;
+    B.pops = (B.pops || []).filter(function (p) { return CC.time - p.t < 1.2; });
+    B.pops.forEach(function (p) {
+      var k = CC.time - p.t, grow = k < 0.12 ? 1.7 - (k / 0.12) * 0.7 : 1, a = k > 0.85 ? 1 - (k - 0.85) / 0.35 : 1;
+      var size = Math.round(p.size * grow), y = Math.round(p.y - Math.min(k, 0.5) * 16);
+      g.globalAlpha = a;
+      [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [1, -1], [-1, 1]].forEach(function (o) { CC.text(p.text, p.x + o[0], y + o[1], '#1e1626', { size: size, align: 'center' }); });
+      CC.text(p.text, p.x, y, p.color, { size: size, align: 'center' });
+      g.globalAlpha = 1;
+    });
+  }
 
   // ---------- animation pieces ----------
   function hpTo(s, sec) {
@@ -174,6 +201,16 @@ var CC = window.CC || (window.CC = {});
     B.cube = null; s.flash = null;
     await CC.tween(0.2, function (k) { s.sy = 1 + Math.sin(k * Math.PI) * 0.15; s.sx = 1 - Math.sin(k * Math.PI) * 0.08; });
     s.sx = s.sy = 1;
+    if (s.mon.shiny) await shinyFx(s);
+  }
+  // a shiny creature arrives in a ring of sparkles
+  async function shinyFx(s) {
+    CC.sfx('shiny');
+    for (var i = 0; i < 8; i++) {
+      var a = i / 8 * Math.PI * 2;
+      CC.fx.add({ x: s.home.x + Math.cos(a) * 26, y: s.home.y - 28 + Math.sin(a) * 20, vx: Math.cos(a) * 14, vy: Math.sin(a) * 14, life: 0.9, kind: 'sparkle', color: i % 2 ? '#f8e050' : '#ffffff', size: 5 });
+    }
+    await CC.sleep(0.7);
   }
   async function withdraw(s) {
     s.flash = '#ffffff';
@@ -251,15 +288,19 @@ var CC = window.CC || (window.CC = {});
   }
   async function statFx(s, up) {
     CC.sfx(up ? 'statup' : 'statdown');
-    s.overlay = [up ? '#ff9a4a' : '#5a8ae0', 0.35];
-    for (var i = 0; i < 8; i++) CC.fx.add({ x: s.home.x + CC.rand(-18, 18), y: s.home.y - (up ? 4 : 52), vx: 0, vy: up ? -50 : 50, life: 0.6, kind: 'arrow', color: up ? '#ff8a3a' : '#5a8ae0', size: 6, rot: up ? 0 : Math.PI });
-    await CC.sleep(0.6);
+    for (var i = 0; i < 12; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y - (up ? CC.rand(0, 10) : CC.rand(46, 56)), vx: 0, vy: up ? -CC.rand(40, 70) : CC.rand(40, 70), life: 0.7, kind: 'arrow', color: CC.pick(up ? ['#ff8a3a', '#ffc070'] : ['#5a8ae0', '#9ac0ff']), size: CC.rand(5, 9), rot: up ? 0 : Math.PI });
+    await CC.tween(0.7, function (k) { s.overlay = [up ? '#ff9a4a' : '#5a8ae0', 0.15 + Math.abs(Math.sin(k * Math.PI * 3)) * 0.35]; });
     s.overlay = null;
   }
+  // fainting: the sprite comes apart into drifting pixels of its own colors
   async function faintAnim(s) {
     CC.sfx('faint');
-    await CC.tween(0.5, function (k) { s.oy = k * 40; s.alpha = 1 - k; s.sy = 1 - k * 0.3; });
-    s.scale = 0; s.oy = 0; s.alpha = 1; s.sy = 1;
+    var look = CC.mon.sp(s.mon).look || {}, cols = [look.main || '#ffffff', look.accent || '#ffffff', '#ffffff'];
+    await CC.tween(0.8, function (k) {
+      s.dissolve = k; s.oy = k * 6;
+      for (var i = 0; i < 2; i++) CC.fx.add({ x: s.home.x + CC.rand(-18, 18), y: s.home.y - CC.rand(6, 50) * (1 - k * 0.6), vx: CC.rand(-8, 8), vy: -CC.rand(18, 40), life: 0.7, kind: 'glow', color: CC.pick(cols), size: CC.rand(1, 2.2) });
+    });
+    s.scale = 0; s.oy = 0; s.alpha = 1; s.sy = 1; s.dissolve = 0;
   }
 
   // ---------- rules ----------
@@ -283,6 +324,7 @@ var CC = window.CC || (window.CC = {});
 
   var STATUS_TEXT = { burn: 'was burned!', freeze: 'was frozen solid!', shock: 'is shocked! It may be unable to move!', poison: 'was poisoned!', sleep: 'fell asleep!' };
   var STAT_NAME = { atk: 'Attack', def: 'Defense', spd: 'Speed', acc: 'accuracy' };
+  var STAT_SHORT = { atk: 'ATTACK', def: 'DEFENSE', spd: 'SPEED', acc: 'ACCURACY' };
 
   async function applyStatus(target, st, quiet) {
     if (target.mon.status || target.mon.hp <= 0) { if (!quiet) await CC.say('But it failed!'); return; }
@@ -295,6 +337,7 @@ var CC = window.CC || (window.CC = {});
     var cur = s.st[stat], next = CC.clamp(cur + n, -3, 3);
     if (next === cur) { await CC.say(nm(s) + '\'s ' + STAT_NAME[stat] + ' won\'t go any ' + (n > 0 ? 'higher!' : 'lower!')); return; }
     s.st[stat] = next;
+    pop(STAT_SHORT[stat] + (n > 0 ? (n > 1 ? ' UP UP' : ' UP') : (n < -1 ? ' DOWN DOWN' : ' DOWN')), s.home.x, s.home.y - 62, n > 0 ? '#ffa04a' : '#7aa8f0', 10);
     await statFx(s, n > 0);
     await CC.say(nm(s) + '\'s ' + STAT_NAME[stat] + (n > 1 ? ' rose sharply!' : n > 0 ? ' rose!' : n < -1 ? ' fell sharply!' : ' fell!'));
   }
@@ -328,7 +371,7 @@ var CC = window.CC || (window.CC = {});
     // accuracy
     if (move.acc && !(fx.self || fx.heal)) {
       var acc = move.acc * stageMult(user.st.acc);
-      if (Math.random() * 100 >= acc) { await CC.say(nm(user) + '\'s attack missed!'); return; }
+      if (Math.random() * 100 >= acc) { pop('MISS', target.home.x, target.home.y - 56, '#d8d0c8'); await CC.say(nm(user) + '\'s attack missed!'); return; }
     }
     await moveAnim(user, target, move);
     if (move.power) {
@@ -337,6 +380,10 @@ var CC = window.CC || (window.CC = {});
         var crit = Math.random() < (fx.crit ? 0.25 : 0.0625);
         var r = damage(user, target, move, crit);
         target.mon.hp = Math.max(0, target.mon.hp - r.dmg); total += r.dmg; last = r; n++;
+        if (crit) { pop('CRITICAL!', target.home.x, target.home.y - 62, '#ffe040', 12); B.flashScreen = 0.45; B.flashColor = '#ffffff'; }
+        else if (r.mult > 1 && h === 0) { pop('SUPER EFFECTIVE!', target.home.x, target.home.y - 62, '#ff8a3a'); B.flashScreen = 0.4; B.flashColor = CC.TYPE_COLORS[move.type] ? CC.TYPE_COLORS[move.type][0] : '#ffffff'; }
+        else if (r.mult === 0 && h === 0) pop('NO EFFECT', target.home.x, target.home.y - 56, '#a8b0b8', 9);
+        else if (r.mult < 1 && h === 0) pop('not very effective', target.home.x, target.home.y - 56, '#a8c0d0', 9);
         await Promise.all([hitFx(target, r.mult, crit, move.type), hpTo(target)]);
         if (crit) await CC.say('A critical hit!');
         if (h < hits - 1 && target.mon.hp > 0) await CC.sleep(0.1);
@@ -404,7 +451,7 @@ var CC = window.CC || (window.CC = {});
 
   function actionMenu() {
     return new Promise(function (resolve) {
-      var sel = 0, labels = ['Fight', 'Cube', 'Swap', 'Run'];
+      var sel = 0, labels = ['Fight', 'Bag', 'Swap', 'Run'];
       var scr = {
         name: 'action',
         update: function () {
@@ -418,7 +465,7 @@ var CC = window.CC || (window.CC = {});
           CC.box(124, 112, 116, 48, { fill: '#ffffff' });
           labels.forEach(function (l, i) {
             var x = 142 + (i % 2) * 50, y = 120 + Math.floor(i / 2) * 18;
-            var off = (i === 1 || i === 3) && !B.wild;
+            var off = i === 3 && (!B.wild || B.noRun);
             CC.text(l, x, y, off ? '#b0a498' : '#2a2230');
             if (i === sel) CC.cursor(x - 9, y + 2);
           });
@@ -468,13 +515,8 @@ var CC = window.CC || (window.CC = {});
         var mv = await fightMenu();
         if (mv) return { kind: 'move', move: mv };
       } else if (a === 1) {
-        if (!B.wild) { await CC.say('You can\'t catch another trainer\'s creature!'); continue; }
-        if (B.noCatch) { await CC.say(B.noCatch); continue; }
-        var have = CC.CUBE_KINDS.filter(function (k) { return CC.state.bag[k] > 0; });
-        if (!have.length) { await CC.say('You don\'t have any cubes!'); continue; }
-        if (have.length === 1) return { kind: 'cube', cube: have[0] };
-        var pick = await CC.menu(have.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + CC.state.bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Throw which?', y: 40 });
-        if (pick >= 0) return { kind: 'cube', cube: have[pick] };
+        var got = await battleBag();
+        if (got) return got;
       } else if (a === 2) {
         var i = await CC.partyScreen('battle', { active: B.allyIndex, title: 'Swap in which?' });
         if (i >= 0) return { kind: 'swap', index: i };
@@ -484,6 +526,54 @@ var CC = window.CC || (window.CC = {});
         return { kind: 'run' };
       }
     }
+  }
+
+  // The Bag in battle: a Cubes pocket and an Items pocket. Using an item takes your turn.
+  function count(keys) { return keys.reduce(function (n, k) { return n + (CC.state.bag[k] || 0); }, 0); }
+  async function battleBag() {
+    var bag = CC.state.bag, start = 0;
+    while (true) {
+      var cubes = CC.CUBE_KINDS.filter(function (k) { return bag[k] > 0; });
+      var items = Object.keys(CC.ITEMS).filter(function (k) { return CC.usable(k, true) && bag[k] > 0; });
+      var pocket = await CC.menu([
+        { label: 'Cubes', right: String(count(cubes)), icon: 'ui/cube' },
+        { label: 'Items', right: String(count(items)), icon: 'items/potion' },
+      ], { title: 'Bag', x: 128, y: 50, w: 108, start: start });
+      if (pocket < 0) return null;
+      start = pocket;
+      if (pocket === 0) {
+        if (!B.wild) { await CC.say('You can\'t catch another trainer\'s creature!'); continue; }
+        if (B.noCatch) { await CC.say(B.noCatch); continue; }
+        if (!cubes.length) { await CC.say('You don\'t have any cubes!'); continue; }
+        var pick = await CC.menu(cubes.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Throw which?', y: 30 });
+        if (pick >= 0) return { kind: 'cube', cube: cubes[pick] };
+        continue;
+      }
+      if (!items.length) { await CC.say('You don\'t have any items you can use in battle.'); continue; }
+      var info = function (i) { CC.box(0, 112, 240, 48); CC.wrap(CC.ITEMS[items[i]].info, 222, 10).slice(0, 2).forEach(function (l, j) { CC.text(l, 9, 119 + j * 15, '#2a2230'); }); };
+      var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, under: info });
+      if (c < 0) continue;
+      var k = items[c], i = await CC.partyScreen('pick', { title: 'Use a ' + CC.ITEMS[k].name + ' on...' });
+      if (i < 0) continue;
+      var problem = CC.itemProblem(k, CC.state.party[i]);
+      if (problem) { await CC.say(problem); continue; }
+      return { kind: 'item', item: k, index: i };
+    }
+  }
+  async function useItem(act) {
+    var m = CC.state.party[act.index], it = CC.ITEMS[act.item];
+    if (!CC.dev.infItems) CC.state.bag[act.item]--;
+    await CC.say('You used a ' + it.name + ' on ' + CC.mon.name(m) + '.', { auto: 0.3 });
+    var r = CC.useItemOn(act.item, m);
+    if (typeof r === 'string') { await CC.say(r); return; }
+    CC.sfx('heal');
+    if (m === B.ally.mon) {
+      var s = B.ally;
+      for (var i = 0; i < 14; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y - CC.rand(0, 40), vx: 0, vy: -CC.rand(20, 45), life: 0.8, kind: 'star', color: CC.pick(['#c8ffd0', '#ffffff', '#a8e8ff']), size: 3 });
+      s.overlay = ['#c8ffd0', 0.4];
+      await hpTo(s); s.overlay = null;
+    }
+    await CC.say(r.text);
   }
 
   // ---------- catching ----------
@@ -522,8 +612,12 @@ var CC = window.CC || (window.CC = {});
     if (caught) {
       CC.sfx('catch');
       for (var j = 0; j < 10; j++) CC.fx.add({ x: B.cube.x, y: B.cube.y, vx: CC.rand(-40, 40), vy: CC.rand(-70, -20), life: 0.8, kind: 'star', color: CC.pick(['#ffffff', '#f8e050', '#c88af8']), size: 4, grav: 120 });
-      B.cube.glow = 0.4; await CC.sleep(0.3); B.cube.glow = 0;
+      [-1, 0, 1].forEach(function (d) { CC.fx.add({ x: B.cube.x + d * 14, y: B.cube.y - 10 - (d ? 0 : 8), vx: d * 10, vy: -12, life: 1.3, kind: 'sparkle', color: d ? '#f8e050' : '#ffffff', size: d ? 6 : 8, fade: true }); });
+      CC.fx.add({ x: B.cube.x, y: B.cube.y - 4, vx: 0, vy: 0, life: 0.5, kind: 'ring', color: '#f8e050', size: 4, grow: 5 });
+      await CC.tween(0.3, function (k) { B.cube.y = f.home.y - 5 - Math.sin(k * Math.PI) * 6; B.cube.glow = 0.5 * Math.sin(k * Math.PI); });
+      B.cube.glow = 0;
       await CC.say('Gotcha! ' + CC.mon.name(f.mon) + ' was caught!');
+      await gainXp(f.mon);
       var where = CC.addCreature(f.mon);
       if (where === 'vault') await CC.say('Your party is full, so ' + CC.mon.name(f.mon) + ' was sent to the Cube Vault.');
       B.cube = null; f.oy = 0;
@@ -539,31 +633,41 @@ var CC = window.CC || (window.CC = {});
   }
 
   // ---------- winning and growing ----------
+  // XP goes to every creature that fought (and is still standing), split between them
   async function gainXp(foeMon) {
-    var s = B.ally, m = s.mon;
-    if (!m || m.hp <= 0 || m.lv >= 50) return;
-    var gain = Math.max(1, Math.floor(CC.mon.sp(foeMon).xpYield * foeMon.lv / 5 * (B.wild ? 1 : 1.5)));
-    await CC.say(nmShort(s) + ' gained ' + gain + ' XP!');
+    var who = Object.keys(B.fought).map(Number).filter(function (i) { var m = CC.state.party[i]; return m && m.hp > 0 && m.lv < 50; });
+    if (!who.length) return;
+    var total = Math.max(1, Math.floor(CC.mon.sp(foeMon).xpYield * foeMon.lv / 5 * (B.wild ? 1 : 1.5)));
+    var each = Math.max(1, Math.ceil(total / who.length));
+    for (var w = 0; w < who.length; w++) await grow(CC.state.party[who[w]], who[w], each);
+  }
+  async function grow(m, index, gain) {
+    var out = m === B.ally.mon, s = out ? B.ally : null, name = CC.mon.name(m);
+    await CC.say(name + ' gained ' + gain + ' XP!', out ? {} : { auto: 0.6 });
     var target = m.xp + gain;
     while (m.lv < 50) {
       var next = CC.mon.xpFor(m.lv + 1), from = m.xp, to = Math.min(target, next);
-      s.xpShown = from;
-      await CC.tween(0.5, function (k) { s.xpShown = CC.lerp(from, to, k); });
+      if (s) { s.xpShown = from; CC.sfx('xp'); await CC.tween(0.5, function (k) { s.xpShown = CC.lerp(from, to, k); }); }
       m.xp = to;
       if (m.xp < next) break;
       var before = CC.mon.stats(m);
       m.lv++;
       var after = CC.mon.stats(m);
-      m.hp += after.hp - before.hp; s.hpShown = m.hp;
-      B.leveled[CC.state.party.indexOf(m)] = true;
+      m.hp += after.hp - before.hp;
+      if (s) {
+        s.hpShown = m.hp; s.levelGlow = CC.time;
+        for (var i = 0; i < 14; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y, vx: 0, vy: -CC.rand(30, 70), life: 0.9, kind: 'star', color: CC.pick(['#f8e050', '#ffffff']), size: 3 });
+        pop('LEVEL UP!', s.home.x, s.home.y - 70, '#f8e050');
+      }
+      B.leveled[index] = true;
       CC.sfx('levelup');
-      for (var i = 0; i < 10; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y, vx: 0, vy: -CC.rand(30, 60), life: 0.8, kind: 'star', color: '#f8e050', size: 3 });
-      await CC.say(nmShort(s) + ' grew to Lv ' + m.lv + '!');
+      await CC.say(name + ' grew to Lv ' + m.lv + '!');
+      await CC.statPanel(m, before, after);
       var learn = CC.mon.newMovesAt(m.id, m.lv);
       for (var j = 0; j < learn.length; j++) await CC.learnMove(m, learn[j]);
     }
     if (m.lv >= 50) m.xp = CC.mon.xpFor(50);
-    s.xpShown = null;
+    if (s) s.xpShown = null;
   }
 
   async function allyFainted() {
@@ -571,7 +675,7 @@ var CC = window.CC || (window.CC = {});
     await CC.say(nmShort(B.ally) + ' fainted!');
     if (CC.firstHealthy() < 0) return false;
     var i = await CC.partyScreen('battle', { active: B.allyIndex, title: 'Send out which?', mustPick: true });
-    B.allyIndex = i; B.ally = side(CC.state.party[i], false);
+    B.allyIndex = i; B.ally = side(CC.state.party[i], false); B.fought[i] = true;
     await CC.say('Go, ' + nmShort(B.ally) + '!', { auto: 0.3 });
     await sendOut(B.ally);
     return true;
@@ -586,6 +690,7 @@ var CC = window.CC || (window.CC = {});
       await CC.tween(0.25, function (k) { B.foe.sy = 1 + Math.sin(k * Math.PI) * 0.2; B.foe.oy = -Math.sin(k * Math.PI) * 10; });
       if (B.boss) { CC.sfx('encounter'); B.shake = 6; CC.burst('Shadow', FOE.x, FOE.y - 20, 24, 70); }
       else CC.burst('Plant', FOE.x, FOE.y - 4, 10, 50, { kind: 'grass', grav: 150 });
+      if (B.foe.mon.shiny) await shinyFx(B.foe);
       await CC.say(B.introText || 'A wild ' + CC.mon.name(B.foe.mon) + ' jumped out!');
     } else {
       B.trainerX = 0;
@@ -623,6 +728,8 @@ var CC = window.CC || (window.CC = {});
         await CC.say('Couldn\'t get away!');
       } else if (act.kind === 'cube') {
         if (await throwCube(act.cube)) { await afterWin(); return 'caught'; }
+      } else if (act.kind === 'item') {
+        await useItem(act);
       } else if (act.kind === 'swap') {
         await CC.say('Come back, ' + nmShort(B.ally) + '!', { auto: 0.3 });
         await withdraw(B.ally);
@@ -687,6 +794,7 @@ var CC = window.CC || (window.CC = {});
   }
 
   async function afterWin() {
+    if (CC.music && !B.boss) CC.music.play('victory');
     var coins = B.wild ? B.foe.mon.lv * 4 : B.trainer.coins || 0;
     if (!B.wild) {
       B.trainerShown = true; B.trainerX = 80;

@@ -74,6 +74,7 @@ CC.firstHealthy = function () {
 CC.addCreature = function (m) {
   m.status = null; m.sleep = 0;
   CC.markCaught(m.id);
+  if (m.shiny) { CC.state.shinyCaught = CC.state.shinyCaught || {}; CC.state.shinyCaught[m.id] = 1; }
   if (CC.state.party.length < 4) { CC.state.party.push(m); return 'party'; }
   CC.state.vault.push(m); return 'vault';
 };

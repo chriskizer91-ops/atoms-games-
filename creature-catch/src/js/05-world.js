@@ -429,6 +429,12 @@ function drawLegendTile(g, t, x, y, map) {
   }
   if (!e) return legendGround(g, lg, x, y);
   if (e.prop) { legendGround(g, lg, x, y); return standOnTile(g, CC.img(e.prop), x, y, e.h || 14); }
+  var single = e.tile && CC.img(e.tile);
+  if (single) { // a tile that is its own picture (not in the atlas)
+    var fl = hash(x * 3 + 1, y) < 0.5;
+    g.save(); g.translate(x * TP + (fl ? TP : 0), y * TP); g.scale(fl ? -1 : 1, 1); g.drawImage(single, 0, 0, TP, TP); g.restore();
+    return true;
+  }
   if (e.under) legendGround(g, lg, x, y);
   return piece(e, t === ',' || t === 'r' || t === '~' ? 2 : 1) || legendGround(g, lg, x, y);
 }
@@ -642,7 +648,10 @@ CC.world = {
     this.px = x * T; this.py = y * T; this.moving = null;
     this.npcs = (CC.NPCS[mapId] || []);
     if (!this.map.indoors) { s.visited = s.visited || {}; s.visited[mapId] = 1; }
-    this.banner = this.map.indoors ? null : { text: this.map.name, t: 2.2 };
+    this.banner = this.map.indoors ? null : { text: this.map.name, t: 2.4, stone: { cave: 1, ruins: 1, spire: 1 }[mapId] };
+    if (CC.music) CC.music.play(CC.mapTrack(mapId));
+    this.fieldFx = null;
+    CC.followReset(this);
   },
   refresh: function () { CC.buildMapPicture(this.mapId); },
 
@@ -699,7 +708,7 @@ CC.world = {
       this.stepAnim += dt * speed;
       if (mv.k >= 1) {
         this.moving = null; s.x = mv.tx; s.y = mv.ty; this.px = s.x * T; this.py = s.y * T;
-        this.afterStep();
+        this.afterStep(mv);
       } else { this.px = CC.lerp(mv.fx, mv.tx, mv.k) * T; this.py = CC.lerp(mv.fy, mv.ty, mv.k) * T; return; }
       if (this.busy) return;
     }
@@ -720,11 +729,13 @@ CC.world = {
     var b = this.buildingAt(nx, ny);
     if (b && b.door[0] === nx && b.door[1] === ny && dir === 'up') { var self = this; this.run(function () { return CC.enterDoor(self.mapId, b.id); }); return; }
     if (this.solidAt(nx, ny)) { if (!this.bumped || CC.time - this.bumped > 0.3) { CC.sfx('bump'); this.bumped = CC.time; } return; }
-    this.moving = { fx: s.x, fy: s.y, tx: nx, ty: ny, k: 0 };
+    this.moving = { fx: s.x, fy: s.y, tx: nx, ty: ny, k: 0, dir: dir, run: !!inp.held.b };
+    CC.followStep(s.x, s.y);
   },
 
-  afterStep: function () {
+  afterStep: function (mv) {
     var s = CC.state; s.steps++;
+    if (mv) CC.fieldStep(this, { x: mv.fx, y: mv.fy, dir: mv.dir }, mv.run);
     if (this.cooldown > 0) this.cooldown--;
     var trig = (CC.TRIGGERS[this.mapId] && CC.TRIGGERS[this.mapId](s.x, s.y)) || (CC.trainerSight && CC.trainerSight(this.mapId, s.x, s.y));
     if (trig) { this.run(trig); return; }
@@ -741,6 +752,7 @@ CC.world = {
     var s = CC.state, d = CC.DIRS[s.dir], fx = s.x + d[0], fy = s.y + d[1];
     var deco = (this.map.decor || []).find(function (o) { return o.x === fx && o.y === fy; });
     if (deco && deco.chest) { this.run(function () { return CC.openChest(deco); }); return; }
+    if (CC.followerAt(fx, fy) && !this.npcAt(fx, fy)) { this.run(CC.talkToFollower); return; }
     // talking across a counter
     var n = this.npcAt(fx, fy) || (deco && deco.counter && this.npcAt(fx + d[0], fy + d[1]));
     if (!n && deco && deco.talk) { this.run(function () { return CC.useFurniture(deco); }); return; }
@@ -771,6 +783,7 @@ CC.world = {
     var lgd = this.map.legend && CC.LEGENDS[this.map.legend];
     CC.rect(0, 0, CC.W, CC.H, this.map.indoors ? '#120b08' : lgd && lgd.backdrop || '#2a6e34');
     g.drawImage(pic, 0, 0, pic.width, pic.height, -cx, -cy, pic.width / R, pic.height / R);
+    CC.drawFieldMarks(this, cx, cy);
     // water glints
     var rows = this.map.rows;
     for (var y = Math.max(0, Math.floor(cy / T)); y < Math.min(rows.length, Math.ceil((cy + CC.H) / T)); y++) {
@@ -782,14 +795,15 @@ CC.world = {
     }
     // people, sorted by y
     var who = this.npcs.filter(function (n) { return !n.when || n.when(); }).map(function (n) {
-      var p = self.npcPos(n), fr = n.mv ? [0, 1, 2, 1][Math.floor(n.mv.k * 4) % 4] : 1;
+      var p = self.npcPos(n), fr = n.mv ? Math.floor(n.mv.k * 4) % 4 : 1;
       return { y: p[1], draw: function () {
         self.drawPerson(n, n.dir || 'down', p[0], p[1], fr);
         if (n.emote) { var em = CC.img('ui/emote-' + n.emote), ex = self.screenX(p[0] + 8), ey = self.screenY(p[1] - 22) - Math.abs(Math.sin(CC.time * 10)) * 2; if (em) g.drawImage(em, ex - 7, ey - 9, 14, 14 * em.height / em.width); }
       } };
     });
-    var frame = this.moving ? [0, 1, 2, 1][Math.floor(this.stepAnim * 2.2) % 4] : 1;
+    var frame = this.moving ? Math.floor(this.stepAnim * 2.2) % 4 : 1;
     var landing = this.arrive ? (CC.time - this.arrive) / 1.1 : 2;
+    if (CC.followerShown()) { var fp = CC.followerPos(this); who.push({ y: fp[1] - 0.5, draw: function () { CC.drawFollower(self, fp[0], fp[1]); } }); }
     if (landing >= 0.45) who.push({ y: this.py, draw: function () { self.drawPerson(null, s.dir, self.px, self.py, frame); } });
     who.sort(function (a, b) { return a.y - b.y; }).forEach(function (o) { o.draw(); });
     // the patch of grass shaking before something jumps out of it
@@ -804,7 +818,7 @@ CC.world = {
       var h = this.hop, k = CC.clamp(h.k, 0, 1), arc = Math.sin(k * Math.PI) * 18;
       var hx = this.screenX(h.x * T + 8), hy = this.screenY(h.y * T + 14);
       g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(hx, hy, 6, 2, 0, 0, Math.PI * 2); g.fill();
-      CC.drawSprite(CC.creatureSprite(h.id), hx, hy - arc, { scale: 0.34 + k * 0.08, sy: 1 + Math.sin(CC.time * 20) * 0.08 * (1 - k), id: h.id });
+      CC.drawSprite(CC.creatureSprite(h.id, h.shiny), hx, hy - arc, { scale: 0.34 + k * 0.08, sy: 1 + Math.sin(CC.time * 20) * 0.08 * (1 - k), id: h.id });
     }
     // after Fly: the big bird swoops down, drops you off, and flies away
     if (landing < 1) {
@@ -815,6 +829,7 @@ CC.world = {
       if (landing > 0.44 && landing < 0.5) for (var q = 0; q < 6; q++) CC.fx.add({ x: lx + CC.rand(-8, 8), y: ly + 12, vx: CC.rand(-30, 30), vy: CC.rand(-15, -5), life: 0.4, kind: 'dust', size: 4 });
     } else this.arrive = null;
     this.drawAmbient(cx, cy);
+    CC.drawDaylight(this, cx, cy);
     if (this.emote) {
       var ex = this.screenX(this.px + 8), ey = this.screenY(this.py - 22) - Math.abs(Math.sin(CC.time * 10)) * 2, em = CC.img('ui/emote-exclaim');
       if (em) g.drawImage(em, ex - 7, ey - 9, 14, 14 * em.height / em.width);
@@ -822,11 +837,7 @@ CC.world = {
     }
     if (this.map.indoors) this.drawIndoorLight(cx, cy);
     if (this.banner) { this.banner.t -= CC.dt || 0; if (this.banner.t <= 0) this.banner = null; }
-    if (this.banner) {
-      var a = Math.min(1, this.banner.t * 2, (2.2 - this.banner.t) * 4);
-      g.globalAlpha = a; var bw = CC.textWidth(this.banner.text) + 20;
-      CC.box(6, 6, bw, 20); CC.text(this.banner.text, 16, 10); g.globalAlpha = 1;
-    }
+    if (this.banner) CC.drawPlaceSign(this.banner);
   },
 
   // Life on the map, all in code: chimney smoke, butterflies, lantern glow, and cloud shadows drifting over.
@@ -1007,23 +1018,25 @@ CC.world = {
       CC.drawSprite(CC.creatureSprite(npc.creature), fx, fy - 2 - Math.abs(Math.sin(CC.time * 1.5)) * 2, { scale: 0.42, sy: 1 + Math.sin(CC.time * 2.4) * 0.03, id: npc.creature });
       return;
     }
-    var sheet = npc ? npc.sheet && CC.img('walk/' + npc.sheet) : CC.img('walk/' + (CC.state.look || 'player-a'));
+    // frame here is the walk phase: 0 to 3 while walking, 1 when standing
+    var key = CC.walkKey(npc), sheet = key && CC.img('walk/' + key);
     var art = npc && npc.art && CC.img('people/' + npc.art);
     if (sheet) {
-      var cw = sheet.width / 3, ch = sheet.height / 4, row = { down: 0, left: 1, right: 2, up: 3 }[dir], k = 27 / ch;
-      var bounce = (npc ? npc.mv : this.moving) && frame !== 1 ? -0.5 : 0;
-      g.drawImage(sheet, frame * cw, row * ch, cw, ch, Math.round(fx - cw * k / 2), Math.round(fy - ch * k + bounce), cw * k, ch * k);
+      CC.drawWalker(g, sheet, key, dir, frame, !!(npc ? npc.mv : this.moving), fx, fy);
     } else if (art) {
       var hgt = npc.h || 26, kk = hgt / art.height;
       var hop = npc.hop ? Math.max(0, 1 - (CC.time - npc.hop) / 0.35) : 0;
       var breathe = 1 + Math.sin(CC.time * 2.2 + npc.x * 1.7) * 0.018;
-      g.save(); g.translate(Math.round(fx), Math.round(fy - Math.sin(hop * Math.PI) * 4));
-      var shift = hop ? npc.flip : Math.sin(CC.time * 0.35 + npc.x * 2.3 + npc.y) > 0.55;
+      // people without a walk sheet step with a little bounce and sway, facing the way they go
+      var step = npc.mv ? Math.abs(Math.sin(npc.mv.k * Math.PI * 2)) * 1.5 : 0, sway = npc.mv ? Math.sin(npc.mv.k * Math.PI * 2) * 0.05 : 0;
+      g.save(); g.translate(Math.round(fx), Math.round(fy - Math.sin(hop * Math.PI) * 4 - step));
+      if (sway) g.rotate(sway);
+      var shift = npc.mv ? npc.dir === 'left' : hop ? npc.flip : Math.sin(CC.time * 0.35 + npc.x * 2.3 + npc.y) > 0.55;
       if (shift) g.scale(-1, 1);
       g.drawImage(art, -art.width * kk / 2, -art.height * kk * breathe, art.width * kk, art.height * kk * breathe);
       g.restore();
     } else {
-      var code = CC.person(npc ? npc.look : 'player', dir, frame === 1 ? 0 : 1);
+      var code = CC.person(npc ? npc.look : 'player', dir, [0, 1, 2, 1][frame] === 1 ? 0 : 1);
       g.drawImage(code, Math.round(fx - 12), Math.round(fy - 23));
     }
     // standing in tall grass hides the feet
@@ -1108,14 +1121,19 @@ CC.wildEncounter = async function (key) {
   for (var i = 0; i < 10; i++) CC.fx.add({ x: w.screenX(hx * T + 8), y: w.screenY(hy * T + 10), vx: CC.rand(-40, 40), vy: CC.rand(-60, -20), life: 0.5, kind: 'grass', color: CC.pick(rc), size: 4, grav: 160, spin: 8 });
   w.emote = true; CC.sfx('encounter');
   await CC.sleep(0.35);
-  w.hop = { id: roll.id, x: hx, y: hy, k: 0 };
+  // about 1 in 160 wild creatures is shiny (the SHINY code makes the next one shiny)
+  var shiny = CC.dev.shinyNext || Math.random() < 1 / 160;
+  CC.dev.shinyNext = false;
+  w.hop = { id: roll.id, x: hx, y: hy, k: 0, shiny: shiny };
   await CC.tween(0.45, function (k) { w.hop.k = k; });
   w.grassFx = null;
   await CC.sleep(0.25);
   w.emote = false;
   await CC.battleTransition();
   w.hop = null;
-  await CC.startBattle({ wild: CC.mon.make(roll.id, roll.lv) });
+  var wild = CC.mon.make(roll.id, roll.lv);
+  if (shiny) wild.shiny = true;
+  await CC.startBattle({ wild: wild });
 };
 
 // bars sweep in from both sides, flashing, then the battle starts
@@ -1138,18 +1156,26 @@ CC.battleTransition = function () {
 };
 
 // ---------- the field menu ----------
+// menu icons from ui/menu-icon-1 to 8 (the polish pack) when they're there
+var MENU_ICON = { Party: 1, Bag: 2, Log: 3, Vault: 4, Fly: 5, Save: 6, Options: 7, Close: 8 };
 CC.fieldMenu = async function () {
+  var start = 0;
   while (true) {
-    var items = ['Party', 'Bag'];
+    var items = ['Party', 'Bag', 'Log'];
     if (CC.state.flags.vaultKey) items.push('Vault');
     if (CC.state.flags.fly && !CC.MAPS[CC.state.map].indoors) items.push('Fly');
-    items.push('Save', 'Close');
-    var c = await CC.menu(items, { x: 158, y: 6, w: 76, startCloses: true });
+    items.push('Save', 'Options', 'Close');
+    var hasIcons = !!CC.img('ui/menu-icon-1');
+    var c = await CC.menu(items.map(function (it) { return hasIcons ? { label: it, icon: 'ui/menu-icon-' + MENU_ICON[it] } : it; }),
+      { x: hasIcons ? 146 : 158, y: 6, w: hasIcons ? 90 : 76, startCloses: true, start: start });
     var pick = items[c];
     if (c < 0 || pick === 'Close') return;
+    start = c;
     if (pick === 'Party') await CC.partyScreen('field');
     if (pick === 'Bag') await CC.bagScreen();
+    if (pick === 'Log') await CC.creatureLog();
     if (pick === 'Vault') await CC.vaultScreen();
+    if (pick === 'Options') await CC.optionsScreen();
     if (pick === 'Fly') { await CC.flyScreen(); return; }
     if (pick === 'Save') {
       var seen = Object.keys(CC.state.seen).length, caught = Object.keys(CC.state.caught).length;

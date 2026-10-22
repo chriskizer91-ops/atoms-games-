@@ -45,6 +45,8 @@ Codes typed on the title screen wait until you start or continue a game, then th
 | `FINALE` (or `MOON`) | Passes every trial and rival battle and puts you at the foot of the Moon Altar. Walk up the steps |
 | `ENDING` (or `POSTGAME`) | The moon is restored and the Moonlit Spire opens (`GOTO SPIRE`) |
 | `DEX` | Marks every creature as seen |
+| `SHINY` | The next wild creature is shiny |
+| `NIGHT` / `DAY` / `DUSK` | Forces the time of day. `CLOCK` goes back to your real clock |
 | `NOWILD` | Turns tall-grass encounters off, or back on |
 | `CATCHALL` | Every cube catches, or back to normal |
 | `ONEHIT` | Your attacks knock out in one hit, or back to normal |

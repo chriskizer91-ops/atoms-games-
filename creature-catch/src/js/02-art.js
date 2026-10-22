@@ -172,12 +172,72 @@ CC.loadArt = function () {
     });
   }));
 };
-CC.img = function (key) { return CC.IMG[key] || null; };
+// Pictures still being painted can have a stand-in made from another picture (see CC.FALLBACK below).
+var fallbackTried = {};
+CC.img = function (key) {
+  var im = CC.IMG[key];
+  if (im || !CC.FALLBACK[key] || fallbackTried[key]) return im || null;
+  fallbackTried[key] = true;
+  im = CC.FALLBACK[key]();
+  if (im) CC.IMG[key] = im;
+  return im || null;
+};
+
+// ---------- recoloring: a copy of a picture with its colors changed pixel by pixel ----------
+CC.recolor = function (img, fn) {
+  var cv = CC.makeCanvas(img.width, img.height), x = cv.getContext('2d');
+  x.drawImage(img, 0, 0);
+  var d = x.getImageData(0, 0, cv.width, cv.height), p = d.data;
+  for (var i = 0; i < p.length; i += 4) {
+    if (!p[i + 3]) continue;
+    var c = fn(p[i], p[i + 1], p[i + 2], (i / 4) % cv.width, Math.floor(i / 4 / cv.width));
+    p[i] = c[0]; p[i + 1] = c[1]; p[i + 2] = c[2];
+  }
+  x.putImageData(d, 0, 0);
+  return cv;
+};
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, h = 0, s = 0, d = mx - mn;
+  if (d) {
+    s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+function hslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360;
+  if (!s) return [l * 255, l * 255, l * 255];
+  var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  var f = function (t) { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255];
+}
+// turns every color around the color wheel; dark outlines (low saturation) stay put
+CC.hueShift = function (img, deg, satMul, lightAdd) {
+  return CC.recolor(img, function (r, g, b) {
+    var h = rgbToHsl(r, g, b);
+    if (h[1] < 0.12 || h[2] < 0.12) return [r, g, b];
+    return hslToRgb(h[0] + deg, Math.min(1, h[1] * (satMul || 1)), CC.clamp(h[2] + (lightAdd || 0), 0, 1));
+  });
+};
+CC.FALLBACK = {
+  // the Mega Potion: the Potion turned orange-gold
+  'items/mega-potion': function () { var p = CC.IMG['items/potion']; return p && CC.hueShift(p, 170, 1.1, 0.03); },
+};
 
 // A creature's sprite: its picture if there is one (made by tools/import-art.py: true pixel size, no
 // background), else the code-drawn stand-in. sprite.fit scales a picture to the 64 px battle size.
 var spriteCache = {};
-CC.creatureSprite = function (id) {
+// shiny creatures: a rare palette swap, the same way for every one of a kind
+CC.shinyHue = function (id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 997; return 90 + h % 180; };
+CC.creatureSprite = function (id, shiny) {
+  if (shiny) {
+    if (spriteCache[id + '*']) return spriteCache[id + '*'];
+    var base = CC.creatureSprite(id), sh = CC.hueShift(base, CC.shinyHue(id), 1.15, 0.02);
+    sh.fit = base.fit;
+    return (spriteCache[id + '*'] = sh);
+  }
   if (spriteCache[id]) return spriteCache[id];
   var im = CC.img('creatures/' + id), cv;
   if (im) {
@@ -211,6 +271,7 @@ CC.drawSprite = function (sprite, x, y, o) {
   g.translate(Math.round(x), Math.round(y));
   if (o.flip) g.scale(-1, 1);
   var img = o.flash ? CC.tinted(sprite, o.flash, o.id || 'x') : sprite;
+  if (o.dissolve) img = dissolved(img, o.dissolve);
   if (o.wave) {
     for (var row = 0; row < h; row += 2) {
       var off = Math.round(Math.sin(CC.time * (o.waveSpeed || 10) + row * 0.25) * o.wave);
@@ -222,6 +283,22 @@ CC.drawSprite = function (sprite, x, y, o) {
   if (o.overlay && !o.flash) { g.globalAlpha *= o.overlay[1]; g.drawImage(CC.tinted(sprite, o.overlay[0], o.id || 'x'), -w / 2 * sx, -h * sy, w * sx, h * sy); }
   g.restore();
 };
+
+// the sprite falling apart into pixels, top first (fainting)
+var dissolveCache = {};
+function dissolved(img, k) {
+  var w = img.width, h = img.height, key = w + 'x' + h;
+  var cv = dissolveCache[key] || (dissolveCache[key] = CC.makeCanvas(w, h)), x = cv.getContext('2d');
+  x.clearRect(0, 0, w, h); x.drawImage(img, 0, 0);
+  var d = x.getImageData(0, 0, w, h), p = d.data;
+  for (var by = 0; by < h; by += 2) for (var bx = 0; bx < w; bx += 2) {
+    var r = (((bx * 73856093) ^ (by * 19349663)) >>> 0) % 1000 / 1000 * 0.7 + (1 - by / h) * 0.3;
+    if (r >= k) continue;
+    for (var yy = by; yy < Math.min(h, by + 2); yy++) for (var xx = bx; xx < Math.min(w, bx + 2); xx++) p[(yy * w + xx) * 4 + 3] = 0;
+  }
+  x.putImageData(d, 0, 0);
+  return cv;
+}
 
 // ---------- the capture cube (code-drawn, purple top, blue bottom) ----------
 CC.drawCube = function (x, y, size, o) {
@@ -391,6 +468,12 @@ CC.drawParticle = function (kind, x, y, s, color, rot) {
     case 'star':
       g.fillStyle = color || '#fff8d8';
       g.fillRect(-s / 2, -0.5, s, 1); g.fillRect(-0.5, -s / 2, 1, s); g.fillRect(-1, -1, 2, 2); break;
+    case 'sparkle': // a four-point star that twinkles
+      var tw = 0.6 + Math.abs(Math.sin(CC.time * 14 + x * 0.7)) * 0.4, ss = s * tw;
+      g.fillStyle = color || '#ffffff';
+      g.beginPath(); g.moveTo(0, -ss); g.lineTo(ss * 0.22, -ss * 0.22); g.lineTo(ss, 0); g.lineTo(ss * 0.22, ss * 0.22);
+      g.lineTo(0, ss); g.lineTo(-ss * 0.22, ss * 0.22); g.lineTo(-ss, 0); g.lineTo(-ss * 0.22, -ss * 0.22); g.closePath(); g.fill();
+      g.fillStyle = '#ffffff'; g.fillRect(-1, -1, 2, 2); break;
     case 'dust':
       g.globalAlpha *= 0.7; g.fillStyle = color || '#e8dcc8';
       g.beginPath(); g.arc(0, 0, s / 2, 0, Math.PI * 2); g.fill(); break;

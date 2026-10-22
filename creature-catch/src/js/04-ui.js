@@ -12,7 +12,7 @@ CC.say = function (text, opts) {
       update: function (dt) {
         var pageText = lines.slice(page * 2, page * 2 + 2).join('\n');
         if (shown < pageText.length) {
-          shown += dt * (CC.input.held.a || CC.input.held.b ? 160 : 55);
+          shown += dt * (CC.input.held.a || CC.input.held.b ? 160 : [30, 55, 110][CC.opts.text == null ? 1 : CC.opts.text]);
           if (CC.input.pressed.a || CC.input.pressed.b) shown = pageText.length;
           return;
         }
@@ -169,7 +169,7 @@ CC.partyScreen = function (mode, opts) {
         CC.state.party.forEach(function (m, i) {
           var y = 18 + i * 30, on = i === sel, sp = CC.mon.sp(m), st = CC.mon.stats(m);
           CC.box(6, y, 228, 28, { fill: on ? '#fff8d0' : '#fbf3e0', edge: on ? '#e8a838' : '#c8a878' });
-          CC.drawSprite(CC.creatureSprite(m.id), 24, y + 27, { scale: 0.4, sy: 1 + (on ? Math.sin(CC.time * 8) * 0.06 : 0) });
+          CC.drawSprite(CC.creatureSprite(m.id, m.shiny), 24, y + 27, { scale: 0.4, sy: 1 + (on ? Math.sin(CC.time * 8) * 0.06 : 0) });
           CC.text(sp.name, 42, y + 4); CC.text('Lv ' + m.lv, 42, y + 15, '#6a5a50', { size: 9 });
           var bx = 72; sp.types.forEach(function (t) { bx += CC.typeBadge(t, bx, y + 15) + 2; });
           CC.text('HP', 140, y + 4, '#6a5a50', { size: 9 });
@@ -185,6 +185,78 @@ CC.partyScreen = function (mode, opts) {
   });
 };
 
+// ---------- options: volumes, text speed, the creature that follows you, day and night ----------
+CC.optionsScreen = function () {
+  return new Promise(function (resolve) {
+    var o = CC.opts, sel = 0;
+    var rows = [
+      { label: 'Music', get: function () { return o.music; }, step: function (d) { o.music = CC.clamp(o.music + d, 0, 10); CC.setVolumes(); }, bar: true },
+      { label: 'Sound effects', get: function () { return o.sfx; }, step: function (d) { o.sfx = CC.clamp(o.sfx + d, 0, 10); CC.setVolumes(); CC.sfx('blip'); }, bar: true },
+      { label: 'Text speed', get: function () { return ['Slow', 'Normal', 'Fast'][o.text]; }, step: function (d) { o.text = CC.clamp(o.text + d, 0, 2); } },
+      { label: 'Creature follows you', get: function () { return o.follower ? 'On' : 'Off'; }, step: function () { o.follower = !o.follower; } },
+      { label: 'Day and night', get: function () { return o.daynight === 'clock' ? 'Clock' : 'Always day'; }, step: function () { o.daynight = o.daynight === 'clock' ? 'day' : 'clock'; } },
+      { label: 'Done' },
+    ];
+    var close = function () { CC.saveOpts(); CC.sfx('back'); CC.pop(scr); resolve(); };
+    var scr = {
+      name: 'options', opaque: true,
+      update: function () {
+        if (CC.repeat('down')) { sel = (sel + 1) % rows.length; CC.sfx('blip'); }
+        if (CC.repeat('up')) { sel = (sel + rows.length - 1) % rows.length; CC.sfx('blip'); }
+        var r = rows[sel], d = CC.repeat('right') ? 1 : CC.repeat('left') ? -1 : 0;
+        if (d && r.step) { r.step(d); if (!r.bar) CC.sfx('blip'); }
+        if (CC.input.pressed.a) { if (!r.step) close(); else { r.step(1); CC.sfx('blip'); } }
+        if (CC.input.pressed.b || CC.input.pressed.start) close();
+      },
+      draw: function () {
+        CC.rect(0, 0, 240, 160, '#3a4a7a');
+        for (var yy = 0; yy < 160; yy += 8) CC.rect(0, yy, 240, 4, '#36456f');
+        CC.text('Options', 120, 8, '#ffffff', { size: 14, align: 'center', shadow: '#1a2440' });
+        CC.box(10, 30, 220, 116);
+        rows.forEach(function (r, i) {
+          var y = 38 + i * 17, on = i === sel;
+          if (on) CC.rect(14, y - 2, 212, 15, '#fff2c8');
+          CC.text(r.label, 26, y, '#2a2230');
+          if (on) CC.cursor(17, y + 2);
+          if (!r.get) return;
+          if (r.bar) {
+            for (var b = 0; b < 10; b++) CC.rect(146 + b * 7, y + 3, 5, 7, b < r.get() ? '#48a8e8' : '#c8bca8');
+          } else CC.text('< ' + r.get() + ' >', 186, y, '#6a3a2a', { align: 'center' });
+        });
+        CC.text('Left / right to change, B to close.', 120, 148, '#e8ecff', { size: 9, align: 'center' });
+      },
+    };
+    CC.push(scr);
+  });
+};
+
+// after a level-up: what each stat gained, then (press A) the new totals
+CC.statPanel = function (m, before, after) {
+  return new Promise(function (resolve) {
+    var t0 = CC.time, totals = false, rows = [['HP', 'hp'], ['Attack', 'atk'], ['Defense', 'def'], ['Speed', 'spd']];
+    var scr = {
+      name: 'statpanel',
+      update: function () {
+        if (CC.time - t0 < 0.25 || !(CC.input.pressed.a || CC.input.pressed.b)) return;
+        CC.sfx('blip');
+        if (!totals) { totals = true; t0 = CC.time; } else { CC.pop(scr); resolve(); }
+      },
+      draw: function () {
+        var k = CC.ease(CC.clamp((CC.time - t0) / 0.15, 0, 1)), x = 132 + (totals ? 0 : (1 - k) * 110), y = 6;
+        CC.box(x, y, 104, 62);
+        CC.text(CC.mon.name(m) + ' Lv ' + m.lv, x + 8, y + 4, '#6a3a2a', { size: 9 });
+        rows.forEach(function (r, i) {
+          var yy = y + 17 + i * 11, d = after[r[1]] - before[r[1]];
+          CC.text(r[0], x + 8, yy, '#2a2230', { size: 9 });
+          if (totals) CC.num(String(after[r[1]]), x + 96, yy + 2, '#2a2230', 'right');
+          else CC.text('+' + d, x + 96, yy, d > 0 ? '#2a9a3a' : '#8a7a70', { size: 9, align: 'right' });
+        });
+      },
+    };
+    CC.push(scr);
+  });
+};
+
 CC.summary = function (m) {
   return new Promise(function (resolve) {
     var scr = {
@@ -193,7 +265,7 @@ CC.summary = function (m) {
       draw: function () {
         var sp = CC.mon.sp(m), st = CC.mon.stats(m), col = CC.TYPE_COLORS[sp.types[0]];
         CC.rect(0, 0, 240, 160, col[2]); CC.rect(0, 0, 96, 160, col[1]);
-        CC.drawSprite(CC.creatureSprite(m.id), 48, 84, { sy: 1 + Math.sin(CC.time * 3) * 0.03 });
+        CC.drawSprite(CC.creatureSprite(m.id, m.shiny), 48, 84, { sy: 1 + Math.sin(CC.time * 3) * 0.03 });
         CC.text(sp.name, 8, 92, '#ffffff', { shadow: '#00000060' });
         CC.text('Lv ' + m.lv, 8, 104, '#ffffff', { size: 9, shadow: '#00000060' });
         var bx = 8; sp.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 116) + 2; });
@@ -226,8 +298,9 @@ CC.ITEMS = {
   master: { name: 'Master Cube', price: 0, cube: 999, icon: 'ui/cube-master', info: 'The legendary cube. It never fails.' },
   potion: { name: 'Potion', price: 60, heal: 30, icon: 'items/potion', info: 'Restores 30 HP to one creature.' },
   superpotion: { name: 'Super Potion', price: 180, heal: 80, icon: 'items/super-potion', info: 'Restores 80 HP to one creature.' },
-  tonic: { name: 'Tonic', price: 320, heal: 150, icon: 'items/tonic', info: 'Restores 150 HP to one creature.' },
-  fulltonic: { name: 'Full Tonic', price: 700, heal: 999, cure: true, icon: 'items/full-tonic', info: 'Restores all HP and cures any status.' },
+  megapotion: { name: 'Mega Potion', price: 450, heal: 150, icon: 'items/mega-potion', info: 'Restores 150 HP to one creature.' },
+  tonic: { name: 'Tonic', price: 300, pp: 10, icon: 'items/tonic', info: 'Restores 10 PP to each of a creature\'s moves.' },
+  fulltonic: { name: 'Full Tonic', price: 1200, heal: 999, pp: 999, cure: true, icon: 'items/full-tonic', info: 'Restores all HP and PP and cures any status.' },
   cureherb: { name: 'Cure Herb', price: 100, cure: true, icon: 'items/cure-herb', info: 'Cures sleep, poison, burn, freeze or shock.' },
   revive: { name: 'Revive', price: 900, revive: true, icon: 'items/revive', info: 'Wakes a fainted creature with half its HP.' },
   sunshard: { name: 'Sun Shard', price: 0, shard: true, icon: 'items/sun-shard', info: 'A warm golden shard. Some creatures evolve when they touch it.' },
@@ -248,10 +321,10 @@ CC.bagScreen = async function () {
       if (CC.MAPS[CC.state.map].indoors) { await CC.say('Timberowl can\'t fit in here. Try it outside!'); continue; }
       CC.sfx('select'); await CC.say('You blew the Wooden Whistle. Timberowl swoops down!'); await CC.flyScreen(); return;
     }
-    if (it.heal || it.cure || it.revive || it.shard) {
+    if (CC.usable(k)) {
       var i = await CC.partyScreen('pick', { title: 'Use a ' + it.name + ' on...' });
       if (i < 0) continue;
-      var m = CC.state.party[i], max = CC.mon.maxHp(m), used = CC.useItemOn(k, m);
+      var m = CC.state.party[i], used = CC.useItemOn(k, m);
       if (typeof used === 'string') { await CC.say(used); continue; }
       if (!CC.dev.infItems) CC.state.bag[k]--;
       if (it.shard) { await CC.evolveScene(m); continue; }
@@ -260,31 +333,46 @@ CC.bagScreen = async function () {
   }
 };
 
-// what an item does to a creature: a string says why it can't be used, else { text }
-CC.useItemOn = function (k, m) {
+// items you use on a creature (from the Bag on the map, or in battle where shards don't work)
+CC.usable = function (k, inBattle) {
+  var it = CC.ITEMS[k];
+  return !!(it.heal || it.cure || it.revive || it.pp || (it.shard && !inBattle));
+};
+function ppFull(m) { return m.moves.every(function (x) { return x.pp >= CC.MOVES[x.id].pp; }); }
+// why an item would do nothing to this creature (a line to say), or null if it works
+CC.itemProblem = function (k, m) {
   var it = CC.ITEMS[k], max = CC.mon.maxHp(m), name = CC.mon.name(m);
-  if (it.shard) {
-    var e = CC.CREATURES[m.id].evo;
-    if (!e || e.at !== k) return 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.';
-    return { text: '' };
-  }
-  if (it.revive) {
-    if (m.hp > 0) return name + ' hasn\'t fainted.';
-    m.hp = Math.ceil(max / 2); m.status = null; return { text: name + ' woke up!' };
-  }
+  if (it.shard) { var e = CC.CREATURES[m.id].evo; return !e || e.at !== k ? 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.' : null; }
+  if (it.revive) return m.hp > 0 ? name + ' hasn\'t fainted.' : null;
   if (m.hp <= 0) return 'A ' + it.name + ' can\'t wake a fainted creature.';
-  if (it.heal && m.hp >= max && !(it.cure && m.status)) return name + ' is already at full HP.';
-  if (!it.heal && !m.status) return name + ' is feeling fine.';
+  var helps = (it.heal && m.hp < max) || (it.cure && m.status) || (it.pp && !ppFull(m));
+  if (helps) return null;
+  if (it.pp && !it.heal) return name + '\'s moves are already full of PP.';
+  return it.heal ? name + ' is already at full HP.' : name + ' is feeling fine.';
+};
+// uses it: a string says why it can't be used, else { text, hp } (hp: how much was healed)
+CC.useItemOn = function (k, m) {
+  var problem = CC.itemProblem(k, m);
+  if (problem) return problem;
+  var it = CC.ITEMS[k], max = CC.mon.maxHp(m), name = CC.mon.name(m);
+  if (it.shard) return { text: '' };
+  if (it.revive) { m.hp = Math.ceil(max / 2); m.status = null; m.sleep = 0; return { text: name + ' woke up!', hp: m.hp }; }
   var before = m.hp, parts = [];
   if (it.heal) { m.hp = Math.min(max, m.hp + it.heal); if (m.hp > before) parts.push('got back ' + (m.hp - before) + ' HP'); }
+  if (it.pp && !ppFull(m)) {
+    m.moves.forEach(function (x) { x.pp = Math.min(CC.MOVES[x.id].pp, x.pp + it.pp); });
+    parts.push(it.pp >= 999 ? 'got all its PP back' : 'got back some PP');
+  }
   if (it.cure && m.status) { m.status = null; m.sleep = 0; parts.push('is cured'); }
-  return { text: name + ' ' + parts.join(' and ') + '.' };
+  var said = parts.length > 1 ? parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1] : parts[0];
+  return { text: name + ' ' + said + '!', hp: m.hp - before };
 };
 
 // a shop: stock is a list of item keys; who is the shopkeeper
 CC.shopScreen = async function (stock, who) {
   who = who || 'Pip';
-  stock = stock || ['cube', 'potion'].concat(CC.state.flags.trial1 ? ['great', 'superpotion', 'cureherb'] : []).concat(CC.state.flags.trialCave ? ['tonic'] : []);
+  var f = CC.state.flags;
+  stock = stock || ['cube', 'potion'].concat(f.trial1 ? ['great', 'superpotion', 'cureherb'] : []).concat(f.trialForest ? ['tonic'] : []).concat(f.trialCave ? ['megapotion', 'revive'] : []);
   while (true) {
     var c = await CC.menu(stock.map(function (k) { return { label: CC.ITEMS[k].name, right: CC.ITEMS[k].price + 'c', icon: CC.ITEMS[k].icon }; }),
       { title: 'Coins: ' + CC.state.coins, w: 140, x: 96, y: 8 });

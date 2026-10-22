@@ -251,11 +251,23 @@ CC.bar = function (x, y, w, k, color) {
 };
 
 // ---------- sound (synth beeps, no files) ----------
+// Two volume knobs (CC.opts.sfx and CC.opts.music, 0 to 10): sound effects and the music each have their own gain.
 (function () {
-  var ac = null, muted = false;
+  var ac = null, muted = false, sfxGain = null, musicGain = null;
   CC.audioUnlock = function () {
     if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
-    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; return; }
+    sfxGain = ac.createGain(); sfxGain.connect(ac.destination);
+    musicGain = ac.createGain(); musicGain.connect(ac.destination);
+    CC.setVolumes();
+    if (CC.music) CC.music.unlocked();
+  };
+  CC.audio = function () { return ac && { ac: ac, music: musicGain, sfx: sfxGain }; };
+  CC.setVolumes = function () {
+    if (!ac) return;
+    var o = CC.opts || {};
+    sfxGain.gain.value = (o.sfx == null ? 8 : o.sfx) / 8;
+    musicGain.gain.value = (o.music == null ? 6 : o.music) / 10 * 0.55;
   };
   function tone(freq, dur, type, vol, slide, delay) {
     if (!ac || muted) return;
@@ -264,7 +276,7 @@ CC.bar = function (x, y, w, k, color) {
     o.type = type || 'square'; o.frequency.setValueAtTime(freq, t);
     if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
     v.gain.setValueAtTime((vol || 0.08), t); v.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(v); v.connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+    o.connect(v); v.connect(sfxGain); o.start(t); o.stop(t + dur + 0.02);
   }
   function noise(dur, vol, delay) {
     if (!ac || muted) return;
@@ -272,7 +284,7 @@ CC.bar = function (x, y, w, k, color) {
     var buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
     for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
     var s = ac.createBufferSource(), v = ac.createGain();
-    s.buffer = buf; v.gain.value = vol || 0.1; s.connect(v); v.connect(ac.destination); s.start(t);
+    s.buffer = buf; v.gain.value = vol || 0.1; s.connect(v); v.connect(sfxGain); s.start(t);
   }
   CC.sfx = function (name) {
     switch (name) {
@@ -298,6 +310,8 @@ CC.bar = function (x, y, w, k, color) {
       case 'evolve': [262, 330, 392, 523, 392, 523, 659, 784, 1047].forEach(function (f, i) { tone(f, 0.16, 'triangle', 0.06, 0, i * 0.14); }); break;
       case 'status': tone(300, 0.2, 'sawtooth', 0.04, 0.6); break;
       case 'shoot': noise(0.1, 0.05); tone(700, 0.12, 'square', 0.03, 0.5); break;
+      case 'xp': tone(880, 0.04, 'square', 0.025); tone(1175, 0.04, 'square', 0.025, 0, 0.05); break;
+      case 'shiny': [1568, 2093, 1568, 2637].forEach(function (f, i) { tone(f, 0.08, 'square', 0.035, 0, i * 0.07); }); break;
       case 'gate': noise(0.5, 0.12); tone(70, 0.5, 'triangle', 0.1, 0.6); tone(55, 0.4, 'square', 0.04, 0.8, 0.2); break;
       case 'chest': [392, 523, 659, 1047].forEach(function (f, i) { tone(f, 0.09, 'square', 0.045, 0, i * 0.07); }); break;
       case 'charm': [523, 523, 523, 659, 784, 659, 784, 1047].forEach(function (f, i) { tone(f, i === 7 ? 0.4 : 0.11, 'square', 0.05, 0, [0, 0.12, 0.24, 0.36, 0.48, 0.66, 0.78, 0.96][i]); }); break;
@@ -306,6 +320,12 @@ CC.bar = function (x, y, w, k, color) {
     }
   };
 })();
+
+// ---------- options (kept apart from the save, so they apply on the title screen too) ----------
+CC.OPTS_KEY = 'creature-catch-options';
+CC.opts = { music: 6, sfx: 8, text: 1, follower: true, daynight: 'clock' };
+try { var savedOpts = JSON.parse(localStorage.getItem(CC.OPTS_KEY) || '{}'); for (var ok in savedOpts) CC.opts[ok] = savedOpts[ok]; } catch (e) { /* defaults */ }
+CC.saveOpts = function () { try { localStorage.setItem(CC.OPTS_KEY, JSON.stringify(CC.opts)); } catch (e) { /* no storage */ } CC.setVolumes(); };
 
 // ---------- saves ----------
 CC.SAVE_KEY = 'creature-catch-save-1';
@@ -317,6 +337,265 @@ CC.loadGame = function () {
   try { var s = localStorage.getItem(CC.SAVE_KEY); if (s) { CC.state = JSON.parse(s); return true; } } catch (e) { /* no save */ }
   return false;
 };
+
+</script>
+<script>/* 01-music.js */
+// The soundtrack: GBA-style chiptune played by Web Audio, no files. Each track is a chord list plus a melody;
+// the bass, the arpeggio and the drums are patterns played over each chord. CC.music.play('route') crossfades.
+//
+// Notes: 'E5:4' is E in octave 5 held for 4 sixteenths; '-:2' is a rest. Bar lines '|' are only for reading.
+// Bass and arpeggio patterns use chord steps: R (root), 3, 5, 8 (octave), 10 (the third, an octave up).
+// Drums: k (kick), s (snare), h (hat), o (open hat).
+var CC = window.CC || (window.CC = {});
+
+(function () {
+  var NOTE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  function midi(name) { // 'F#5' -> 78
+    var m = /^([A-G])([#b]?)(-?\d)$/.exec(name);
+    if (!m) return null;
+    return 12 * (+m[3] + 1) + NOTE[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+  }
+  function freq(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+  // 'C#m' -> { root: 1, minor: true }
+  function chord(name) {
+    var m = /^([A-G])([#b]?)(m?)/.exec(name);
+    return { root: NOTE[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0), minor: !!m[3] };
+  }
+  var STEP = { R: 0, '1': 0, '3': null, '5': 7, '8': 12, '10': null };
+  function chordStep(c, step, oct) {
+    var base = 12 * (oct + 1) + c.root, third = c.minor ? 3 : 4;
+    if (step === '3') return base + third;
+    if (step === '10') return base + 12 + third;
+    return base + STEP[step];
+  }
+  function tokens(str) { return str.replace(/\|/g, ' ').trim().split(/\s+/).filter(Boolean).map(function (t) { var p = t.split(':'); return [p[0], +(p[1] || 1)]; }); }
+
+  // a track's notes as events on a grid of sixteenths: { at, len, midi | drum, ch }
+  function build(tr) {
+    var cl = tr.chordLen || 16, chords = tr.chords.map(chord), len = chords.length * cl, ev = [];
+    var at = 0;
+    tokens(tr.lead).forEach(function (t) { if (t[0] !== '-') ev.push({ at: at, len: t[1], midi: midi(t[0]), ch: 'lead' }); at += t[1]; });
+    if (tr.echo) ev.filter(function (e) { return e.ch === 'lead'; }).forEach(function (e) { ev.push({ at: (e.at + 3) % len, len: e.len, midi: e.midi, ch: 'echo' }); });
+    ['bass', 'arp'].forEach(function (ch) {
+      if (!tr[ch]) return;
+      var pat = tokens(tr[ch]), oct = ch === 'bass' ? (tr.bassOct || 2) : (tr.arpOct || 4);
+      chords.forEach(function (c, ci) {
+        var a = ci * cl;
+        while (a < (ci + 1) * cl) {
+          pat.forEach(function (t) { if (a < (ci + 1) * cl && t[0] !== '-') ev.push({ at: a, len: t[1], midi: chordStep(c, t[0], oct), ch: ch }); a += t[1]; });
+        }
+      });
+    });
+    if (tr.drums) {
+      var dp = tokens(tr.drums), d = 0;
+      while (d < len) dp.forEach(function (t) { if (d < len && t[0] !== '-') ev.push({ at: d, len: t[1], drum: t[0], ch: 'drums' }); d += t[1]; });
+    }
+    var byStep = [];
+    ev.forEach(function (e) { (byStep[e.at] = byStep[e.at] || []).push(e); });
+    return { len: len, byStep: byStep, bpm: tr.bpm, tr: tr };
+  }
+
+  // ---------- the instruments ----------
+  var waves = {}, noiseBuf = null;
+  function pulse(ac, duty) { // a pulse wave with a narrow duty cycle, the GBA's thin square
+    var k = 'p' + duty;
+    if (waves[k]) return waves[k];
+    var n = 32, re = new Float32Array(n), im = new Float32Array(n);
+    for (var i = 1; i < n; i++) im[i] = 2 / (i * Math.PI) * Math.sin(i * Math.PI * duty);
+    return (waves[k] = ac.createPeriodicWave(re, im));
+  }
+  function noise(ac) {
+    if (noiseBuf) return noiseBuf;
+    var n = ac.sampleRate, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    return (noiseBuf = b);
+  }
+  var VOICE = { // wave, volume, how long the note rings (fraction of its length), vibrato
+    lead: { wave: 'pulse25', vol: 0.12, gate: 0.92, vib: true },
+    echo: { wave: 'pulse25', vol: 0.04, gate: 0.8 },
+    arp: { wave: 'pulse12', vol: 0.045, gate: 0.6 },
+    bass: { wave: 'triangle', vol: 0.2, gate: 0.85 },
+  };
+  function playNote(ac, out, e, t, stepDur, tr) {
+    if (e.drum) return playDrum(ac, out, e.drum, t);
+    var v = Object.assign({}, VOICE[e.ch], (tr.voices || {})[e.ch]), dur = e.len * stepDur * v.gate, f = freq(e.midi);
+    var o = ac.createOscillator(), g = ac.createGain();
+    if (v.wave === 'pulse25') o.setPeriodicWave(pulse(ac, 0.25));
+    else if (v.wave === 'pulse12') o.setPeriodicWave(pulse(ac, 0.125));
+    else o.type = v.wave;
+    o.frequency.setValueAtTime(f, t);
+    if (v.vib && dur > 0.35) { // a little vibrato on long notes, after they start
+      var lfo = ac.createOscillator(), lg = ac.createGain();
+      lfo.frequency.value = 5.5; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * 0.012, t + 0.25);
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + dur + 0.05);
+    }
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(v.vol, t + 0.008);
+    g.gain.linearRampToValueAtTime(v.vol * 0.7, t + Math.min(0.12, dur * 0.5));
+    g.gain.setValueAtTime(v.vol * 0.7, t + Math.max(0.01, dur - 0.03));
+    g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function playDrum(ac, out, d, t) {
+    var g = ac.createGain();
+    g.connect(out);
+    if (d === 'k') {
+      var o = ac.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      g.gain.setValueAtTime(0.32, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+      o.connect(g); o.start(t); o.stop(t + 0.18);
+      return;
+    }
+    var s = ac.createBufferSource(), f = ac.createBiquadFilter();
+    s.buffer = noise(ac);
+    var long = d === 's' ? 0.13 : d === 'o' ? 0.12 : 0.035;
+    f.type = d === 's' ? 'bandpass' : 'highpass'; f.frequency.value = d === 's' ? 1800 : 7000;
+    g.gain.setValueAtTime(d === 's' ? 0.13 : 0.05, t); g.gain.exponentialRampToValueAtTime(0.001, t + long);
+    s.connect(f); f.connect(g); s.start(t, Math.random() * 0.5); s.stop(t + long + 0.01);
+  }
+
+  // ---------- the player: looks a little ahead and schedules what's coming ----------
+  var built = {}, cur = null, want = null, timer = null;
+  function tick() {
+    var A = CC.audio();
+    if (!A || !cur) return;
+    var ac = A.ac;
+    while (cur.next < ac.currentTime + 0.15) {
+      var list = cur.song.byStep[cur.step];
+      if (list) for (var i = 0; i < list.length; i++) playNote(ac, cur.gain, list[i], cur.next, cur.stepDur, cur.song.tr);
+      cur.step = (cur.step + 1) % cur.song.len;
+      cur.next += cur.stepDur;
+    }
+  }
+  function start(id) {
+    var A = CC.audio();
+    if (!A || !CC.TRACKS[id]) return;
+    var ac = A.ac, song = built[id] || (built[id] = build(CC.TRACKS[id]));
+    if (cur) { // fade the old one out
+      var old = cur.gain;
+      old.gain.setValueAtTime(old.gain.value, ac.currentTime); old.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 0.4);
+      setTimeout(function () { old.disconnect(); }, 600);
+    }
+    var g = ac.createGain(); g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.linearRampToValueAtTime(1, ac.currentTime + 0.3);
+    g.connect(A.music);
+    cur = { id: id, song: song, step: 0, next: ac.currentTime + 0.08, stepDur: 60 / song.bpm / 4, gain: g };
+    if (!timer) timer = setInterval(tick, 25);
+  }
+  CC.music = {
+    play: function (id) {
+      if (!id || (cur && cur.id === id) || want === id && !CC.audio()) { want = id; return; }
+      want = id;
+      start(id);
+    },
+    stop: function () {
+      var A = CC.audio();
+      if (cur && A) { var old = cur.gain; old.gain.linearRampToValueAtTime(0.0001, A.ac.currentTime + 0.3); setTimeout(function () { old.disconnect(); }, 500); }
+      cur = null; want = null;
+    },
+    current: function () { return cur ? cur.id : want; },
+    unlocked: function () { if (want && !cur) start(want); },
+  };
+
+  // which track plays where
+  var MAP_TRACK = { village: 'village', meadow: 'route', grassland: 'route', forest: 'route', water: 'route', desert: 'route', cave: 'cave', snow: 'snow', swamp: 'swamp', ruins: 'ruins', spire: 'spire' };
+  CC.mapTrack = function (mapId) {
+    if (MAP_TRACK[mapId]) return MAP_TRACK[mapId];
+    var m = CC.MAPS[mapId];
+    if (m && m.indoors) { // rooms play their town's music: the village's, or the outpost's cozy version
+      var out = m.exits && m.exits[0] && m.exits[0].to;
+      return out === 'village' ? 'village' : 'outpost';
+    }
+    return 'route';
+  };
+  CC.battleTrack = function (opts) {
+    return { guide: 'guide', rival: 'rival', boss: 'boss', trainer: 'trainer' }[opts.vs] || (opts.boss ? 'boss' : opts.trainer ? 'trainer' : 'wild');
+  };
+
+  // ---------- the tracks ----------
+  CC.TRACKS = {
+    title: {
+      bpm: 100, chords: ['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'G'],
+      lead: 'E5:4 G5:4 C6:6 B5:2 | A5:4 G5:4 D5:8 | C5:4 E5:4 A5:6 G5:2 | F5:4 E5:4 C5:8 | E5:4 G5:4 C6:4 D6:4 | E6:6 D6:2 B5:8 | C6:4 A5:4 F5:4 A5:4 | G5:12 -:4',
+      bass: 'R:2 R:2 5:2 R:2 8:2 R:2 5:2 R:2', arp: '1 3 5 8', drums: 'k:2 h:2 s:2 h:2 k:2 k:2 s:2 h:2', echo: true,
+    },
+    village: {
+      bpm: 92, chords: ['F', 'C', 'Dm', 'Bb', 'F', 'C', 'Bb', 'C'],
+      lead: 'A5:4 C6:2 A5:2 G5:4 F5:4 | E5:4 G5:4 C5:8 | D5:4 F5:2 A5:2 G5:4 F5:4 | D5:12 -:4 | A5:4 C6:4 F6:4 E6:2 D6:2 | C6:4 G5:4 E5:8 | D6:4 C6:2 Bb5:2 A5:4 G5:4 | E5:8 G5:8',
+      bass: 'R:4 5:4 8:4 5:4', arp: '1:2 5:2 3:2 5:2', drums: 'k:4 h:4 s:4 h:4', voices: { lead: { vol: 0.1 } },
+    },
+    outpost: {
+      bpm: 84, chords: ['C', 'Am', 'F', 'G', 'C', 'Am', 'Dm', 'G'],
+      lead: 'G5:4 E5:4 C5:4 E5:4 | A5:6 G5:2 E5:8 | F5:4 A5:4 C6:4 A5:4 | G5:12 -:4 | E6:4 D6:2 C6:2 G5:8 | A5:4 C6:4 E6:8 | D6:4 C6:2 A5:2 F5:4 A5:4 | G5:8 B5:8',
+      bass: 'R:4 5:4 R:4 5:4', arp: '1:2 3:2 5:2 3:2', drums: 'h:4 h:4 h:4 h:4', voices: { lead: { wave: 'triangle', vol: 0.16 } },
+    },
+    route: {
+      bpm: 128, chords: ['G', 'D', 'Em', 'C', 'G', 'D', 'C', 'D'],
+      lead: 'B4:2 D5:2 G5:4 F#5:2 G5:2 A5:4 | F#5:4 D5:4 A4:8 | G5:2 F#5:2 E5:4 B4:4 E5:4 | G5:6 E5:2 C5:8 | B5:4 A5:2 G5:2 D6:8 | C6:2 B5:2 A5:4 F#5:8 | E5:2 G5:2 C6:4 B5:2 A5:2 G5:4 | A5:12 -:4',
+      bass: 'R:2 R:2 R:2 R:2 5:2 5:2 8:2 5:2', arp: '1 5 8 5', drums: 'k:2 h:2 s:2 h:2 k:2 k:2 s:2 h:2',
+    },
+    cave: {
+      bpm: 84, chords: ['Dm', 'Bb', 'Gm', 'A', 'Dm', 'C', 'Bb', 'A'], echo: true,
+      lead: 'D5:6 F5:2 A5:8 | Bb5:4 A5:4 F5:8 | G5:6 Bb5:2 D6:4 C6:4 | C#6:12 -:4 | A5:6 F5:2 D5:8 | E5:4 G5:4 C6:8 | D6:4 C6:4 Bb5:4 G5:4 | A5:8 E5:8',
+      bass: 'R:8 5:8', arp: '1:2 5:2 8:2 5:2', drums: 'k:8 -:4 h:4', voices: { arp: { vol: 0.03 } },
+    },
+    snow: {
+      bpm: 96, chords: ['Am', 'F', 'C', 'G', 'Am', 'F', 'G', 'E'],
+      lead: 'E6:2 C6:2 A5:4 B5:2 C6:2 E6:4 | F6:4 E6:2 C6:2 A5:8 | G5:2 C6:2 E6:4 D6:2 C6:2 G5:4 | B5:8 D6:8 | C6:4 B5:2 A5:2 E5:8 | F5:2 A5:2 C6:4 A5:4 F5:4 | G5:4 B5:4 D6:4 G6:4 | G#5:8 B5:8',
+      bass: 'R:4 -:4 5:4 -:4', arp: '8 5 3 5', arpOct: 5, drums: 'h:4 h:4 h:4 h:2 h:2', voices: { lead: { wave: 'pulse12', vol: 0.11 }, arp: { vol: 0.03 } },
+    },
+    swamp: {
+      bpm: 76, chords: ['Em', 'Em', 'C', 'B', 'Em', 'G', 'Am', 'B'],
+      lead: 'E5:3 G5:1 B5:4 A5:2 G5:2 E5:4 | D5:4 E5:12 | G5:4 E5:4 C5:4 E5:4 | D#5:8 F#5:8 | B5:4 A5:2 G5:2 F#5:4 E5:4 | D5:4 G5:4 B5:8 | C6:4 B5:2 A5:2 E5:8 | F#5:8 D#5:8',
+      bass: 'R:3 R:1 -:4 5:3 5:1 -:4', drums: 'k:4 -:2 h:2 s:4 -:2 h:2', voices: { lead: { vol: 0.1 } },
+    },
+    ruins: {
+      bpm: 88, chords: ['Bm', 'G', 'Em', 'F#', 'Bm', 'G', 'A', 'F#'], echo: true,
+      lead: 'F#5:4 B5:4 A5:2 G5:2 F#5:4 | G5:4 D5:4 B4:8 | E5:4 G5:4 B5:2 A#5:2 B5:4 | C#6:8 A#5:8 | D6:4 C#6:2 B5:2 F#5:8 | G5:2 A5:2 B5:4 D6:8 | E6:4 D6:2 C#6:2 A5:8 | A#5:8 F#5:8',
+      bass: 'R:4 R:4 5:4 8:4', arp: '1 3 5 3', drums: 'k:4 h:2 h:2 -:4 h:4', voices: { arp: { vol: 0.03 } },
+    },
+    spire: {
+      bpm: 70, chords: ['E', 'C#m', 'A', 'B', 'E', 'G#m', 'A', 'B'], echo: true,
+      lead: 'B5:4 G#5:4 E6:8 | E6:4 D#6:2 C#6:2 G#5:8 | A5:4 C#6:4 E6:4 F#6:4 | D#6:8 B5:8 | G#6:6 F#6:2 E6:8 | D#6:4 B5:4 G#5:8 | C#6:4 E6:4 A6:4 G#6:2 F#6:2 | F#6:8 D#6:8',
+      bass: 'R:8 5:8', arp: '1 5 8 5', drums: 'h:8 h:8', voices: { lead: { wave: 'triangle', vol: 0.17 } },
+    },
+    wild: {
+      bpm: 150, chords: ['Am', 'F', 'G', 'E', 'Am', 'F', 'G', 'E'],
+      lead: 'A5:2 A5:2 C6:2 A5:2 E6:4 D6:2 C6:2 | C6:2 A5:2 F5:4 A5:4 C6:4 | B5:2 B5:2 D6:2 B5:2 G6:4 F6:2 D6:2 | E6:4 D6:2 B5:2 G#5:8 | A5:2 C6:2 E6:2 A6:2 G6:4 E6:4 | F6:4 E6:2 C6:2 A5:8 | B5:2 D6:2 G6:2 F6:2 D6:4 B5:4 | E6:4 G#6:4 B6:8',
+      bass: 'R:2 R:2 8:2 R:2 R:2 R:2 8:2 R:2', arp: '1 3 5 3', drums: 'k:2 h:2 s:2 h:2 k:2 k:2 s:2 h:2',
+    },
+    trainer: {
+      bpm: 140, chords: ['Dm', 'C', 'Bb', 'A', 'Gm', 'A', 'Dm', 'A'],
+      lead: 'D5:2 F5:2 A5:2 D6:2 C6:4 A5:4 | G5:2 E5:2 C5:4 E5:2 G5:2 C6:4 | D6:4 C6:2 Bb5:2 F5:4 D5:4 | E5:2 A5:2 C#6:4 E6:8 | D6:4 Bb5:4 G5:4 Bb5:4 | C#6:4 A5:4 E5:4 C#6:4 | F6:4 E6:2 D6:2 A5:8 | E6:6 C#6:2 A5:8',
+      bass: 'R:2 8:2 R:2 8:2 5:2 8:2 R:2 5:2', arp: '1 5 8 5', drums: 'k:2 h:2 s:2 k:2 k:2 h:2 s:2 h:2',
+    },
+    guide: {
+      bpm: 132, chords: ['Em', 'C', 'G', 'D', 'Em', 'C', 'D', 'B'],
+      lead: 'E5:4 G5:2 B5:2 E6:8 | D6:2 C6:2 B5:4 G5:8 | B5:2 D6:2 G6:4 F#6:2 E6:2 D6:4 | A5:12 -:4 | G6:4 F#6:2 E6:2 B5:8 | C6:2 E6:2 G6:4 E6:8 | F#6:4 E6:2 D6:2 A5:8 | D#6:4 F#6:4 B6:8',
+      bass: 'R:2 R:2 5:2 R:2 8:2 R:2 5:2 5:2', arp: '1 3 5 8', drums: 'k:2 h:2 s:2 h:2 k:2 s:1 s:1 s:2 o:2',
+    },
+    rival: {
+      bpm: 160, chords: ['Cm', 'Ab', 'Bb', 'G', 'Cm', 'Ab', 'Fm', 'G'],
+      lead: 'C5:2 Eb5:2 G5:2 C6:2 Bb5:2 G5:2 C6:4 | Eb6:4 C6:4 Ab5:8 | D6:2 Bb5:2 F5:2 Bb5:2 D6:4 F6:4 | G6:6 F6:2 D6:8 | Eb6:2 D6:2 C6:2 G5:2 C6:2 D6:2 Eb6:4 | C6:4 Ab5:4 Eb5:8 | F5:2 Ab5:2 C6:2 F6:2 Eb6:4 D6:4 | B5:4 D6:4 G6:8',
+      bass: 'R:2 R:2 8:2 R:2 5:2 R:2 8:2 5:2', arp: '1 3 5 3', drums: 'k:2 h:2 s:2 h:2 k:2 k:2 s:2 o:2',
+    },
+    boss: {
+      bpm: 120, chords: ['F#m', 'D', 'E', 'C#', 'F#m', 'D', 'Bm', 'C#'],
+      lead: 'F#5:8 C#6:4 A5:4 | D6:6 C#6:2 A5:8 | B5:4 G#5:4 E5:4 B5:4 | C#6:4 F5:4 G#5:8 | A5:2 C#6:2 F#6:4 E6:2 D6:2 C#6:4 | D6:4 F#6:4 A6:8 | B5:4 D6:4 F#6:2 E6:2 D6:4 | C#6:8 G#5:8',
+      bass: 'R:2 R:2 R:2 8:2 R:2 R:2 5:2 R:2', bassOct: 1, arp: '1 5 8 5', drums: 'k:2 k:2 s:2 h:2 k:2 h:2 s:2 s:2', echo: true,
+      voices: { bass: { wave: 'square', vol: 0.07 } },
+    },
+    victory: {
+      bpm: 132, chords: ['C', 'F', 'G', 'C'],
+      lead: 'G5:2 G5:2 G5:2 C6:10 | A5:4 C6:4 F6:8 | D6:2 E6:2 F6:2 G6:2 B5:4 D6:4 | C6:12 -:4',
+      bass: 'R:2 5:2 8:2 5:2', arp: '1 3 5 8', drums: 'k:4 s:4 k:4 s:4',
+    },
+    credits: {
+      bpm: 96, chords: ['D', 'A', 'Bm', 'G', 'G', 'A', 'D', 'A'], echo: true,
+      lead: 'F#5:4 A5:4 D6:6 C#6:2 | E6:4 C#6:4 A5:8 | B5:4 D6:4 F#6:6 E6:2 | D6:4 B5:4 G5:8 | G5:4 B5:4 D6:4 G6:4 | F#6:4 E6:4 C#6:8 | D6:4 F#6:4 A6:6 G6:2 | F#6:8 E6:8',
+      bass: 'R:4 5:4 8:4 5:4', arp: '1:2 5:2 8:2 5:2', drums: 'k:4 h:4 s:4 h:4',
+    },
+  };
+})();
 
 </script>
 <script>/* 02-art.js */
@@ -494,12 +773,72 @@ CC.loadArt = function () {
     });
   }));
 };
-CC.img = function (key) { return CC.IMG[key] || null; };
+// Pictures still being painted can have a stand-in made from another picture (see CC.FALLBACK below).
+var fallbackTried = {};
+CC.img = function (key) {
+  var im = CC.IMG[key];
+  if (im || !CC.FALLBACK[key] || fallbackTried[key]) return im || null;
+  fallbackTried[key] = true;
+  im = CC.FALLBACK[key]();
+  if (im) CC.IMG[key] = im;
+  return im || null;
+};
+
+// ---------- recoloring: a copy of a picture with its colors changed pixel by pixel ----------
+CC.recolor = function (img, fn) {
+  var cv = CC.makeCanvas(img.width, img.height), x = cv.getContext('2d');
+  x.drawImage(img, 0, 0);
+  var d = x.getImageData(0, 0, cv.width, cv.height), p = d.data;
+  for (var i = 0; i < p.length; i += 4) {
+    if (!p[i + 3]) continue;
+    var c = fn(p[i], p[i + 1], p[i + 2], (i / 4) % cv.width, Math.floor(i / 4 / cv.width));
+    p[i] = c[0]; p[i + 1] = c[1]; p[i + 2] = c[2];
+  }
+  x.putImageData(d, 0, 0);
+  return cv;
+};
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, h = 0, s = 0, d = mx - mn;
+  if (d) {
+    s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+function hslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360;
+  if (!s) return [l * 255, l * 255, l * 255];
+  var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  var f = function (t) { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255];
+}
+// turns every color around the color wheel; dark outlines (low saturation) stay put
+CC.hueShift = function (img, deg, satMul, lightAdd) {
+  return CC.recolor(img, function (r, g, b) {
+    var h = rgbToHsl(r, g, b);
+    if (h[1] < 0.12 || h[2] < 0.12) return [r, g, b];
+    return hslToRgb(h[0] + deg, Math.min(1, h[1] * (satMul || 1)), CC.clamp(h[2] + (lightAdd || 0), 0, 1));
+  });
+};
+CC.FALLBACK = {
+  // the Mega Potion: the Potion turned orange-gold
+  'items/mega-potion': function () { var p = CC.IMG['items/potion']; return p && CC.hueShift(p, 170, 1.1, 0.03); },
+};
 
 // A creature's sprite: its picture if there is one (made by tools/import-art.py: true pixel size, no
 // background), else the code-drawn stand-in. sprite.fit scales a picture to the 64 px battle size.
 var spriteCache = {};
-CC.creatureSprite = function (id) {
+// shiny creatures: a rare palette swap, the same way for every one of a kind
+CC.shinyHue = function (id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 997; return 90 + h % 180; };
+CC.creatureSprite = function (id, shiny) {
+  if (shiny) {
+    if (spriteCache[id + '*']) return spriteCache[id + '*'];
+    var base = CC.creatureSprite(id), sh = CC.hueShift(base, CC.shinyHue(id), 1.15, 0.02);
+    sh.fit = base.fit;
+    return (spriteCache[id + '*'] = sh);
+  }
   if (spriteCache[id]) return spriteCache[id];
   var im = CC.img('creatures/' + id), cv;
   if (im) {
@@ -533,6 +872,7 @@ CC.drawSprite = function (sprite, x, y, o) {
   g.translate(Math.round(x), Math.round(y));
   if (o.flip) g.scale(-1, 1);
   var img = o.flash ? CC.tinted(sprite, o.flash, o.id || 'x') : sprite;
+  if (o.dissolve) img = dissolved(img, o.dissolve);
   if (o.wave) {
     for (var row = 0; row < h; row += 2) {
       var off = Math.round(Math.sin(CC.time * (o.waveSpeed || 10) + row * 0.25) * o.wave);
@@ -544,6 +884,22 @@ CC.drawSprite = function (sprite, x, y, o) {
   if (o.overlay && !o.flash) { g.globalAlpha *= o.overlay[1]; g.drawImage(CC.tinted(sprite, o.overlay[0], o.id || 'x'), -w / 2 * sx, -h * sy, w * sx, h * sy); }
   g.restore();
 };
+
+// the sprite falling apart into pixels, top first (fainting)
+var dissolveCache = {};
+function dissolved(img, k) {
+  var w = img.width, h = img.height, key = w + 'x' + h;
+  var cv = dissolveCache[key] || (dissolveCache[key] = CC.makeCanvas(w, h)), x = cv.getContext('2d');
+  x.clearRect(0, 0, w, h); x.drawImage(img, 0, 0);
+  var d = x.getImageData(0, 0, w, h), p = d.data;
+  for (var by = 0; by < h; by += 2) for (var bx = 0; bx < w; bx += 2) {
+    var r = (((bx * 73856093) ^ (by * 19349663)) >>> 0) % 1000 / 1000 * 0.7 + (1 - by / h) * 0.3;
+    if (r >= k) continue;
+    for (var yy = by; yy < Math.min(h, by + 2); yy++) for (var xx = bx; xx < Math.min(w, bx + 2); xx++) p[(yy * w + xx) * 4 + 3] = 0;
+  }
+  x.putImageData(d, 0, 0);
+  return cv;
+}
 
 // ---------- the capture cube (code-drawn, purple top, blue bottom) ----------
 CC.drawCube = function (x, y, size, o) {
@@ -713,6 +1069,12 @@ CC.drawParticle = function (kind, x, y, s, color, rot) {
     case 'star':
       g.fillStyle = color || '#fff8d8';
       g.fillRect(-s / 2, -0.5, s, 1); g.fillRect(-0.5, -s / 2, 1, s); g.fillRect(-1, -1, 2, 2); break;
+    case 'sparkle': // a four-point star that twinkles
+      var tw = 0.6 + Math.abs(Math.sin(CC.time * 14 + x * 0.7)) * 0.4, ss = s * tw;
+      g.fillStyle = color || '#ffffff';
+      g.beginPath(); g.moveTo(0, -ss); g.lineTo(ss * 0.22, -ss * 0.22); g.lineTo(ss, 0); g.lineTo(ss * 0.22, ss * 0.22);
+      g.lineTo(0, ss); g.lineTo(-ss * 0.22, ss * 0.22); g.lineTo(-ss, 0); g.lineTo(-ss * 0.22, -ss * 0.22); g.closePath(); g.fill();
+      g.fillStyle = '#ffffff'; g.fillRect(-1, -1, 2, 2); break;
     case 'dust':
       g.globalAlpha *= 0.7; g.fillStyle = color || '#e8dcc8';
       g.beginPath(); g.arc(0, 0, s / 2, 0, Math.PI * 2); g.fill(); break;
@@ -844,6 +1206,7 @@ CC.firstHealthy = function () {
 CC.addCreature = function (m) {
   m.status = null; m.sleep = 0;
   CC.markCaught(m.id);
+  if (m.shiny) { CC.state.shinyCaught = CC.state.shinyCaught || {}; CC.state.shinyCaught[m.id] = 1; }
   if (CC.state.party.length < 4) { CC.state.party.push(m); return 'party'; }
   CC.state.vault.push(m); return 'vault';
 };
@@ -864,7 +1227,7 @@ CC.say = function (text, opts) {
       update: function (dt) {
         var pageText = lines.slice(page * 2, page * 2 + 2).join('\n');
         if (shown < pageText.length) {
-          shown += dt * (CC.input.held.a || CC.input.held.b ? 160 : 55);
+          shown += dt * (CC.input.held.a || CC.input.held.b ? 160 : [30, 55, 110][CC.opts.text == null ? 1 : CC.opts.text]);
           if (CC.input.pressed.a || CC.input.pressed.b) shown = pageText.length;
           return;
         }
@@ -1021,7 +1384,7 @@ CC.partyScreen = function (mode, opts) {
         CC.state.party.forEach(function (m, i) {
           var y = 18 + i * 30, on = i === sel, sp = CC.mon.sp(m), st = CC.mon.stats(m);
           CC.box(6, y, 228, 28, { fill: on ? '#fff8d0' : '#fbf3e0', edge: on ? '#e8a838' : '#c8a878' });
-          CC.drawSprite(CC.creatureSprite(m.id), 24, y + 27, { scale: 0.4, sy: 1 + (on ? Math.sin(CC.time * 8) * 0.06 : 0) });
+          CC.drawSprite(CC.creatureSprite(m.id, m.shiny), 24, y + 27, { scale: 0.4, sy: 1 + (on ? Math.sin(CC.time * 8) * 0.06 : 0) });
           CC.text(sp.name, 42, y + 4); CC.text('Lv ' + m.lv, 42, y + 15, '#6a5a50', { size: 9 });
           var bx = 72; sp.types.forEach(function (t) { bx += CC.typeBadge(t, bx, y + 15) + 2; });
           CC.text('HP', 140, y + 4, '#6a5a50', { size: 9 });
@@ -1037,6 +1400,78 @@ CC.partyScreen = function (mode, opts) {
   });
 };
 
+// ---------- options: volumes, text speed, the creature that follows you, day and night ----------
+CC.optionsScreen = function () {
+  return new Promise(function (resolve) {
+    var o = CC.opts, sel = 0;
+    var rows = [
+      { label: 'Music', get: function () { return o.music; }, step: function (d) { o.music = CC.clamp(o.music + d, 0, 10); CC.setVolumes(); }, bar: true },
+      { label: 'Sound effects', get: function () { return o.sfx; }, step: function (d) { o.sfx = CC.clamp(o.sfx + d, 0, 10); CC.setVolumes(); CC.sfx('blip'); }, bar: true },
+      { label: 'Text speed', get: function () { return ['Slow', 'Normal', 'Fast'][o.text]; }, step: function (d) { o.text = CC.clamp(o.text + d, 0, 2); } },
+      { label: 'Creature follows you', get: function () { return o.follower ? 'On' : 'Off'; }, step: function () { o.follower = !o.follower; } },
+      { label: 'Day and night', get: function () { return o.daynight === 'clock' ? 'Clock' : 'Always day'; }, step: function () { o.daynight = o.daynight === 'clock' ? 'day' : 'clock'; } },
+      { label: 'Done' },
+    ];
+    var close = function () { CC.saveOpts(); CC.sfx('back'); CC.pop(scr); resolve(); };
+    var scr = {
+      name: 'options', opaque: true,
+      update: function () {
+        if (CC.repeat('down')) { sel = (sel + 1) % rows.length; CC.sfx('blip'); }
+        if (CC.repeat('up')) { sel = (sel + rows.length - 1) % rows.length; CC.sfx('blip'); }
+        var r = rows[sel], d = CC.repeat('right') ? 1 : CC.repeat('left') ? -1 : 0;
+        if (d && r.step) { r.step(d); if (!r.bar) CC.sfx('blip'); }
+        if (CC.input.pressed.a) { if (!r.step) close(); else { r.step(1); CC.sfx('blip'); } }
+        if (CC.input.pressed.b || CC.input.pressed.start) close();
+      },
+      draw: function () {
+        CC.rect(0, 0, 240, 160, '#3a4a7a');
+        for (var yy = 0; yy < 160; yy += 8) CC.rect(0, yy, 240, 4, '#36456f');
+        CC.text('Options', 120, 8, '#ffffff', { size: 14, align: 'center', shadow: '#1a2440' });
+        CC.box(10, 30, 220, 116);
+        rows.forEach(function (r, i) {
+          var y = 38 + i * 17, on = i === sel;
+          if (on) CC.rect(14, y - 2, 212, 15, '#fff2c8');
+          CC.text(r.label, 26, y, '#2a2230');
+          if (on) CC.cursor(17, y + 2);
+          if (!r.get) return;
+          if (r.bar) {
+            for (var b = 0; b < 10; b++) CC.rect(146 + b * 7, y + 3, 5, 7, b < r.get() ? '#48a8e8' : '#c8bca8');
+          } else CC.text('< ' + r.get() + ' >', 186, y, '#6a3a2a', { align: 'center' });
+        });
+        CC.text('Left / right to change, B to close.', 120, 148, '#e8ecff', { size: 9, align: 'center' });
+      },
+    };
+    CC.push(scr);
+  });
+};
+
+// after a level-up: what each stat gained, then (press A) the new totals
+CC.statPanel = function (m, before, after) {
+  return new Promise(function (resolve) {
+    var t0 = CC.time, totals = false, rows = [['HP', 'hp'], ['Attack', 'atk'], ['Defense', 'def'], ['Speed', 'spd']];
+    var scr = {
+      name: 'statpanel',
+      update: function () {
+        if (CC.time - t0 < 0.25 || !(CC.input.pressed.a || CC.input.pressed.b)) return;
+        CC.sfx('blip');
+        if (!totals) { totals = true; t0 = CC.time; } else { CC.pop(scr); resolve(); }
+      },
+      draw: function () {
+        var k = CC.ease(CC.clamp((CC.time - t0) / 0.15, 0, 1)), x = 132 + (totals ? 0 : (1 - k) * 110), y = 6;
+        CC.box(x, y, 104, 62);
+        CC.text(CC.mon.name(m) + ' Lv ' + m.lv, x + 8, y + 4, '#6a3a2a', { size: 9 });
+        rows.forEach(function (r, i) {
+          var yy = y + 17 + i * 11, d = after[r[1]] - before[r[1]];
+          CC.text(r[0], x + 8, yy, '#2a2230', { size: 9 });
+          if (totals) CC.num(String(after[r[1]]), x + 96, yy + 2, '#2a2230', 'right');
+          else CC.text('+' + d, x + 96, yy, d > 0 ? '#2a9a3a' : '#8a7a70', { size: 9, align: 'right' });
+        });
+      },
+    };
+    CC.push(scr);
+  });
+};
+
 CC.summary = function (m) {
   return new Promise(function (resolve) {
     var scr = {
@@ -1045,7 +1480,7 @@ CC.summary = function (m) {
       draw: function () {
         var sp = CC.mon.sp(m), st = CC.mon.stats(m), col = CC.TYPE_COLORS[sp.types[0]];
         CC.rect(0, 0, 240, 160, col[2]); CC.rect(0, 0, 96, 160, col[1]);
-        CC.drawSprite(CC.creatureSprite(m.id), 48, 84, { sy: 1 + Math.sin(CC.time * 3) * 0.03 });
+        CC.drawSprite(CC.creatureSprite(m.id, m.shiny), 48, 84, { sy: 1 + Math.sin(CC.time * 3) * 0.03 });
         CC.text(sp.name, 8, 92, '#ffffff', { shadow: '#00000060' });
         CC.text('Lv ' + m.lv, 8, 104, '#ffffff', { size: 9, shadow: '#00000060' });
         var bx = 8; sp.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 116) + 2; });
@@ -1078,8 +1513,9 @@ CC.ITEMS = {
   master: { name: 'Master Cube', price: 0, cube: 999, icon: 'ui/cube-master', info: 'The legendary cube. It never fails.' },
   potion: { name: 'Potion', price: 60, heal: 30, icon: 'items/potion', info: 'Restores 30 HP to one creature.' },
   superpotion: { name: 'Super Potion', price: 180, heal: 80, icon: 'items/super-potion', info: 'Restores 80 HP to one creature.' },
-  tonic: { name: 'Tonic', price: 320, heal: 150, icon: 'items/tonic', info: 'Restores 150 HP to one creature.' },
-  fulltonic: { name: 'Full Tonic', price: 700, heal: 999, cure: true, icon: 'items/full-tonic', info: 'Restores all HP and cures any status.' },
+  megapotion: { name: 'Mega Potion', price: 450, heal: 150, icon: 'items/mega-potion', info: 'Restores 150 HP to one creature.' },
+  tonic: { name: 'Tonic', price: 300, pp: 10, icon: 'items/tonic', info: 'Restores 10 PP to each of a creature\'s moves.' },
+  fulltonic: { name: 'Full Tonic', price: 1200, heal: 999, pp: 999, cure: true, icon: 'items/full-tonic', info: 'Restores all HP and PP and cures any status.' },
   cureherb: { name: 'Cure Herb', price: 100, cure: true, icon: 'items/cure-herb', info: 'Cures sleep, poison, burn, freeze or shock.' },
   revive: { name: 'Revive', price: 900, revive: true, icon: 'items/revive', info: 'Wakes a fainted creature with half its HP.' },
   sunshard: { name: 'Sun Shard', price: 0, shard: true, icon: 'items/sun-shard', info: 'A warm golden shard. Some creatures evolve when they touch it.' },
@@ -1100,10 +1536,10 @@ CC.bagScreen = async function () {
       if (CC.MAPS[CC.state.map].indoors) { await CC.say('Timberowl can\'t fit in here. Try it outside!'); continue; }
       CC.sfx('select'); await CC.say('You blew the Wooden Whistle. Timberowl swoops down!'); await CC.flyScreen(); return;
     }
-    if (it.heal || it.cure || it.revive || it.shard) {
+    if (CC.usable(k)) {
       var i = await CC.partyScreen('pick', { title: 'Use a ' + it.name + ' on...' });
       if (i < 0) continue;
-      var m = CC.state.party[i], max = CC.mon.maxHp(m), used = CC.useItemOn(k, m);
+      var m = CC.state.party[i], used = CC.useItemOn(k, m);
       if (typeof used === 'string') { await CC.say(used); continue; }
       if (!CC.dev.infItems) CC.state.bag[k]--;
       if (it.shard) { await CC.evolveScene(m); continue; }
@@ -1112,31 +1548,46 @@ CC.bagScreen = async function () {
   }
 };
 
-// what an item does to a creature: a string says why it can't be used, else { text }
-CC.useItemOn = function (k, m) {
+// items you use on a creature (from the Bag on the map, or in battle where shards don't work)
+CC.usable = function (k, inBattle) {
+  var it = CC.ITEMS[k];
+  return !!(it.heal || it.cure || it.revive || it.pp || (it.shard && !inBattle));
+};
+function ppFull(m) { return m.moves.every(function (x) { return x.pp >= CC.MOVES[x.id].pp; }); }
+// why an item would do nothing to this creature (a line to say), or null if it works
+CC.itemProblem = function (k, m) {
   var it = CC.ITEMS[k], max = CC.mon.maxHp(m), name = CC.mon.name(m);
-  if (it.shard) {
-    var e = CC.CREATURES[m.id].evo;
-    if (!e || e.at !== k) return 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.';
-    return { text: '' };
-  }
-  if (it.revive) {
-    if (m.hp > 0) return name + ' hasn\'t fainted.';
-    m.hp = Math.ceil(max / 2); m.status = null; return { text: name + ' woke up!' };
-  }
+  if (it.shard) { var e = CC.CREATURES[m.id].evo; return !e || e.at !== k ? 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.' : null; }
+  if (it.revive) return m.hp > 0 ? name + ' hasn\'t fainted.' : null;
   if (m.hp <= 0) return 'A ' + it.name + ' can\'t wake a fainted creature.';
-  if (it.heal && m.hp >= max && !(it.cure && m.status)) return name + ' is already at full HP.';
-  if (!it.heal && !m.status) return name + ' is feeling fine.';
+  var helps = (it.heal && m.hp < max) || (it.cure && m.status) || (it.pp && !ppFull(m));
+  if (helps) return null;
+  if (it.pp && !it.heal) return name + '\'s moves are already full of PP.';
+  return it.heal ? name + ' is already at full HP.' : name + ' is feeling fine.';
+};
+// uses it: a string says why it can't be used, else { text, hp } (hp: how much was healed)
+CC.useItemOn = function (k, m) {
+  var problem = CC.itemProblem(k, m);
+  if (problem) return problem;
+  var it = CC.ITEMS[k], max = CC.mon.maxHp(m), name = CC.mon.name(m);
+  if (it.shard) return { text: '' };
+  if (it.revive) { m.hp = Math.ceil(max / 2); m.status = null; m.sleep = 0; return { text: name + ' woke up!', hp: m.hp }; }
   var before = m.hp, parts = [];
   if (it.heal) { m.hp = Math.min(max, m.hp + it.heal); if (m.hp > before) parts.push('got back ' + (m.hp - before) + ' HP'); }
+  if (it.pp && !ppFull(m)) {
+    m.moves.forEach(function (x) { x.pp = Math.min(CC.MOVES[x.id].pp, x.pp + it.pp); });
+    parts.push(it.pp >= 999 ? 'got all its PP back' : 'got back some PP');
+  }
   if (it.cure && m.status) { m.status = null; m.sleep = 0; parts.push('is cured'); }
-  return { text: name + ' ' + parts.join(' and ') + '.' };
+  var said = parts.length > 1 ? parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1] : parts[0];
+  return { text: name + ' ' + said + '!', hp: m.hp - before };
 };
 
 // a shop: stock is a list of item keys; who is the shopkeeper
 CC.shopScreen = async function (stock, who) {
   who = who || 'Pip';
-  stock = stock || ['cube', 'potion'].concat(CC.state.flags.trial1 ? ['great', 'superpotion', 'cureherb'] : []).concat(CC.state.flags.trialCave ? ['tonic'] : []);
+  var f = CC.state.flags;
+  stock = stock || ['cube', 'potion'].concat(f.trial1 ? ['great', 'superpotion', 'cureherb'] : []).concat(f.trialForest ? ['tonic'] : []).concat(f.trialCave ? ['megapotion', 'revive'] : []);
   while (true) {
     var c = await CC.menu(stock.map(function (k) { return { label: CC.ITEMS[k].name, right: CC.ITEMS[k].price + 'c', icon: CC.ITEMS[k].icon }; }),
       { title: 'Coins: ' + CC.state.coins, w: 140, x: 96, y: 8 });
@@ -1681,6 +2132,12 @@ function drawLegendTile(g, t, x, y, map) {
   }
   if (!e) return legendGround(g, lg, x, y);
   if (e.prop) { legendGround(g, lg, x, y); return standOnTile(g, CC.img(e.prop), x, y, e.h || 14); }
+  var single = e.tile && CC.img(e.tile);
+  if (single) { // a tile that is its own picture (not in the atlas)
+    var fl = hash(x * 3 + 1, y) < 0.5;
+    g.save(); g.translate(x * TP + (fl ? TP : 0), y * TP); g.scale(fl ? -1 : 1, 1); g.drawImage(single, 0, 0, TP, TP); g.restore();
+    return true;
+  }
   if (e.under) legendGround(g, lg, x, y);
   return piece(e, t === ',' || t === 'r' || t === '~' ? 2 : 1) || legendGround(g, lg, x, y);
 }
@@ -1894,7 +2351,10 @@ CC.world = {
     this.px = x * T; this.py = y * T; this.moving = null;
     this.npcs = (CC.NPCS[mapId] || []);
     if (!this.map.indoors) { s.visited = s.visited || {}; s.visited[mapId] = 1; }
-    this.banner = this.map.indoors ? null : { text: this.map.name, t: 2.2 };
+    this.banner = this.map.indoors ? null : { text: this.map.name, t: 2.4, stone: { cave: 1, ruins: 1, spire: 1 }[mapId] };
+    if (CC.music) CC.music.play(CC.mapTrack(mapId));
+    this.fieldFx = null;
+    CC.followReset(this);
   },
   refresh: function () { CC.buildMapPicture(this.mapId); },
 
@@ -1951,7 +2411,7 @@ CC.world = {
       this.stepAnim += dt * speed;
       if (mv.k >= 1) {
         this.moving = null; s.x = mv.tx; s.y = mv.ty; this.px = s.x * T; this.py = s.y * T;
-        this.afterStep();
+        this.afterStep(mv);
       } else { this.px = CC.lerp(mv.fx, mv.tx, mv.k) * T; this.py = CC.lerp(mv.fy, mv.ty, mv.k) * T; return; }
       if (this.busy) return;
     }
@@ -1972,11 +2432,13 @@ CC.world = {
     var b = this.buildingAt(nx, ny);
     if (b && b.door[0] === nx && b.door[1] === ny && dir === 'up') { var self = this; this.run(function () { return CC.enterDoor(self.mapId, b.id); }); return; }
     if (this.solidAt(nx, ny)) { if (!this.bumped || CC.time - this.bumped > 0.3) { CC.sfx('bump'); this.bumped = CC.time; } return; }
-    this.moving = { fx: s.x, fy: s.y, tx: nx, ty: ny, k: 0 };
+    this.moving = { fx: s.x, fy: s.y, tx: nx, ty: ny, k: 0, dir: dir, run: !!inp.held.b };
+    CC.followStep(s.x, s.y);
   },
 
-  afterStep: function () {
+  afterStep: function (mv) {
     var s = CC.state; s.steps++;
+    if (mv) CC.fieldStep(this, { x: mv.fx, y: mv.fy, dir: mv.dir }, mv.run);
     if (this.cooldown > 0) this.cooldown--;
     var trig = (CC.TRIGGERS[this.mapId] && CC.TRIGGERS[this.mapId](s.x, s.y)) || (CC.trainerSight && CC.trainerSight(this.mapId, s.x, s.y));
     if (trig) { this.run(trig); return; }
@@ -1993,6 +2455,7 @@ CC.world = {
     var s = CC.state, d = CC.DIRS[s.dir], fx = s.x + d[0], fy = s.y + d[1];
     var deco = (this.map.decor || []).find(function (o) { return o.x === fx && o.y === fy; });
     if (deco && deco.chest) { this.run(function () { return CC.openChest(deco); }); return; }
+    if (CC.followerAt(fx, fy) && !this.npcAt(fx, fy)) { this.run(CC.talkToFollower); return; }
     // talking across a counter
     var n = this.npcAt(fx, fy) || (deco && deco.counter && this.npcAt(fx + d[0], fy + d[1]));
     if (!n && deco && deco.talk) { this.run(function () { return CC.useFurniture(deco); }); return; }
@@ -2023,6 +2486,7 @@ CC.world = {
     var lgd = this.map.legend && CC.LEGENDS[this.map.legend];
     CC.rect(0, 0, CC.W, CC.H, this.map.indoors ? '#120b08' : lgd && lgd.backdrop || '#2a6e34');
     g.drawImage(pic, 0, 0, pic.width, pic.height, -cx, -cy, pic.width / R, pic.height / R);
+    CC.drawFieldMarks(this, cx, cy);
     // water glints
     var rows = this.map.rows;
     for (var y = Math.max(0, Math.floor(cy / T)); y < Math.min(rows.length, Math.ceil((cy + CC.H) / T)); y++) {
@@ -2034,14 +2498,15 @@ CC.world = {
     }
     // people, sorted by y
     var who = this.npcs.filter(function (n) { return !n.when || n.when(); }).map(function (n) {
-      var p = self.npcPos(n), fr = n.mv ? [0, 1, 2, 1][Math.floor(n.mv.k * 4) % 4] : 1;
+      var p = self.npcPos(n), fr = n.mv ? Math.floor(n.mv.k * 4) % 4 : 1;
       return { y: p[1], draw: function () {
         self.drawPerson(n, n.dir || 'down', p[0], p[1], fr);
         if (n.emote) { var em = CC.img('ui/emote-' + n.emote), ex = self.screenX(p[0] + 8), ey = self.screenY(p[1] - 22) - Math.abs(Math.sin(CC.time * 10)) * 2; if (em) g.drawImage(em, ex - 7, ey - 9, 14, 14 * em.height / em.width); }
       } };
     });
-    var frame = this.moving ? [0, 1, 2, 1][Math.floor(this.stepAnim * 2.2) % 4] : 1;
+    var frame = this.moving ? Math.floor(this.stepAnim * 2.2) % 4 : 1;
     var landing = this.arrive ? (CC.time - this.arrive) / 1.1 : 2;
+    if (CC.followerShown()) { var fp = CC.followerPos(this); who.push({ y: fp[1] - 0.5, draw: function () { CC.drawFollower(self, fp[0], fp[1]); } }); }
     if (landing >= 0.45) who.push({ y: this.py, draw: function () { self.drawPerson(null, s.dir, self.px, self.py, frame); } });
     who.sort(function (a, b) { return a.y - b.y; }).forEach(function (o) { o.draw(); });
     // the patch of grass shaking before something jumps out of it
@@ -2056,7 +2521,7 @@ CC.world = {
       var h = this.hop, k = CC.clamp(h.k, 0, 1), arc = Math.sin(k * Math.PI) * 18;
       var hx = this.screenX(h.x * T + 8), hy = this.screenY(h.y * T + 14);
       g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(hx, hy, 6, 2, 0, 0, Math.PI * 2); g.fill();
-      CC.drawSprite(CC.creatureSprite(h.id), hx, hy - arc, { scale: 0.34 + k * 0.08, sy: 1 + Math.sin(CC.time * 20) * 0.08 * (1 - k), id: h.id });
+      CC.drawSprite(CC.creatureSprite(h.id, h.shiny), hx, hy - arc, { scale: 0.34 + k * 0.08, sy: 1 + Math.sin(CC.time * 20) * 0.08 * (1 - k), id: h.id });
     }
     // after Fly: the big bird swoops down, drops you off, and flies away
     if (landing < 1) {
@@ -2067,6 +2532,7 @@ CC.world = {
       if (landing > 0.44 && landing < 0.5) for (var q = 0; q < 6; q++) CC.fx.add({ x: lx + CC.rand(-8, 8), y: ly + 12, vx: CC.rand(-30, 30), vy: CC.rand(-15, -5), life: 0.4, kind: 'dust', size: 4 });
     } else this.arrive = null;
     this.drawAmbient(cx, cy);
+    CC.drawDaylight(this, cx, cy);
     if (this.emote) {
       var ex = this.screenX(this.px + 8), ey = this.screenY(this.py - 22) - Math.abs(Math.sin(CC.time * 10)) * 2, em = CC.img('ui/emote-exclaim');
       if (em) g.drawImage(em, ex - 7, ey - 9, 14, 14 * em.height / em.width);
@@ -2074,11 +2540,7 @@ CC.world = {
     }
     if (this.map.indoors) this.drawIndoorLight(cx, cy);
     if (this.banner) { this.banner.t -= CC.dt || 0; if (this.banner.t <= 0) this.banner = null; }
-    if (this.banner) {
-      var a = Math.min(1, this.banner.t * 2, (2.2 - this.banner.t) * 4);
-      g.globalAlpha = a; var bw = CC.textWidth(this.banner.text) + 20;
-      CC.box(6, 6, bw, 20); CC.text(this.banner.text, 16, 10); g.globalAlpha = 1;
-    }
+    if (this.banner) CC.drawPlaceSign(this.banner);
   },
 
   // Life on the map, all in code: chimney smoke, butterflies, lantern glow, and cloud shadows drifting over.
@@ -2259,23 +2721,25 @@ CC.world = {
       CC.drawSprite(CC.creatureSprite(npc.creature), fx, fy - 2 - Math.abs(Math.sin(CC.time * 1.5)) * 2, { scale: 0.42, sy: 1 + Math.sin(CC.time * 2.4) * 0.03, id: npc.creature });
       return;
     }
-    var sheet = npc ? npc.sheet && CC.img('walk/' + npc.sheet) : CC.img('walk/' + (CC.state.look || 'player-a'));
+    // frame here is the walk phase: 0 to 3 while walking, 1 when standing
+    var key = CC.walkKey(npc), sheet = key && CC.img('walk/' + key);
     var art = npc && npc.art && CC.img('people/' + npc.art);
     if (sheet) {
-      var cw = sheet.width / 3, ch = sheet.height / 4, row = { down: 0, left: 1, right: 2, up: 3 }[dir], k = 27 / ch;
-      var bounce = (npc ? npc.mv : this.moving) && frame !== 1 ? -0.5 : 0;
-      g.drawImage(sheet, frame * cw, row * ch, cw, ch, Math.round(fx - cw * k / 2), Math.round(fy - ch * k + bounce), cw * k, ch * k);
+      CC.drawWalker(g, sheet, key, dir, frame, !!(npc ? npc.mv : this.moving), fx, fy);
     } else if (art) {
       var hgt = npc.h || 26, kk = hgt / art.height;
       var hop = npc.hop ? Math.max(0, 1 - (CC.time - npc.hop) / 0.35) : 0;
       var breathe = 1 + Math.sin(CC.time * 2.2 + npc.x * 1.7) * 0.018;
-      g.save(); g.translate(Math.round(fx), Math.round(fy - Math.sin(hop * Math.PI) * 4));
-      var shift = hop ? npc.flip : Math.sin(CC.time * 0.35 + npc.x * 2.3 + npc.y) > 0.55;
+      // people without a walk sheet step with a little bounce and sway, facing the way they go
+      var step = npc.mv ? Math.abs(Math.sin(npc.mv.k * Math.PI * 2)) * 1.5 : 0, sway = npc.mv ? Math.sin(npc.mv.k * Math.PI * 2) * 0.05 : 0;
+      g.save(); g.translate(Math.round(fx), Math.round(fy - Math.sin(hop * Math.PI) * 4 - step));
+      if (sway) g.rotate(sway);
+      var shift = npc.mv ? npc.dir === 'left' : hop ? npc.flip : Math.sin(CC.time * 0.35 + npc.x * 2.3 + npc.y) > 0.55;
       if (shift) g.scale(-1, 1);
       g.drawImage(art, -art.width * kk / 2, -art.height * kk * breathe, art.width * kk, art.height * kk * breathe);
       g.restore();
     } else {
-      var code = CC.person(npc ? npc.look : 'player', dir, frame === 1 ? 0 : 1);
+      var code = CC.person(npc ? npc.look : 'player', dir, [0, 1, 2, 1][frame] === 1 ? 0 : 1);
       g.drawImage(code, Math.round(fx - 12), Math.round(fy - 23));
     }
     // standing in tall grass hides the feet
@@ -2360,14 +2824,19 @@ CC.wildEncounter = async function (key) {
   for (var i = 0; i < 10; i++) CC.fx.add({ x: w.screenX(hx * T + 8), y: w.screenY(hy * T + 10), vx: CC.rand(-40, 40), vy: CC.rand(-60, -20), life: 0.5, kind: 'grass', color: CC.pick(rc), size: 4, grav: 160, spin: 8 });
   w.emote = true; CC.sfx('encounter');
   await CC.sleep(0.35);
-  w.hop = { id: roll.id, x: hx, y: hy, k: 0 };
+  // about 1 in 160 wild creatures is shiny (the SHINY code makes the next one shiny)
+  var shiny = CC.dev.shinyNext || Math.random() < 1 / 160;
+  CC.dev.shinyNext = false;
+  w.hop = { id: roll.id, x: hx, y: hy, k: 0, shiny: shiny };
   await CC.tween(0.45, function (k) { w.hop.k = k; });
   w.grassFx = null;
   await CC.sleep(0.25);
   w.emote = false;
   await CC.battleTransition();
   w.hop = null;
-  await CC.startBattle({ wild: CC.mon.make(roll.id, roll.lv) });
+  var wild = CC.mon.make(roll.id, roll.lv);
+  if (shiny) wild.shiny = true;
+  await CC.startBattle({ wild: wild });
 };
 
 // bars sweep in from both sides, flashing, then the battle starts
@@ -2390,18 +2859,26 @@ CC.battleTransition = function () {
 };
 
 // ---------- the field menu ----------
+// menu icons from ui/menu-icon-1 to 8 (the polish pack) when they're there
+var MENU_ICON = { Party: 1, Bag: 2, Log: 3, Vault: 4, Fly: 5, Save: 6, Options: 7, Close: 8 };
 CC.fieldMenu = async function () {
+  var start = 0;
   while (true) {
-    var items = ['Party', 'Bag'];
+    var items = ['Party', 'Bag', 'Log'];
     if (CC.state.flags.vaultKey) items.push('Vault');
     if (CC.state.flags.fly && !CC.MAPS[CC.state.map].indoors) items.push('Fly');
-    items.push('Save', 'Close');
-    var c = await CC.menu(items, { x: 158, y: 6, w: 76, startCloses: true });
+    items.push('Save', 'Options', 'Close');
+    var hasIcons = !!CC.img('ui/menu-icon-1');
+    var c = await CC.menu(items.map(function (it) { return hasIcons ? { label: it, icon: 'ui/menu-icon-' + MENU_ICON[it] } : it; }),
+      { x: hasIcons ? 146 : 158, y: 6, w: hasIcons ? 90 : 76, startCloses: true, start: start });
     var pick = items[c];
     if (c < 0 || pick === 'Close') return;
+    start = c;
     if (pick === 'Party') await CC.partyScreen('field');
     if (pick === 'Bag') await CC.bagScreen();
+    if (pick === 'Log') await CC.creatureLog();
     if (pick === 'Vault') await CC.vaultScreen();
+    if (pick === 'Options') await CC.optionsScreen();
     if (pick === 'Fly') { await CC.flyScreen(); return; }
     if (pick === 'Save') {
       var seen = Object.keys(CC.state.seen).length, caught = Object.keys(CC.state.caught).length;
@@ -2411,6 +2888,261 @@ CC.fieldMenu = async function () {
     }
   }
 };
+
+</script>
+<script>/* 05b-field.js */
+// Life on the field, part two: walking that reads as walking, the creature that follows you, footprints, dust and
+// ripples, day and night, and the sign that slides in with each new place's name.
+var CC = window.CC || (window.CC = {});
+
+(function () {
+  // ---------- walking ----------
+  // The walk sheets have 3 frames a row. Front and back already step (stride, feet together, other stride), but the
+  // side rows are three strides, so they glide. Until the 4-frame side strips (walk/side-<who>, facing left) arrive,
+  // the "feet together" frame is made here: the legs of a stride are pulled in under the hips, row by row.
+  var passCache = {};
+  function passingFrame(sheet, key, row) {
+    var k = key + row;
+    if (passCache[k]) return passCache[k];
+    var cw = Math.floor(sheet.width / 3), ch = Math.floor(sheet.height / 4);
+    var src = CC.makeCanvas(cw, ch), sx = src.getContext('2d');
+    sx.drawImage(sheet, cw, row * ch, cw, ch, 0, 0, cw, ch);
+    var d = sx.getImageData(0, 0, cw, ch).data, rows = [];
+    var top = ch, bottom = -1;
+    for (var y = 0; y < ch; y++) {
+      var l = -1, r = -1;
+      for (var x = 0; x < cw; x++) if (d[(y * cw + x) * 4 + 3] > 40) { if (l < 0) l = x; r = x; }
+      rows.push([l, r]);
+      if (l >= 0) { top = Math.min(top, y); bottom = y; }
+    }
+    var out = CC.makeCanvas(cw, ch), o = out.getContext('2d');
+    o.imageSmoothingEnabled = false;
+    if (bottom < 0) return (passCache[k] = src);
+    var legTop = bottom - Math.round((bottom - top) * 0.3);
+    // the middle of the body just above the legs
+    var sum = 0, n = 0;
+    for (var yy = Math.max(top, legTop - 5); yy < legTop; yy++) if (rows[yy][0] >= 0) { sum += (rows[yy][0] + rows[yy][1]) / 2; n++; }
+    var mid = n ? sum / n : cw / 2;
+    o.drawImage(src, 0, 0, cw, legTop, 0, -1, cw, legTop); // the body, a pixel higher
+    for (var ly = legTop; ly <= bottom; ly++) {
+      var span = rows[ly];
+      if (span[0] < 0) continue;
+      var w = span[1] - span[0] + 1, nw = Math.max(3, Math.round(w * 0.55));
+      o.drawImage(src, span[0], ly, w, 1, Math.round(mid - nw / 2), ly - 1, nw, 1);
+      if (ly === bottom) o.drawImage(src, span[0], ly, w, 1, Math.round(mid - nw / 2), ly, nw, 1); // the soles stay on the ground
+    }
+    return (passCache[k] = out);
+  }
+  // draws a walking person from their sheet; phase 0..3 steps through a walk, 1 when standing still
+  CC.drawWalker = function (g, sheet, key, dir, phase, moving, fx, fy) {
+    var cw = sheet.width / 3, ch = sheet.height / 4, row = { down: 0, left: 1, right: 2, up: 3 }[dir], k = 27 / ch;
+    var side = dir === 'left' || dir === 'right', strip = side && CC.img('walk/side-' + key);
+    if (strip) { // the real 4-frame side walk, facing left (mirrored for right)
+      var sw = strip.width / 4, sk = 27 / strip.height, f = moving ? phase : 1;
+      g.save(); g.translate(Math.round(fx), Math.round(fy)); if (dir === 'right') g.scale(-1, 1);
+      g.drawImage(strip, f * sw, 0, sw, strip.height, -sw * sk / 2, -strip.height * sk, sw * sk, strip.height * sk);
+      g.restore();
+      return;
+    }
+    if (side && (!moving || phase % 2 === 1)) {
+      var pf = passingFrame(sheet, key, row);
+      g.drawImage(pf, 0, 0, pf.width, pf.height, Math.round(fx - cw * k / 2), Math.round(fy - ch * k), cw * k, ch * k);
+      return;
+    }
+    var frame = side ? (phase === 0 ? 0 : 2) : [0, 1, 2, 1][phase];
+    var bounce = moving && frame !== 1 ? -0.5 : 0;
+    g.drawImage(sheet, frame * cw, row * ch, cw, ch, Math.round(fx - cw * k / 2), Math.round(fy - ch * k + bounce), cw * k, ch * k);
+  };
+  // which walk sheet a person uses: the player's look, an NPC's sheet, or any person whose art has one
+  CC.walkKey = function (npc) {
+    if (!npc) return CC.state.look || 'player-a';
+    if (npc.sheet) return npc.sheet;
+    return npc.art && CC.img('walk/' + npc.art) ? npc.art : null;
+  };
+
+  // ---------- the creature that follows you ----------
+  // It trails one step behind: whenever you step, it steps into the tile you just left.
+  var fol = { x: 0, y: 0, fx: 0, fy: 0, k: 1, dir: 'down', on: false, heart: 0 };
+  CC.follower = fol;
+  function lead() {
+    var i = CC.firstHealthy();
+    return i >= 0 ? CC.state.party[i] : null;
+  }
+  CC.followReset = function (w) {
+    var s = CC.state, back = CC.DIRS[{ up: 'down', down: 'up', left: 'right', right: 'left' }[s.dir] || 'up'];
+    var bx = s.x + back[0], by = s.y + back[1];
+    var free = w.map && !w.solidAt(bx, by) && !w.exitAt(bx, by);
+    fol.x = fol.fx = free ? bx : s.x; fol.y = fol.fy = free ? by : s.y; fol.k = 1; fol.dir = s.dir; fol.on = free;
+  };
+  CC.followStep = function (fromX, fromY) {
+    fol.fx = fol.x; fol.fy = fol.y; fol.x = fromX; fol.y = fromY; fol.k = 0;
+    var dx = fol.x - fol.fx, dy = fol.y - fol.fy;
+    if (dx || dy) fol.dir = dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
+    fol.on = true;
+  };
+  CC.followerShown = function () { return CC.opts.follower && fol.on && !!lead() && !(CC.world.arrive); };
+  CC.followerAt = function (x, y) { return CC.followerShown() && fol.x === x && fol.y === y; };
+  // where it is drawn (between tiles while it walks)
+  CC.followerPos = function (w) {
+    var k = w.moving ? w.moving.k : 1;
+    if (fol.k < 1) fol.k = k;
+    return [CC.lerp(fol.fx, fol.x, fol.k) * 16, CC.lerp(fol.fy, fol.y, fol.k) * 16];
+  };
+  CC.drawFollower = function (w, px, py) {
+    var m = lead(), g = CC.g;
+    if (!m) return;
+    var fx = w.screenX(px) + 8, fy = w.screenY(py) + 14;
+    if (fx < -30 || fy < -10 || fx > CC.W + 30 || fy > CC.H + 40) return;
+    var walking = fol.k < 1 && w.moving, hop = walking ? Math.abs(Math.sin(fol.k * Math.PI)) * 3 : Math.abs(Math.sin(CC.time * 2.2)) * 0.8;
+    g.fillStyle = 'rgba(0,0,0,0.2)'; g.beginPath(); g.ellipse(fx, fy + 1, 6 - hop * 0.4, 2, 0, 0, Math.PI * 2); g.fill();
+    var sp = CC.creatureSprite(m.id, m.shiny), body = CC.mon.sp(m).look.body;
+    var fly = body === 'ghost' || body === 'bird' ? 3 + Math.sin(CC.time * 3) * 1.5 : 0;
+    CC.drawSprite(sp, fx, fy - hop - fly, { scale: 0.3, flip: fol.dir === 'right', sy: 1 + (walking ? 0 : Math.sin(CC.time * 3) * 0.03), id: m.id + 'fol' });
+    if (fol.heart && CC.time - fol.heart < 1.2) {
+      var em = CC.img('ui/emote-heart'), ey = fy - 30 - (CC.time - fol.heart) * 6;
+      if (em) g.drawImage(em, fx - 6, ey, 12, 12 * em.height / em.width);
+    }
+    var tx = Math.round(px / 16), ty = Math.round(py / 16);
+    if (CC.tileAt(w.map, tx, ty) === ',') g.drawImage(w.map.picture, tx * 32, ty * 32 + 16, 32, 16, w.screenX(tx * 16), w.screenY(ty * 16 + 8), 16, 8);
+  };
+  var FOLLOW_LINES = [' looks up at you happily.', ' is sniffing the air.', ' hops around your feet.', ' seems to be enjoying the walk.', ' gives a happy little cry!', ' is keeping a lookout.'];
+  CC.talkToFollower = async function () {
+    var m = lead();
+    fol.heart = CC.time; CC.sfx('select');
+    var where = CC.world.map.legend, extra = { snow: ' is shivering a little.', desert: ' is panting in the heat.', cave: ' stays close to you in the dark.', ruins: ' keeps glancing up at the moon.' }[where];
+    await CC.say(CC.mon.name(m) + (extra && Math.random() < 0.5 ? extra : CC.pick(FOLLOW_LINES)));
+  };
+
+  // ---------- footprints, dust and ripples ----------
+  var PRINTS = { snow: 'rgba(90,115,160,0.6)', desert: 'rgba(130,88,40,0.5)' };
+  var DUST = { snow: ['#ffffff', '#e4eefa'], desert: ['#e8d0a0', '#d8b880'], cave: ['#8a8098', '#6a6278'], swamp: ['#6a5a3a', '#8a7a4a'] };
+  CC.fieldStep = function (w, from, running) {
+    var lg = w.map.legend, f = w.fieldFx || (w.fieldFx = { prints: [], ripples: [] });
+    if (PRINTS[lg]) {
+      f.prints.push({ x: from.x, y: from.y, dir: from.dir, t: CC.time, c: PRINTS[lg], alt: f.prints.length % 2 });
+      if (f.prints.length > 50) f.prints.shift();
+    }
+    if (running && !w.map.indoors) {
+      var cols = DUST[lg] || ['#e0d4b8', '#c8b898'];
+      for (var i = 0; i < 4; i++) CC.fx.add({ x: w.screenX(from.x * 16 + 8) + CC.rand(-4, 4), y: w.screenY(from.y * 16 + 14), vx: CC.rand(-12, 12), vy: -CC.rand(4, 14), life: 0.45, kind: 'dust', color: CC.pick(cols), size: CC.rand(2, 4) });
+    }
+    // stepping onto a dock or the boardwalk sends ripples out into the water beside it
+    var t = CC.tileAt(w.map, CC.state.x, CC.state.y);
+    if (t === 'd' || (t === ':' && lg === 'swamp')) {
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+        if (CC.tileAt(w.map, CC.state.x + d[0], CC.state.y + d[1]) === '~') f.ripples.push({ x: (CC.state.x + d[0]) * 16 + 8 - d[0] * 5, y: (CC.state.y + d[1]) * 16 + 9, t: CC.time });
+      });
+    }
+  };
+  // footprints go under everyone, so this is drawn right after the map picture
+  CC.drawFieldMarks = function (w, cx, cy) {
+    var f = w.fieldFx, g = CC.g;
+    if (!f) return;
+    var art = { snow: CC.img('fx/field-1'), desert: CC.img('fx/field-2') }[w.map.legend];
+    f.prints = f.prints.filter(function (p) { return CC.time - p.t < 8; });
+    f.prints.forEach(function (p) {
+      var a = 1 - (CC.time - p.t) / 8, x = p.x * 16 + 8 - cx, y = p.y * 16 + 11 - cy, side = p.dir === 'left' || p.dir === 'right';
+      g.globalAlpha = a;
+      if (art) { g.drawImage(art, x - 5, y - 5, 10, 10); g.globalAlpha = 1; return; }
+      g.fillStyle = p.c;
+      if (side) { g.fillRect(x - 5, y - 2 + (p.alt ? 2 : 0), 4, 2); g.fillRect(x + 1, y + (p.alt ? -2 : 0), 4, 2); }
+      else { g.fillRect(x - 3, y - 4 + (p.alt ? 4 : 0), 2, 4); g.fillRect(x + 1, y + (p.alt ? -4 : 0), 2, 4); }
+      g.globalAlpha = 1;
+    });
+    f.ripples = f.ripples.filter(function (r) { return CC.time - r.t < 0.9; });
+    f.ripples.forEach(function (r) {
+      var k = (CC.time - r.t) / 0.9;
+      g.strokeStyle = 'rgba(255,255,255,' + (0.7 * (1 - k)) + ')'; g.lineWidth = 1;
+      g.beginPath(); g.ellipse(r.x - cx, r.y - cy, 2 + k * 7, 1 + k * 3, 0, 0, Math.PI * 2); g.stroke();
+    });
+  };
+
+  // ---------- day and night (by the clock, unless Options says always day) ----------
+  // 0 = full day, 1 = full night; dusk and dawn fade between with a warm tint
+  CC.daylight = function () {
+    var forced = CC.dev.time;
+    if (forced === 'day' || (!forced && CC.opts.daynight !== 'clock')) return { night: 0, warm: 0 };
+    if (forced === 'night') return { night: 1, warm: 0 };
+    if (forced === 'dusk') return { night: 0.45, warm: 1 };
+    var d = new Date(), h = d.getHours() + d.getMinutes() / 60;
+    if (h >= 7 && h < 17) return { night: 0, warm: 0 };
+    if (h >= 17 && h < 19.5) { var k = (h - 17) / 2.5; return { night: k * 0.9, warm: Math.sin(k * Math.PI) }; }
+    if (h >= 5 && h < 7) { var k2 = (7 - h) / 2; return { night: k2 * 0.9, warm: Math.sin(k2 * Math.PI) * 0.7 }; }
+    return { night: 1, warm: 0 };
+  };
+  var OWN_LIGHT = { cave: 1, ruins: 1, spire: 1 }; // places with their own lighting
+  CC.drawDaylight = function (w, cx, cy) {
+    if (w.map.indoors || OWN_LIGHT[w.map.legend]) return;
+    var dl = CC.daylight(), g = CC.g, W = CC.W, H = CC.H;
+    if (!dl.night && !dl.warm) return;
+    var bright = CC.state.flags && CC.state.flags.moonRestored, n = dl.night * (bright ? 0.75 : 1);
+    g.save();
+    g.globalCompositeOperation = 'multiply';
+    if (dl.warm) { g.globalAlpha = dl.warm * 0.5; g.fillStyle = '#ff9a5a'; g.fillRect(0, 0, W, H); }
+    if (n) { g.globalAlpha = n * 0.92; g.fillStyle = '#3c466e'; g.fillRect(0, 0, W, H); }
+    g.globalCompositeOperation = 'lighter';
+    if (n) { g.globalAlpha = n; g.fillStyle = 'rgb(8,10,34)'; g.fillRect(0, 0, W, H); } // a blue night wash
+    if (dl.warm) { g.globalAlpha = dl.warm * 0.12; g.fillStyle = '#7a3010'; g.fillRect(0, 0, W, H); }
+    if (n > 0.2) {
+      var glow = function (x, y, r, col, a) {
+        var grd = g.createRadialGradient(x, y, 0, x, y, r);
+        grd.addColorStop(0, col + a + ')'); grd.addColorStop(1, col + '0)');
+        g.globalAlpha = 1; g.fillStyle = grd; g.fillRect(x - r, y - r, r * 2, r * 2);
+      };
+      var flick = 0.9 + Math.sin(CC.time * 9) * 0.05 + Math.sin(CC.time * 23) * 0.04;
+      (w.map.decor || []).forEach(function (d) { // lanterns
+        if (d.img !== 'props/village-props-18') return;
+        glow(d.x * 16 + 8 - cx - 3, (d.y + 1) * 16 - d.h + 7 - cy, 34, 'rgba(255,200,120,', 0.38 * n * flick);
+      });
+      w.map.buildings.forEach(function (b) { // lit doorways and windows
+        glow(b.door[0] * 16 + 8 - cx, b.door[1] * 16 + 8 - cy, 26, 'rgba(255,190,110,', 0.32 * n * flick);
+        if (b.smokeAt) glow(b.smokeAt[0] - cx, b.smokeAt[1] + 18 - cy, 14, 'rgba(255,170,90,', 0.15 * n);
+      });
+      glow(w.screenX(w.px + 8), w.screenY(w.py + 8), 46, 'rgba(160,170,220,', 0.16 * n); // a little light around you
+    }
+    g.restore();
+    if (n > 0.5 && !w.map.weather) w.fireflies(w.map.amb, '#e8f080', cx, cy, CC.dt || 0.016);
+  };
+
+  // ---------- the sign with the place's name ----------
+  CC.drawPlaceSign = function (b) {
+    var g = CC.g, art = CC.img(b.stone ? 'ui/region-sign-2' : 'ui/region-sign-1'), life = 2.4, age = life - b.t;
+    var drop = age < 0.35 ? CC.ease(age / 0.35) : b.t < 0.35 ? CC.ease(b.t / 0.35) : 1;
+    var w = Math.max(96, CC.textWidth(b.text) + 30), h = 24, x = Math.round(120 - w / 2), y = Math.round(-h - 4 + drop * (h + 10));
+    var swing = Math.sin(age * 6) * Math.max(0, 1 - age) * 0.04;
+    g.save(); g.translate(120, y - 6); g.rotate(swing); g.translate(-120, -(y - 6));
+    if (art) g.drawImage(art, x, y, w, h);
+    else if (b.stone) {
+      CC.rect(x, y, w, h, '#2a2834'); CC.rect(x + 1, y + 1, w - 2, h - 2, '#6a6878'); CC.rect(x + 2, y + 2, w - 4, 2, '#8a889a');
+      CC.rect(x + 2, y + h - 4, w - 4, 2, '#4a4858');
+      for (var i = 0; i < 3; i++) { CC.rect(x + 5, y + 6 + i * 5, 2, 2, '#6ab0ff'); CC.rect(x + w - 7, y + 6 + i * 5, 2, 2, '#6ab0ff'); }
+      CC.rect(x + 2, y + h - 3, 5, 2, '#5a8a4a'); CC.rect(x + w - 8, y + 1, 6, 2, '#5a8a4a');
+    } else {
+      CC.rect(x + 8, y - 12, 1, 13, '#8a6a3a'); CC.rect(x + w - 9, y - 12, 1, 13, '#8a6a3a'); // ropes
+      CC.rect(x, y, w, h, '#3a2412'); CC.rect(x + 1, y + 1, w - 2, h - 2, '#a8743a');
+      CC.rect(x + 1, y + 8, w - 2, 1, '#8a5a2a'); CC.rect(x + 1, y + 16, w - 2, 1, '#8a5a2a'); CC.rect(x + 2, y + 2, w - 4, 1, '#c8945a');
+      CC.rect(x + 4, y - 2, 6, 3, '#4f9a40'); CC.rect(x + 7, y - 3, 3, 2, '#6ab848'); CC.rect(x + w - 12, y - 2, 7, 3, '#4f9a40');
+    }
+    CC.text(b.text, 120, y + 6, b.stone ? '#e8ecff' : '#fff4dc', { align: 'center', shadow: b.stone ? '#2a2834' : '#5a3418' });
+    g.restore();
+  };
+
+  // ---------- the cave's hiding spots: glowing mushrooms instead of the blue moss that looked like water ----------
+  CC.FALLBACK['tiles/cave-mushroom-patch'] = function () {
+    var a = CC.IMG['tiles/cave'];
+    if (!a) return null;
+    var c = CC.makeCanvas(32, 32), x = c.getContext('2d');
+    x.drawImage(a, 0, 0, 32, 32, 0, 0, 32, 32); // plain floor
+    var moss = CC.makeCanvas(32, 32); moss.getContext('2d').drawImage(a, 32, 0, 32, 32, 0, 0, 32, 32);
+    x.globalAlpha = 0.85; x.drawImage(CC.hueShift(moss, -75, 0.75, -0.06), 0, 0); x.globalAlpha = 1;
+    [[7, 10], [20, 6], [14, 20], [25, 22], [5, 25]].forEach(function (p, i) { // small pale mushrooms
+      x.fillStyle = '#d8d0c0'; x.fillRect(p[0] + 1, p[1] + 2, 1, 3);
+      x.fillStyle = i % 2 ? '#c8fff0' : '#e8fff8'; x.fillRect(p[0] - 1, p[1], 5, 2); x.fillRect(p[0], p[1] - 1, 3, 1);
+      x.fillStyle = '#7ae8d0'; x.fillRect(p[0] - 1, p[1] + 1, 5, 1);
+    });
+    return c;
+  };
+})();
 
 </script>
 <script>/* 06-battle.js */
@@ -2441,6 +3173,7 @@ var CC = window.CC || (window.CC = {});
         bg: opts.bg || (CC.world.map && CC.world.map.spawns) || 'grassland',
         noCatch: opts.noCatch, noRun: opts.noRun, introText: opts.introText, boss: opts.boss,
       };
+      if (CC.music) CC.music.play(CC.battleTrack(opts));
       B.foe = side(B.foeTeam[0], true);
       B.ally = side(null, false);
       B.foe.scale = 0;
@@ -2449,6 +3182,7 @@ var CC = window.CC || (window.CC = {});
       CC.push(screen);
       battle().catch(function (e) { console.error(e); }).then(function (result) {
         CC.pop(screen); CC.fx.clear();
+        if (CC.music && CC.state) CC.music.play(CC.mapTrack(CC.state.map));
         var r = B.resolve; B = null; r(result);
       });
     });
@@ -2488,7 +3222,7 @@ var CC = window.CC || (window.CC = {});
 
   function drawMon(s) {
     if (!s.mon || s.scale <= 0) return;
-    var m = s.mon, sprite = CC.creatureSprite(m.id), sp = CC.mon.sp(m);
+    var m = s.mon, sprite = CC.creatureSprite(m.id, m.shiny), sp = CC.mon.sp(m);
     var t = CC.time + (s.foe ? 1.3 : 0);
     var frozen = m.status === 'freeze', asleep = m.status === 'sleep';
     var breathe = frozen ? 0 : Math.sin(t * (asleep ? 1.4 : 2.6)) * (asleep ? 0.04 : 0.028);
@@ -2503,7 +3237,8 @@ var CC = window.CC || (window.CC = {});
     CC.drawSprite(sprite, x, y + bob - (ghosty ? 2 : 0), {
       scale: size, flip: !s.foe, sx: s.sx * s.scale * (1 - breathe * 0.5) * (1 + low), sy: s.sy * s.scale * (1 + breathe), alpha: s.alpha,
       flash: s.flash, id: m.id + (s.foe ? 'f' : 'a'), wave: s.wave || ghosty, waveSpeed: ghosty && !s.wave ? 3 : 14,
-      overlay: frozen ? ['#9adcf0', 0.45] : s.overlay,
+      overlay: frozen ? ['#9adcf0', 0.45] : s.overlay || (s.levelGlow && CC.time - s.levelGlow < 0.9 ? ['#fff080', 0.6 * (1 - (CC.time - s.levelGlow) / 0.9)] : null),
+      dissolve: s.dissolve,
     });
     // status particles
     if (m.hp > 0 && Math.random() < 0.06) {
@@ -2527,12 +3262,16 @@ var CC = window.CC || (window.CC = {});
     CC.bar(x + 20, y + 18, w - 28, s.hpShown / max);
     if (ally) {
       CC.num(Math.ceil(s.hpShown) + '/' + max, x + w - 8, y + 23, '#2a2230', 'right');
-      var lo = CC.mon.xpFor(m.lv), hi = CC.mon.xpFor(m.lv + 1);
-      CC.rect(x + 6, y + h - 5, w - 12, 2, '#5a5060');
-      CC.rect(x + 6, y + h - 5, Math.round((w - 12) * CC.clamp((s.xpShown != null ? s.xpShown : m.xp) - lo, 0, hi - lo) / (hi - lo || 1)), 2, '#48a8e8');
+      var lo = CC.mon.xpFor(m.lv), hi = CC.mon.xpFor(m.lv + 1), bw = w - 30;
+      var xk = m.lv >= 50 ? 1 : CC.clamp((s.xpShown != null ? s.xpShown : m.xp) - lo, 0, hi - lo) / (hi - lo || 1);
+      CC.text('EXP', x + 6, y + h - 9, '#4878b8', { size: 7 });
+      CC.rect(x + 23, y + h - 7, bw + 2, 5, '#3a2a22'); CC.rect(x + 24, y + h - 6, bw, 3, '#5a5060');
+      CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 3, '#48a8e8'); CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 1, '#a8dcff');
+      if (s.xpShown != null) { var sw = (CC.time * 90) % (bw + 12) - 6; CC.g.globalAlpha = 0.6; CC.rect(x + 24 + CC.clamp(sw, 0, bw * xk), y + h - 6, 2, 3, '#ffffff'); CC.g.globalAlpha = 1; }
     } else if (CC.state.caught[m.id] && B.wild) {
       CC.drawCube(x + w - 54, y + 8, 5);
     }
+    if (m.shiny) { CC.g.save(); CC.drawParticle('sparkle', x + w - 3, y + 2, 4, '#f8e050'); CC.g.restore(); }
   }
 
   var screen = {
@@ -2564,13 +3303,33 @@ var CC = window.CC || (window.CC = {});
       g.restore();
       drawPlate(B.foe, 6, 8, false);
       drawPlate(B.ally, 124, 72, true);
+      drawPops();
       if (B.flashScreen > 0) { g.globalAlpha = Math.min(1, B.flashScreen); CC.rect(0, 0, 240, 160, B.flashColor || '#ffffff'); g.globalAlpha = 1; B.flashScreen -= CC.dt * 4; }
       if (B.intro < 1) { // the bars from the transition opening up
         for (var i = 0; i < 10; i++) { var w = CC.W * (1 - CC.ease(CC.clamp(B.intro * 1.6 - i * 0.06, 0, 1))); CC.rect(i % 2 ? CC.W - w : 0, i * 16, w, 16, '#1e1626'); }
       }
-      if (!CC.top().isDialog && CC.top() === screen) CC.box(0, 112, 240, 48);
+      var tp = CC.top();
+      if (tp === screen || (tp.name !== 'say' && !tp.opaque)) CC.box(0, 112, 240, 48); // menus and panels over the battle keep the text box under them
     },
   };
+
+  // ---------- pop-up words: CRITICAL!, SUPER EFFECTIVE!, LEVEL UP! ----------
+  function pop(text, x, y, color, size) {
+    B.pops = B.pops || [];
+    B.pops.push({ text: text, x: CC.clamp(x, 50, 190), y: y, color: color, size: size || 11, t: CC.time });
+  }
+  function drawPops() {
+    var g = CC.g;
+    B.pops = (B.pops || []).filter(function (p) { return CC.time - p.t < 1.2; });
+    B.pops.forEach(function (p) {
+      var k = CC.time - p.t, grow = k < 0.12 ? 1.7 - (k / 0.12) * 0.7 : 1, a = k > 0.85 ? 1 - (k - 0.85) / 0.35 : 1;
+      var size = Math.round(p.size * grow), y = Math.round(p.y - Math.min(k, 0.5) * 16);
+      g.globalAlpha = a;
+      [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [1, -1], [-1, 1]].forEach(function (o) { CC.text(p.text, p.x + o[0], y + o[1], '#1e1626', { size: size, align: 'center' }); });
+      CC.text(p.text, p.x, y, p.color, { size: size, align: 'center' });
+      g.globalAlpha = 1;
+    });
+  }
 
   // ---------- animation pieces ----------
   function hpTo(s, sec) {
@@ -2590,6 +3349,16 @@ var CC = window.CC || (window.CC = {});
     B.cube = null; s.flash = null;
     await CC.tween(0.2, function (k) { s.sy = 1 + Math.sin(k * Math.PI) * 0.15; s.sx = 1 - Math.sin(k * Math.PI) * 0.08; });
     s.sx = s.sy = 1;
+    if (s.mon.shiny) await shinyFx(s);
+  }
+  // a shiny creature arrives in a ring of sparkles
+  async function shinyFx(s) {
+    CC.sfx('shiny');
+    for (var i = 0; i < 8; i++) {
+      var a = i / 8 * Math.PI * 2;
+      CC.fx.add({ x: s.home.x + Math.cos(a) * 26, y: s.home.y - 28 + Math.sin(a) * 20, vx: Math.cos(a) * 14, vy: Math.sin(a) * 14, life: 0.9, kind: 'sparkle', color: i % 2 ? '#f8e050' : '#ffffff', size: 5 });
+    }
+    await CC.sleep(0.7);
   }
   async function withdraw(s) {
     s.flash = '#ffffff';
@@ -2667,15 +3436,19 @@ var CC = window.CC || (window.CC = {});
   }
   async function statFx(s, up) {
     CC.sfx(up ? 'statup' : 'statdown');
-    s.overlay = [up ? '#ff9a4a' : '#5a8ae0', 0.35];
-    for (var i = 0; i < 8; i++) CC.fx.add({ x: s.home.x + CC.rand(-18, 18), y: s.home.y - (up ? 4 : 52), vx: 0, vy: up ? -50 : 50, life: 0.6, kind: 'arrow', color: up ? '#ff8a3a' : '#5a8ae0', size: 6, rot: up ? 0 : Math.PI });
-    await CC.sleep(0.6);
+    for (var i = 0; i < 12; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y - (up ? CC.rand(0, 10) : CC.rand(46, 56)), vx: 0, vy: up ? -CC.rand(40, 70) : CC.rand(40, 70), life: 0.7, kind: 'arrow', color: CC.pick(up ? ['#ff8a3a', '#ffc070'] : ['#5a8ae0', '#9ac0ff']), size: CC.rand(5, 9), rot: up ? 0 : Math.PI });
+    await CC.tween(0.7, function (k) { s.overlay = [up ? '#ff9a4a' : '#5a8ae0', 0.15 + Math.abs(Math.sin(k * Math.PI * 3)) * 0.35]; });
     s.overlay = null;
   }
+  // fainting: the sprite comes apart into drifting pixels of its own colors
   async function faintAnim(s) {
     CC.sfx('faint');
-    await CC.tween(0.5, function (k) { s.oy = k * 40; s.alpha = 1 - k; s.sy = 1 - k * 0.3; });
-    s.scale = 0; s.oy = 0; s.alpha = 1; s.sy = 1;
+    var look = CC.mon.sp(s.mon).look || {}, cols = [look.main || '#ffffff', look.accent || '#ffffff', '#ffffff'];
+    await CC.tween(0.8, function (k) {
+      s.dissolve = k; s.oy = k * 6;
+      for (var i = 0; i < 2; i++) CC.fx.add({ x: s.home.x + CC.rand(-18, 18), y: s.home.y - CC.rand(6, 50) * (1 - k * 0.6), vx: CC.rand(-8, 8), vy: -CC.rand(18, 40), life: 0.7, kind: 'glow', color: CC.pick(cols), size: CC.rand(1, 2.2) });
+    });
+    s.scale = 0; s.oy = 0; s.alpha = 1; s.sy = 1; s.dissolve = 0;
   }
 
   // ---------- rules ----------
@@ -2699,6 +3472,7 @@ var CC = window.CC || (window.CC = {});
 
   var STATUS_TEXT = { burn: 'was burned!', freeze: 'was frozen solid!', shock: 'is shocked! It may be unable to move!', poison: 'was poisoned!', sleep: 'fell asleep!' };
   var STAT_NAME = { atk: 'Attack', def: 'Defense', spd: 'Speed', acc: 'accuracy' };
+  var STAT_SHORT = { atk: 'ATTACK', def: 'DEFENSE', spd: 'SPEED', acc: 'ACCURACY' };
 
   async function applyStatus(target, st, quiet) {
     if (target.mon.status || target.mon.hp <= 0) { if (!quiet) await CC.say('But it failed!'); return; }
@@ -2711,6 +3485,7 @@ var CC = window.CC || (window.CC = {});
     var cur = s.st[stat], next = CC.clamp(cur + n, -3, 3);
     if (next === cur) { await CC.say(nm(s) + '\'s ' + STAT_NAME[stat] + ' won\'t go any ' + (n > 0 ? 'higher!' : 'lower!')); return; }
     s.st[stat] = next;
+    pop(STAT_SHORT[stat] + (n > 0 ? (n > 1 ? ' UP UP' : ' UP') : (n < -1 ? ' DOWN DOWN' : ' DOWN')), s.home.x, s.home.y - 62, n > 0 ? '#ffa04a' : '#7aa8f0', 10);
     await statFx(s, n > 0);
     await CC.say(nm(s) + '\'s ' + STAT_NAME[stat] + (n > 1 ? ' rose sharply!' : n > 0 ? ' rose!' : n < -1 ? ' fell sharply!' : ' fell!'));
   }
@@ -2744,7 +3519,7 @@ var CC = window.CC || (window.CC = {});
     // accuracy
     if (move.acc && !(fx.self || fx.heal)) {
       var acc = move.acc * stageMult(user.st.acc);
-      if (Math.random() * 100 >= acc) { await CC.say(nm(user) + '\'s attack missed!'); return; }
+      if (Math.random() * 100 >= acc) { pop('MISS', target.home.x, target.home.y - 56, '#d8d0c8'); await CC.say(nm(user) + '\'s attack missed!'); return; }
     }
     await moveAnim(user, target, move);
     if (move.power) {
@@ -2753,6 +3528,10 @@ var CC = window.CC || (window.CC = {});
         var crit = Math.random() < (fx.crit ? 0.25 : 0.0625);
         var r = damage(user, target, move, crit);
         target.mon.hp = Math.max(0, target.mon.hp - r.dmg); total += r.dmg; last = r; n++;
+        if (crit) { pop('CRITICAL!', target.home.x, target.home.y - 62, '#ffe040', 12); B.flashScreen = 0.45; B.flashColor = '#ffffff'; }
+        else if (r.mult > 1 && h === 0) { pop('SUPER EFFECTIVE!', target.home.x, target.home.y - 62, '#ff8a3a'); B.flashScreen = 0.4; B.flashColor = CC.TYPE_COLORS[move.type] ? CC.TYPE_COLORS[move.type][0] : '#ffffff'; }
+        else if (r.mult === 0 && h === 0) pop('NO EFFECT', target.home.x, target.home.y - 56, '#a8b0b8', 9);
+        else if (r.mult < 1 && h === 0) pop('not very effective', target.home.x, target.home.y - 56, '#a8c0d0', 9);
         await Promise.all([hitFx(target, r.mult, crit, move.type), hpTo(target)]);
         if (crit) await CC.say('A critical hit!');
         if (h < hits - 1 && target.mon.hp > 0) await CC.sleep(0.1);
@@ -2820,7 +3599,7 @@ var CC = window.CC || (window.CC = {});
 
   function actionMenu() {
     return new Promise(function (resolve) {
-      var sel = 0, labels = ['Fight', 'Cube', 'Swap', 'Run'];
+      var sel = 0, labels = ['Fight', 'Bag', 'Swap', 'Run'];
       var scr = {
         name: 'action',
         update: function () {
@@ -2834,7 +3613,7 @@ var CC = window.CC || (window.CC = {});
           CC.box(124, 112, 116, 48, { fill: '#ffffff' });
           labels.forEach(function (l, i) {
             var x = 142 + (i % 2) * 50, y = 120 + Math.floor(i / 2) * 18;
-            var off = (i === 1 || i === 3) && !B.wild;
+            var off = i === 3 && (!B.wild || B.noRun);
             CC.text(l, x, y, off ? '#b0a498' : '#2a2230');
             if (i === sel) CC.cursor(x - 9, y + 2);
           });
@@ -2884,13 +3663,8 @@ var CC = window.CC || (window.CC = {});
         var mv = await fightMenu();
         if (mv) return { kind: 'move', move: mv };
       } else if (a === 1) {
-        if (!B.wild) { await CC.say('You can\'t catch another trainer\'s creature!'); continue; }
-        if (B.noCatch) { await CC.say(B.noCatch); continue; }
-        var have = CC.CUBE_KINDS.filter(function (k) { return CC.state.bag[k] > 0; });
-        if (!have.length) { await CC.say('You don\'t have any cubes!'); continue; }
-        if (have.length === 1) return { kind: 'cube', cube: have[0] };
-        var pick = await CC.menu(have.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + CC.state.bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Throw which?', y: 40 });
-        if (pick >= 0) return { kind: 'cube', cube: have[pick] };
+        var got = await battleBag();
+        if (got) return got;
       } else if (a === 2) {
         var i = await CC.partyScreen('battle', { active: B.allyIndex, title: 'Swap in which?' });
         if (i >= 0) return { kind: 'swap', index: i };
@@ -2900,6 +3674,54 @@ var CC = window.CC || (window.CC = {});
         return { kind: 'run' };
       }
     }
+  }
+
+  // The Bag in battle: a Cubes pocket and an Items pocket. Using an item takes your turn.
+  function count(keys) { return keys.reduce(function (n, k) { return n + (CC.state.bag[k] || 0); }, 0); }
+  async function battleBag() {
+    var bag = CC.state.bag, start = 0;
+    while (true) {
+      var cubes = CC.CUBE_KINDS.filter(function (k) { return bag[k] > 0; });
+      var items = Object.keys(CC.ITEMS).filter(function (k) { return CC.usable(k, true) && bag[k] > 0; });
+      var pocket = await CC.menu([
+        { label: 'Cubes', right: String(count(cubes)), icon: 'ui/cube' },
+        { label: 'Items', right: String(count(items)), icon: 'items/potion' },
+      ], { title: 'Bag', x: 128, y: 50, w: 108, start: start });
+      if (pocket < 0) return null;
+      start = pocket;
+      if (pocket === 0) {
+        if (!B.wild) { await CC.say('You can\'t catch another trainer\'s creature!'); continue; }
+        if (B.noCatch) { await CC.say(B.noCatch); continue; }
+        if (!cubes.length) { await CC.say('You don\'t have any cubes!'); continue; }
+        var pick = await CC.menu(cubes.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Throw which?', y: 30 });
+        if (pick >= 0) return { kind: 'cube', cube: cubes[pick] };
+        continue;
+      }
+      if (!items.length) { await CC.say('You don\'t have any items you can use in battle.'); continue; }
+      var info = function (i) { CC.box(0, 112, 240, 48); CC.wrap(CC.ITEMS[items[i]].info, 222, 10).slice(0, 2).forEach(function (l, j) { CC.text(l, 9, 119 + j * 15, '#2a2230'); }); };
+      var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, under: info });
+      if (c < 0) continue;
+      var k = items[c], i = await CC.partyScreen('pick', { title: 'Use a ' + CC.ITEMS[k].name + ' on...' });
+      if (i < 0) continue;
+      var problem = CC.itemProblem(k, CC.state.party[i]);
+      if (problem) { await CC.say(problem); continue; }
+      return { kind: 'item', item: k, index: i };
+    }
+  }
+  async function useItem(act) {
+    var m = CC.state.party[act.index], it = CC.ITEMS[act.item];
+    if (!CC.dev.infItems) CC.state.bag[act.item]--;
+    await CC.say('You used a ' + it.name + ' on ' + CC.mon.name(m) + '.', { auto: 0.3 });
+    var r = CC.useItemOn(act.item, m);
+    if (typeof r === 'string') { await CC.say(r); return; }
+    CC.sfx('heal');
+    if (m === B.ally.mon) {
+      var s = B.ally;
+      for (var i = 0; i < 14; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y - CC.rand(0, 40), vx: 0, vy: -CC.rand(20, 45), life: 0.8, kind: 'star', color: CC.pick(['#c8ffd0', '#ffffff', '#a8e8ff']), size: 3 });
+      s.overlay = ['#c8ffd0', 0.4];
+      await hpTo(s); s.overlay = null;
+    }
+    await CC.say(r.text);
   }
 
   // ---------- catching ----------
@@ -2938,8 +3760,12 @@ var CC = window.CC || (window.CC = {});
     if (caught) {
       CC.sfx('catch');
       for (var j = 0; j < 10; j++) CC.fx.add({ x: B.cube.x, y: B.cube.y, vx: CC.rand(-40, 40), vy: CC.rand(-70, -20), life: 0.8, kind: 'star', color: CC.pick(['#ffffff', '#f8e050', '#c88af8']), size: 4, grav: 120 });
-      B.cube.glow = 0.4; await CC.sleep(0.3); B.cube.glow = 0;
+      [-1, 0, 1].forEach(function (d) { CC.fx.add({ x: B.cube.x + d * 14, y: B.cube.y - 10 - (d ? 0 : 8), vx: d * 10, vy: -12, life: 1.3, kind: 'sparkle', color: d ? '#f8e050' : '#ffffff', size: d ? 6 : 8, fade: true }); });
+      CC.fx.add({ x: B.cube.x, y: B.cube.y - 4, vx: 0, vy: 0, life: 0.5, kind: 'ring', color: '#f8e050', size: 4, grow: 5 });
+      await CC.tween(0.3, function (k) { B.cube.y = f.home.y - 5 - Math.sin(k * Math.PI) * 6; B.cube.glow = 0.5 * Math.sin(k * Math.PI); });
+      B.cube.glow = 0;
       await CC.say('Gotcha! ' + CC.mon.name(f.mon) + ' was caught!');
+      await gainXp(f.mon);
       var where = CC.addCreature(f.mon);
       if (where === 'vault') await CC.say('Your party is full, so ' + CC.mon.name(f.mon) + ' was sent to the Cube Vault.');
       B.cube = null; f.oy = 0;
@@ -2955,31 +3781,41 @@ var CC = window.CC || (window.CC = {});
   }
 
   // ---------- winning and growing ----------
+  // XP goes to every creature that fought (and is still standing), split between them
   async function gainXp(foeMon) {
-    var s = B.ally, m = s.mon;
-    if (!m || m.hp <= 0 || m.lv >= 50) return;
-    var gain = Math.max(1, Math.floor(CC.mon.sp(foeMon).xpYield * foeMon.lv / 5 * (B.wild ? 1 : 1.5)));
-    await CC.say(nmShort(s) + ' gained ' + gain + ' XP!');
+    var who = Object.keys(B.fought).map(Number).filter(function (i) { var m = CC.state.party[i]; return m && m.hp > 0 && m.lv < 50; });
+    if (!who.length) return;
+    var total = Math.max(1, Math.floor(CC.mon.sp(foeMon).xpYield * foeMon.lv / 5 * (B.wild ? 1 : 1.5)));
+    var each = Math.max(1, Math.ceil(total / who.length));
+    for (var w = 0; w < who.length; w++) await grow(CC.state.party[who[w]], who[w], each);
+  }
+  async function grow(m, index, gain) {
+    var out = m === B.ally.mon, s = out ? B.ally : null, name = CC.mon.name(m);
+    await CC.say(name + ' gained ' + gain + ' XP!', out ? {} : { auto: 0.6 });
     var target = m.xp + gain;
     while (m.lv < 50) {
       var next = CC.mon.xpFor(m.lv + 1), from = m.xp, to = Math.min(target, next);
-      s.xpShown = from;
-      await CC.tween(0.5, function (k) { s.xpShown = CC.lerp(from, to, k); });
+      if (s) { s.xpShown = from; CC.sfx('xp'); await CC.tween(0.5, function (k) { s.xpShown = CC.lerp(from, to, k); }); }
       m.xp = to;
       if (m.xp < next) break;
       var before = CC.mon.stats(m);
       m.lv++;
       var after = CC.mon.stats(m);
-      m.hp += after.hp - before.hp; s.hpShown = m.hp;
-      B.leveled[CC.state.party.indexOf(m)] = true;
+      m.hp += after.hp - before.hp;
+      if (s) {
+        s.hpShown = m.hp; s.levelGlow = CC.time;
+        for (var i = 0; i < 14; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y, vx: 0, vy: -CC.rand(30, 70), life: 0.9, kind: 'star', color: CC.pick(['#f8e050', '#ffffff']), size: 3 });
+        pop('LEVEL UP!', s.home.x, s.home.y - 70, '#f8e050');
+      }
+      B.leveled[index] = true;
       CC.sfx('levelup');
-      for (var i = 0; i < 10; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y, vx: 0, vy: -CC.rand(30, 60), life: 0.8, kind: 'star', color: '#f8e050', size: 3 });
-      await CC.say(nmShort(s) + ' grew to Lv ' + m.lv + '!');
+      await CC.say(name + ' grew to Lv ' + m.lv + '!');
+      await CC.statPanel(m, before, after);
       var learn = CC.mon.newMovesAt(m.id, m.lv);
       for (var j = 0; j < learn.length; j++) await CC.learnMove(m, learn[j]);
     }
     if (m.lv >= 50) m.xp = CC.mon.xpFor(50);
-    s.xpShown = null;
+    if (s) s.xpShown = null;
   }
 
   async function allyFainted() {
@@ -2987,7 +3823,7 @@ var CC = window.CC || (window.CC = {});
     await CC.say(nmShort(B.ally) + ' fainted!');
     if (CC.firstHealthy() < 0) return false;
     var i = await CC.partyScreen('battle', { active: B.allyIndex, title: 'Send out which?', mustPick: true });
-    B.allyIndex = i; B.ally = side(CC.state.party[i], false);
+    B.allyIndex = i; B.ally = side(CC.state.party[i], false); B.fought[i] = true;
     await CC.say('Go, ' + nmShort(B.ally) + '!', { auto: 0.3 });
     await sendOut(B.ally);
     return true;
@@ -3002,6 +3838,7 @@ var CC = window.CC || (window.CC = {});
       await CC.tween(0.25, function (k) { B.foe.sy = 1 + Math.sin(k * Math.PI) * 0.2; B.foe.oy = -Math.sin(k * Math.PI) * 10; });
       if (B.boss) { CC.sfx('encounter'); B.shake = 6; CC.burst('Shadow', FOE.x, FOE.y - 20, 24, 70); }
       else CC.burst('Plant', FOE.x, FOE.y - 4, 10, 50, { kind: 'grass', grav: 150 });
+      if (B.foe.mon.shiny) await shinyFx(B.foe);
       await CC.say(B.introText || 'A wild ' + CC.mon.name(B.foe.mon) + ' jumped out!');
     } else {
       B.trainerX = 0;
@@ -3039,6 +3876,8 @@ var CC = window.CC || (window.CC = {});
         await CC.say('Couldn\'t get away!');
       } else if (act.kind === 'cube') {
         if (await throwCube(act.cube)) { await afterWin(); return 'caught'; }
+      } else if (act.kind === 'item') {
+        await useItem(act);
       } else if (act.kind === 'swap') {
         await CC.say('Come back, ' + nmShort(B.ally) + '!', { auto: 0.3 });
         await withdraw(B.ally);
@@ -3103,6 +3942,7 @@ var CC = window.CC || (window.CC = {});
   }
 
   async function afterWin() {
+    if (CC.music && !B.boss) CC.music.play('victory');
     var coins = B.wild ? B.foe.mon.lv * 4 : B.trainer.coins || 0;
     if (!B.wild) {
       B.trainerShown = true; B.trainerX = 80;
@@ -3121,6 +3961,91 @@ var CC = window.CC || (window.CC = {});
 })();
 
 </script>
+<script>/* 06b-vs.js */
+// The VS splash before trainer, guide, rival and boss battles: the two halves of the background slide in, you and
+// your opponent slide in from the sides, VS slams down, and their name plate slides in. bg/vs-<kind> and
+// ui/name-plate are used when they exist; otherwise everything is drawn in code.
+var CC = window.CC || (window.CC = {});
+
+(function () {
+  var VS_COLORS = { trainer: ['#1a3a8a', '#6ab0f0'], guide: ['#1e5a2a', '#e8b838'], rival: ['#b8281e', '#f8a020'], boss: ['#2a1250', '#101030'] };
+  // the split runs from (0, 120) up to (240, 40)
+  function upper(g) { g.beginPath(); g.moveTo(0, 0); g.lineTo(240, 0); g.lineTo(240, 40); g.lineTo(0, 120); g.closePath(); }
+  function lower(g) { g.beginPath(); g.moveTo(0, 120); g.lineTo(240, 40); g.lineTo(240, 160); g.lineTo(0, 160); g.closePath(); }
+  function outlined(text, x, y, color, size, edge) {
+    [[-2, 0], [2, 0], [0, -2], [0, 2], [-2, -2], [2, 2], [2, -2], [-2, 2]].forEach(function (o) { CC.text(text, x + o[0], y + o[1], edge || '#1e1626', { size: size, align: 'center' }); });
+    CC.text(text, x, y, color, { size: size, align: 'center' });
+  }
+
+  CC.vsIntro = function (opts) {
+    var kind = opts.vs || (opts.boss ? 'boss' : 'trainer'), cols = VS_COLORS[kind] || VS_COLORS.trainer, t0 = CC.time, hit = false;
+    var tr = opts.trainer, foeArt = tr && tr.art && (CC.img('people/' + tr.art + '-battle') || CC.img('people/' + tr.art));
+    var you = CC.img('people/' + (CC.state.look || 'player-a'));
+    var name = tr ? tr.name : opts.wild ? CC.mon.name(opts.wild) : '';
+    var lines = [];
+    for (var i = 0; i < 14; i++) lines.push([Math.random() * 160, Math.random() * 300, 40 + Math.random() * 80, 160 + Math.random() * 220]);
+    if (CC.music) CC.music.play(CC.battleTrack(opts));
+    return new Promise(function (resolve) {
+      var scr = {
+        name: 'vs', opaque: true,
+        update: function () {
+          var t = CC.time - t0;
+          if (t > 0.5 && !hit) { hit = true; CC.sfx('superhit'); }
+          if (t > 2.3 || (t > 0.8 && CC.input.pressed.a)) { CC.pop(scr); resolve(); }
+        },
+        draw: function () {
+          var g = CC.g, t = CC.time - t0, k = CC.ease(CC.clamp(t / 0.35, 0, 1)), k2 = CC.ease(CC.clamp((t - 0.15) / 0.35, 0, 1));
+          var shake = t > 0.5 && t < 0.75 ? Math.round(CC.rand(-3, 3)) : 0, bg = CC.img('bg/vs-' + kind);
+          CC.rect(0, 0, 240, 160, '#000');
+          g.save(); g.translate(shake, 0);
+          // the two halves slide in from opposite sides
+          g.save(); g.translate((1 - k) * 240, 0); upper(g);
+          if (bg) { g.clip(); g.drawImage(bg, 0, 0, 240, 160); } else { g.fillStyle = cols[0]; g.fill(); }
+          g.restore();
+          g.save(); g.translate(-(1 - k) * 240, 0); lower(g);
+          if (bg) { g.clip(); g.drawImage(bg, 0, 0, 240, 160); } else { g.fillStyle = cols[1]; g.fill(); }
+          g.restore();
+          if (!bg) { g.strokeStyle = '#ffffff'; g.lineWidth = 2; g.globalAlpha = k; g.beginPath(); g.moveTo(0, 120); g.lineTo(240, 40); g.stroke(); g.globalAlpha = 1; }
+          // speed lines
+          lines.forEach(function (l, i) {
+            var x = ((l[1] - t * l[3]) % 320 + 320) % 320 - 60;
+            g.globalAlpha = 0.35; CC.rect(x, l[0], l[2], 1, i % 3 ? '#ffffff' : cols[1]); g.globalAlpha = 1;
+          });
+          // your opponent: their battle art, or the boss creature, dark until a flash reveals it
+          if (foeArt) {
+            var fh = 74, fk = fh / foeArt.height;
+            g.drawImage(foeArt, 178 + (1 - k2) * 150 - foeArt.width * fk / 2, 84 - fh, foeArt.width * fk, fh);
+          } else if (opts.wild) {
+            var sp = CC.creatureSprite(opts.wild.id), lit = t > 0.95;
+            CC.drawSprite(lit ? sp : CC.tinted(sp, '#0a0618', 'vs'), 178 + (1 - k2) * 150, 94, { scale: 1.1, sy: 1 + Math.sin(CC.time * 2) * 0.02 });
+          }
+          if (you) { var yh = 78, yk = yh / you.height; g.drawImage(you, 58 - (1 - k2) * 150 - you.width * yk / 2, 158 - yh, you.width * yk, yh); }
+          // VS slams down
+          if (t > 0.45) {
+            var vk = CC.clamp((t - 0.45) / 0.15, 0, 1), size = Math.round(36 - vk * 14);
+            outlined('VS', 120, 64 - size / 2, kind === 'boss' ? '#d8b8ff' : '#fff4a0', size);
+          }
+          // the name plate
+          if (t > 0.6 && name) {
+            var pk = CC.ease(CC.clamp((t - 0.6) / 0.25, 0, 1)), plate = CC.img('ui/name-plate'), px = 126 + (1 - pk) * 130, py = 88;
+            if (plate) g.drawImage(plate, px, py, 110, 20);
+            else {
+              CC.rect(px, py, 110, 18, '#e8b838'); CC.rect(px + 1, py + 1, 108, 16, '#1a1a3a'); CC.rect(px + 2, py + 2, 106, 1, '#3a3a6a');
+              CC.rect(px - 3, py + 6, 4, 6, '#e8b838'); CC.rect(px + 109, py + 6, 4, 6, '#e8b838');
+            }
+            CC.text(name, px + 55, py + 4, '#ffffff', { size: 10, align: 'center' });
+          }
+          g.restore();
+          if (opts.wild && t > 0.9 && t < 1.1) { g.globalAlpha = 1 - (t - 0.9) / 0.2; CC.rect(0, 0, 240, 160, '#ffffff'); g.globalAlpha = 1; }
+          if (t > 2.1) { g.globalAlpha = CC.clamp((t - 2.1) / 0.2, 0, 1); CC.rect(0, 0, 240, 160, '#ffffff'); g.globalAlpha = 1; }
+        },
+      };
+      CC.push(scr);
+    });
+  };
+})();
+
+</script>
 <script>/* 07-story.js */
 // The opening: Home Village, Meadow Path and Grassland. People, signs, doors and the first story beats (the rest is in 15-story-full.js).
 var CC = window.CC || (window.CC = {});
@@ -3134,6 +4059,7 @@ function F() { return CC.state.flags; }
 
 // a battle that sends you back to the last Healing Hut if you lose (unless losing is part of the story)
 CC.fight = async function (opts) {
+  if ((opts.trainer || opts.boss) && !opts.noVs && CC.vsIntro) await CC.vsIntro(opts);
   var result = await CC.startBattle(opts);
   if (result === 'lose' && !opts.canLose) {
     await CC.fade(0.4, true);
@@ -3194,6 +4120,7 @@ CC.NPCS = {
         await CC.talk('Farmer Bramble', ['Howdy! I\'m Farmer Bramble, guide of the Grassland.', 'That fallen log is the only way into the Forest, and I only clear it for trainers who can handle the creatures out there.']);
         if (!(await CC.yesNo('Ready for my trail trial?', 'Farmer Bramble'))) { await CC.say('Come back when you\'re ready. The outpost will patch you up.', { who: 'Farmer Bramble' }); return; }
         var r = await CC.fight({
+          vs: 'guide',
           trainer: {
             name: 'Farmer Bramble', look: 'bramble', art: 'bramble', coins: 240,
             intro: 'My critters have been working the fields all morning. Show me what you\'ve got!',
@@ -3328,7 +4255,7 @@ async function willowHouse() {
     'Let\'s see whose creature is tougher. Battle me!',
   ]);
   var result = await CC.fight({
-    canLose: true, bg: 'village',
+    canLose: true, bg: 'village', vs: 'rival',
     trainer: {
       name: 'Juniper', look: 'juniper', art: 'juniper', coins: 100,
       winText: 'What?! I had the type advantage! Next time, I\'m winning.',
@@ -3406,7 +4333,8 @@ function starterSelect() {
 // ---------- title ----------
 CC.titleScreen = function () {
   return new Promise(function (resolve) {
-    var hasSave = CC.hasSave(), sel = hasSave ? 0 : 0, items = hasSave ? ['Continue', 'New Game'] : ['New Game'];
+    var hasSave = CC.hasSave(), sel = hasSave ? 0 : 0, items = (hasSave ? ['Continue', 'New Game'] : ['New Game']).concat(['Options']);
+    if (CC.music) CC.music.play('title');
     var critters = ['drizzlon', 'mossback', 'embroak', 'tuftail', 'bumblop', 'clovermouse'];
     // the secret: Up Up Down Down Left Right Left Right B A opens the dev code box
     var SECRET = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'b', 'a'], typed = [];
@@ -3418,6 +4346,8 @@ CC.titleScreen = function () {
         ['up', 'down', 'left', 'right', 'a', 'b'].forEach(function (k) { if (CC.input.pressed[k]) typed.push(k); });
         typed = typed.slice(-SECRET.length);
         if (CC.input.pressed.down || CC.input.pressed.up) { sel = (sel + 1) % items.length; CC.sfx('blip'); }
+        if (scr.busy) return;
+        if ((CC.input.pressed.a || CC.input.pressed.start) && items[sel] === 'Options') { CC.sfx('select'); scr.busy = true; CC.optionsScreen().then(function () { scr.busy = false; }); return; }
         if (CC.input.pressed.a || CC.input.pressed.start) { CC.sfx('select'); CC.pop(scr); resolve(items[sel]); }
       },
       draw: function () {
@@ -3644,7 +4574,7 @@ CC.CODES = [
     var id = creatureId(a[0]); if (!id) return 'No creature called "' + (a[0] || '') + '".';
     if (CC.firstHealthy() < 0) return 'You need a creature that can fight.';
     var lv = num(a[1], 1, 50, 5);
-    CC.dev.queue = function () { return CC.fight({ wild: CC.mon.make(id, lv) }); };
+    CC.dev.queue = function () { var m = CC.mon.make(id, lv); if (CC.dev.shinyNext) { m.shiny = true; CC.dev.shinyNext = false; } return CC.fight({ wild: m }); };
     return 'A wild ' + CC.CREATURES[id].name + ' is coming...';
   } },
   { words: ['TRIAL', 'TRIALS'], needsGame: true, help: 'TRIAL DONE (Bramble), TRIAL CAVE (every trial up to that region), TRIAL ALL, or TRIAL RESET', run: function (a) {
@@ -3667,6 +4597,10 @@ CC.CODES = [
     CC.state.flags.moonRestored = true; if (!CC.state.caught.lunarion) CC.state.flags.lunarionSpire = true;
     return 'The moon is whole again. GOTO SPIRE to climb the tower.';
   } },
+  { words: ['NIGHT', 'DAY', 'DUSK', 'CLOCK'], help: 'NIGHT / DAY / DUSK: force the time of day (CLOCK goes back to the real clock)', run: function (a, w) {
+    var t = (w || 'clock').toLowerCase(); CC.dev.time = t === 'clock' ? null : t; return t === 'clock' ? 'Back to the real clock.' : 'It is now ' + t + '.';
+  } },
+  { words: ['SHINY'], help: 'SHINY: the next wild creature is shiny', run: function () { CC.dev.shinyNext = true; return 'The next wild creature will be shiny.'; } },
   { words: ['DEX', 'LOG'], needsGame: true, help: 'DEX: mark every creature as seen', run: function () {
     CC.CREATURE_ORDER.forEach(function (id) { CC.state.seen[id] = 1; }); return 'All ' + CC.CREATURE_ORDER.length + ' creatures marked seen.';
   } },
@@ -3695,7 +4629,7 @@ CC.runCodes = function (text) {
     var w = words[0].toUpperCase(), code = CC.CODES.find(function (c) { return c.words.indexOf(w) >= 0; });
     if (!code) { out.push('"' + line.trim() + '": no such code. Type HELP.'); return; }
     if (code.needsGame && !CC.state) { CC.dev.pending.push(line.trim()); out.push(line.trim().toUpperCase() + ': will happen when your game starts.'); return; }
-    try { out.push(code.run(words.slice(1))); } catch (e) { out.push(w + ' failed: ' + e.message); }
+    try { out.push(code.run(words.slice(1), w)); } catch (e) { out.push(w + ' failed: ' + e.message); }
   });
   return out.join('\n');
 };
@@ -4327,7 +5261,7 @@ CC.LEGENDS = {
   cave: {
     rustle: ['#5ac8f0', '#3a8ee8', '#8ae0ff'],
     atlas: 'cave', ground: [0], dirtFrom: null, wall: true, backdrop: '#17141f', pathTint: 'rgba(150,140,170,0.16)',
-    ',': { i: [1] }, o: { i: [9, 10], solid: true }, x: { i: [8], solid: true, glow: '#5ac8f0' }, '*': { i: [10] }, '~': { i: [11], solid: true, glow: '#3a8ee8' },
+    ',': { i: [1], tile: 'tiles/cave-mushroom-patch', glow: '#7ae8c8' }, o: { i: [9, 10], solid: true }, x: { i: [8], solid: true, glow: '#5ac8f0' }, '*': { i: [10] }, '~': { i: [11], solid: true, glow: '#3a8ee8' },
   },
   desert: {
     rustle: ['#d8b070', '#b89050', '#e8d090'],
@@ -4872,7 +5806,7 @@ var CC = window.CC || (window.CC = {});
     if (F()[gd.flag]) { await CC.talk(gd.name, gd.lore.slice(0, 1).concat(['The way on is open. Good luck out there!'])); return; }
     await CC.talk(gd.name, gd.hello);
     if (!(await CC.yesNo('Ready for my trail trial?', gd.name))) { await CC.say('Come back when you\'re ready.', { who: gd.name }); return; }
-    var r = await CC.fight({ trainer: { name: gd.name, art: gd.art, look: gd.art, coins: gd.coins, intro: gd.intro, winText: gd.winText, loseText: gd.loseText, team: team(gd.team) } });
+    var r = await CC.fight({ vs: 'guide', trainer: { name: gd.name, art: gd.art, look: gd.art, coins: gd.coins, intro: gd.intro, winText: gd.winText, loseText: gd.loseText, team: team(gd.team) } });
     if (r !== 'win') return;
     F()[gd.flag] = true;
     CC.sfx('charm');
@@ -5010,7 +5944,7 @@ var CC = window.CC || (window.CC = {});
     faceEach(n);
     await CC.talk('Juniper', L.hi);
     var older = no >= 4;
-    var r = await CC.fight({ trainer: { name: 'Juniper', art: older ? 'juniper-older' : 'juniper', look: 'juniper', coins: 300 * no, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][no]) } });
+    var r = await CC.fight({ vs: 'rival', trainer: { name: 'Juniper', art: older ? 'juniper-older' : 'juniper', look: 'juniper', coins: 300 * no, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][no]) } });
     if (r !== 'win') { n.show = false; return; }
     F()['juniper' + no] = true;
     await CC.talk('Juniper', L.bye);
@@ -5064,7 +5998,7 @@ var CC = window.CC || (window.CC = {});
     } }];
     if (TOBIAS_FROM[k]) CC.NPCS[room].push({ x: 7, y: 4, art: 'tobias', h: 26, dir: 'left', talk: async function () {
       await CC.say('Tobias, traveling merchant! Finest gold-banded cubes this side of the dunes.', { who: 'Tobias' });
-      await CC.shopScreen(['ultra', 'great', 'superpotion', 'tonic', 'fulltonic', 'revive', 'cureherb'], 'Tobias');
+      await CC.shopScreen(['ultra', 'great', 'superpotion', 'megapotion', 'tonic', 'fulltonic', 'revive', 'cureherb'], 'Tobias');
       await CC.say('Pleasure doing business!', { who: 'Tobias' });
     } });
   });
@@ -5163,6 +6097,7 @@ var CC = window.CC || (window.CC = {});
     CC.state.dir = 'up';
     await CC.say('...');
     CC.sfx('boss');
+    if (CC.music) CC.music.play('boss');
     await CC.showStill('still-5', ['A huge shadow rises over the altar: a winged wolf, its crescent crest cracked and flickering.', 'Lunarion, guardian of the moon. Its eyes are wild with fear.'], {});
     if (jun) { jun.show = true; jun.x = 12; jun.y = 6; jun.dir = 'up'; }
     await CC.say('It\'s scared! Calm it down. You can do this!', { who: 'Juniper' });
@@ -5178,7 +6113,7 @@ var CC = window.CC || (window.CC = {});
     await CC.say('The shadow pours out of Lunarion like smoke and drifts away into the night.');
     await CC.say('Its crest mends with a bright chime. Silver light spills across the ruins!');
     var r2 = await CC.fight({
-      wild: CC.mon.make('lunarion', 40), bg: 'moon-altar', boss: true, canLose: true,
+      wild: CC.mon.make('lunarion', 40), bg: 'moon-altar', boss: true, canLose: true, noVs: true,
       introText: 'Lunarion, shining silver again, looks at you calmly. It seems to be waiting.',
     });
     if (r2 === 'caught') await CC.say('Lunarion is calm in its cube. You can feel moonlight humming inside it.');
@@ -5188,6 +6123,7 @@ var CC = window.CC || (window.CC = {});
       CC.healParty();
     }
     await CC.talk('Juniper', ['You did it! Look up!']);
+    if (CC.music) CC.music.play('credits');
     await CC.showStill('still-6', ['The moon shines full and bright again.', 'Back home, the villagers light lanterns, and creatures of every kind come out of the tall grass to see.'], { keepBlack: true });
     await credits();
     CC.unfade();
@@ -5207,6 +6143,7 @@ var CC = window.CC || (window.CC = {});
   }
   // the credits roll over the night sky with Lunarion flying across
   function credits() {
+    if (CC.music) CC.music.play('credits');
     return new Promise(function (resolve) {
       var t = 0, lines = [
         ['Creature Catch', 22], ['', 0], ['The Fading Moon', 14], ['', 0], ['', 0],
@@ -5250,14 +6187,14 @@ var CC = window.CC || (window.CC = {});
     var r = REMATCH[id];
     return { x: r[2], y: r[3], art: id, h: 26, dir: 'down', talk: async function () {
       if (!(await CC.yesNo('The view from up here is something, eh? Fancy a rematch? My team has grown too.', r[0]))) return;
-      var res = await CC.fight({ trainer: { name: r[0], art: id, look: id, coins: 1500, winText: 'Still the best. Come back anytime!', team: team(r[1]) } });
+      var res = await CC.fight({ vs: 'guide', trainer: { name: r[0], art: id, look: id, coins: 1500, winText: 'Still the best. Come back anytime!', team: team(r[1]) } });
       if (res === 'win') F()['rematch:' + id] = (F()['rematch:' + id] || 0) + 1;
     } };
   });
   CC.NPCS.spire.push({ x: 8, y: 1, art: 'juniper-older', h: 27, dir: 'down', talk: async function () {
     var L = rivalLines(6);
     await CC.talk('Juniper', F().juniper6 ? ['Back for more? Let\'s go!'] : L.hi);
-    var r = await CC.fight({ trainer: { name: 'Juniper', art: 'juniper-older', look: 'juniper', coins: 5000, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][6]) } });
+    var r = await CC.fight({ vs: 'rival', trainer: { name: 'Juniper', art: 'juniper-older', look: 'juniper', coins: 5000, winText: L.win, loseText: L.lose, team: team(RIVAL_TEAMS[F().starter || 'embroak'][6]) } });
     if (r === 'win') { if (!F().juniper6) { F().juniper6 = true; await CC.talk('Juniper', L.bye); } }
   } });
   CC.NPCS.spire.push({ x: 11, y: 1, creature: 'lunarion', h: 30, dir: 'down', when: function () { return F().lunarionSpire && !CC.state.caught.lunarion; }, talk: async function () {
@@ -5266,6 +6203,93 @@ var CC = window.CC || (window.CC = {});
     if (r === 'caught') F().lunarionSpire = false;
   } });
   CC.PORTRAITS['Ranger Oakley'] = 'oakley';
+})();
+
+</script>
+<script>/* 16-log.js */
+// The Creature Log: every creature you've seen or caught, in an old field journal. The left page shows the one
+// you're on (its picture, types and a field note); the right page is the list. A reads its full lore.
+// ui/creature-log-book is the journal art when it's there; otherwise the book is drawn in code.
+var CC = window.CC || (window.CC = {});
+
+(function () {
+  var PER_PAGE = 10;
+
+  function drawBook() {
+    var g = CC.g, art = CC.img('ui/creature-log-book');
+    if (art) { g.drawImage(art, 0, 0, 240, 160); return; }
+    CC.rect(0, 0, 240, 160, '#2a1a12');
+    CC.rect(3, 3, 234, 154, '#6a3a22'); CC.rect(5, 5, 230, 150, '#7a4a2a');
+    [[5, 5], [229, 5], [5, 149], [229, 149]].forEach(function (c) { CC.rect(c[0], c[1], 6, 6, '#c8a048'); }); // brass corners
+    // two pages and the fold between them
+    CC.rect(9, 9, 108, 142, '#f6ecd4'); CC.rect(123, 9, 108, 142, '#f6ecd4');
+    CC.rect(117, 9, 6, 142, '#e0d0b0'); CC.rect(119, 9, 2, 142, '#c8b48c');
+    g.fillStyle = 'rgba(160,130,90,0.18)';
+    for (var y = 22; y < 148; y += 11) { g.fillRect(126, y, 102, 1); }
+    g.fillStyle = 'rgba(90,60,30,0.12)'; g.fillRect(109, 9, 8, 142); g.fillRect(123, 9, 6, 142);
+    CC.rect(100, 2, 5, 16, '#b8302a'); CC.rect(100, 18, 2, 3, '#b8302a'); CC.rect(103, 18, 2, 3, '#b8302a'); // ribbon
+  }
+
+  CC.creatureLog = function () {
+    return new Promise(function (resolve) {
+      var ids = CC.CREATURE_ORDER, s = CC.state, sel = 0, busy = false;
+      var seen = function (id) { return s.seen[id] || s.caught[id]; };
+      var scr = {
+        name: 'log', opaque: true,
+        update: function () {
+          if (busy) return;
+          var n = ids.length;
+          if (CC.repeat('down')) { sel = (sel + 1) % n; CC.sfx('blip'); }
+          if (CC.repeat('up')) { sel = (sel + n - 1) % n; CC.sfx('blip'); }
+          if (CC.repeat('right')) { sel = Math.min(n - 1, sel + PER_PAGE); CC.sfx('blip'); }
+          if (CC.repeat('left')) { sel = Math.max(0, sel - PER_PAGE); CC.sfx('blip'); }
+          if (CC.input.pressed.b || CC.input.pressed.start) { CC.sfx('back'); CC.pop(scr); resolve(); return; }
+          if (CC.input.pressed.a) {
+            var id = ids[sel], lore = CC.LORE && CC.LORE[id];
+            if (!s.caught[id] || !lore) { CC.sfx('bump'); return; }
+            busy = true; CC.sfx('select');
+            CC.say(lore.lore).then(function () { busy = false; });
+          }
+        },
+        draw: function () {
+          var g = CC.g, id = ids[sel], c = CC.CREATURES[id], known = seen(id), got = s.caught[id];
+          drawBook();
+          // the left page: the creature
+          CC.text('No. ' + String(sel + 1).padStart(3, '0'), 63, 13, '#8a6a4a', { size: 9, align: 'center' });
+          CC.rect(20, 25, 86, 64, '#e8dcbc'); CC.rect(21, 26, 84, 62, '#fbf4e2');
+          g.strokeStyle = '#b89a6a'; g.lineWidth = 1; g.strokeRect(20.5, 25.5, 85, 63);
+          if (known) {
+            var sp = CC.creatureSprite(id, s.shinyCaught && s.shinyCaught[id]);
+            g.fillStyle = 'rgba(120,90,50,0.15)'; g.beginPath(); g.ellipse(63, 84, 20, 3, 0, 0, Math.PI * 2); g.fill();
+            CC.drawSprite(got ? sp : CC.tinted(sp, '#4a3a2a', 'logsil'), 63, 85, { scale: 0.78, sy: 1 + Math.sin(CC.time * 2.4) * 0.025, id: id });
+            CC.text(c.name, 63, 92, '#3a2418', { align: 'center' });
+            var bw = c.types.reduce(function (w, t) { return w + CC.textWidth(t.toUpperCase(), 8) + 17; }, 0), bx = 63 - bw / 2;
+            c.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 105) + 2; });
+            var note = got ? (CC.LORE && CC.LORE[id] ? CC.LORE[id].note : '') : 'Seen in the wild. Catch one to fill in this page.';
+            CC.wrap(note, 92, 8).slice(0, 3).forEach(function (l, i) { CC.text(l, 17, 118 + i * 9, '#6a4a30', { size: 8 }); });
+            if (got) CC.text('A: read more', 108, 140, '#a08060', { size: 8, align: 'right' });
+          } else {
+            CC.text('?', 63, 44, '#c8b48c', { size: 22, align: 'center' });
+            CC.text('Not seen yet', 63, 96, '#a08060', { align: 'center' });
+          }
+          // the right page: the list
+          var top = Math.floor(sel / PER_PAGE) * PER_PAGE;
+          CC.text('Seen ' + Object.keys(s.seen).length + '   Caught ' + Object.keys(s.caught).length, 176, 12, '#8a6a4a', { size: 8, align: 'center' });
+          for (var i = 0; i < PER_PAGE && top + i < ids.length; i++) {
+            var lid = ids[top + i], y = 24 + i * 12, on = top + i === sel;
+            if (on) { g.fillStyle = 'rgba(232,184,56,0.35)'; g.fillRect(125, y - 2, 104, 12); }
+            CC.text(String(top + i + 1).padStart(3, '0'), 136, y, '#a08060', { size: 8 });
+            CC.text(seen(lid) ? CC.CREATURES[lid].name : '- - - - -', 156, y, seen(lid) ? '#3a2418' : '#c0ac88', { size: 9 });
+            if (s.caught[lid]) CC.drawCube(222, y + 6, 4);
+            if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 214, y + 4, 3, '#e8b838'); g.restore(); }
+            if (on) CC.cursor(127, y + 2);
+          }
+          CC.text('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 176, 141, '#a08060', { size: 8, align: 'center' });
+        },
+      };
+      CC.push(scr);
+    });
+  };
 })();
 
 </script>
