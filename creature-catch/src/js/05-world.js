@@ -679,6 +679,13 @@ CC.world = {
     var landing = this.arrive ? (CC.time - this.arrive) / 1.1 : 2;
     if (landing >= 0.45) who.push({ y: this.py, draw: function () { self.drawPerson(null, s.dir, self.px, self.py, frame); } });
     who.sort(function (a, b) { return a.y - b.y; }).forEach(function (o) { o.draw(); });
+    // the patch of grass shaking before something jumps out of it
+    var gfx = this.grassFx, gimg = CC.img('fx/grass-spawn');
+    if (gfx && gimg) {
+      var gk = Math.min(1, (CC.time - gfx.t) / 0.25), gw = 22 * (0.6 + gk * 0.4), gh = gimg.height * gw / gimg.width;
+      var shake = Math.sin(CC.time * 40) * 1.5;
+      g.drawImage(gimg, this.screenX(gfx.x * T + 8) - gw / 2 + shake, this.screenY(gfx.y * T + 16) - gh, gw, gh);
+    }
     // a creature hopping out of the grass
     if (this.hop) {
       var h = this.hop, k = CC.clamp(h.k, 0, 1), arc = Math.sin(k * Math.PI) * 18;
@@ -875,11 +882,13 @@ CC.wildEncounter = async function (key) {
   var d = CC.DIRS[s.dir], hx = s.x + d[0], hy = s.y + d[1];
   if (CC.tileAt(w.map, hx, hy) !== ',') { hx = s.x; hy = s.y; }
   CC.sfx('rustle');
+  w.grassFx = { x: hx, y: hy, t: CC.time };
   for (var i = 0; i < 10; i++) CC.fx.add({ x: w.screenX(hx * T + 8), y: w.screenY(hy * T + 10), vx: CC.rand(-40, 40), vy: CC.rand(-60, -20), life: 0.5, kind: 'grass', color: CC.pick(['#5ab848', '#90e070', '#2f7a2a']), size: 4, grav: 160, spin: 8 });
   w.emote = true; CC.sfx('encounter');
   await CC.sleep(0.35);
   w.hop = { id: roll.id, x: hx, y: hy, k: 0 };
   await CC.tween(0.45, function (k) { w.hop.k = k; });
+  w.grassFx = null;
   await CC.sleep(0.25);
   w.emote = false;
   await CC.battleTransition();

@@ -2,6 +2,13 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
+## v6 (in progress, not delivered yet)
+- **Every creature has art now:** Mudgator, Mireling, Wispkin, Pebbleton, Bonecat and Moonlynx arrived in the repair pack.
+- **The grass-spawn picture** shakes in the tall grass before a creature jumps out.
+- **Fern** has her own art and portrait, and Bramble and Tinker have painted portraits.
+- **The Field Guide** shows art for all 67 creatures.
+- `docs/creature-catch-full-game-prompts.md`: the image pack for the rest of the game.
+
 ## v5
 - **The vampire line is 3 stages:** Fangling → Duskfang (Lv 33) → Rosferatu (Lv 42). Duskfang has its own art and stats.
 - **Fly follows the story rule:** you get the Wooden Whistle halfway through the game (after Dusty's Cave trial) and can only fly to places you've already been. It shows in your Bag as a key item. The `FLY` code opens every place on the map.

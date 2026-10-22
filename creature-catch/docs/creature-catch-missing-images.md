@@ -1,5 +1,7 @@
 # Creature Catch: Missing Images
 
+> **Done.** All 9 images arrived in the repair pack and are in the game. Every creature now has art. Next: `creature-catch-full-game-prompts.md`.
+
 These are all the images the game still needs, as of v5. Everything else from the five prompt files is already in the game.
 
 **Why they're missing:** pack 03 (Snow-Swamp-Night) arrived cut off at 6 MB. The first 6 images in it were recovered (Frostoat, Pengloo, Yetiny, Sleetle, Lilypadle, Wispeel). The rest weren't. The grass spawn effect was never in any pack.

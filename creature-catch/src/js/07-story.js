@@ -50,7 +50,7 @@ CC.NPCS = {
     { x: 5, y: 7, id: 'juniperIn', look: 'juniper', art: 'juniper', sheet: 'juniper', h: 26, dir: 'up', when: function () { return F().juniperIn; }, talk: function () {} },
   ],
   'hut-in': [{ x: 5, y: 2, look: 'hazel', art: 'hazel', h: 25, dir: 'down', talk: function () { return healingHut('Hazel', { map: 'hut-in', x: 5, y: 4 }); } }],
-  'outpost-in': [{ x: 4, y: 2, look: 'hazel', art: 'villager-7', h: 25, dir: 'down', talk: function () { return healingHut('Fern', { map: 'outpost-in', x: 4, y: 4 }); } }],
+  'outpost-in': [{ x: 4, y: 2, look: 'hazel', art: 'fern', h: 25, dir: 'down', talk: function () { return healingHut('Fern', { map: 'outpost-in', x: 4, y: 4 }); } }],
   'shop-in': [{ x: 4, y: 2, look: 'pip', art: 'pip', h: 24, dir: 'down', talk: async function () {
     await CC.say('Welcome to Pip\'s Cube Shop! Cubes, potions, all fresh.', { who: 'Pip' });
     await CC.shopScreen();
@@ -107,7 +107,7 @@ function B_moveAside() {
 // who speaks -> whose picture shows beside the dialog box
 CC.PORTRAITS = {
   'Elder Willow': 'willow', 'Juniper': 'juniper', 'Pip': 'pip', 'Hazel': 'hazel', 'Farmer Bramble': 'bramble',
-  'Tinker': 'tinker', 'Rosa': 'rosa', 'Ranger Oakley': 'oakley', 'Farm Kid': 'villager-2', 'Fern': 'villager-7',
+  'Tinker': 'tinker', 'Rosa': 'rosa', 'Ranger Oakley': 'oakley', 'Farm Kid': 'villager-2', 'Fern': 'fern',
 };
 
 CC.SIGNS = {

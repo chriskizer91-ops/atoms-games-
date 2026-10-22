@@ -295,12 +295,15 @@ def main(src):
         made.append(save(out, f'walk/{key}.png')); log('walk', key, [len(r) for r in rows])
     for who in ('player-a', 'player-b'):
         if f'{who}-back-view-throwing.png' in files: strip(f'{who}-back-view-throwing.png', f'throw/{who}.png', 6, 3)
+    if 'fern-full-body.png' in files: made.append(save(sprite(files['fern-full-body.png'], 13), 'people/fern.png'))
+    if 'bonus-grass-spawn-effect.png' in files: made.append(save(sprite(files['bonus-grass-spawn-effect.png'], 13), 'fx/grass-spawn.png'))
     if 'juniper-battle-pose.png' in files: made.append(save(sprite(files['juniper-battle-pose.png'], 13), 'people/juniper-battle.png'))
     # dialogue portraits: 4 faces a sheet
     for f, names in (('sheet-a-the-player-and-the-rival.png', ['player-a', 'player-b', 'juniper', 'juniper-cross']),
                      ('sheet-b-village.png', ['willow', 'hazel', 'pip', 'tobias']),
                      ('sheet-c-region-guides-1.png', ['oakley', 'gus', 'dusty', 'safi']),
-                     ('sheet-d-region-guides-2.png', ['frida', 'moss', 'corvin', 'rosa'])):
+                     ('sheet-d-region-guides-2.png', ['frida', 'moss', 'corvin', 'rosa']),
+                     ('portrait-sheet-e.png', ['bramble', 'tinker', 'fern', 'tobias-2'])):
         if f not in files: continue
         sheet, boxes = pieces(f, 6, 0.004)
         for n, b in zip(names, boxes):

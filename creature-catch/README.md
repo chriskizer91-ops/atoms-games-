@@ -66,5 +66,5 @@ node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.ht
   2. `creature-catch-handoff.md`: the full design.
   3. `creature-catch-roster.md`: every creature's stats, learnset, and moves (generated).
   4. `creature-catch-design-doc.md`: the first draft, partly replaced.
-  5. `creature-catch-missing-images.md`: the images still needed, with prompts.
+  5. `creature-catch-full-game-prompts.md`: the image pack for the rest of the game (`creature-catch-missing-images.md` is done).
   6. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).
