@@ -119,10 +119,11 @@ function learnset(types, profile, sig, kind) {
   if (t1 === 'Normal') {
     out = [[1, 'tackle'], [1, 'growl'], [4, BUFF[profile]], [9, sig], [14, BUFF2[profile]], [20, 'bodyslam'], [28, 'guardup']];
   } else {
+    // starters open with Tackle and Growl, so the first rival fight (Lv 5) isn't decided by type
     var starter = kind.indexOf('starter') === 0;
-    out = [[1, 'tackle'], [1, m1[0]], [4, BUFF[profile]], [8, m1[2]],
-      [12, t2 ? CC.TYPE_MOVES[t2][0] : 'growl'], [starter ? 11 : 16, sig], [20, m1[1]],
-      [26, t2 ? CC.TYPE_MOVES[t2][1] : 'bodyslam'], [34, BUFF2[profile]]];
+    out = [[1, 'tackle'], starter ? [1, 'growl'] : [1, m1[0]], [4, BUFF[profile]], starter ? [6, m1[0]] : null, [8, m1[2]],
+      [12, t2 ? CC.TYPE_MOVES[t2][0] : starter ? 'bodyslam' : 'growl'], [starter ? 11 : 16, sig], [20, m1[1]],
+      [26, t2 ? CC.TYPE_MOVES[t2][1] : 'bodyslam'], [34, BUFF2[profile]]].filter(Boolean);
   }
   var seen = {};
   return out.filter(function (e) { if (seen[e[1]]) return false; seen[e[1]] = 1; return true; })

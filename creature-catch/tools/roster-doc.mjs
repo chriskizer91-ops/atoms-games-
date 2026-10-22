@@ -33,7 +33,7 @@ L.push('| Profile | HP | Atk | Def | Spd |', '|---|---|---|---|---|');
 for (const [k, w] of Object.entries(CC.PROFILES)) L.push(`| ${k} | ${w.join(' | ')} |`);
 L.push('');
 L.push('- **Stats at a level:** `HP = floor(2 x base x Lv / 100) + Lv + 10`, other stats `floor(2 x base x Lv / 100) + 5`.');
-L.push('- **Learnset pattern:** Lv 1 Tackle + type basic, Lv 4 a stat buff, Lv 8 type utility, Lv 11 (starters) or 16 signature, Lv 12 second-type basic (or Growl), Lv 20 type strong, Lv 26 second-type strong (or Body Slam), Lv 34 another buff. Normal types: Tackle, Growl, buff, signature at 9, buff, Body Slam at 20. An evolved form keeps its line\'s moves and picks up its new type\'s moves on evolving.');
+L.push('- **Learnset pattern:** Lv 1 Tackle + type basic (starters: Tackle + Growl, with their type basic at Lv 6, so the first rival fight is even), Lv 4 a stat buff, Lv 8 type utility, Lv 11 (starters) or 16 signature, Lv 12 second-type basic (or Growl), Lv 20 type strong, Lv 26 second-type strong (or Body Slam), Lv 34 another buff. Normal types: Tackle, Growl, buff, signature at 9, buff, Body Slam at 20. An evolved form keeps its line\'s moves and picks up its new type\'s moves on evolving. A wild creature knows its two newest attacks plus its newest other moves, up to 4.');
 L.push('- **XP yield:** base total / 4, times the fainted creature\'s level / 5 (x1.5 against a trainer).', '');
 
 L.push('## Creatures', '');
