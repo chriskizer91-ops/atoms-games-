@@ -29,10 +29,12 @@ const js = fs.readdirSync(path.join(SRC, 'js')).filter((f) => f.endsWith('.js'))
 const scripts = js.map((f) => `<script>/* ${f} */\n${fs.readFileSync(path.join(SRC, 'js', f), 'utf8').replace(/<\/script/gi, '<\\/script')}\n</script>`).join('\n');
 const font = fs.readFileSync(path.join(SRC, 'fonts', 'PixelifySans.ttf')).toString('base64');
 
+const version = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf8').trim();
 const html = fs.readFileSync(path.join(SRC, 'shell.html'), 'utf8')
+  .replace('{{VERSION}}', version)
   .replace('{{FONT}}', () => font)
   .replace('{{ART}}', () => JSON.stringify(art))
   .replace('{{SCRIPTS}}', () => scripts);
 const out = path.join(ROOT, 'creature-catch.html');
 fs.writeFileSync(out, html);
-console.log(`wrote ${path.relative(process.cwd(), out)}: ${(html.length / 1024).toFixed(0)} KB (${Object.keys(art).length} art files, ${(artBytes / 1024).toFixed(0)} KB of art)`);
+console.log(`Creature Catch v${version}: wrote ${path.relative(process.cwd(), out)}: ${(html.length / 1024).toFixed(0)} KB (${Object.keys(art).length} art files, ${(artBytes / 1024).toFixed(0)} KB of art)`);

@@ -13,6 +13,14 @@ Open **`creature-catch.html`** in any browser. It's one file and works offline. 
 | X / Esc | B | Back. Hold it to run |
 | Enter | MENU | Party, Bag, Vault, Save |
 
+## Dev codes
+
+Press MENU, then Codes (or Up Up Down Down Left Right Left Right B A on the title screen). See `docs/creature-catch-dev-codes.md`.
+
+## Versions
+
+The current version is in `VERSION` and shows on the title screen. `CHANGELOG.md` lists what each version changed.
+
 ## What's in the first slice
 
 - **Home Village:** Elder Willow gives you your starter, Juniper picks the one that beats yours and battles you, Pip runs the cube shop, Hazel's Healing Hut heals you and holds the Cube Vault, and you can rest at home.

@@ -270,9 +270,15 @@ CC.titleScreen = function () {
   return new Promise(function (resolve) {
     var hasSave = CC.hasSave(), sel = hasSave ? 0 : 0, items = hasSave ? ['Continue', 'New Game'] : ['New Game'];
     var critters = ['drizzlon', 'mossback', 'embroak', 'tuftail', 'bumblop', 'clovermouse'];
+    // the secret: Up Up Down Down Left Right Left Right B A opens the dev code box
+    var SECRET = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'b', 'a'], typed = [];
     var scr = {
-      opaque: true,
+      name: 'title', opaque: true,
       update: function () {
+        var lead = SECRET.slice(0, -1).join();
+        if (CC.input.pressed.a && typed.slice(-SECRET.length + 1).join() === lead) { typed = []; CC.sfx('catch'); CC.openCodes(); return; }
+        ['up', 'down', 'left', 'right', 'a', 'b'].forEach(function (k) { if (CC.input.pressed[k]) typed.push(k); });
+        typed = typed.slice(-SECRET.length);
         if (CC.input.pressed.down || CC.input.pressed.up) { sel = (sel + 1) % items.length; CC.sfx('blip'); }
         if (CC.input.pressed.a || CC.input.pressed.start) { CC.sfx('select'); CC.pop(scr); resolve(items[sel]); }
       },
@@ -281,6 +287,8 @@ CC.titleScreen = function () {
         if (art) {
           g.drawImage(art, 0, 0, 240, 160);
           CC.text('Creature Catch', 120, 10, '#ffffff', { size: 22, align: 'center', shadow: '#5a2a6e' });
+          CC.text(CC.VERSION || '', 234, 150, '#ffffff', { size: 9, align: 'right', shadow: '#000000' });
+          if (CC.dev.pending.length) CC.text('Codes waiting: ' + CC.dev.pending.length, 6, 150, '#fff4a0', { size: 9, shadow: '#000000' });
           g.globalAlpha = 0.85; CC.box(120 - 40, 104, 80, items.length * 14 + 8); g.globalAlpha = 1;
           items.forEach(function (it, i) {
             CC.text(it, 120, 108 + i * 14, '#2a2230', { align: 'center' });
@@ -352,6 +360,8 @@ CC.newGame = async function () {
   CC.world.enter('village', 4, 12, 'down');
   CC.push(CC.world);
   await CC.world.run(async function () {
+    await CC.applyPendingCodes();
+    if (CC.state.flags.starter) return; // a STARTER code skipped the intro
     await CC.say('Welcome to Home Village! Creatures live in the wild all around here, hiding in the tall grass.');
     await CC.say('Arrows (or the pad) to walk, A (Z key) to talk, B (X key) to go back or run, and MENU (Enter) for your party and saves.');
     await CC.say('Elder Willow lives in the big house with the mossy roof. Go and say hello!');
@@ -363,4 +373,5 @@ CC.continueGame = function () {
   if (s.flags.trial1) B_moveAside();
   CC.world.enter(s.map, s.x, s.y, s.dir);
   CC.push(CC.world);
+  CC.world.run(CC.applyPendingCodes);
 };

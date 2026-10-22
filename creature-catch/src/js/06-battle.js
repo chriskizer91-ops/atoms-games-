@@ -269,6 +269,7 @@ var CC = window.CC || (window.CC = {});
     var mult = move.type ? CC.typeMult(move.type, CC.mon.sp(target.mon).types) : 1;
     var stab = move.type && CC.mon.sp(user.mon).types.indexOf(move.type) >= 0 ? 1.25 : 1;
     var dmg = (((2 * L / 5 + 2) * move.power * a.atk / d.def) / 50 + 2) * mult * stab * CC.rand(0.9, 1) * (crit ? 1.5 : 1);
+    if (CC.dev.oneHit && user === B.ally) return { dmg: target.mon.hp, mult: mult };
     return { dmg: mult === 0 ? 0 : Math.max(1, Math.floor(dmg)), mult: mult };
   }
 
@@ -475,6 +476,7 @@ var CC = window.CC || (window.CC = {});
   // ---------- catching ----------
   var RARITY_BONUS = { common: 25, uncommon: 10, rare: -5, veryrare: -15 };
   function catchChance(m) {
+    if (CC.dev.catchAll) return 100;
     var max = CC.mon.maxHp(m), st = m.status;
     var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[CC.RARITY[m.id]] || 0);
     return CC.clamp(c, 5, 95);

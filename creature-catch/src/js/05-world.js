@@ -498,7 +498,7 @@ CC.world = {
     if (trig) { this.run(trig); return; }
     if (CC.tileAt(this.map, s.x, s.y) === ',') {
       for (var i = 0; i < 4; i++) CC.fx.add({ x: this.screenX(s.x * T + 8), y: this.screenY(s.y * T + 12), vx: CC.rand(-20, 20), vy: CC.rand(-30, -10), life: 0.3, kind: 'grass', color: '#5ab848', size: 3, grav: 120 });
-      if (this.map.spawns && CC.firstHealthy() >= 0 && this.cooldown <= 0 && Math.random() < 0.12) {
+      if (this.map.spawns && !CC.dev.noWild && CC.firstHealthy() >= 0 && this.cooldown <= 0 && Math.random() < 0.12) {
         var self = this; this.run(function () { return CC.wildEncounter(self.map.spawns); });
       }
     }
@@ -723,13 +723,14 @@ CC.fieldMenu = async function () {
   while (true) {
     var items = ['Party', 'Bag'];
     if (CC.state.flags.vaultKey) items.push('Vault');
-    items.push('Save', 'Close');
+    items.push('Save', 'Codes', 'Close');
     var c = await CC.menu(items, { x: 158, y: 6, w: 76, startCloses: true });
     var pick = items[c];
     if (c < 0 || pick === 'Close') return;
     if (pick === 'Party') await CC.partyScreen('field');
     if (pick === 'Bag') await CC.bagScreen();
     if (pick === 'Vault') await CC.vaultScreen();
+    if (pick === 'Codes') { await CC.openCodes(); if (await CC.runCodeQueue()) return; }
     if (pick === 'Save') {
       var seen = Object.keys(CC.state.seen).length, caught = Object.keys(CC.state.caught).length;
       if (await CC.yesNo('Save your game? (Creature Log: ' + caught + ' caught, ' + seen + ' seen. Coins: ' + CC.state.coins + '.)')) {

@@ -33,6 +33,7 @@ CC.W = 240; CC.H = 160;
   function down(b) { if (!held[b]) { pressed[b] = true; repeatT[b] = 0.35; } held[b] = true; CC.audioUnlock(); }
   function up(b) { held[b] = false; }
   window.addEventListener('keydown', function (e) {
+    if (e.target && e.target.tagName === 'INPUT') return; // typing a code
     var b = KEYS[e.code]; if (!b) return; e.preventDefault(); if (!e.repeat) down(b);
   });
   window.addEventListener('keyup', function (e) { var b = KEYS[e.code]; if (b) up(b); });
@@ -84,7 +85,7 @@ CC.W = 240; CC.H = 160;
   CC.time = 0;
   var last = 0;
   function frame(now) {
-    var dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    var dt = Math.min(0.05, (now - last) / 1000 || 0.016) * ((CC.dev && CC.dev.speed) || 1); last = now;
     CC.time += dt; CC.dt = dt;
     for (var k in repeatT) if (held[k]) { repeatT[k] -= dt; if (repeatT[k] <= 0) { pressed[k + '_rep'] = true; repeatT[k] += 0.09; } }
     var top = CC.top();
