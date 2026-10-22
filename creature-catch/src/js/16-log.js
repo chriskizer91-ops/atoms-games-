@@ -58,7 +58,7 @@ var CC = window.CC || (window.CC = {});
             c.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 92) + 2; });
             var note = got ? (CC.LORE && CC.LORE[id] ? CC.LORE[id].note : '') : 'Seen in the wild. Catch one to fill in this page.';
             CC.wrap(note, 88, 8).slice(0, 4).forEach(function (l, i) { CC.text(l, 21, 104 + i * ROW, '#5a3a22', { size: 8 }); });
-            if (got) CC.text('A: read more', 110, 140, faint, { size: 8, align: 'right' });
+            if (got) CC.text('A: read more', 110, 132, faint, { size: 8, align: 'right' });
           } else {
             CC.text('?', 65, 30, '#c8b08a', { size: 22, align: 'center' });
             CC.text('Not seen yet', 65, 82, faint, { align: 'center' });

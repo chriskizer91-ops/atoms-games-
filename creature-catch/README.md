@@ -71,5 +71,6 @@ node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.ht
   2. `creature-catch-handoff.md`: the full design.
   3. `creature-catch-roster.md`: every creature's stats, learnset, and moves (generated).
   4. `creature-catch-design-doc.md`: the first draft, partly replaced.
-  5. `creature-catch-polish-prompts.md`: the polish pack (side walks, guide walk sheets, Mega Potion, Creature Log, menu icons, VS intros, region signs). The full-game pack (`creature-catch-full-game-prompts.md`) and `creature-catch-missing-images.md` are done.
-  6. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).
+  5. `creature-catch-new-creatures.md`: how to add your own creatures (drawing to game art to `src/js/13b-family-creatures.js`).
+  6. `creature-catch-polish-prompts.md`: the polish pack (side walks, guide walk sheets, Mega Potion, Creature Log, menu icons, VS intros, region signs). The full-game pack (`creature-catch-full-game-prompts.md`) and `creature-catch-missing-images.md` are done.
+  7. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).

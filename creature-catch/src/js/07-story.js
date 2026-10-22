@@ -341,6 +341,75 @@ CC.titleScreen = function () {
   });
 };
 
+// ---------- the save files: pick one to continue, or one to start a new game in ----------
+var CHARM_REGIONS = ['grassland', 'forest', 'water', 'cave', 'desert', 'snow', 'swamp', 'ruins'];
+function playTime(sec) { var m = Math.floor(sec / 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
+CC.filePicker = function (mode) {
+  return new Promise(function (resolve) {
+    var infos = [], busy = false;
+    var refresh = function () { infos = []; for (var i = 1; i <= CC.SLOTS; i++) infos.push(CC.saveInfo(i)); };
+    refresh();
+    var sel = 0, last = (CC.opts.lastSlot || 1) - 1;
+    if (mode === 'continue') sel = infos[last] ? last : Math.max(0, infos.findIndex(Boolean));
+    else sel = infos.findIndex(function (x) { return !x; }) >= 0 ? infos.findIndex(function (x) { return !x; }) : 0;
+    var done = function (n) { CC.pop(scr); resolve(n); };
+    var scr = {
+      name: 'files', opaque: true,
+      update: function () {
+        if (busy) return;
+        if (CC.repeat('down')) { sel = (sel + 1) % CC.SLOTS; CC.sfx('blip'); }
+        if (CC.repeat('up')) { sel = (sel + CC.SLOTS - 1) % CC.SLOTS; CC.sfx('blip'); }
+        if (CC.input.pressed.b) { CC.sfx('back'); done(0); return; }
+        if (!CC.input.pressed.a) return;
+        var n = sel + 1, info = infos[sel];
+        if (mode === 'continue') {
+          if (!info) { CC.sfx('bump'); return; }
+          CC.sfx('select'); busy = true;
+          CC.menu(['Play', 'Delete', 'Back'], { x: 168, y: 18 + sel * 44 }).then(async function (c) {
+            busy = false;
+            if (c === 0) done(n);
+            else if (c === 1 && await CC.yesNo('Delete File ' + n + '? This can\'t be undone.')) {
+              CC.deleteSave(n); CC.sfx('back'); refresh();
+              if (!CC.hasSave()) done(0);
+            }
+          });
+          return;
+        }
+        CC.sfx('select');
+        if (!info) { done(n); return; }
+        busy = true;
+        CC.yesNo('File ' + n + ' already has a game in it. Start over and erase it?').then(function (yes) { busy = false; if (yes) done(n); });
+      },
+      draw: function () {
+        var g = CC.g, bg = CC.img('bg/title');
+        if (bg) { g.drawImage(bg, 0, 0, 240, 160); g.globalAlpha = 0.6; CC.rect(0, 0, 240, 160, '#1b1626'); g.globalAlpha = 1; }
+        else CC.rect(0, 0, 240, 160, '#2a2440');
+        CC.text(mode === 'continue' ? 'Continue which file?' : 'Start a new game in which file?', 120, 3, '#ffffff', { align: 'center', shadow: '#000000' });
+        infos.forEach(function (info, i) {
+          var y = 18 + i * 44, on = i === sel;
+          CC.box(8, y, 224, 40, { fill: on ? '#fff8d0' : '#fbf3e0', edge: on ? '#e8a838' : '#c8a878' });
+          CC.text('File ' + (i + 1), 16, y + 4, '#6a3a2a', { size: 9 });
+          if (on) CC.cursor(10, y + 18);
+          if (!info) { CC.text(mode === 'new' ? 'Empty: start here' : 'Empty', 120, y + 15, '#a89c90', { align: 'center' }); return; }
+          var face = CC.img('portraits/' + info.look);
+          if (face) { CC.rect(16, y + 14, 22, 22, '#3a2a22'); g.drawImage(face, 17, y + 15, 20, 20); }
+          if (info.lead) CC.drawSprite(CC.creatureSprite(info.lead), 54, y + 38, { scale: 0.42, sy: 1 + (on ? Math.sin(CC.time * 6) * 0.04 : 0) });
+          CC.text(info.place, 72, y + 4, '#2a2230', { size: 9 });
+          CC.text('Caught ' + info.caught + '   Time ' + playTime(info.time) + (info.lead ? '   Lv ' + info.leadLv : ''), 72, y + 15, '#6a5a50', { size: 8 });
+          CHARM_REGIONS.forEach(function (r, j) {
+            var icon = CC.img('ui/charm-' + r), cx = 72 + j * 12, cy = y + 26;
+            if (j < info.charms && icon) g.drawImage(icon, cx, cy, 10, 10);
+            else { CC.rect(cx + 2, cy + 2, 6, 6, '#d8ccb8'); }
+          });
+          if (info.moon) { g.fillStyle = '#f8e8a0'; g.beginPath(); g.arc(222, y + 30, 5, 0, Math.PI * 2); g.fill(); }
+        });
+        CC.text('A to choose, B to go back.', 120, 150, '#e8e0ff', { size: 9, align: 'center', shadow: '#000000' });
+      },
+    };
+    CC.push(scr);
+  });
+};
+
 // pick which explorer you are (Player A or Player B art)
 function chooseExplorer() {
   return new Promise(function (resolve) {

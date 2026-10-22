@@ -2,6 +2,10 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
+## v8: save files and family creatures
+- **Three save files.** Continue and New Game open a file picker showing each file's place, lead creature, creatures caught, play time and trail charms. Files can be deleted, and starting over in a used file asks first. Your old save is File 1.
+- **Your own creatures:** `src/js/13b-family-creatures.js` takes a simple block per creature (name, types, where it lives, rarity, what it evolves into and when, an optional special move, lore, and who drew it). Stats, moves, spawns, the Creature Log number and the Field Guide page are all worked out from it, and the art import tool finds each creature's picture by name. The how-to, with prompts that turn a child's drawing into a sprite in the game's style, is `docs/creature-catch-new-creatures.md`.
+
 ## v7: the polish pass
 - **Music:** a chiptune soundtrack made in code, 16 tracks: title, village, outposts, routes, cave, snow, swamp, ruins, the Spire, wild, trainer, guide, rival and boss battles, victory, and the credits.
 - **Options** (MENU > Options, or on the title screen): music volume, sound volume, text speed, the creature that follows you, and day and night.

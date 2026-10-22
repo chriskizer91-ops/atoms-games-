@@ -54,7 +54,7 @@ Codes typed on the title screen wait until you start or continue a game, then th
 | `ZOO` | A gallery of every creature sprite. Pink names have no art yet |
 | `DEV` | Shows which toggles are on and which codes are waiting |
 
-Creature names can be shortened to their start (`WILD DANDY 6`).
+Creature names can be shortened to their start (`WILD DANDY 6`). Your own creatures from `src/js/13b-family-creatures.js` work in every code too.
 
 The toggles (`NOWILD`, `CATCHALL`, `ONEHIT`, `FAST`, `INFINITE`, `GODMODE`) last until you reload the page. They aren't saved. Everything else changes your save the next time you save.
 

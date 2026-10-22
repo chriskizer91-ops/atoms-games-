@@ -268,12 +268,35 @@ try { var savedOpts = JSON.parse(localStorage.getItem(CC.OPTS_KEY) || '{}'); for
 CC.saveOpts = function () { try { localStorage.setItem(CC.OPTS_KEY, JSON.stringify(CC.opts)); } catch (e) { /* no storage */ } CC.setVolumes(); };
 
 // ---------- saves ----------
-CC.SAVE_KEY = 'creature-catch-save-1';
-CC.hasSave = function () { try { return !!localStorage.getItem(CC.SAVE_KEY); } catch (e) { return false; } };
-CC.saveGame = function () {
-  try { localStorage.setItem(CC.SAVE_KEY, JSON.stringify(CC.state)); return true; } catch (e) { return false; }
-};
-CC.loadGame = function () {
-  try { var s = localStorage.getItem(CC.SAVE_KEY); if (s) { CC.state = JSON.parse(s); return true; } } catch (e) { /* no save */ }
+// Three save files. File 1 uses the key the game always used, so older saves show up there.
+CC.SLOTS = 3;
+CC.slot = 1;
+CC.slotKey = function (n) { return 'creature-catch-save-' + (n || CC.slot); };
+CC.SAVE_KEY = CC.slotKey(1);
+function readSlot(n) { try { var s = localStorage.getItem(CC.slotKey(n)); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+// any save at all (no number), or that file
+CC.hasSave = function (n) {
+  if (n) return !!readSlot(n);
+  for (var i = 1; i <= CC.SLOTS; i++) if (readSlot(i)) return true;
   return false;
+};
+CC.saveGame = function () {
+  try { localStorage.setItem(CC.slotKey(), JSON.stringify(CC.state)); CC.opts.lastSlot = CC.slot; CC.saveOpts(); return true; } catch (e) { return false; }
+};
+CC.loadGame = function (n) {
+  var s = readSlot(n || CC.slot);
+  if (!s) return false;
+  if (n) CC.slot = n;
+  CC.state = s;
+  return true;
+};
+CC.deleteSave = function (n) { try { localStorage.removeItem(CC.slotKey(n)); } catch (e) { /* no storage */ } };
+// what a file holds, for the file picker
+CC.saveInfo = function (n) {
+  var s = readSlot(n);
+  if (!s) return null;
+  var charms = ['trial1', 'trialForest', 'trialWater', 'trialCave', 'trialDesert', 'trialSnow', 'trialSwamp', 'trialRuins'].filter(function (k) { return s.flags && s.flags[k]; }).length;
+  var lead = s.party && s.party[0];
+  return { look: s.look || 'player-a', lead: lead && lead.id, leadLv: lead && lead.lv, caught: Object.keys(s.caught || {}).length,
+    charms: charms, time: s.playTime || 0, place: (CC.MAPS && CC.MAPS[s.map] && CC.MAPS[s.map].name) || '', moon: !!(s.flags && s.flags.moonRestored) };
 };

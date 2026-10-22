@@ -1179,7 +1179,7 @@ CC.fieldMenu = async function () {
     if (pick === 'Fly') { await CC.flyScreen(); return; }
     if (pick === 'Save') {
       var seen = Object.keys(CC.state.seen).length, caught = Object.keys(CC.state.caught).length;
-      if (await CC.yesNo('Save your game? (Creature Log: ' + caught + ' caught, ' + seen + ' seen. Coins: ' + CC.state.coins + '.)')) {
+      if (await CC.yesNo('Save to File ' + CC.slot + '? (Creature Log: ' + caught + ' caught, ' + seen + ' seen. Coins: ' + CC.state.coins + '.)')) {
         if (CC.saveGame()) { CC.sfx('select'); await CC.say('Your game is saved.'); } else await CC.say('This browser won\'t let the game save, sorry.');
       }
     }
