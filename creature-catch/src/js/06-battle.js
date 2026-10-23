@@ -24,6 +24,7 @@ var CC = window.CC || (window.CC = {});
         allyIndex: CC.firstHealthy(), runs: 0, fought: {}, leveled: {}, shake: 0, flashScreen: 0, intro: 0, trainerShown: !!opts.trainer,
         bg: opts.bg || (CC.world.map && CC.world.map.spawns) || 'grassland',
         noCatch: opts.noCatch, noRun: opts.noRun, introText: opts.introText, boss: opts.boss,
+        turnLines: opts.turnLines, turn: 0, // turnLines: a line to say at the start of each turn after the first (gentle battles)
       };
       if (CC.music) CC.music.play(CC.battleTrack(opts));
       B.foe = side(B.foeTeam[0], true);
@@ -42,7 +43,7 @@ var CC = window.CC || (window.CC = {});
 
   // ---------- drawing ----------
   // which battle picture goes with which place
-  var BG_ART = { meadow: 'grassland', grassland: 'grassland', village: 'village-training', forest: 'forest', water: 'water', cave: 'cave', desert: 'desert', snow: 'snow', swamp: 'swamp', ruins: 'night-ruins', spire: 'moonlit-spire' };
+  var BG_ART = CC.BG_ART = { temple: 'dawn-temple', hollow: 'hollow-deep', tidepool: 'cove', meadow: 'grassland', grassland: 'grassland', village: 'village-training', forest: 'forest', water: 'water', cave: 'cave', desert: 'desert', snow: 'snow', swamp: 'swamp', ruins: 'night-ruins', spire: 'moonlit-spire' };
   function drawBackground() {
     var g = CC.g, bg = B.bg, art = CC.img('bg/' + (BG_ART[bg] || bg));
     if (art) {
@@ -720,6 +721,7 @@ var CC = window.CC || (window.CC = {});
     B.fought[B.allyIndex] = true;
 
     while (true) {
+      if (B.turnLines && B.turn++ > 0) await CC.say(B.turnLines[(B.turn - 2) % B.turnLines.length]);
       var act = await chooseAction();
       var foeMove = foeChoice();
       if (act.kind === 'run') {

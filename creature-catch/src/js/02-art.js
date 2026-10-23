@@ -185,7 +185,7 @@ CC.img = function (key) {
 
 // ---------- recoloring: a copy of a picture with its colors changed pixel by pixel ----------
 CC.recolor = function (img, fn) {
-  var cv = CC.makeCanvas(img.width, img.height), x = cv.getContext('2d');
+  var cv = CC.makeCanvas(img.width, img.height), x = cv.getContext('2d', { willReadFrequently: true });
   x.drawImage(img, 0, 0);
   var d = x.getImageData(0, 0, cv.width, cv.height), p = d.data;
   for (var i = 0; i < p.length; i += 4) {
@@ -296,7 +296,7 @@ CC.drawStretched = function (img, x, y, w, h, edge) {
 var dissolveCache = {};
 function dissolved(img, k) {
   var w = img.width, h = img.height, key = w + 'x' + h;
-  var cv = dissolveCache[key] || (dissolveCache[key] = CC.makeCanvas(w, h)), x = cv.getContext('2d');
+  var cv = dissolveCache[key] || (dissolveCache[key] = CC.makeCanvas(w, h)), x = cv.getContext('2d', { willReadFrequently: true });
   x.clearRect(0, 0, w, h); x.drawImage(img, 0, 0);
   var d = x.getImageData(0, 0, w, h), p = d.data;
   for (var by = 0; by < h; by += 2) for (var bx = 0; bx < w; bx += 2) {

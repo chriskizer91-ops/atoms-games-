@@ -12,7 +12,7 @@ var CC = window.CC || (window.CC = {});
     var k = key + row;
     if (passCache[k]) return passCache[k];
     var cw = Math.floor(sheet.width / 3), ch = Math.floor(sheet.height / 4);
-    var src = CC.makeCanvas(cw, ch), sx = src.getContext('2d');
+    var src = CC.makeCanvas(cw, ch), sx = src.getContext('2d', { willReadFrequently: true });
     sx.drawImage(sheet, cw, row * ch, cw, ch, 0, 0, cw, ch);
     var d = sx.getImageData(0, 0, cw, ch).data, rows = [];
     var top = ch, bottom = -1;

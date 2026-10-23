@@ -24,8 +24,19 @@ function setLevel(m, lv) {
 var MAPS_BY_WORD = {
   village: 'village', home: 'village', meadow: 'meadow', grassland: 'grassland', grass: 'grassland', forest: 'forest', water: 'water', lake: 'water',
   lakeshore: 'water', cave: 'cave', desert: 'desert', snow: 'snow', frostpeak: 'snow', swamp: 'swamp', ruins: 'ruins', night: 'ruins', altar: 'ruins', spire: 'spire', tower: 'spire',
+  // the expansion's places
+  orchard: 'orchard', willowbrook: 'orchard', grove: 'grove', cove: 'cove', beach: 'cove', isle: 'isle', island: 'isle', lighthouse: 'isle', copperbell: 'copperbell', town: 'copperbell',
+  mine: 'mine', springs: 'springs', bayou: 'bayou', archive: 'archive', library: 'archive', temple: 'temple', dawn: 'temple', hollow: 'hollow', deep: 'hollow',
 };
-var ARRIVE = { village: [10, 6], meadow: [7, 12], grassland: [12, 14], forest: [11, 23], water: [11, 23], cave: [11, 23], desert: [11, 23], snow: [11, 23], swamp: [11, 23], ruins: [11, 23], spire: [8, 18] };
+var ARRIVE = { village: [10, 6], meadow: [7, 12], grassland: [12, 14], forest: [11, 23], water: [11, 23], cave: [11, 23], desert: [11, 23], snow: [11, 23], swamp: [11, 23], ruins: [11, 23], spire: [8, 18],
+  orchard: [2, 9], grove: [21, 10], cove: [11, 2], isle: [10, 16], copperbell: [11, 21], mine: [12, 27], springs: [19, 16], bayou: [2, 10], archive: [11, 21], temple: [11, 23], hollow: [11, 4] };
+// the moon restored, as after the ending
+function postgame() {
+  setTrials(TRIALS.length - 1, true);
+  [2, 3, 4, 5].forEach(function (n) { CC.state.flags['juniper' + n] = true; });
+  CC.state.flags.moonRestored = true; if (!CC.state.caught.lunarion) CC.state.flags.lunarionSpire = true;
+  CC.state.pages = CC.state.pages || {};
+}
 // the trail trials in order, and what passing each one sets
 var TRIALS = [['grassland', 'trial1'], ['forest', 'trialForest'], ['water', 'trialWater'], ['cave', 'trialCave'], ['desert', 'trialDesert'], ['snow', 'trialSnow'], ['swamp', 'trialSwamp'], ['ruins', 'trialRuins']];
 function setTrials(upTo, done) {
@@ -112,7 +123,7 @@ CC.CODES = [
   { words: ['CUBES'], needsGame: true, help: 'CUBES 50: set your Basic Cubes', run: function (a) { CC.state.bag.cube = num(a[0], 0, 999, 99); return 'Cubes: ' + CC.state.bag.cube + '.'; } },
   { words: ['POTIONS'], needsGame: true, help: 'POTIONS 20: set your Potions', run: function (a) { CC.state.bag.potion = num(a[0], 0, 999, 99); return 'Potions: ' + CC.state.bag.potion + '.'; } },
   { words: ['COINS'], needsGame: true, help: 'COINS 5000: set your coins', run: function (a) { CC.state.coins = num(a[0], 0, 999999, 9999); return 'Coins: ' + CC.state.coins + '.'; } },
-  { words: ['GOTO', 'WARP'], needsGame: true, help: 'GOTO FOREST (VILLAGE, MEADOW, GRASSLAND, WATER, CAVE, DESERT, SNOW, SWAMP, RUINS, SPIRE), optional X Y', run: function (a) {
+  { words: ['GOTO', 'WARP'], needsGame: true, help: 'GOTO FOREST (VILLAGE, MEADOW, GRASSLAND, WATER, CAVE, DESERT, SNOW, SWAMP, RUINS, SPIRE, ORCHARD, GROVE, COVE, ISLE, COPPERBELL, MINE, SPRINGS, BAYOU, ARCHIVE, TEMPLE, HOLLOW), optional X Y', run: function (a) {
     var map = MAPS_BY_WORD[(a[0] || '').toLowerCase()]; if (!map) return 'Try GOTO FOREST, or any region name.';
     var p = ARRIVE[map], x = num(a[1], 0, 99, p[0]), y = num(a[2], 0, 99, p[1]);
     CC.dev.queue = function () { CC.world.enter(map, x, y, 'down'); };
@@ -144,6 +155,33 @@ CC.CODES = [
     [2, 3, 4, 5].forEach(function (n) { CC.state.flags['juniper' + n] = true; });
     CC.state.flags.moonRestored = true; if (!CC.state.caught.lunarion) CC.state.flags.lunarionSpire = true;
     return 'The moon is whole again. GOTO SPIRE to climb the tower.';
+  } },
+  // ---------- the expansion ----------
+  { words: ['PAGES', 'PAGE'], needsGame: true, help: 'PAGES 8: you have Lost Pages 1 to 8 (PAGES ALL for all 12, PAGES RESET for none)', run: function (a) {
+    var w = (a[0] || 'all').toLowerCase(), n = w === 'all' ? 12 : w === 'reset' ? 0 : num(a[0], 0, 12, 12);
+    CC.state.pages = {}; for (var i = 1; i <= n; i++) CC.state.pages[i] = true;
+    CC.state.flags.anyPage = n > 0; CC.state.flags.longDusk = n >= 12;
+    return 'Lost Pages: ' + n + ' of 12.';
+  } },
+  { words: ['KEYS'], needsGame: true, help: 'KEYS: the Boat Ticket and the Archive Key', run: function () {
+    CC.state.flags.boatTicket = true; CC.state.flags.archiveKey = true; return 'You have the Boat Ticket and the Archive Key.';
+  } },
+  { words: ['TEMPLE'], needsGame: true, help: 'TEMPLE: the moon restored, 8 pages, and the Dawn Temple open (you go to its door)', run: function () {
+    postgame(); var f = CC.state.flags; if (CC.pageCount() < 8) { CC.state.pages = CC.state.pages || {}; for (var i = 1; i <= 8; i++) CC.state.pages[i] = true; f.anyPage = true; }
+    f.templeOpen = true;
+    CC.dev.queue = function () { CC.world.enter('temple', 11, 23, 'up'); };
+    return 'The Dawn Temple is open. In you go.';
+  } },
+  { words: ['EMBER'], needsGame: true, help: 'EMBER: Solarion is awake and you have the Sun Ember (you go to the old door in Glimmer Mine)', run: function () {
+    postgame(); var f = CC.state.flags; f.templeOpen = f.solarionCalm = f.sunEmber = true; CC.state.pages[11] = true;
+    CC.dev.queue = function () { CC.world.enter('mine', 12, 4, 'up'); };
+    return 'You have the Sun Ember. The old door is just ahead.';
+  } },
+  { words: ['BALANCE'], needsGame: true, help: 'BALANCE: everything up to the three guardians (you go to the top of the Moonlit Spire)', run: function () {
+    postgame(); var f = CC.state.flags; f.templeOpen = f.solarionCalm = f.sunEmber = f.doorOpen = f.gloamingCalm = f.gloamingSeen = f.bellRings = true;
+    CC.state.pages = CC.state.pages || {}; CC.state.pages[11] = CC.state.pages[12] = true; f.anyPage = true;
+    CC.dev.queue = function () { CC.world.enter('spire', 8, 6, 'up'); };
+    return 'Walk to the top of the Spire.';
   } },
   { words: ['NIGHT', 'DAY', 'DUSK', 'CLOCK'], help: 'NIGHT / DAY / DUSK: force the time of day (CLOCK goes back to the real clock)', run: function (a, w) {
     var t = (w || 'clock').toLowerCase(); CC.dev.time = t === 'clock' ? null : t; return t === 'clock' ? 'Back to the real clock.' : 'It is now ' + t + '.';

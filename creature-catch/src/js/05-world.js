@@ -221,7 +221,7 @@ function dirtColors(atlas, idx) {
   if (dirtCache[k]) return dirtCache[k];
   var a = CC.img('tiles/' + atlas), cols = [];
   if (a) {
-    var c = CC.makeCanvas(8, 8), x = c.getContext('2d');
+    var c = CC.makeCanvas(8, 8), x = c.getContext('2d', { willReadFrequently: true });
     x.drawImage(a, (idx % 4) * 32 + 12, Math.floor(idx / 4) * 32 + 12, 8, 8, 0, 0, 8, 8);
     var d = x.getImageData(0, 0, 8, 8).data;
     for (var i = 0; i < d.length; i += 4) cols.push([d[i], d[i + 1], d[i + 2]]);
@@ -837,6 +837,7 @@ CC.world = {
       if (landing > 0.44 && landing < 0.5) for (var q = 0; q < 6; q++) CC.fx.add({ x: lx + CC.rand(-8, 8), y: ly + 12, vx: CC.rand(-30, 30), vy: CC.rand(-15, -5), life: 0.4, kind: 'dust', size: 4 });
     } else this.arrive = null;
     this.drawAmbient(cx, cy);
+    if (this.map.drawOver) this.map.drawOver(g, cx, cy); // a map's own effects (the temple's light beams)
     CC.drawDaylight(this, cx, cy);
     if (this.emote) {
       var ex = this.screenX(this.px + 8), ey = this.screenY(this.py - 22) - Math.abs(Math.sin(CC.time * 10)) * 2, em = CC.img('ui/emote-exclaim');
@@ -852,7 +853,7 @@ CC.world = {
   drawAmbient: function (cx, cy) {
     var g = CC.g, map = this.map, dt = CC.dt || 0.016, t = CC.time;
     var amb = map.amb || (map.amb = { smoke: [], flies: [] });
-    var wx = map.weather, calm = { cave: 1, snow: 1, night: 1, spire: 1, fog: 1, steam: 1, bayou: 1 }[wx];
+    var wx = map.weather, calm = { cave: 1, snow: 1, night: 1, spire: 1, fog: 1, steam: 1, bayou: 1, hollow: 1, sunbeams: 1 }[wx];
     if (!amb.flies.length && !map.indoors && !calm) {
       var W = map.rows[0].length * T, H = map.rows.length * T;
       for (var i = 0; i < 4; i++) amb.flies.push({ x: CC.rand(32, W - 32), y: CC.rand(32, H - 32), ph: CC.rand(0, 9), c: CC.pick(['#ffffff', '#f8e070', '#f8a8d0', '#a8d8ff']), vx: 0, vy: 0 });
@@ -891,7 +892,7 @@ CC.world = {
       g.fillStyle = '#3a2a22'; g.fillRect(x, y - 1, 1, 2);
     });
     // big soft cloud shadows sliding across
-    if (!map.indoors && !{ cave: 1, spire: 1, night: 1 }[wx]) {
+    if (!map.indoors && !{ cave: 1, spire: 1, night: 1, hollow: 1, sunbeams: 1 }[wx]) {
       for (var c = 0; c < 3; c++) {
         var span = map.rows[0].length * T + 200, sx = ((t * 6 + c * 157) % span) - 100 - cx, sy = (c * 97 + 40) % (map.rows.length * T) - cy;
         g.fillStyle = 'rgba(20,40,60,0.07)';
@@ -998,6 +999,27 @@ CC.world = {
         glowAt(lx2, ly2, 60 + Math.sin(t * 1.5) * 6, 'rgb(255,220,110)', 0.35 * nk);
       }
       this.fireflies(amb, '#f8e070', cx, cy, dt, 10 + Math.round(nk * 36));
+      lights();
+    } else if (wx === 'sunbeams') { // the Dawn Temple: warm shafts of sunlight and floating dust
+      for (var sb = 0; sb < 3; sb++) {
+        var sx2 = 30 + sb * 85 + Math.sin(t * 0.25 + sb) * 6, sg = g.createLinearGradient(sx2, 0, sx2 + 30, H);
+        sg.addColorStop(0, 'rgba(255,220,140,0.2)'); sg.addColorStop(1, 'rgba(255,220,140,0)');
+        g.fillStyle = sg; g.beginPath(); g.moveTo(sx2, 0); g.lineTo(sx2 + 16, 0); g.lineTo(sx2 + 46, H); g.lineTo(sx2 + 22, H); g.fill();
+      }
+      bits(20, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), par: 0.4 }; }).forEach(function (b) {
+        b.y -= dt * 3; b.x += Math.sin(t + b.ph) * dt * 4;
+        g.fillStyle = 'rgba(255,240,190,' + (0.4 + Math.sin(t * 2 + b.ph) * 0.3) + ')'; g.fillRect(Math.round(wrapX(b)), Math.round(wrapY(b)), 1, 1);
+      });
+      lights();
+    } else if (wx === 'hollow') { // the Hollow Deep: nearly dark, only the Sun Ember's warm glow around you, and the crystals
+      bits(7, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), par: 0.8 }; }).forEach(function (b) {
+        b.x += dt * 4; var x = wrapX(b), y = wrapY(b) + Math.sin(t * 0.7 + b.ph) * 6;
+        g.fillStyle = 'rgba(120,80,170,0.12)'; g.beginPath(); g.ellipse(x, y, 14, 5, 0, 0, Math.PI * 2); g.fill();
+      });
+      var ember = CC.state.flags.sunEmber, dk = g.createRadialGradient(pxl, pyl, ember ? 22 : 10, pxl, pyl, ember ? 84 : 50);
+      dk.addColorStop(0, 'rgba(10,6,20,0)'); dk.addColorStop(1, 'rgba(10,6,20,0.86)');
+      g.fillStyle = dk; g.fillRect(0, 0, W, H);
+      if (ember) glowAt(pxl, pyl, 34 + Math.sin(t * 2) * 2, 'rgb(255,190,110)', 0.16);
       lights();
     } else if (wx === 'night') {
       var nd = g.createRadialGradient(pxl, pyl, 30, pxl, pyl, 150);

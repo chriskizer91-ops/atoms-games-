@@ -3,18 +3,30 @@
 // The FLY code also sets flags.flyAll, which opens every place. Places sit on the world-map picture at x, y (240 x 160).
 var CC = window.CC || (window.CC = {});
 
-// map: the field map you land on (null = not built yet); land: where you land on it
+// map: the field map you land on (null = not built yet); land: where you land on it; from: the place a side area
+// branches off (its dotted route goes there; the main road's places are joined in order)
 CC.FLY_SPOTS = [
-  { name: 'Home Village', map: 'village', x: 30, y: 128, land: [10, 6] },
-  { name: 'Meadow Path', map: 'meadow', x: 44, y: 112, land: [7, 12] },
-  { name: 'Grassland', map: 'grassland', x: 56, y: 96, land: [18, 12] },
-  { name: 'Forest', map: 'forest', x: 44, y: 66, land: [16, 15] },
-  { name: 'Lakeshore', map: 'water', x: 84, y: 68, land: [19, 15] },
-  { name: 'Crystal Cave', map: 'cave', x: 116, y: 60, land: [20, 15] },
-  { name: 'Sunscorch Desert', map: 'desert', x: 156, y: 62, land: [14, 15] },
-  { name: 'Frostpeak Pass', map: 'snow', x: 130, y: 22, land: [11, 15] },
-  { name: 'Murkmire Swamp', map: 'swamp', x: 186, y: 56, land: [20, 15] },
-  { name: 'Night Ruins', map: 'ruins', x: 214, y: 20, land: [13, 20] },
+  { name: 'Home Village', map: 'village', x: 28, y: 126, land: [10, 6] },
+  { name: 'Meadow Path', map: 'meadow', x: 44, y: 110, land: [7, 12] },
+  { name: 'Grassland', map: 'grassland', x: 44, y: 94, land: [18, 12] },
+  { name: 'Willowbrook Orchard', map: 'orchard', x: 70, y: 110, land: [4, 10], from: 'Grassland' },
+  { name: 'Forest', map: 'forest', x: 40, y: 72, land: [16, 15] },
+  { name: 'Whispering Grove', map: 'grove', x: 22, y: 64, land: [18, 9], from: 'Forest' },
+  { name: 'Lakeshore', map: 'water', x: 86, y: 74, land: [19, 15] },
+  { name: 'Driftwood Cove', map: 'cove', x: 98, y: 106, land: [12, 5], from: 'Lakeshore' },
+  { name: 'Lantern Isle', map: 'isle', x: 112, y: 120, land: [10, 15], from: 'Driftwood Cove' },
+  { name: 'Crystal Cave', map: 'cave', x: 116, y: 62, land: [20, 15] },
+  { name: 'Copperbell Town', map: 'copperbell', x: 146, y: 50, land: [11, 15] },
+  { name: 'Glimmer Mine', map: 'mine', x: 172, y: 46, land: [12, 26], from: 'Copperbell Town' },
+  { name: 'Sunscorch Desert', map: 'desert', x: 164, y: 78, land: [14, 15] },
+  { name: 'Dawn Temple', map: 'temple', x: 182, y: 92, land: [11, 23], from: 'Sunscorch Desert' },
+  { name: 'Frostpeak Pass', map: 'snow', x: 128, y: 24, land: [11, 15] },
+  { name: 'Steamvent Springs', map: 'springs', x: 152, y: 28, land: [11, 7], from: 'Frostpeak Pass' },
+  { name: 'Murkmire Swamp', map: 'swamp', x: 192, y: 60, land: [20, 15] },
+  { name: 'Firefly Bayou', map: 'bayou', x: 206, y: 78, land: [3, 11], from: 'Murkmire Swamp' },
+  { name: 'Night Ruins', map: 'ruins', x: 204, y: 18, land: [13, 20] },
+  { name: 'Ancients\' Archive', map: 'archive', x: 214, y: 32, land: [11, 21], from: 'Night Ruins' },
+  { name: 'Hollow Deep', map: 'hollow', x: 168, y: 56, land: [11, 4], from: 'Glimmer Mine' },
 ];
 
 CC.flyScreen = function () {
@@ -43,12 +55,12 @@ CC.flyScreen = function () {
       draw: function () {
         var g = CC.g, map = CC.img('bg/world-map');
         if (map) g.drawImage(map, 0, 0, 240, 160); else CC.rect(0, 0, 240, 160, '#3a6ab8');
-        // dotted route between the places, in order
+        // dotted routes: the main road in order, and each side area back to where it branches off
         g.fillStyle = 'rgba(255,248,220,0.8)';
-        for (var i = 0; i < CC.FLY_SPOTS.length - 1; i++) {
-          var a = CC.FLY_SPOTS[i], b = CC.FLY_SPOTS[i + 1], n = Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 5);
-          for (var j = 1; j < n; j++) g.fillRect(Math.round(CC.lerp(a.x, b.x, j / n)), Math.round(CC.lerp(a.y, b.y, j / n)), 1, 1);
-        }
+        var dots = function (a, b) { var n = Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 5); for (var j = 1; j < n; j++) g.fillRect(Math.round(CC.lerp(a.x, b.x, j / n)), Math.round(CC.lerp(a.y, b.y, j / n)), 1, 1); };
+        var road = CC.FLY_SPOTS.filter(function (p) { return !p.from; });
+        for (var i = 0; i < road.length - 1; i++) dots(road[i], road[i + 1]);
+        CC.FLY_SPOTS.forEach(function (p) { if (p.from) { var q = CC.FLY_SPOTS.find(function (o) { return o.name === p.from; }); if (q) { g.fillStyle = 'rgba(255,248,220,0.5)'; dots(q, p); g.fillStyle = 'rgba(255,248,220,0.8)'; } } });
         CC.FLY_SPOTS.forEach(function (p, i) {
           var ok = canGo(p), on = i === sel, r = on ? 4 + Math.sin(CC.time * 6) : 3;
           g.fillStyle = '#2a1a22'; g.beginPath(); g.arc(p.x, p.y, r + 1, 0, Math.PI * 2); g.fill();
