@@ -117,14 +117,14 @@ CC.MAPS = {
 
 // Rooms. Tiles: # dark (walls beyond) W plaster wall w wall with a window . wood floor c checker floor m doormat (walk out)
 // Furniture is decor; counter: true lets you talk to whoever stands behind it; talk: runs when you face it and press A.
-function room(name, rows, door, decor, extra) {
+var room = CC.room = function (name, rows, door, decor, extra) {
   var r = { name: name, indoors: true, tileset: 'interior', rows: rows, buildings: [], decor: decor || [] };
   var my = rows.length - 1, mx = rows[my].indexOf('m');
   r.exits = [{ side: 'bottom', x0: mx, x1: rows[my].lastIndexOf('m'), to: door[0], tx0: door[1], ty: door[2], fixedX: true }];
   r.inside = [mx, my - 1];
   for (var k in extra || {}) r[k] = extra[k];
   return r;
-}
+};
 CC.MAPS['willow-in'] = room('Elder Willow\'s House', [
   '#PPPPPPPPPP#', '#WWwWWWWwWW#', '#..........#', '#..........#', '#..........#', '#..........#', '#..........#', '#####mm#####',
 ], ['village', 4, 5], [
@@ -380,8 +380,9 @@ function drawCaveWall(g, x, y, map, lg) {
   var px = x * TP, py = y * TP, wall = function (dx, dy) { var t = CC.tileAt(map, x + dx, y + dy); return t === null || t === 'T'; };
   g.fillStyle = '#17141f'; g.fillRect(px, py, TP, TP);
   for (var i = 0; i < 5; i++) { g.fillStyle = i % 2 ? '#221d2c' : '#1d1926'; g.fillRect(px + Math.floor(hash(x * 5 + i, y) * 26), py + Math.floor(hash(x, y * 5 + i) * 26), 5, 3); }
-  var a = CC.img('tiles/' + lg.atlas);
+  var a = CC.img('tiles/' + (lg.wallAtlas || lg.atlas));
   if (!a) return;
+  if (lg.wallTint) { g.fillStyle = lg.wallTint; g.fillRect(px, py, TP, TP); }
   // the rocky rim from the cave atlas: tile 7 is void above a rim, tile 4 is void beside a rim
   if (!wall(0, 1)) g.drawImage(a, 96, 32, 32, 26, px, py + 6, 32, 26);
   if (!wall(0, -1)) { g.save(); g.translate(px, py + 26); g.scale(1, -1); g.drawImage(a, 96, 40, 32, 18, 0, 0, 32, 18); g.restore(); }
@@ -423,7 +424,9 @@ function drawLegendTile(g, t, x, y, map) {
   switch (t) {
     case ':': case '=': return path();
     case '~': if (e && e.water) return drawWater(g, x, y, map); break;
-    case 'T': if (lg.wall) { drawCaveWall(g, x, y, map, lg); return true; } if (lg.trees) return legendGround(g, lg, x, y); break;
+    case 'T': if (lg.wall) { drawCaveWall(g, x, y, map, lg); return true; }
+      if (lg.trees) return lg.treeGround ? legendPiece(g, lg.atlas, cols, lg.treeGround, x, y, 2) : legendGround(g, lg, x, y);
+      break;
     case 'S': legendGround(g, lg, x, y); return standOnTile(g, CC.img(map.signArt) || CC.img('props/village-props-11'), x, y, 17);
     case 'L': case '.': return legendGround(g, lg, x, y);
   }
@@ -765,6 +768,7 @@ CC.world = {
       this.run(n.talk); return;
     }
     var t = CC.tileAt(this.map, fx, fy);
+    if (t === 'L' && this.map.landmarkTalk) { this.run(this.map.landmarkTalk); return; } // the area's landmark (and its Keeper)
     if (t === 'S') { var sign = CC.SIGNS[this.mapId + ':' + fx + ',' + fy]; if (sign) this.run(function () { return CC.say(sign); }); return; }
     var b = this.buildingAt(fx, fy);
     if (b && b.door[0] === fx && b.door[1] === fy) { var self = this; this.run(function () { return CC.enterDoor(self.mapId, b.id); }); }
@@ -1077,6 +1081,7 @@ CC.enterRoom = async function (roomId) {
 };
 // furniture you can look at (talk: a line to say, or 'vault' / 'bed')
 CC.useFurniture = async function (d) {
+  if (typeof d.talk === 'function') return d.talk(d); // something with its own little script
   if (d.talk === 'vault') {
     if (!CC.state.party.length) { await CC.say('The Cube Vault. It stores the creatures you catch once your party of 4 is full.'); return; }
     await CC.say('You switched on the Cube Vault.'); CC.sfx('select'); await CC.vaultScreen(); return;

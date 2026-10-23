@@ -195,7 +195,7 @@ var CC = window.CC || (window.CC = {});
     if (h >= 5 && h < 7) { var k2 = (7 - h) / 2; return { night: k2 * 0.9, warm: Math.sin(k2 * Math.PI) * 0.7 }; }
     return { night: 1, warm: 0 };
   };
-  var OWN_LIGHT = { cave: 1, ruins: 1, spire: 1 }; // places with their own lighting
+  var OWN_LIGHT = CC.OWN_LIGHT = { cave: 1, ruins: 1, spire: 1 }; // places with their own lighting (by legend)
   CC.drawDaylight = function (w, cx, cy) {
     if (w.map.indoors || OWN_LIGHT[w.map.legend]) return;
     var dl = CC.daylight(), g = CC.g, W = CC.W, H = CC.H;
