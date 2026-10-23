@@ -31,19 +31,24 @@ Codes typed on the title screen wait until you start or continue a game, then th
 | `EVOLVE` | Your lead creature evolves now, if it has an evolution |
 | `MAX` (or `LV50`) | Your whole party goes to Lv 50 |
 | `RICH` (or `MONEY`) | 999,999 coins |
-| `STOCKUP` (or `ITEMS`) | 99 of every item: all four cube tiers (Master Cubes too), every potion and tonic, Cure Herbs, Revives, and both shards |
+| `STOCKUP` (or `ITEMS`) | 99 of every item: every cube (Dusk and Master Cubes too), every potion and tonic, Copper Rolls, Warm Soup, Cure Herbs, Revives, and both shards |
 | `INFINITE` | Cubes and potions never run out, or back to normal |
 | `GODMODE` | Your creatures take no damage, or back to normal |
 | `FLY` | Gives you the Wooden Whistle (Fly) and opens every place on the map. Press **R** outside, MENU then Fly, or use the whistle in your Bag. Normally you only get Fly halfway through the story, and only to places you've been |
 | `ZOOKEEPER` | One of every creature goes into your Vault at Lv 5 |
 | `CUBES 50` / `POTIONS 20` / `COINS 5000` | Sets items or coins |
-| `GOTO FOREST` | Warps to any place: VILLAGE, MEADOW, GRASSLAND, FOREST, WATER, CAVE, DESERT, SNOW, SWAMP, RUINS or SPIRE (optionally add X Y) |
+| `GOTO FOREST` | Warps to any place: VILLAGE, MEADOW, GRASSLAND, FOREST, WATER, CAVE, DESERT, SNOW, SWAMP, RUINS or SPIRE, or a v9 place: ORCHARD, GROVE, COVE, ISLE, COPPERBELL, MINE, SPRINGS, BAYOU, ARCHIVE, TEMPLE or HOLLOW (optionally add X Y) |
 | `WILD DANDYLION 6` | Starts a wild battle with that creature at that level |
 | `TRIAL DONE` | Passes Farmer Bramble's trial (log gate, Vault Key) |
 | `TRIAL CAVE` | Passes every guide's trial up to that region and opens their gates (`TRIAL CAVE` and later also gives you Fly) |
 | `TRIAL ALL` / `TRIAL RESET` | Passes every trial, or undoes them all |
 | `FINALE` (or `MOON`) | Passes every trial and rival battle and puts you at the foot of the Moon Altar. Walk up the steps |
 | `ENDING` (or `POSTGAME`) | The moon is restored and the Moonlit Spire opens (`GOTO SPIRE`) |
+| `PAGES 8` | You have Lost Pages 1 to 8. `PAGES ALL` gives all 12, `PAGES RESET` takes them away. Read them at Elder Willow's |
+| `KEYS` | The Boat Ticket (Driftwood Cove to Lantern Isle) and the Archive Key (the stairway under the Night Ruins) |
+| `TEMPLE` | The moon restored, 8 Lost Pages, and the Dawn Temple open. Puts you at the temple door |
+| `EMBER` | Solarion is awake and you have the Sun Ember. Puts you at the Ancient Door in Glimmer Mine |
+| `BALANCE` | Everything up to the three guardians. Puts you at the top of the Moonlit Spire for the Balance |
 | `DEX` | Marks every creature as seen |
 | `SHINY` | The next wild creature is shiny |
 | `NIGHT` / `DAY` / `DUSK` | Forces the time of day. `CLOCK` goes back to your real clock |
@@ -60,9 +65,7 @@ The toggles (`NOWILD`, `CATCHALL`, `ONEHIT`, `FAST`, `INFINITE`, `GODMODE`) last
 
 ## Ideas for later (not built yet)
 
-- `SHINY`: show the shiny palette.
 - `ART`: list which pictures are still missing.
 - `BATTLEBG <place>`: preview a battle background.
 - `ANIM <move>`: replay one move's animation in a loop.
-- `NIGHT` / `DAY`: once day and night exist.
 - `RIVAL <n>`: replay one of Juniper's battles.

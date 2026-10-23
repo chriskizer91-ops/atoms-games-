@@ -26,17 +26,21 @@ Hold L + R and press MENU (or press Up Up Down Down Left Right Left Right B A on
 
 The current version is in `VERSION` and shows on the title screen. `CHANGELOG.md` lists what each version changed.
 
-## What's in the game (v6, the full game)
+## What's in the game (v9, with the expansion)
 
 **The Fading Moon.** The moon over the land is dimming, and frightened creatures hide in the tall grass. Elder Willow gives you your first creature and sends you north to find out why.
 
-- **10 places in a straight line:** Home Village, Meadow Path, Grassland, Forest, Lakeshore, Crystal Cave, Sunscorch Desert, Frostpeak Pass, Murkmire Swamp and the Night Ruins. Each region has its own tiles, weather and landmark, an outpost (Healing Hut keeper and Cube Vault), a guide's home, route trainers and treasure chests.
+- **The main road:** Home Village, Meadow Path, Grassland, Forest, Lakeshore, Crystal Cave, Copperbell Town, Sunscorch Desert, Frostpeak Pass, Murkmire Swamp and the Night Ruins. Each region has its own tiles, weather and landmark, an outpost (Healing Hut keeper and Cube Vault), a guide's home, route trainers and treasure chests.
+- **Side areas** off the road: Willowbrook Orchard, Whispering Grove, Driftwood Cove, Lantern Isle, Glimmer Mine, Steamvent Springs, Firefly Bayou and the Ancients' Archive, each with its own people, landmark and secrets.
+- **131 creatures**, some only out by day and some only at night.
 - **8 guide trials** (Bramble, Oakley, Gus, Dusty, Safi, Frida, Granny Moss, Corvin). Each gives a trail charm and a piece of the story, and opens the gate north.
 - **Juniper**, your rival, battles you five times with a team built against your starter.
 - **Fly** comes from Dusty after the Cave trial: the Wooden Whistle takes you to any place you've been.
 - **The finale** at the Moon Altar: calm the Dimmed Lunarion, then try to catch it. Then the credits, and the **Moonlit Spire** after the story (Lv 38 to 48 wilds, guide rematches, Juniper at Lv 50).
+- **The Lost Pages and the Long Dusk:** find the 12 missing pages of Elder Willow's book. Eight of them open the Dawn Temple, where Solarion sleeps; its Sun Ember lights the way to the Hollow Deep and shy Gloaming; and the three guardians meet at the top of the Spire for the Balance.
 - **Music and options:** a chiptune soundtrack made in code, and an Options screen for volumes, text speed, the follower, and day and night.
-- **Battles:** Fight / Bag / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP, level-ups, learning moves, evolving after a battle (or with the Sun and Moon Shards), four cube tiers, and the catch formula with a wobbling cube.
+- **Battles:** Fight / Bag / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP, level-ups, learning moves, evolving after a battle (or with the Sun and Moon Shards), five kinds of cube, and the catch formula with a wobbling cube.
+- **Your own creatures:** draw one and add it in `src/js/13b-family-creatures.js`, as a creature of any place, a Moonborn that can show up anywhere, or the Keeper of a side area (`docs/creature-catch-new-creatures.md`).
 - **Code-drawn life:** creatures breathe, bob, lunge, flash, shake and faint; attacks throw type particles and bursts; the maps have smoke, butterflies, falling leaves, snow, fog, fireflies, heat shimmer and glowing crystals.
 
 ## Art
@@ -68,9 +72,10 @@ node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.ht
 - `tools/`: build and doc scripts.
 - `docs/`: design and prompts. Read in this order:
   1. `creature-catch-decisions-2.md`: the latest decisions. It wins over everything below.
-  2. `creature-catch-handoff.md`: the full design.
-  3. `creature-catch-roster.md`: every creature's stats, learnset, and moves (generated).
-  4. `creature-catch-design-doc.md`: the first draft, partly replaced.
-  5. `creature-catch-new-creatures.md`: how to add your own creatures (drawing to game art to `src/js/13b-family-creatures.js`).
-  6. `creature-catch-polish-prompts.md`: the polish pack (side walks, guide walk sheets, Mega Potion, Creature Log, menu icons, VS intros, region signs). The full-game pack (`creature-catch-full-game-prompts.md`) and `creature-catch-missing-images.md` are done.
-  7. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).
+  2. `creature-catch-expansion-guide.md`: the v9 expansion (places, people, the Lost Pages, the post-game arc, the kids' creatures), with its art in `creature-catch-expansion-image-prompts.md`. `creature-catch-future-creatures.md` holds 19 more creature ideas, not in the game.
+  3. `creature-catch-handoff.md`: the full design.
+  4. `creature-catch-roster.md`: every creature's stats, learnset, and moves (generated).
+  5. `creature-catch-design-doc.md`: the first draft, partly replaced.
+  6. `creature-catch-new-creatures.md`: how to add your own creatures (drawing to game art to `src/js/13b-family-creatures.js`).
+  7. `creature-catch-polish-prompts.md`: the polish pack (side walks, guide walk sheets, Mega Potion, Creature Log, menu icons, VS intros, region signs). The full-game pack (`creature-catch-full-game-prompts.md`) and `creature-catch-missing-images.md` are done.
+  8. Image prompts: `creature-catch-image-prompts.md` (40 base creatures), `creature-catch-evolution-prompts.md` (24 evolutions), `creature-catch-world-prompts.md` (people, places, UI), and `creature-catch-extra-prompts.md` (the vampire line, effects, icons, portraits, interiors, outposts, gates, map).

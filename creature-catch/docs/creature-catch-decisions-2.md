@@ -131,3 +131,20 @@ They're generated in `creature-catch/src/js/12-data-creatures.js` and `11-data-m
 - **Rewards:** Dusty gives the Wooden Whistle (Fly), Corvin the Master Cube. The Sun Shard is in a Desert chest; Moon Shards are in the Swamp and the Night Ruins.
 - **Tobias** sells Ultra Cubes, tonics and Revives at the outposts from the Desert on.
 - **Post-game:** the Moonlit Spire (wilds Lv 38 to 48, seven guide rematches at Lv 44 to 47, Juniper at Lv 50).
+
+## 14. Added in v9 (the expansion)
+
+The expansion follows `creature-catch-expansion-guide.md`. Where the guide left a choice open, or where the game does something a little different, this is what was built:
+
+- **Copperbell Town is on the main road**, between the Crystal Cave and the Sunscorch Desert. The other new places are side areas off the road (and Lantern Isle is reached by boat). Fly has a spot for every place, and a side area's route on the Fly map joins the road it hangs off.
+- **Renames** so no two people share a name: the Lakeshore outpost keeper Coral is now **Marina** (Coral is the girl at Driftwood Cove), the Frostpeak keeper Holly is now **Noelle**, and trainers Sailor Bo, Herbalist Wren and Scholar Ada are now **Sailor Finn**, **Herbalist Sage** and **Scholar Edith** (Boatman Bo, Keeper Wren and Cubesmith Ada are the new characters).
+- **The Inn is in Home Village** (Rosa's Inn). Resting costs 30 coins and moves the game clock to the next morning or the next night, so you can find day and night creatures without waiting for the real clock.
+- **Day and night:** "night" includes dusk. A creature listed for one time of day only appears then.
+- **A wild creature at or above its evolution level appears evolved.** Without this, the later side areas would be full of first forms well past the level they should have grown.
+- **The Glyphling wall** counts Glyphlings in your party and the Vault together (three are needed).
+- **The Dawn Temple opens** when the moon is restored and you have at least 8 Lost Pages. Elder Willow points you to Safi's grandmother, Amani, at the oasis.
+- **Solarion and Gloaming** work like Lunarion: a calming battle first (they can't be caught and you can't run), then a second battle where you can catch them. If they get away, they wait where you found them.
+- **The Balance** gives the title "Keeper of the Long Dusk" (Elder Willow uses it), the Dusk Cube recipe (Cubesmith Ada sells Dusk Cubes from then on), and doubles the Moonborn chance. Bringing all 12 pages home after the Balance gives 5 Ultra Cubes.
+- **Keepers** use a normal 64x64 sprite; the battle draws them bigger, like every boss. A side area without a Keeper yet shows the landmark's legend line and nothing else.
+- **Moonborn** creatures get mid-game stats (the same as a Crystal Cave creature) and appear at the level of the place they turn up in.
+
