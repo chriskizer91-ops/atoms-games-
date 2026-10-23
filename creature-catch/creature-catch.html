@@ -6927,7 +6927,10 @@ var CC = window.CC || (window.CC = {});
           }
           CC.text('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });
           var pg = CC.img('items/lost-page'); // the Lost Pages of The Long Dusk found so far
-          if (s.flags.anyPage && pg) { g.drawImage(pg, 205, 130, 8, 8 * pg.height / pg.width); CC.text(String(CC.pageCount()), 215, 131, faint, { size: 8 }); }
+          if (s.flags.anyPage && pg) { // on a patch of plain paper, over the book's paw-print doodle
+            CC.rect(202, 127, 22, 11, '#efdcb8');
+            g.drawImage(pg, 204, 128, 9, 9 * pg.height / pg.width); CC.text(String(CC.pageCount()), 215, 129, ink, { size: 8 });
+          }
         },
       };
       CC.push(scr);
