@@ -548,7 +548,7 @@ var BUILDING_ART = {
   hut: { art: 'healing-hut', door: 0.5 }, outpost: { art: 'outpost-hut', door: 0.55, fallback: 'healing-hut' }, inn: { art: 'inn', door: 0.36, smoke: [0.73, 0.03] },
 };
 // buildings on the region maps name their picture (art) and these say how wide it is drawn and where its door sits
-var ART_INFO = {
+var ART_INFO = CC.ART_INFO = {
   'bramble-farmhouse': { door: 0.42, smoke: null }, 'oakley-ranger-station': { door: 0.45 }, 'gus-dock-shack': { door: 0.5 },
   'dusty-mine-office': { door: 0.5 }, 'safi-nomad-tent': { door: 0.45 }, 'frida-log-cabin': { door: 0.42, smoke: [0.27, 0.02] },
   'granny-moss-hut': { door: 0.5 }, 'corvin-watchtower': { door: 0.5, width: 34 }, 'moonlit-spire': { door: 0.5, width: 44 },
@@ -652,6 +652,7 @@ CC.world = {
     if (CC.music) CC.music.play(CC.mapTrack(mapId));
     this.fieldFx = null;
     CC.followReset(this);
+    if (this.map.onEnter) this.map.onEnter();
   },
   refresh: function () { CC.buildMapPicture(this.mapId); },
 
@@ -674,6 +675,8 @@ CC.world = {
     return m.exits.find(function (e) {
       if (e.side === 'top') return y < 0 && x >= e.x0 && x <= e.x1;
       if (e.side === 'bottom') return y >= h && x >= e.x0 && x <= e.x1;
+      if (e.side === 'left') return x < 0 && y >= e.y0 && y <= e.y1;
+      if (e.side === 'right') return x >= w && y >= e.y0 && y <= e.y1;
       return false;
     });
   },
@@ -724,7 +727,7 @@ CC.world = {
     s.dir = dir;
     var d = CC.DIRS[dir], nx = s.x + d[0], ny = s.y + d[1];
     var ex = this.exitAt(nx, ny);
-    if (ex) { this.run(function () { return CC.useExit(ex, nx); }); return; }
+    if (ex) { this.run(function () { return CC.useExit(ex, nx, ny); }); return; }
     if (this.blockScript && this.blockScript(nx, ny)) return;
     var b = this.buildingAt(nx, ny);
     if (b && b.door[0] === nx && b.door[1] === ny && dir === 'up') { var self = this; this.run(function () { return CC.enterDoor(self.mapId, b.id); }); return; }
@@ -1048,12 +1051,17 @@ CC.world = {
 };
 CC.DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
-CC.useExit = async function (ex, nx) {
+// exits on the top and bottom edges land at tx0 (+ how far along you were) and row ty; side exits land at column tx
+// and row ty0 (+ how far down you were)
+CC.useExit = async function (ex, nx, ny) {
   var dest = CC.MAPS[ex.to];
   if (CC.MAPS[CC.world.mapId].indoors) CC.sfx('back');
+  if (ex.check && !(await ex.check())) return dest; // a closed way (the check says why)
   await CC.fade(0.25, true);
-  var x = ex.fixedX ? ex.tx0 : ex.tx0 + (nx - ex.x0);
-  CC.world.enter(ex.to, x, ex.ty, ex.side === 'top' ? 'up' : 'down');
+  var sideways = ex.side === 'left' || ex.side === 'right';
+  var x = sideways ? ex.tx : ex.fixedX ? ex.tx0 : ex.tx0 + (nx - ex.x0);
+  var y = sideways ? (ex.fixedY ? ex.ty0 : ex.ty0 + (ny - ex.y0)) : ex.ty;
+  CC.world.enter(ex.to, x, y, { top: 'up', bottom: 'down', left: 'left', right: 'right' }[ex.side]);
   CC.world.cooldown = 2;
   await CC.fade(0.25, false);
   return dest;

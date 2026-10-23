@@ -178,13 +178,18 @@ var CC = window.CC || (window.CC = {});
   };
 
   // ---------- day and night (by the clock, unless Options says always day) ----------
+  // the hour of the day: the real clock, wound on by state.clockShift hours (resting at an inn moves it)
+  CC.gameHour = function () {
+    var d = new Date(), shift = (CC.state && CC.state.clockShift) || 0;
+    return ((d.getHours() + d.getMinutes() / 60 + shift) % 24 + 24) % 24;
+  };
   // 0 = full day, 1 = full night; dusk and dawn fade between with a warm tint
   CC.daylight = function () {
     var forced = CC.dev.time;
     if (forced === 'day' || (!forced && CC.opts.daynight !== 'clock')) return { night: 0, warm: 0 };
     if (forced === 'night') return { night: 1, warm: 0 };
     if (forced === 'dusk') return { night: 0.45, warm: 1 };
-    var d = new Date(), h = d.getHours() + d.getMinutes() / 60;
+    var h = CC.gameHour();
     if (h >= 7 && h < 17) return { night: 0, warm: 0 };
     if (h >= 17 && h < 19.5) { var k = (h - 17) / 2.5; return { night: k * 0.9, warm: Math.sin(k * Math.PI) }; }
     if (h >= 5 && h < 7) { var k2 = (7 - h) / 2; return { night: k2 * 0.9, warm: Math.sin(k2 * Math.PI) * 0.7 }; }

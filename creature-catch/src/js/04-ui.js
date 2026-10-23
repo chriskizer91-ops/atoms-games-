@@ -314,13 +314,14 @@ CC.bagScreen = async function () {
   while (true) {
     var keys = Object.keys(CC.ITEMS).filter(function (k) { var it = CC.ITEMS[k]; return it.key ? CC.state.flags[it.key] : CC.state.bag[k] > 0; });
     if (!keys.length) { await CC.say('Your bag is empty.'); return; }
-    var c = await CC.menu(keys.map(function (k) { var it = CC.ITEMS[k]; return { label: it.name, right: it.key ? '' : 'x' + CC.state.bag[k], icon: it.icon }; }), { title: 'Bag', w: 150 });
+    var c = await CC.menu(keys.map(function (k) { var it = CC.ITEMS[k]; return { label: it.name, right: it.key ? (it.count ? it.count() : '') : 'x' + CC.state.bag[k], icon: it.icon }; }), { title: 'Bag', w: 150 });
     if (c < 0) return;
     var k = keys[c], it = CC.ITEMS[k];
     if (k === 'whistle') {
       if (CC.MAPS[CC.state.map].indoors) { await CC.say('Timberowl can\'t fit in here. Try it outside!'); continue; }
       CC.sfx('select'); await CC.say('You blew the Wooden Whistle. Timberowl swoops down!'); await CC.flyScreen(); return;
     }
+    if (it.use) { if (await it.use()) return; continue; } // key items with their own screen (Lost Pages, the book)
     if (CC.usable(k)) {
       var i = await CC.partyScreen('pick', { title: 'Use a ' + it.name + ' on...' });
       if (i < 0) continue;
@@ -345,7 +346,7 @@ CC.itemProblem = function (k, m) {
   if (it.shard) { var e = CC.CREATURES[m.id].evo; return !e || e.at !== k ? 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.' : null; }
   if (it.revive) return m.hp > 0 ? name + ' hasn\'t fainted.' : null;
   if (m.hp <= 0) return 'A ' + it.name + ' can\'t wake a fainted creature.';
-  var helps = (it.heal && m.hp < max) || (it.cure && m.status) || (it.pp && !ppFull(m));
+  var helps = (it.heal && m.hp < max) || (it.cure && m.status && (it.cure === true || it.cure === m.status)) || (it.pp && !ppFull(m));
   if (helps) return null;
   if (it.pp && !it.heal) return name + '\'s moves are already full of PP.';
   return it.heal ? name + ' is already at full HP.' : name + ' is feeling fine.';
@@ -363,7 +364,7 @@ CC.useItemOn = function (k, m) {
     m.moves.forEach(function (x) { x.pp = Math.min(CC.MOVES[x.id].pp, x.pp + it.pp); });
     parts.push(it.pp >= 999 ? 'got all its PP back' : 'got back some PP');
   }
-  if (it.cure && m.status) { m.status = null; m.sleep = 0; parts.push('is cured'); }
+  if (it.cure && m.status && (it.cure === true || it.cure === m.status)) { m.status = null; m.sleep = 0; parts.push(it.cure === true ? 'is cured' : 'thawed out'); }
   var said = parts.length > 1 ? parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1] : parts[0];
   return { text: name + ' ' + said + '!', hp: m.hp - before };
 };

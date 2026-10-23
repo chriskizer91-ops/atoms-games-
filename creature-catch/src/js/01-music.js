@@ -155,17 +155,18 @@ var CC = window.CC || (window.CC = {});
   };
 
   // which track plays where
-  var MAP_TRACK = { village: 'village', meadow: 'route', grassland: 'route', forest: 'route', water: 'route', desert: 'route', cave: 'cave', snow: 'snow', swamp: 'swamp', ruins: 'ruins', spire: 'spire' };
+  var MAP_TRACK = CC.MAP_TRACK = { village: 'village', meadow: 'route', grassland: 'route', forest: 'route', water: 'route', desert: 'route', cave: 'cave', snow: 'snow', swamp: 'swamp', ruins: 'ruins', spire: 'spire' };
   CC.mapTrack = function (mapId) {
     if (MAP_TRACK[mapId]) return MAP_TRACK[mapId];
     var m = CC.MAPS[mapId];
-    if (m && m.indoors) { // rooms play their town's music: the village's, or the outpost's cozy version
+    if (m && m.indoors) { // rooms play their town's music: the village's, Copperbell's, or the outpost's cozy version
       var out = m.exits && m.exits[0] && m.exits[0].to;
-      return out === 'village' ? 'village' : 'outpost';
+      return out === 'village' ? 'village' : MAP_TRACK[out] === 'town' ? 'town' : 'outpost';
     }
     return 'route';
   };
   CC.battleTrack = function (opts) {
+    if (opts.music) return opts.music;
     return { guide: 'guide', rival: 'rival', boss: 'boss', trainer: 'trainer' }[opts.vs] || (opts.boss ? 'boss' : opts.trainer ? 'trainer' : 'wild');
   };
 
@@ -215,6 +216,32 @@ var CC = window.CC || (window.CC = {});
       bpm: 70, chords: ['E', 'C#m', 'A', 'B', 'E', 'G#m', 'A', 'B'], echo: true,
       lead: 'B5:4 G#5:4 E6:8 | E6:4 D#6:2 C#6:2 G#5:8 | A5:4 C#6:4 E6:4 F#6:4 | D#6:8 B5:8 | G#6:6 F#6:2 E6:8 | D#6:4 B5:4 G#5:8 | C#6:4 E6:4 A6:4 G#6:2 F#6:2 | F#6:8 D#6:8',
       bass: 'R:8 5:8', arp: '1 5 8 5', drums: 'h:8 h:8', voices: { lead: { wave: 'triangle', vol: 0.17 } },
+    },
+    // the expansion's places
+    town: { // Copperbell: a busy hill town with bells in it
+      bpm: 112, chords: ['Bb', 'F', 'Gm', 'Eb', 'Bb', 'F', 'Eb', 'F'],
+      lead: 'D5:4 F5:4 Bb5:6 A5:2 | C6:4 A5:4 F5:8 | G5:4 Bb5:4 D6:6 C6:2 | Bb5:4 G5:4 Eb5:8 | F5:2 G5:2 Bb5:4 D6:4 F6:4 | Eb6:4 C6:4 A5:8 | G5:4 Bb5:2 C6:2 Eb6:4 D6:4 | C6:12 -:4',
+      bass: 'R:4 5:4 R:4 5:4', arp: '1:2 3:2 5:2 8:2', drums: 'k:4 h:2 h:2 s:4 h:4', voices: { arp: { wave: 'triangle', vol: 0.05 } },
+    },
+    seaside: { // Driftwood Cove and Lantern Isle
+      bpm: 104, chords: ['C', 'Am', 'Dm', 'G', 'C', 'Em', 'F', 'G'], echo: true,
+      lead: 'E5:6 G5:2 C6:8 | A5:4 C6:4 E6:8 | F6:4 E6:2 D6:2 A5:8 | B5:12 -:4 | C6:4 E6:4 G6:6 F6:2 | E6:4 B5:4 G5:8 | A5:2 C6:2 F6:4 E6:4 D6:4 | D6:8 G5:8',
+      bass: 'R:4 -:2 5:2 R:4 8:4', arp: '1 5 8 5', drums: 'k:4 h:4 s:4 h:2 h:2',
+    },
+    temple: { // the Dawn Temple: warm and old
+      bpm: 90, chords: ['Em', 'F', 'Em', 'D', 'Em', 'F', 'G', 'F'], echo: true,
+      lead: 'E5:4 F5:4 B5:8 | A5:2 G5:2 F5:4 E5:8 | G5:4 A5:4 B5:4 C6:4 | D6:12 -:4 | E6:4 F6:2 E6:2 B5:8 | C6:4 B5:2 A5:2 F5:8 | G5:4 B5:4 D6:4 C6:4 | B5:8 F5:8',
+      bass: 'R:4 R:4 5:4 R:4', arp: '1 3 5 3', drums: 'k:4 -:4 k:2 k:2 s:4', voices: { arp: { vol: 0.03 } },
+    },
+    hollow: { // the Hollow Deep: sad and quiet, not scary
+      bpm: 64, chords: ['Am', 'Em', 'F', 'C', 'Dm', 'Am', 'E', 'E'], echo: true,
+      lead: 'E5:8 C5:4 A4:4 | B4:8 G4:8 | A4:4 C5:4 F5:8 | E5:12 -:4 | F5:4 E5:4 D5:8 | C5:4 B4:4 A4:8 | G#4:4 B4:4 E5:8 | -:16',
+      bass: 'R:16', arp: '1:4 5:4 8:4 5:4', drums: 'h:8 h:8', voices: { lead: { wave: 'triangle', vol: 0.16 }, arp: { vol: 0.03 } },
+    },
+    lullaby: { // calming Gloaming: a soft lullaby instead of battle music
+      bpm: 72, chords: ['F', 'Dm', 'Bb', 'C', 'F', 'Am', 'Bb', 'C'], echo: true,
+      lead: 'C6:4 A5:4 F5:8 | D6:4 C6:4 A5:8 | Bb5:4 D6:4 F6:6 E6:2 | E6:8 C6:8 | A5:4 C6:4 F6:8 | E6:4 C6:4 A5:8 | G5:4 Bb5:4 D6:4 C6:4 | C6:16',
+      bass: 'R:8 5:8', arp: '1:2 3:2 5:2 8:2', drums: 'h:8 h:8', voices: { lead: { wave: 'triangle', vol: 0.17 }, arp: { wave: 'pulse12', vol: 0.03 } },
     },
     wild: {
       bpm: 150, chords: ['Am', 'F', 'G', 'E', 'Am', 'F', 'G', 'E'],

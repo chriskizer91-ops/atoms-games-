@@ -185,7 +185,7 @@ var CC = window.CC || (window.CC = {});
     water: [
       { id: 'water-1', art: 'trainer-3', name: 'Swimmer Kai', x: 16, y: 21, dir: 'left', sight: 3, team: [['bubblefin', 12], ['crabbit', 13]],
         intro: 'Water\'s great! Let\'s splash!', win: 'Glub glub...', after: 'Swim between battles. It\'s good training.' },
-      { id: 'water-2', art: 'trainer-4', name: 'Sailor Bo', x: 16, y: 9, dir: 'left', sight: 3, team: [['tidepuff', 13], ['sealamp', 13], ['crabbit', 13]],
+      { id: 'water-2', art: 'trainer-4', name: 'Sailor Finn', x: 16, y: 9, dir: 'left', sight: 3, team: [['tidepuff', 13], ['sealamp', 13], ['crabbit', 13]],
         intro: 'Ahoy! Prepare to be boarded!', win: 'Abandon ship!', after: 'The lighthouse hasn\'t been needed this much in years. Dark nights.' },
     ],
     cave: [
@@ -207,13 +207,13 @@ var CC = window.CC || (window.CC = {});
         intro: 'Every peak, every battle. Let\'s climb!', win: 'I\'ll need a rest after that.', after: 'From the top, the ruins look so dark at night.' },
     ],
     swamp: [
-      { id: 'swamp-1', art: 'trainer-11', name: 'Herbalist Wren', x: 12, y: 18, dir: 'right', sight: 3, team: [['lilypadle', 28], ['mudgator', 28]],
+      { id: 'swamp-1', art: 'trainer-11', name: 'Herbalist Sage', x: 12, y: 18, dir: 'right', sight: 3, team: [['lilypadle', 28], ['mudgator', 28]],
         intro: 'These swamp flowers make great medicine. And great battlers!', win: 'Wilted...', after: 'Granny Moss taught me everything I know.' },
       { id: 'swamp-2', art: 'trainer-12', name: 'Ghost Hunter Vale', x: 8, y: 9, dir: 'right', sight: 3, team: [['mireling', 29], ['wispeel', 29], ['mudgator', 30]],
         intro: 'My lantern sees ghosts. And you!', win: 'Spooked out...', after: 'The ghosts in the ruins are restless. Something\'s wrong up there.' },
     ],
     ruins: [
-      { id: 'ruins-1', art: 'trainer-13', name: 'Scholar Ada', x: 7, y: 22, dir: 'left', sight: 3, team: [['pebbleton', 32], ['wispkin', 32], ['bonecat', 33]],
+      { id: 'ruins-1', art: 'trainer-13', name: 'Scholar Edith', x: 7, y: 22, dir: 'left', sight: 3, team: [['pebbleton', 32], ['wispkin', 32], ['bonecat', 33]],
         intro: 'These runes say: "battle the traveler." I think. Let\'s go!', win: 'I mistranslated that.', after: 'The runes speak of a guardian who keeps the moon alight.' },
       { id: 'ruins-2', art: 'trainer-14', name: 'Moon Priestess Selene', x: 15, y: 13, dir: 'left', sight: 3, team: [['moonlynx', 33], ['wispkin', 33], ['fangling', 34]],
         intro: 'The moon watches us. Let it see you battle.', win: 'The moon has chosen well.', after: 'Lunarion is in pain. Please, be gentle with it.' },

@@ -102,6 +102,74 @@ var ROWS = [
   // the moon's guardian: the dimmed form is the final battle; calmed, it becomes Lunarion and can be caught
   ['lunariond', 'Dimmed Lunarion', ['Shadow', 'Lumen'], 9, 'legend', 'bulk', 'eclipsefang', null, ['quad', '#2a2a5a', '#8a6ad8']],
   ['lunarion', 'Lunarion', ['Lumen'], 9, 'legend', 'bal', 'moonsong', null, ['quad', '#e8eef8', '#f8e8a0']],
+
+  // ---------- the expansion (docs/creature-catch-expansion-guide.md, section 6) ----------
+  // the 10th entry is the creature's home place (a CC.SPAWNS key); the region number only sets its stat budget
+  // new creatures in the old regions
+  ['puffmunk', 'Puffmunk', ['Normal'], 1, 'base', 'bal', 'cheekstash', ['stashmunk', 16], ['quad', '#c8884a', '#f0d8b0'], 'meadow'],
+  ['stashmunk', 'Stashmunk', ['Normal'], 1, 'final', 'bal', 'cheekstash', null, ['quad', '#a86a32', '#f0d8b0'], 'meadow'],
+  ['fleecling', 'Fleecling', ['Normal'], 1, 'base', 'bulk', 'woolpuff', ['cloudram', 22], ['quad', '#f8f8f8', '#5a5050'], 'meadow'],
+  ['cloudram', 'Cloudram', ['Normal', 'Bolt'], 1, 'final', 'bulk', 'woolpuff', null, ['quad', '#f0f0f8', '#f0c828'], 'meadow'],
+  ['dewt', 'Dewt', ['Water'], 2, 'base', 'fast', 'dewdropdash', ['monsoonewt', 20], ['serpent', '#a8d8f8', '#e8f8ff'], 'grassland'],
+  ['monsoonewt', 'Monsoonewt', ['Water'], 2, 'final', 'fast', 'dewdropdash', null, ['serpent', '#5a9ae8', '#a8b0c0'], 'grassland'],
+  ['burrhog', 'Burrhog', ['Plant', 'Earth'], 3, 'solo', 'tank', 'burrball', null, ['round', '#c8883a', '#6a8a2a'], 'forest'],
+  ['splotter', 'Splotter', ['Water'], 4, 'base', 'fast', 'splashjuggle', ['tidotter', 20], ['quad', '#8a5a32', '#e8d0b0'], 'water'],
+  ['tidotter', 'Tidotter', ['Water'], 4, 'final', 'fast', 'splashjuggle', null, ['quad', '#7a4a2a', '#5ab0e8'], 'water'],
+  ['honkwave', 'Honkwave', ['Normal', 'Water'], 4, 'solo', 'atk', 'honkblast', null, ['bird', '#f8f8f0', '#f0a030'], 'water'],
+  ['rimeskink', 'Rimeskink', ['Frost'], 5, 'solo', 'fast', 'rimelick', null, ['serpent', '#c8e8f8', '#8ac8f0'], 'cave'],
+  ['shardling', 'Shardling', ['Earth', 'Lumen'], 5, 'base', 'bulk', 'prismglint', ['crystalwyrm', 28], ['round', '#a8c8f8', '#c8a8f0'], 'cave'],
+  ['crystalwyrm', 'Crystalwyrm', ['Earth', 'Lumen'], 5, 'final', 'bulk', 'prismglint', null, ['serpent', '#a8d8f8', '#c8a8f0'], 'cave'],
+  ['kilnadillo', 'Kilnadillo', ['Fire', 'Earth'], 6, 'solo', 'tank', 'kilnroll', null, ['round', '#c86a2a', '#f0a050'], 'desert'],
+  ['mirajack', 'Mirajack', ['Lumen'], 6, 'solo', 'glass', 'miragehop', null, ['quad', '#d8b080', '#f8e8c8'], 'desert'],
+  ['flurrpaca', 'Flurrpaca', ['Frost', 'Normal'], 7, 'solo', 'wall', 'flurryspit', null, ['quad', '#f8f8f8', '#c84a3a'], 'snow'],
+  ['aurorelly', 'Aurorelly', ['Frost', 'Lumen'], 7, 'solo', 'bal', 'aurorasting', null, ['ghost', '#c8f0f8', '#a8f0c8'], 'snow'],
+  ['snaptrap', 'Snaptrap', ['Plant', 'Shadow'], 8, 'base', 'atk', 'snapshut', ['gnashtrap', 32], ['round', '#6ab83a', '#e85a4a'], 'swamp'],
+  ['gnashtrap', 'Gnashtrap', ['Plant', 'Shadow'], 8, 'final', 'atk', 'snapshut', null, ['round', '#4a9a2a', '#e85a4a'], 'swamp'],
+  ['fireflink', 'Fireflink', ['Fire', 'Bolt'], 8, 'solo', 'fast', 'flickerspark', null, ['bug', '#6a4a2a', '#f8a020'], 'swamp'],
+  ['mimicube', 'Mimicube', ['Shadow'], 9, 'base', 'tank', 'gotchachomp', ['mimichest', 'moonshard'], ['round', '#7a4ac8', '#3a8ee8'], 'ruins'],
+  ['mimichest', 'Mimichest', ['Shadow', 'Earth'], 9, 'final', 'tank', 'gotchachomp', null, ['round', '#a86a2a', '#f0c040'], 'ruins'],
+  ['glyphling', 'Glyphling', ['Lumen'], 9, 'solo', 'fast', 'runeflash', null, ['ghost', '#4ae0c8', '#a8f8e8'], 'ruins'],
+  ['twinkit', 'Twinkit', ['Lumen'], 10, 'base', 'fast', 'twinklepounce', ['starlynx', 45], ['quad', '#2a3a6a', '#f8e050'], 'spire'],
+  ['starlynx', 'Starlynx', ['Lumen'], 10, 'final', 'fast', 'twinklepounce', null, ['quad', '#1e2a5a', '#f8e050'], 'spire'],
+  ['comette', 'Comette', ['Lumen', 'Fire'], 10, 'solo', 'glass', 'comettail', null, ['round', '#f8c040', '#f86a20'], 'spire'],
+  // side-area creatures
+  ['wormapple', 'Wormapple', ['Plant', 'Normal'], 2, 'solo', 'wall', 'coreburrow', null, ['round', '#e83a2a', '#8ad83a'], 'orchard'],
+  ['scarecrowl', 'Scarecrowl', ['Shadow'], 2, 'solo', 'glass', 'scareflap', null, ['bird', '#2a2430', '#c8a050'], 'orchard'],
+  ['sprigkin', 'Sprigkin', ['Plant', 'Lumen'], 3, 'base', 'bal', 'sprigsong', ['grovekin', 24], ['biped', '#8ad83a', '#f8e050'], 'grove'],
+  ['grovekin', 'Grovekin', ['Plant', 'Lumen'], 3, 'final', 'bal', 'sprigsong', null, ['biped', '#5ab83a', '#f8e050'], 'grove'],
+  ['snoozeloth', 'Snoozeloth', ['Normal', 'Plant'], 3, 'solo', 'wall', 'bigyawn', null, ['biped', '#8a7a5a', '#6ab83a'], 'grove'],
+  ['shellbit', 'Shellbit', ['Water', 'Normal'], 4, 'base', 'tank', 'shellhum', ['conchord', 24], ['bug', '#f0a0b0', '#f06a3a'], 'cove'],
+  ['conchord', 'Conchord', ['Water', 'Normal'], 4, 'final', 'tank', 'shellhum', null, ['bug', '#f8b8c8', '#f06a3a'], 'cove'],
+  ['glimstar', 'Glimstar', ['Water', 'Lumen'], 4, 'solo', 'bal', 'starspin', null, ['round', '#f8a06a', '#f8e050'], 'cove'],
+  ['puffling', 'Puffling', ['Water', 'Frost'], 5, 'base', 'fast', 'captainsdive', ['puffcaptain', 26], ['bird', '#2a2a30', '#f08a2a'], 'isle'],
+  ['puffcaptain', 'Puffcaptain', ['Water', 'Frost'], 5, 'final', 'fast', 'captainsdive', null, ['bird', '#2a2a30', '#f8f8f8'], 'isle'],
+  ['krakling', 'Krakling', ['Water', 'Shadow'], 5, 'base', 'atk', 'inksquirt', ['kraketide', 34], ['ghost', '#8a5ac8', '#5ae0e0'], 'isle'],
+  ['kraketide', 'Kraketide', ['Water', 'Shadow'], 5, 'final', 'atk', 'inksquirt', null, ['ghost', '#6a3aa8', '#5ae0e0'], 'isle'],
+  ['rustcoon', 'Rustcoon', ['Normal', 'Earth'], 5, 'solo', 'fast', 'coinswipe', null, ['quad', '#8a8478', '#c8783a'], 'copperbell'],
+  ['dingdove', 'Dingdove', ['Normal', 'Bolt'], 5, 'solo', 'bal', 'belltoll', null, ['bird', '#f0ece0', '#c8883a'], 'copperbell'],
+  ['coalcub', 'Coalcub', ['Fire', 'Earth'], 6, 'base', 'bulk', 'coalswipe', ['coalossus', 30], ['quad', '#2a2424', '#f06a2a'], 'mine'],
+  ['coalossus', 'Coalossus', ['Fire', 'Earth'], 6, 'final', 'bulk', 'coalswipe', null, ['biped', '#2a2424', '#f06a2a'], 'mine'],
+  ['pickaxolotl', 'Pickaxolotl', ['Water', 'Earth'], 6, 'solo', 'atk', 'pickstrike', null, ['frog', '#f8b8c8', '#8a8a90'], 'mine'],
+  ['steamacaque', 'Steamacaque', ['Fire', 'Water'], 7, 'base', 'bal', 'steamsplash', ['geysape', 32], ['biped', '#c8b8a0', '#e85a4a'], 'springs'],
+  ['geysape', 'Geysape', ['Fire', 'Water'], 7, 'final', 'bal', 'steamsplash', null, ['biped', '#b89a78', '#e85a4a'], 'springs'],
+  ['mittencub', 'Mittencub', ['Fire', 'Frost'], 7, 'solo', 'bulk', 'warmhug', null, ['quad', '#f8f8f8', '#e84a3a'], 'springs'],
+  ['lotusprite', 'Lotusprite', ['Water', 'Lumen'], 8, 'base', 'bal', 'lotusglow', ['lotusage', 36], ['ghost', '#a8c8f8', '#f8a8c8'], 'bayou'],
+  ['lotusage', 'Lotusage', ['Water', 'Lumen'], 8, 'final', 'bal', 'lotusglow', null, ['ghost', '#8ab0f0', '#f8a8c8'], 'bayou'],
+  ['mudtusk', 'Mudtusk', ['Earth', 'Normal'], 8, 'solo', 'bulk', 'mudcharge', null, ['quad', '#8a5a32', '#f0e8d0'], 'bayou'],
+  ['inkwing', 'Inkwing', ['Shadow', 'Normal'], 9, 'base', 'glass', 'inkquill', ['tomeraven', 40], ['bird', '#2a2440', '#8a6ad8'], 'archive'],
+  ['tomeraven', 'Tomeraven', ['Shadow', 'Normal'], 9, 'final', 'glass', 'inkquill', null, ['bird', '#2a2440', '#c84a8a'], 'archive'],
+  ['clocktoise', 'Clocktoise', ['Earth', 'Bolt'], 9, 'solo', 'wall', 'timetap', null, ['turtle', '#7a8a5a', '#f0c040'], 'archive'],
+  ['sphinxie', 'Sphinxie', ['Lumen'], 10, 'base', 'fast', 'riddleray', ['sphinxar', 46], ['quad', '#e8c080', '#3a5ab0'], 'temple'],
+  ['sphinxar', 'Sphinxar', ['Lumen', 'Earth'], 10, 'final', 'fast', 'riddleray', null, ['quad', '#e8b860', '#f0c040'], 'temple'],
+  ['mummoth', 'Mummoth', ['Normal', 'Shadow'], 10, 'solo', 'bulk', 'wrapstomp', null, ['quad', '#e8d8b0', '#8a7a5a'], 'temple'],
+  ['echoling', 'Echoling', ['Shadow', 'Earth'], 10, 'base', 'tank', 'echoboom', ['echolith', 48], ['round', '#7a7880', '#8a4ac8'], 'hollow'],
+  ['echolith', 'Echolith', ['Shadow', 'Earth'], 10, 'final', 'tank', 'echoboom', null, ['biped', '#6a6870', '#8a4ac8'], 'hollow'],
+  ['umbramoth', 'Umbramoth', ['Shadow'], 10, 'solo', 'glass', 'shadedust', null, ['bug', '#3a2a5a', '#8a6ad8'], 'hollow'],
+  // the other two guardians: the battle forms (groggy, hiding), then the calmed forms you can catch
+  ['groggysolarion', 'Groggy Solarion', ['Fire', 'Lumen'], 10, 'legend', 'bulk', 'dawnbreak', null, ['quad', '#c88a2a', '#f0c040'], 'temple'],
+  ['solarion', 'Solarion', ['Fire', 'Lumen'], 10, 'legend', 'atk', 'dawnbreak', null, ['quad', '#f8c040', '#f86a20'], 'temple'],
+  ['hidinggloaming', 'Hiding Gloaming', ['Shadow'], 10, 'legend', 'wall', 'duskfall', null, ['ghost', '#5a3a8a', '#f8a060'], 'hollow'],
+  ['gloaming', 'Gloaming', ['Shadow'], 10, 'legend', 'fast', 'duskfall', null, ['ghost', '#7a5ab0', '#f8a060'], 'hollow'],
 ];
 
 // Stat budget (base total). docs/creature-catch-decisions-2.md section 10.
@@ -151,6 +219,7 @@ ROWS.forEach(function (row) {
     learn: learnset(row[2], row[5], row[6], kind),
     xpYield: Math.round(total / 4),
   };
+  if (row[9]) CC.CREATURES[id].home = row[9];
   CC.CREATURE_ORDER.push(id);
 });
 // evolved forms point back at what they came from

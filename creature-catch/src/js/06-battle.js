@@ -400,6 +400,7 @@ var CC = window.CC || (window.CC = {});
           await CC.say(nm(target) + ' had its energy drained!');
         }
       }
+      if (fx.coins && user === B.ally) B.coinSwipe = { by: nm(user), n: (B.coinSwipe ? B.coinSwipe.n : 0) + 1 }; // Coin Swipe: extra coins if you win
       if (fx.recoil && user.mon.hp > 0 && !(CC.dev.god && user === B.ally)) {
         user.mon.hp = Math.max(0, user.mon.hp - Math.max(1, Math.floor(total * fx.recoil)));
         await Promise.all([hitFx(user, 1, false, 'Normal'), hpTo(user)]);
@@ -579,7 +580,7 @@ var CC = window.CC || (window.CC = {});
   // ---------- catching ----------
   var RARITY_BONUS = { common: 25, uncommon: 10, rare: -5, veryrare: -15 };
   function catchChance(m) {
-    var bonus = CC.ITEMS[B.cubeKind || 'cube'].cube;
+    var it = CC.ITEMS[B.cubeKind || 'cube'], bonus = it.duskCube ? (CC.isNight() ? it.duskCube : it.cube) : it.cube;
     if (CC.dev.catchAll || bonus >= 999) return 100;
     var max = CC.mon.maxHp(m), st = m.status;
     var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[CC.RARITY[m.id]] || 0) + bonus;
@@ -802,6 +803,11 @@ var CC = window.CC || (window.CC = {});
       if (B.trainer.winText) await CC.say(B.trainer.winText, { who: B.trainer.name });
     }
     if (coins) { CC.state.coins += coins; await CC.say('You got ' + coins + ' coins' + (B.wild ? '.' : ' for winning!')); }
+    if (B.coinSwipe) {
+      var extra = B.foe.mon.lv * 3 * Math.min(3, B.coinSwipe.n);
+      CC.state.coins += extra; CC.sfx('buy');
+      await CC.say(B.coinSwipe.by + ' swiped ' + extra + ' shiny coins during the battle!');
+    }
     // evolution after the battle, for anyone who grew
     for (var k in B.leveled) {
       var m = CC.state.party[k];

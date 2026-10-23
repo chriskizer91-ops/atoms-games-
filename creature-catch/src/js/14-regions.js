@@ -331,19 +331,23 @@ function blocks(rows, letters) {
   }
   return out;
 }
-Object.keys(R_MAPS).forEach(function (key) {
-  var m = R_MAPS[key];
+// a region map from its ASCII: buildingIds name the B/D blocks in reading order, either an id (its picture from
+// BUILDING_KIND) or [id, picture]; the first L block is the landmark
+CC.addRegion = function (key, m) {
   m.buildings = blocks(m.rows, 'BD').map(function (b, i) {
-    var id = m.buildingIds[i];
-    return { id: id, x: b.x, y: b.y, w: b.w, h: b.h, door: b.door, art: id.indexOf('outpost') === 0 ? 'outpost-hut' : BUILDING_KIND[id], small: true };
+    var id = m.buildingIds[i], art = null;
+    if (Array.isArray(id)) { art = id[1]; id = id[0]; }
+    return { id: id, x: b.x, y: b.y, w: b.w, h: b.h, door: b.door, art: art || (id.indexOf('outpost') === 0 ? 'outpost-hut' : BUILDING_KIND[id]), small: true };
   });
   var lm = blocks(m.rows, 'L')[0];
   if (lm && m.landmark) m.landmarkAt = lm;
   // B, D and L draw as ground underneath the pictures
   m.rows = m.rows.map(function (r) { return r.replace(/[BDL]/g, function (c) { return c === 'L' ? 'L' : '.'; }); });
-  m.exits = [];
+  m.exits = m.exits || [];
   CC.MAPS[key] = m;
-});
+  return m;
+};
+Object.keys(R_MAPS).forEach(function (key) { R_MAPS[key].exits = []; CC.addRegion(key, R_MAPS[key]); });
 // the road: each region's top exit leads to the next region's bottom, and back
 for (var i = 0; i < ORDER.length - 1; i++) {
   var a = CC.MAPS[ORDER[i]], b = CC.MAPS[ORDER[i + 1]];
@@ -364,8 +368,8 @@ CC.MAPS.grassland.buildings.push({ id: 'home-bramble', x: 2, y: 2, w: 4, h: 3, d
 
 // ---------- rooms: every outpost, and each guide's home ----------
 var KEEPERS = {
-  forest: ['Basil', 'villager-5'], water: ['Coral', 'villager-6'], cave: ['Flint', 'villager-4'], desert: ['Saffron', 'villager-7'],
-  snow: ['Holly', 'villager-3'], swamp: ['Reed', 'villager-2'], ruins: ['Luna', 'villager-8'],
+  forest: ['Basil', 'villager-5'], water: ['Marina', 'villager-6'], cave: ['Flint', 'villager-4'], desert: ['Saffron', 'villager-7'],
+  snow: ['Noelle', 'villager-3'], swamp: ['Reed', 'villager-2'], ruins: ['Luna', 'villager-8'],
 };
 CC.KEEPERS = KEEPERS;
 function outpostRoom(key) {
@@ -407,7 +411,10 @@ function homeRoom(id) {
 Object.keys(HOMES).forEach(homeRoom);
 
 // ---------- spawns past the Night Ruins ----------
-CC.SPAWNS.spire = { name: 'Moonlit Spire', levels: [38, 48], common: ['boulderhound', 'timberowl', 'surgefin', 'glacistoat'], uncommon: ['prismole', 'duneserpent', 'pengarch', 'beaconwraith'], rare: ['koidrake', 'bonepanther', 'rosferatu'] };
+var spire = { name: 'Moonlit Spire', levels: [38, 48], common: ['boulderhound', 'timberowl', 'surgefin', 'glacistoat'], uncommon: ['prismole', 'duneserpent', 'pengarch', 'beaconwraith'], rare: ['koidrake', 'bonepanther', 'rosferatu'] };
+var early = CC.SPAWNS.spire; // creatures added before this file (src/js/12b-data-expansion.js)
+if (early) { ['common', 'uncommon', 'rare'].forEach(function (t) { spire[t] = spire[t].concat(early[t] || []); }); spire.time = early.time; }
+CC.SPAWNS.spire = spire;
 // family creatures that live in the Spire (src/js/13b-family-creatures.js)
 (CC.SPAWN_LATER || []).forEach(function (s) { CC.SPAWNS[s[0]][s[1]].push(s[2]); CC.RARITY[s[2]] = s[1]; });
 ['common', 'uncommon', 'rare'].forEach(function (t) { CC.SPAWNS.spire[t].forEach(function (id) { if (!CC.RARITY[id]) CC.RARITY[id] = t; }); });

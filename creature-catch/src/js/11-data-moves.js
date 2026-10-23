@@ -3,7 +3,8 @@
 //   status: 'burn'|'freeze'|'shock'|'poison'|'sleep', chance (percent, default 100)
 //   stat: 'atk'|'def'|'spd'|'acc', stages (+ or -), self (true = user), chance
 //   drain (share of damage healed), recoil (share of damage taken), heal (share of max HP)
-//   crit (high critical rate), priority (goes first), hits [min, max]
+//   crit (high critical rate), priority (goes first), hits [min, max], coins (extra coins if you win the battle)
+//   A damaging move with no acc never misses.
 var CC = window.CC || (window.CC = {});
 
 CC.MOVES = {
@@ -93,6 +94,50 @@ CC.MOVES = {
   eclipsefang: { name: 'Eclipse Fang', type: 'Shadow', tier: 'sig', power: 90, acc: 95, pp: 10, fx: { stat: 'acc', stages: -1, chance: 30 } },
   moonsong: { name: 'Moonsong', type: 'Lumen', tier: 'sig', power: 90, acc: 100, pp: 10, fx: { drain: 0.5 } },
   crescentclaw: { name: 'Crescent Claw', type: 'Lumen', tier: 'sig', power: 75, acc: 100, pp: 10, fx: { crit: true } },
+
+  // The expansion's lines (docs/creature-catch-expansion-guide.md, section 6)
+  cheekstash: { name: 'Cheek Stash', type: 'Normal', tier: 'sig', power: 50, acc: 100, pp: 15, fx: { drain: 0.25 } },
+  woolpuff: { name: 'Wool Puff', type: 'Normal', tier: 'sig', power: 45, acc: 100, pp: 15, fx: { stat: 'def', stages: 1, self: true } },
+  dewdropdash: { name: 'Dewdrop Dash', type: 'Water', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { priority: 1 } },
+  burrball: { name: 'Burr Ball', type: 'Plant', tier: 'sig', power: 65, acc: 100, pp: 15, fx: { stat: 'spd', stages: -1, chance: 30 } },
+  splashjuggle: { name: 'Splash Juggle', type: 'Water', tier: 'sig', power: 45, acc: 100, pp: 15, fx: { hits: [2, 2] } },
+  honkblast: { name: 'Honk Blast', type: 'Normal', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { stat: 'atk', stages: -1, chance: 30 } },
+  rimelick: { name: 'Rime Lick', type: 'Frost', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { status: 'freeze', chance: 20 } },
+  prismglint: { name: 'Prism Glint', type: 'Lumen', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { stat: 'acc', stages: -1, chance: 30 } },
+  kilnroll: { name: 'Kiln Roll', type: 'Fire', tier: 'sig', power: 70, acc: 95, pp: 15, fx: { stat: 'def', stages: 1, self: true } },
+  miragehop: { name: 'Mirage Hop', type: 'Lumen', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { stat: 'acc', stages: -1 } },
+  flurryspit: { name: 'Flurry Spit', type: 'Frost', tier: 'sig', power: 55, acc: 100, pp: 15, fx: { stat: 'spd', stages: -1 } },
+  aurorasting: { name: 'Aurora Sting', type: 'Frost', tier: 'sig', power: 75, acc: 95, pp: 10, fx: { status: 'freeze', chance: 20 } },
+  snapshut: { name: 'Snap Shut', type: 'Plant', tier: 'sig', power: 75, acc: 95, pp: 10, fx: { crit: true } },
+  flickerspark: { name: 'Flicker Spark', type: 'Fire', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { status: 'shock', chance: 20 } },
+  gotchachomp: { name: 'Gotcha Chomp', type: 'Shadow', tier: 'sig', power: 80, acc: 95, pp: 10, fx: { stat: 'def', stages: -1 } },
+  runeflash: { name: 'Rune Flash', type: 'Lumen', tier: 'sig', power: 65, acc: 100, pp: 15, fx: { stat: 'def', stages: -1, chance: 30 } },
+  twinklepounce: { name: 'Twinkle Pounce', type: 'Lumen', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { crit: true } },
+  comettail: { name: 'Comet Tail', type: 'Fire', tier: 'sig', power: 85, acc: 95, pp: 10, fx: { recoil: 0.25 } },
+  coreburrow: { name: 'Core Burrow', type: 'Plant', tier: 'sig', power: 55, acc: 100, pp: 15, fx: { stat: 'def', stages: 1, self: true } },
+  scareflap: { name: 'Scare Flap', type: 'Shadow', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { stat: 'atk', stages: -1 } },
+  sprigsong: { name: 'Sprig Song', type: 'Plant', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { drain: 0.25 } },
+  bigyawn: { name: 'Big Yawn', type: 'Normal', tier: 'sig', power: 50, acc: 100, pp: 15, fx: { status: 'sleep', chance: 50 } },
+  shellhum: { name: 'Shell Hum', type: 'Water', tier: 'sig', power: 55, acc: 100, pp: 15, fx: { stat: 'spd', stages: -1 } },
+  starspin: { name: 'Star Spin', type: 'Lumen', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { hits: [2, 2] } },
+  captainsdive: { name: 'Captain\'s Dive', type: 'Water', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { priority: 1 } },
+  inksquirt: { name: 'Ink Squirt', type: 'Shadow', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { stat: 'acc', stages: -1 } },
+  coinswipe: { name: 'Coin Swipe', type: 'Normal', tier: 'sig', power: 50, acc: 100, pp: 20, fx: { coins: true } },
+  belltoll: { name: 'Bell Toll', type: 'Bolt', tier: 'sig', power: 55, acc: 100, pp: 15, fx: { status: 'shock', chance: 20 } },
+  coalswipe: { name: 'Coal Swipe', type: 'Fire', tier: 'sig', power: 65, acc: 100, pp: 15, fx: { status: 'burn', chance: 20 } },
+  pickstrike: { name: 'Pick Strike', type: 'Earth', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { crit: true } },
+  steamsplash: { name: 'Steam Splash', type: 'Water', tier: 'sig', power: 65, acc: 100, pp: 15, fx: { status: 'burn', chance: 20 } },
+  warmhug: { name: 'Warm Hug', type: 'Fire', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { drain: 0.25 } },
+  lotusglow: { name: 'Lotus Glow', type: 'Lumen', tier: 'sig', power: 65, acc: 100, pp: 15, fx: { drain: 0.25 } },
+  mudcharge: { name: 'Mud Charge', type: 'Earth', tier: 'sig', power: 75, acc: 100, pp: 15, fx: { recoil: 0.25 } },
+  inkquill: { name: 'Ink Quill', type: 'Shadow', tier: 'sig', power: 65, acc: 100, pp: 15, fx: { stat: 'acc', stages: -1 } },
+  timetap: { name: 'Time Tap', type: 'Bolt', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { stat: 'spd', stages: 1, self: true } },
+  riddleray: { name: 'Riddle Ray', type: 'Lumen', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { stat: 'def', stages: -1, chance: 30 } },
+  wrapstomp: { name: 'Wrap Stomp', type: 'Normal', tier: 'sig', power: 80, acc: 95, pp: 10, fx: { stat: 'spd', stages: -1 } },
+  echoboom: { name: 'Echo Boom', type: 'Shadow', tier: 'sig', power: 70, pp: 15 }, // no accuracy: it never misses
+  shadedust: { name: 'Shade Dust', type: 'Shadow', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { status: 'sleep', chance: 30 } },
+  dawnbreak: { name: 'Dawnbreak', type: 'Fire', tier: 'sig', power: 100, acc: 100, pp: 5, fx: { drain: 0.25 } },
+  duskfall: { name: 'Duskfall', type: 'Shadow', tier: 'sig', power: 90, acc: 100, pp: 5, fx: { status: 'sleep', chance: 30 } },
 };
 
 // The basic / strong / utility move of each type

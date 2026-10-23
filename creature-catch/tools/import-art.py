@@ -149,6 +149,125 @@ BACKGROUNDS = ['grassland', 'forest', 'water', 'cave', 'desert', 'snow', 'swamp'
 TILESETS = ['home-village', 'grassland-spawn-zone', 'forest', 'water-shoreline', 'cave', 'desert', 'snow', 'swamp', 'night-ruins']
 PROP_SHEETS = ['trees-sheet', 'village-props-sheet', 'rocks-and-bushes-sheet', 'water-props-sheet', 'cave-and-ruins-props-sheet', 'treasure-chest-and-pickups']
 
+# ---------- the expansion pack (docs/creature-catch-expansion-image-prompts.md) ----------
+def sheet_pieces(path, gap=10, min_area=0.0008, scale=4):
+    """A keyed sheet and its pieces in reading order."""
+    sheet = key_white(Image.open(path))
+    return sheet, [b for r in rows_then_cols(merge_close(components(sheet, min_area, scale), gap)) for b in r]
+
+def shrink_piece(piece, block=None, height=None, colors=32):
+    w, h = piece.size
+    size = (max(1, round(w * height / h)), height) if height else (max(1, round(w / block)), max(1, round(h / block)))
+    out = pixelize(piece, size, colors)
+    return out.crop(bbox(out)) if bbox(out) else out
+
+def grid_cells(im, n=4):
+    """The n x n cells of a tile sheet: the white gaps between tiles are found as the whitest lines near where
+    they should be (the gaps are too thin and broken to cut the sheet by its shapes)."""
+    a = np.asarray(im.convert('RGB')).astype(int)
+    white = a.min(axis=2) > 225
+    ys, xs = np.where(~white)
+    x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+    def cuts(frac, lo, hi):
+        out = [lo]
+        for i in range(1, n):
+            c = lo + (hi - lo) * i / n; r = int((hi - lo) * 0.06)
+            seg = frac[int(c - r):int(c + r)]
+            best = seg.max()
+            idx = np.where(seg >= best - 0.08)[0]  # the whole gap band around the whitest line
+            out.append((int(c - r) + idx.min(), int(c - r) + idx.max() + 1))
+        out.append(hi)
+        return out
+    cx = cuts(white[y0:y1].mean(axis=0), x0, x1)
+    cy = cuts(white[:, x0:x1].mean(axis=1), y0, y1)
+    edges = lambda c: [(c[0] if i == 0 else c[i][1], c[i + 1] if i + 1 == n else c[i + 1][0]) for i in range(n)]
+    return [(l, t, r, b) for (t, b) in edges(cy) for (l, r) in edges(cx)]
+
+def defringe_magenta(img):
+    """Clears magenta left on a sprite's edge (the dark rim some pieces keep from the magenta background)."""
+    if img.mode != 'RGBA': return img
+    a = np.asarray(img).copy(); al = a[:, :, 3] > 0; px = a[:, :, :3].astype(int)
+    if al.all(): return img  # a picture with no see-through edge (a portrait on its backing)
+    for _ in range(2):
+        inner = np.zeros_like(al)
+        inner[1:-1, 1:-1] = al[:-2, 1:-1] & al[2:, 1:-1] & al[1:-1, :-2] & al[1:-1, 2:]
+        pink = (px[:, :, 0] > 120) & (px[:, :, 2] > 120) & (px[:, :, 1] < px[:, :, 0] - 50) & (px[:, :, 1] < px[:, :, 2] - 50) & (abs(px[:, :, 0] - px[:, :, 2]) < 60)
+        drop = al & ~inner & pink
+        if not drop.any(): break
+        al = al & ~drop
+    a[:, :, 3] = np.where(al, a[:, :, 3], 0)
+    out = Image.fromarray(a, 'RGBA')
+    return out.crop(bbox(out)) if bbox(out) else out
+
+def expansion(src, made, log):
+    """The expansion pack. Its folders are named by section (A-creatures, F-tilesets, D-people/portraits ...) and some
+    names repeat across them (orchard.png is a tileset and a battle background), so files are found by folder and name."""
+    import re
+    ex = {}
+    for d, _, fs in os.walk(src, followlinks=True):
+        parts = os.path.relpath(d, src).lower().split(os.sep)
+        sec = next((p for p in reversed(parts) if re.match(r'^[a-n]-[a-z-]+$', p)), None)
+        if not sec: continue
+        sub = 'portrait/' if parts[-1] == 'portraits' else ''
+        for f in fs:
+            if f.lower().endswith('.png'): ex[sec[0] + '/' + sub + f.lower()[:-4]] = os.path.join(d, f)
+    save = lambda img, rel: globals()['save'](defringe_magenta(img), rel)
+    flat = lambda k, colors: Image.open(ex[k]).convert('RGB').resize((240, 160), Image.BOX).quantize(colors, dither=Image.Dither.NONE).convert('RGB')
+    n0 = len(made)
+    for k in sorted(ex):
+        sec, name = k[0], k[2:]
+        if sec in 'abc':  # creatures, and the legendaries' calming-battle forms
+            name = name.replace('groggy-solarion', 'groggysolarion').replace('hiding-gloaming', 'hidinggloaming')
+            made.append(save(sprite(ex[k], 13), f'creatures/{name}.png'))
+        elif sec == 'd' and name.startswith('portrait/'):  # 48 px tall on the portrait blue
+            im = key_white(Image.open(ex[k])); im = im.crop(bbox(im))
+            face = shrink_piece(im, height=48, colors=40)
+            back = Image.new('RGBA', face.size, (206, 224, 240, 255)); back.alpha_composite(face)
+            made.append(save(back, f'portraits/{name[9:]}.png'))
+        elif sec == 'd' and not re.match(r'(trainers|villagers)-', name):
+            made.append(save(sprite(ex[k], 13), f'people/{name}.png'))
+        elif sec == 'e': made.append(save(sprite(ex[k], 13, 48), f'buildings/{name}.png'))
+        elif sec in 'gln': made.append(save(flat(k, 64 if sec == 'g' else 96), f'bg/{name}.png'))
+        elif sec == 'f':  # tilesets: 4 x 4 tiles on white -> a 128 x 128 atlas, like the main pack's
+            im = Image.open(ex[k]).convert('RGB')
+            atlas = Image.new('RGB', (128, 128))
+            for i, c in enumerate(grid_cells(im)):
+                inset = int((c[2] - c[0]) * 0.035)
+                atlas.paste(im.crop((c[0] + inset, c[1] + inset, c[2] - inset, c[3] - inset)).resize((32, 32), Image.BOX), ((i % 4) * 32, (i // 4) * 32))
+            made.append(save(atlas.quantize(48, dither=Image.Dither.NONE).convert('RGB'), f'tiles/{name}.png'))
+        elif sec == 'h' and name == 'landmark-dusk-bell':  # cracked, then mended
+            sheet, boxes = sheet_pieces(ex[k], 12, 0.01)
+            for n, b in zip(['landmark-dusk-bell', 'landmark-dusk-bell-mended'], boxes): made.append(save(shrink_piece(sheet.crop(b), 10, colors=48), f'props/{n}.png'))
+            log('dusk bell', len(boxes), 'for 2')
+        elif sec == 'h' and name == 'signposts':
+            sheet, boxes = sheet_pieces(ex[k], 4)
+            for n, b in zip(['orchard', 'grove', 'cove', 'isle', 'copperbell', 'mine', 'springs', 'bayou', 'archive', 'dawn-temple', 'hollow-deep'], boxes):
+                made.append(save(shrink_piece(sheet.crop(b), height=18, colors=24), f'props/signpost-{n}.png'))
+            log('signposts', len(boxes), 'for 11')
+        elif sec == 'h': made.append(save(sprite(ex[k], 10, 48), f'props/{name}.png'))
+        elif sec == 'i':  # prop sheets: props/<area>-props-<n>, in reading order (Copperbell's lamp post nearly touches the stall below it)
+            sheet, boxes = sheet_pieces(ex[k], 4 if name == 'copperbell-props' else 10)
+            for i, b in enumerate(boxes): made.append(save(shrink_piece(sheet.crop(b), 10, colors=24), f'props/{name}-{i + 1}.png'))
+            log('props', name, len(boxes))
+        elif sec == 'j':  # furniture sheets: furniture/<set>-<n>, 40 px tall like the main pack's
+            sheet, boxes = sheet_pieces(ex[k], 8, 0.002)
+            for i, b in enumerate(boxes): made.append(save(shrink_piece(sheet.crop(b), height=40), f'furniture/{name}-{i + 1}.png'))
+            log('furniture', name, len(boxes))
+        elif sec == 'm' and name == 'cube-dusk': made.append(save(sprite(ex[k], 13, 40), 'ui/cube-dusk.png'))
+        elif sec == 'm':
+            im = key_white(Image.open(ex[k])); im = im.crop(bbox(im))
+            made.append(save(shrink_piece(im, height=16, colors=24), f'items/{name}.png'))
+    # trainer and villager sheets: 8 evenly spaced figures each, cut into 8 equal columns
+    for k, first, prefix in (('d/trainers-15-22', 15, 'trainer'), ('d/trainers-23-30', 23, 'trainer'), ('d/villagers-9-16', 9, 'villager')):
+        if k not in ex: continue
+        sheet = key_white(Image.open(ex[k])); bb = bbox(sheet); cw = (bb[2] - bb[0]) / 8
+        for j in range(8):
+            col = sheet.crop((round(bb[0] + j * cw), bb[1], round(bb[0] + (j + 1) * cw), bb[3]))
+            parts = components(col, 0.0005, 4)  # keep the biggest shape: drops slivers of the neighbors
+            big = max(parts, key=lambda q: (q[2] - q[0]) * (q[3] - q[1])) if parts else bbox(col)
+            made.append(save(shrink_piece(col.crop(big), height=84 if prefix == 'trainer' else 80), f'people/{prefix}-{first + j}.png'))
+    log('expansion', len(made) - n0, 'files')
+
 def main(src):
     files = find_all(src)
     made = []
@@ -467,10 +586,19 @@ def main(src):
         tile = im.crop((bb[0] + inset, bb[1] + inset, bb[2] - inset, bb[3] - inset)).resize((32, 32), Image.BOX)
         made.append(save(tile.quantize(32, dither=Image.Dither.NONE).convert('RGB'), 'tiles/cave-mushroom-patch.png'))
 
+    expansion(src, made, log)
+
+    made = sorted(set(made))
     with open(os.path.join(ART, 'MANIFEST.json'), 'w') as fh:
         json.dump(sorted(made), fh, indent=1)
     total = sum(os.path.getsize(os.path.join(ART, m)) for m in made)
     log(f'{len(made)} files, {total / 1024:.0f} KB')
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    if '--expansion' in sys.argv:  # just the expansion pack, added to the art already in the manifest
+        mf = os.path.join(ART, 'MANIFEST.json')
+        made = json.load(open(mf)) if os.path.exists(mf) else []
+        expansion(sys.argv[1], made, print)
+        json.dump(sorted(set(made)), open(mf, 'w'), indent=1)
+    else:
+        main(sys.argv[1])
