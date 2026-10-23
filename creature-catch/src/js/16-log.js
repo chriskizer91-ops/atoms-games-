@@ -76,6 +76,8 @@ var CC = window.CC || (window.CC = {});
             if (on) CC.cursor(133, y + 1);
           }
           CC.text('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });
+          var pg = CC.img('items/lost-page'); // the Lost Pages of The Long Dusk found so far
+          if (s.flags.anyPage && pg) { g.drawImage(pg, 205, 130, 8, 8 * pg.height / pg.width); CC.text(String(CC.pageCount()), 215, 131, faint, { size: 8 }); }
         },
       };
       CC.push(scr);

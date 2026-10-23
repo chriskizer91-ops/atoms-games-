@@ -410,13 +410,5 @@ function homeRoom(id) {
 ['forest', 'water', 'cave', 'desert', 'snow', 'swamp', 'ruins'].forEach(outpostRoom);
 Object.keys(HOMES).forEach(homeRoom);
 
-// ---------- spawns past the Night Ruins ----------
-var spire = { name: 'Moonlit Spire', levels: [38, 48], common: ['boulderhound', 'timberowl', 'surgefin', 'glacistoat'], uncommon: ['prismole', 'duneserpent', 'pengarch', 'beaconwraith'], rare: ['koidrake', 'bonepanther', 'rosferatu'] };
-var early = CC.SPAWNS.spire; // creatures added before this file (src/js/12b-data-expansion.js)
-if (early) { ['common', 'uncommon', 'rare'].forEach(function (t) { spire[t] = spire[t].concat(early[t] || []); }); spire.time = early.time; }
-CC.SPAWNS.spire = spire;
-// family creatures that live in the Spire (src/js/13b-family-creatures.js)
-(CC.SPAWN_LATER || []).forEach(function (s) { CC.SPAWNS[s[0]][s[1]].push(s[2]); CC.RARITY[s[2]] = s[1]; });
-['common', 'uncommon', 'rare'].forEach(function (t) { CC.SPAWNS.spire[t].forEach(function (id) { if (!CC.RARITY[id]) CC.RARITY[id] = t; }); });
 CC.RARITY.lunarion = 'veryrare';
 })();

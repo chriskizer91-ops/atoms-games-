@@ -1,7 +1,7 @@
 // Builds the companion field guide: companion/creature-catch-field-guide.html, one offline page with every
 // creature's lore, stats, moves and evolutions, the type chart, the regions, and cubes and items.
 //   node tools/build-companion.mjs
-// It reads the same data and art as the game (src/js/1x-data-*.js, 04-ui.js for items, art/), so it stays in sync.
+// It reads the same data and art as the game (src/js/1x-data-*.js and the lore, 04-ui.js and 17-expansion.js for items, art/), so it stays in sync.
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -10,7 +10,7 @@ import { SRC } from './load-data.mjs';
 const ROOT = path.join(SRC, '..');
 const ctx = { window: {} };
 vm.createContext(ctx);
-for (const f of ['10-data-types.js', '11-data-moves.js', '12-data-creatures.js', '13-data-lore.js', '04-ui.js']) {
+for (const f of ['10-data-types.js', '11-data-moves.js', '12-data-creatures.js', '12b-data-expansion.js', '13-data-lore.js', '13a-lore-expansion.js', '13b-family-creatures.js', '04-ui.js', '17-expansion.js']) {
   vm.runInContext(fs.readFileSync(path.join(SRC, 'js', f), 'utf8'), ctx, { filename: f });
 }
 const CC = ctx.window.CC;
@@ -38,8 +38,13 @@ const STAGE = { starter1: 'Starter', starter2: 'Starter, stage 2', starter3: 'St
 const RARITY = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', veryrare: 'Very rare' };
 
 // where each base form lives (evolved forms take their line's home)
+// (the first place listed wins; the cove's tide-pool fishing isn't a place of its own)
 const home = {};
-for (const [, sp] of Object.entries(CC.SPAWNS)) for (const t of ['common', 'uncommon', 'rare']) for (const id of sp[t]) home[id] = sp.name;
+for (const [k, sp] of Object.entries(CC.SPAWNS)) if (k !== 'tidepool') for (const t of ['common', 'uncommon', 'rare']) for (const id of sp[t]) if (!home[id]) home[id] = sp.name;
+const placeName = (k) => k && CC.SPAWNS[k] ? CC.SPAWNS[k].name : null;
+// the guardians: where you meet them, and whether you can catch them
+const LEGEND_AT = { lunariond: 'The Moon Altar, Night Ruins', lunarion: 'The Moon Altar, Night Ruins', groggysolarion: 'The Sun Altar, Dawn Temple', solarion: 'The Sun Altar, Dawn Temple', hidinggloaming: 'The Dusk Pool, Hollow Deep', gloaming: 'The Dusk Pool, Hollow Deep' };
+const CALMING = { lunariond: 1, groggysolarion: 1, hidinggloaming: 1 };
 const root = (id) => { let c = CC.CREATURES[id]; while (c.from) c = CC.CREATURES[c.from]; return c.id; };
 
 const creatures = CC.CREATURE_ORDER.map((id, i) => {
@@ -49,8 +54,10 @@ const creatures = CC.CREATURE_ORDER.map((id, i) => {
   const lore = CC.LORE[id] || { lore: '', note: '' };
   return {
     id, num: i + 1, name: c.name, types: c.types, stage: STAGE[c.kind] || c.kind,
-    where: c.kind.startsWith('starter') ? 'Elder Willow (starter)' : c.kind === 'legend' ? 'The Moon Altar, Night Ruins' : home[id] || home[r] || CC.REGIONS[c.region],
-    rarity: c.kind === 'legend' ? (id === 'lunarion' ? 'One of a kind: calm it, then catch it' : 'The final battle: it can\'t be caught') : c.from ? 'Evolves from ' + CC.CREATURES[c.from].name : RARITY[CC.RARITY[id]] || (c.kind.startsWith('starter') ? 'Gift' : ''),
+    where: c.kind.startsWith('starter') ? 'Elder Willow (starter)' : c.kind === 'legend' ? LEGEND_AT[id] : CC.CREATURES[r].keeper ? placeName(CC.CREATURES[r].keeper) + ' (its Keeper)'
+      : CC.CREATURES[r].moonborn ? 'Anywhere (Moonborn)' : home[id] || home[r] || placeName(CC.CREATURES[r].home) || CC.REGIONS[c.region],
+    rarity: c.kind === 'legend' ? (CALMING[id] ? 'A calming battle: it can\'t be caught' : 'One of a kind: calm it, then catch it') : c.from ? 'Evolves from ' + CC.CREATURES[c.from].name
+      : CC.CREATURES[r].keeper ? 'One of a kind: calm it, then catch it' : RARITY[CC.RARITY[id]] || (c.kind.startsWith('starter') ? 'Gift' : ''),
     kind: c.kind.startsWith('starter') ? 'starter' : c.kind === 'legend' ? 'legend' : c.kind === 'solo' ? 'solo' : c.from ? 'evolved' : 'first',
     base: c.base, total: c.total, lore: lore.lore, note: lore.note,
     sig: { name: sig.name, type: sig.type, power: sig.power || null, acc: sig.acc || null, pp: sig.pp, fx: fxText(sig.fx) },
@@ -63,13 +70,19 @@ const chart = types.map((a) => types.map((d) => CC.typeVs(a, d)));
 const typeIcons = Object.fromEntries(types.map((t) => [t, uri('ui/type-' + t)]));
 const typeColors = CC.TYPE_COLORS;
 const GUIDES = { meadow: '', grassland: 'Farmer Bramble', forest: 'Ranger Oakley', water: 'Fisher Gus', cave: 'Dusty the Miner', desert: 'Safi the Nomad', snow: 'Frida the Explorer', swamp: 'Granny Moss', ruins: 'Night Watchman Corvin' };
-const BUILT = { meadow: 1, grassland: 1, forest: 1, water: 1, cave: 1, desert: 1, snow: 1, swamp: 1, ruins: 1 };
-const regions = Object.entries(CC.SPAWNS).map(([k, s]) => ({
-  key: k, name: s.name, levels: s.levels, guide: GUIDES[k], built: !!BUILT[k],
-  tiers: ['common', 'uncommon', 'rare'].map((t) => ({ tier: RARITY[t], ids: s[t] })).filter((t) => t.ids.length),
-  bg: uri('bg/' + ({ meadow: 'grassland', ruins: 'night-ruins' }[k] || k)),
+// the side areas and the post-game places have no trial: the person to meet there instead
+const PEOPLE = { orchard: 'Marigold', grove: 'Old Fennick', cove: 'Coral', isle: 'Keeper Wren', copperbell: 'Mayor Barnaby', mine: 'Grit', springs: 'Auntie Yuzu', bayou: 'Boatman Bo',
+  archive: 'Archivist Ilsa', temple: 'Grandmother Amani', hollow: '', spire: '' };
+// where each place sits in the story (the main road needs no label)
+const PART = { orchard: 'Side area', grove: 'Side area', cove: 'Side area', isle: 'Side area', mine: 'Side area', springs: 'Side area', bayou: 'Side area', archive: 'Side area',
+  spire: 'After the story', temple: 'After the story', hollow: 'After the story' };
+const BG = { meadow: 'grassland', ruins: 'night-ruins', spire: 'moonlit-spire', temple: 'dawn-temple', hollow: 'hollow-deep' };
+const regions = Object.entries(CC.SPAWNS).filter(([k]) => k !== 'tidepool').map(([k, s]) => ({
+  key: k, name: s.name, levels: s.levels, guide: GUIDES[k], person: PEOPLE[k], part: PART[k] || 'On the road',
+  tiers: ['common', 'uncommon', 'rare'].map((t) => ({ tier: RARITY[t], ids: s[t] })).filter((t) => t.ids.length), time: s.time || {},
+  bg: uri('bg/' + (BG[k] || k)),
 }));
-const items = Object.entries(CC.ITEMS).map(([k, it]) => ({ key: k, name: it.name, info: it.info, price: it.price || null, cube: it.cube, heal: it.heal, keyItem: !!it.key, icon: uri(it.icon) }));
+const items = Object.entries(CC.ITEMS).map(([k, it]) => ({ key: k, name: it.name, info: it.info, price: it.price || null, cube: it.cube, duskCube: it.duskCube || null, heal: it.heal, keyItem: !!it.key, icon: uri(it.icon) }));
 const data = { version, creatures, types, chart, typeIcons, typeColors, regions, items };
 
 const font = fs.readFileSync(path.join(SRC, 'fonts', 'PixelifySans.ttf')).toString('base64');
@@ -191,7 +204,7 @@ footer { padding: 30px 0 50px; color: var(--soft); font-size: 13px; text-align: 
 <body>
 <header class="hero"><div class="wrap">
   <h1>Creature Catch Field Guide</h1>
-  <p>Every creature from Home Village to the Night Ruins: where to find them, how they grow, and the stories the old folks tell about them.</p>
+  <p>Every creature from Home Village to the Hollow Deep: where to find them, how they grow, and the stories the old folks tell about them.</p>
 </div></header>
 <nav class="bar"><div class="wrap">
   <a href="#creatures">Creatures</a><a href="#types">Types</a><a href="#regions">Regions</a><a href="#items">Cubes &amp; items</a>
@@ -222,8 +235,8 @@ footer { padding: 30px 0 50px; color: var(--soft); font-size: 13px; text-align: 
 
 <section id="regions"><div class="wrap">
   <h2>Regions</h2>
-  <p class="lead">The land is one long road from Home Village to the Night Ruins. Each region's wild creatures are a little stronger than the last, and a guide at each exit opens the way forward once you beat their trial. Every region has an outpost with a Healing Hut and the Cube Vault.</p>
-  <div class="mapbox"><img class="px" src="${map}" alt="Map of the land, from Home Village in the south-west to the Night Ruins in the north-east"></div>
+  <p class="lead">The land is one long road from Home Village to the Night Ruins, with Copperbell Town halfway along. Each region's wild creatures are a little stronger than the last, and a guide at each exit opens the way forward once you beat their trial. Every region has an outpost with a Healing Hut and the Cube Vault. Side paths lead off the road to orchards, coves, springs and old ruins, and some creatures only come out by day or at night. After the story, the Moonlit Spire, the Dawn Temple and the Hollow Deep wait.</p>
+  <div class="mapbox"><img class="px" src="${map}" alt="Map of the land, from Home Village to the Night Ruins, with the side areas and the places past the story"></div>
   <div class="regions" id="regionlist"></div>
 </div></section>
 
@@ -296,14 +309,14 @@ var D = ${JSON.stringify(data)};
   }).join('');
   // regions
   $('regionlist').innerHTML = D.regions.map(function (r) {
-    return '<div class="region"><div class="pic" style="background-image:url(' + r.bg + ')"><span>' + esc(r.name) + '</span><em>' + (r.built ? 'Playable now' : 'Coming later') + '</em></div><div class="in">' +
-      'Wild creatures Lv ' + r.levels[0] + ' to ' + r.levels[1] + (r.guide ? ' &middot; Guide: ' + esc(r.guide) : ' &middot; No guide: a gentle first route') +
-      r.tiers.map(function (t) { return '<div class="tier"><b>' + t.tier + '</b><div class="minis">' + t.ids.map(function (id) { return '<a href="#c-' + id + '">' + mini(id) + esc(byId[id].name) + '</a>'; }).join('') + '</div></div>'; }).join('') +
+    return '<div class="region"><div class="pic" style="background-image:url(' + r.bg + ')"><span>' + esc(r.name) + '</span><em>' + esc(r.part) + '</em></div><div class="in">' +
+      'Wild creatures Lv ' + r.levels[0] + ' to ' + r.levels[1] + (r.guide ? ' &middot; Guide: ' + esc(r.guide) : r.person ? ' &middot; Meet: ' + esc(r.person) : r.person === '' ? '' : ' &middot; No guide: a gentle first route') +
+      r.tiers.map(function (t) { return '<div class="tier"><b>' + t.tier + '</b><div class="minis">' + t.ids.map(function (id) { return '<a href="#c-' + id + '">' + mini(id) + esc(byId[id].name) + (r.time[id] ? '&nbsp;<small>(' + (r.time[id] === 'night' ? 'night' : 'day') + ')</small>' : '') + '</a>'; }).join('') + '</div></div>'; }).join('') +
       '</div></div>';
   }).join('');
   // items
   $('itemlist').innerHTML = D.items.map(function (it) {
-    var tag = it.keyItem ? 'Key item' : it.cube >= 999 ? 'Always catches' : it.cube != null ? (it.cube ? '+' + it.cube + ' catch bonus' : 'The basic cube') : it.heal ? 'Heals ' + it.heal + ' HP' : '';
+    var tag = it.keyItem ? 'Key item' : it.cube >= 999 ? 'Always catches' : it.duskCube ? '+' + it.cube + ' by day, +' + it.duskCube + ' at night' : it.cube != null ? (it.cube ? '+' + it.cube + ' catch bonus' : 'The basic cube') : it.heal ? 'Heals ' + it.heal + ' HP' : '';
     return '<div class="item">' + (it.icon ? '<img class="px" src="' + it.icon + '" alt="">' : '') + '<div><h3 class="pix">' + esc(it.name) + '</h3><span class="tag">' + tag + (it.price ? ' &middot; ' + it.price + ' coins' : '') + '</span><p>' + esc(it.info) + '</p></div></div>';
   }).join('');
   // light / dark

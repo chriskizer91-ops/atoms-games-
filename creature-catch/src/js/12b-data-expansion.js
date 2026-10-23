@@ -16,8 +16,10 @@ var CC = window.CC || (window.CC = {});
     ruins: { uncommon: ['glyphling'], rare: ['mimicube'], time: { glyphling: 'night' } },
     spire: { uncommon: ['twinkit'], rare: ['comette'], time: { twinkit: 'night', comette: 'night' } },
   };
+  // the Moonlit Spire, past the Night Ruins (its map is in 14-regions.js)
+  CC.SPAWNS.spire = { name: 'Moonlit Spire', levels: [38, 48], common: ['boulderhound', 'timberowl', 'surgefin', 'glacistoat'], uncommon: ['prismole', 'duneserpent', 'pengarch', 'beaconwraith'], rare: ['koidrake', 'bonepanther', 'rosferatu'] };
   Object.keys(ADD).forEach(function (k) {
-    var sp = CC.SPAWNS[k] || (CC.SPAWNS[k] = { common: [], uncommon: [], rare: [] }), a = ADD[k]; // the Spire's list is filled in later (14-regions.js)
+    var sp = CC.SPAWNS[k], a = ADD[k];
     ['common', 'uncommon', 'rare'].forEach(function (t) { (a[t] || []).forEach(function (id) { sp[t].push(id); }); });
     sp.time = Object.assign(sp.time || {}, a.time || {});
   });
@@ -40,5 +42,5 @@ var CC = window.CC || (window.CC = {});
     ['common', 'uncommon', 'rare'].forEach(function (t) { CC.SPAWNS[k][t].forEach(function (id) { if (!CC.RARITY[id]) CC.RARITY[id] = t; }); });
   });
   ['solarion', 'gloaming', 'groggysolarion', 'hidinggloaming'].forEach(function (id) { CC.RARITY[id] = 'veryrare'; });
-  CC.PLACE_NAMES = Object.assign({ spire: 'Moonlit Spire' }, Object.keys(PLACES).reduce(function (o, k) { o[k] = PLACES[k].name; return o; }, {}));
+  CC.PLACE_NAMES = Object.assign({ spire: CC.SPAWNS.spire.name }, Object.keys(PLACES).reduce(function (o, k) { o[k] = PLACES[k].name; return o; }, {}));
 })();

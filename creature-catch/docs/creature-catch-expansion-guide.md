@@ -702,7 +702,7 @@ The kids' creatures go in through the existing `13b-family-creatures.js` system.
   - Its stat budget is `keeper`, about 420 to 460, between a final evolution and a legendary.
   - An NPC in the area tells its legend first, so players know to look.
 - **Empty slots:** if no kid has designed a Keeper for an area yet, the landmark shows the legend line only and no battle starts. Nothing else depends on Keepers.
-- **Look:** every Keeper has a glowing teal Ancient rune somewhere on its body (the same teal as Pebbleton's and Glyphling's runes), and its sprite is larger, about 96x96. The image prompts add both automatically.
+- **Look:** every Keeper has a glowing teal Ancient rune somewhere on its body (the same teal as Pebbleton's and Glyphling's runes), and its sprite is the usual 64x64, drawn to fill the whole frame (the game draws a Keeper bigger in battle itself, like every boss). The image prompts add both automatically.
 - A Keeper can have an evolution or be Solo, as the kid prefers.
 
 | Slot | Landmark | Legend (told by) | Level | Suggested types (optional) |
