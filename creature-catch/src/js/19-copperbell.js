@@ -68,6 +68,12 @@ var CC = window.CC || (window.CC = {});
       { x: 28, y: 18, img: 'props/mine-props-2', h: 14 }, { x: 23, y: 19, img: 'props/mine-props-4', h: 18, solid: true },
     ],
   });
+  TOWN.onArrive = async function () {
+    if (F().seenCopperbell) return;
+    F().seenCopperbell = true;
+    await CC.showStill('still-7', ['The tunnel opens onto a hillside. Below, a town of red brick and shining copper roofs spreads out in the evening light.',
+      'In the middle of it all stands a tall bell tower. The bell at the top hangs perfectly still.']);
+  };
   CC.MAP_TRACK.copperbell = 'town'; CC.MAP_TRACK['cb-tower-top'] = 'town';
   CC.SIGNS['copperbell:14,21'] = 'Copperbell Town. Market square: north. Healing Hut and Cube Shop: west of the square. Glimmer Mine: east. The desert road: through the north gate.';
   Object.assign(CC.ART_INFO, {

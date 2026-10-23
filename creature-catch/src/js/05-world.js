@@ -1068,6 +1068,7 @@ CC.useExit = async function (ex, nx, ny) {
   CC.world.enter(ex.to, x, y, { top: 'up', bottom: 'down', left: 'left', right: 'right' }[ex.side]);
   CC.world.cooldown = 2;
   await CC.fade(0.25, false);
+  if (dest.onArrive) await dest.onArrive(ex); // a first-visit scene
   return dest;
 };
 
