@@ -5,7 +5,7 @@ Anyone in the family can draw a creature and put it in the game. There are two w
 - **The easy way:** send Claude the drawing (a photo is fine), its name, and the details in step 4. Claude turns it into game art, adds it, and builds a new version.
 - **Doing it yourself:** follow the five steps below.
 
-The game works out everything else on its own: stats, the moves it learns, where it shows up in the wild, its number in the Creature Log, its page in the Field Guide, and a shiny version.
+The game works out everything else on its own: stats, the moves it learns, where it shows up in the wild, its number in the Creature Log (it slots in with the creatures of the place it lives), its page in the Field Guide, and a shiny version.
 
 ---
 

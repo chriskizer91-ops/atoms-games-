@@ -16,7 +16,7 @@ Open **`creature-catch.html`** in any browser. It's one file and works offline. 
 
 ## Field Guide
 
-`companion/creature-catch-field-guide.html` is a separate offline page: lore, stats, moves and evolutions for every creature, plus the type chart, regions, and items. Rebuild it with `node tools/build-companion.mjs`.
+`companion/creature-catch-field-guide.html` is a separate offline page: lore, stats, moves and evolutions for every creature, with a tab for each place in the order you reach it (the places after the story ask before they open, so nothing is spoiled), plus the map, the type chart, and items. Creatures are numbered the same way as the Creature Log in the game. Rebuild it with `node tools/build-companion.mjs`.
 
 ## Dev codes
 

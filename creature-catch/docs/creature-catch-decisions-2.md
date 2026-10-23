@@ -148,3 +148,8 @@ The expansion follows `creature-catch-expansion-guide.md`. Where the guide left 
 - **Keepers** use a normal 64x64 sprite; the battle draws them bigger, like every boss. A side area without a Keeper yet shows the landmark's legend line and nothing else.
 - **Moonborn** creatures get mid-game stats (the same as a Crystal Cave creature) and appear at the level of the place they turn up in.
 
+## 15. Added in v10
+
+- **Creature numbers follow the journey** (`src/js/13c-field-order.js`): the places in the order you reach them (the main road, each side area right after the road it hangs off, then the places after the story), and each creature numbered in the first place you can meet any of its line, with its evolutions right after it. The starters are 1 to 9. The family's Moonborn come after the Hollow Deep, and a Keeper is numbered with its side area. The Creature Log and the Field Guide share these numbers.
+- **The Field Guide is spoiler-safe:** one tab per place, opening on Home Village. The places after the story and the "Every creature" page ask first, and the Night Ruins' guardians are hidden until you tap them.
+

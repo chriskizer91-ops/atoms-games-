@@ -60,10 +60,10 @@ for (const [id, m] of Object.entries(M)) {
 }
 L.push('', '**Struggle** (used when every move is out of PP): Power 30, no type, 25% recoil.', '');
 
-L.push('## Wild spawns', '');
+L.push('## Wild spawns', '', 'In the order you reach each place (the same order the Creature Log numbers creatures in).', '');
 L.push('| Area | Levels | Common | Uncommon | Rare |', '|---|---|---|---|---|');
 const nm = (a) => a.map((id) => CC.CREATURES[id].name).join(', ') || '-';
-for (const s of Object.values(CC.SPAWNS)) L.push(`| ${s.name} | ${s.levels[0]} to ${s.levels[1]} | ${nm(s.common)} | ${nm(s.uncommon)} | ${nm(s.rare)} |`);
+for (const z of CC.ZONES) for (const k of z.spawns) { const s = CC.SPAWNS[k]; L.push(`| ${s.name} | ${s.levels[0]} to ${s.levels[1]} | ${nm(s.common)} | ${nm(s.uncommon)} | ${nm(s.rare)} |`); }
 L.push('');
 
 const out = path.join(SRC, '..', 'docs', 'creature-catch-roster.md');

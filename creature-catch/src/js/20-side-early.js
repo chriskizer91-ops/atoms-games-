@@ -293,8 +293,7 @@ var CC = window.CC || (window.CC = {});
       await CC.showPrize(CC.ITEMS[f[0]].icon, f[2]);
     };
   }
-  // the tide pools: dip in and something might bite
-  CC.SPAWNS.tidepool = { name: 'Tide Pool', levels: [11, 14], common: ['shellbit', 'tidepuff'], uncommon: ['glimstar', 'crabbit'], rare: ['krakling'], time: { glimstar: 'night', krakling: 'night' } };
+  // the tide pools: dip in and something might bite (their creatures are CC.SPAWNS.tidepool, 12b-data-expansion.js)
   async function tidePool() {
     if (!CC.state.party.length) { await say('A tide pool, full of tiny crabs.'); return; }
     if (!(await CC.yesNo('A tide pool. Dip your hand in and see what bites?'))) return;

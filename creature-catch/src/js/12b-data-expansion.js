@@ -35,6 +35,8 @@ var CC = window.CC || (window.CC = {});
     archive: { name: 'Ancients\' Archive', levels: [31, 36], common: ['glyphling'], uncommon: ['inkwing', 'pebbleton'], rare: ['mimicube', 'clocktoise'], time: { inkwing: 'night' } },
     temple: { name: 'Dawn Temple', levels: [40, 45], common: ['sphinxie'], uncommon: ['kilnadillo', 'mirajack'], rare: ['mummoth'] },
     hollow: { name: 'Hollow Deep', levels: [42, 48], common: ['echoling', 'stalagbat'], uncommon: ['shardling'], rare: ['umbramoth'] },
+    // Driftwood Cove's tide pools: dip a hand in and something might bite (20-side-early.js)
+    tidepool: { name: 'Tide Pool', levels: [11, 14], common: ['shellbit', 'tidepuff'], uncommon: ['glimstar', 'crabbit'], rare: ['krakling'], time: { glimstar: 'night', krakling: 'night' } },
   };
   Object.keys(PLACES).forEach(function (k) { CC.SPAWNS[k] = PLACES[k]; });
   // catch rarity for every wild creature that doesn't have one yet

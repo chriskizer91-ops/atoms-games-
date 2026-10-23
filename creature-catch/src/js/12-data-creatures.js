@@ -233,11 +233,11 @@ CC.SPAWNS = {
   meadow: { name: 'Meadow Path', levels: [2, 4], common: ['clovermouse', 'hopsprout'], uncommon: [], rare: [] },
   grassland: { name: 'Grassland', levels: [4, 7], common: ['tuftail', 'pebblepup'], uncommon: ['bumblop'], rare: ['dandylion'] },
   forest: { name: 'Forest', levels: [5, 10], common: ['barkbeetle', 'mushling'], uncommon: ['owlcorn', 'mothlight'], rare: ['budstag'] },
-  water: { name: 'Water', levels: [8, 13], common: ['bubblefin', 'crabbit'], uncommon: ['tidepuff', 'sealamp'], rare: ['koiling'] },
-  cave: { name: 'Cave', levels: [12, 18], common: ['glimmole', 'stalagbat'], uncommon: ['rumblepede', 'gemlin'], rare: ['magmite'] },
-  desert: { name: 'Desert', levels: [16, 22], common: ['cactoad', 'sandwyrm'], uncommon: ['dunefox'], rare: ['scarabolt'] },
-  snow: { name: 'Snow', levels: [20, 26], common: ['pengloo', 'sleetle'], uncommon: ['frostoat'], rare: ['yetiny'] },
-  swamp: { name: 'Swamp', levels: [24, 30], common: ['lilypadle', 'mudgator'], uncommon: ['wispeel'], rare: ['mireling'] },
+  water: { name: 'Lakeshore', levels: [8, 13], common: ['bubblefin', 'crabbit'], uncommon: ['tidepuff', 'sealamp'], rare: ['koiling'] },
+  cave: { name: 'Crystal Cave', levels: [12, 18], common: ['glimmole', 'stalagbat'], uncommon: ['rumblepede', 'gemlin'], rare: ['magmite'] },
+  desert: { name: 'Sunscorch Desert', levels: [16, 22], common: ['cactoad', 'sandwyrm'], uncommon: ['dunefox'], rare: ['scarabolt'] },
+  snow: { name: 'Frostpeak Pass', levels: [20, 26], common: ['pengloo', 'sleetle'], uncommon: ['frostoat'], rare: ['yetiny'] },
+  swamp: { name: 'Murkmire Swamp', levels: [24, 30], common: ['lilypadle', 'mudgator'], uncommon: ['wispeel'], rare: ['mireling'] },
   ruins: { name: 'Night Ruins', levels: [28, 35], common: ['wispkin'], uncommon: ['pebbleton', 'bonecat', 'fangling'], rare: ['moonlynx'] },
 };
 

@@ -2,6 +2,12 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
+## v10: a field guide in journey order
+- **New numbering:** creatures are numbered in the order you can meet them on the journey, place by place: the starters first, then the Meadow Path, the Grassland, Willowbrook Orchard, and on to the Hollow Deep. A creature's evolutions sit right after it. The Creature Log in the game and the Field Guide use the same numbers.
+- **The Field Guide has a tab for each place**, in the order you reach it, and opens on Home Village. Each place's page shows where it is, its wild levels, who to meet, the creatures first found there, and "Also found here" for creatures from earlier pages that live there too. Cards say how rare a creature is in that place and whether it only comes out by day or at night.
+- **No spoilers:** the places after the story, and the "Every creature" page, ask before they open. The guardians at the end of the Night Ruins stay face down until you tap "Show it". The guide remembers which page you were on.
+- The Field Guide's search and type filters look through the page you're on. Its map has a section of its own.
+
 ## v9: the expansion
 Built from `docs/creature-catch-expansion-guide.md` and the 17-part expansion art pack (`docs/creature-catch-expansion-image-prompts.md`).
 
