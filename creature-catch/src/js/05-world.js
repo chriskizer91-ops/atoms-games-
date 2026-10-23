@@ -280,6 +280,7 @@ function drawDirt(g, x, y, map, ts) {
 function drawWater(g, x, y, map) {
   var px = x * TP, py = y * TP;
   if (!variedTile(g, 'water-shoreline', map.deepWater ? 0 : 1, x, y)) return false;
+  if (map.waterTint) { g.globalAlpha = 0.45; g.fillStyle = map.waterTint; g.fillRect(px, py, TP, TP); g.globalAlpha = 1; } // hot springs
   var land = function (dx, dy) { var t = CC.tileAt(map, x + dx, y + dy); return t !== null && t !== '~'; };
   [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(function (s) {
     if (!land(s[0], s[1])) return;
@@ -851,7 +852,7 @@ CC.world = {
   drawAmbient: function (cx, cy) {
     var g = CC.g, map = this.map, dt = CC.dt || 0.016, t = CC.time;
     var amb = map.amb || (map.amb = { smoke: [], flies: [] });
-    var wx = map.weather, calm = { cave: 1, snow: 1, night: 1, spire: 1, fog: 1 }[wx];
+    var wx = map.weather, calm = { cave: 1, snow: 1, night: 1, spire: 1, fog: 1, steam: 1, bayou: 1 }[wx];
     if (!amb.flies.length && !map.indoors && !calm) {
       var W = map.rows[0].length * T, H = map.rows.length * T;
       for (var i = 0; i < 4; i++) amb.flies.push({ x: CC.rand(32, W - 32), y: CC.rand(32, H - 32), ph: CC.rand(0, 9), c: CC.pick(['#ffffff', '#f8e070', '#f8a8d0', '#a8d8ff']), vx: 0, vy: 0 });
@@ -964,6 +965,40 @@ CC.world = {
       }
       this.fireflies(amb, '#d8f070', cx, cy, dt);
       g.fillStyle = 'rgba(30,50,30,0.12)'; g.fillRect(0, 0, W, H);
+    } else if (wx === 'steam') { // hot springs in the snow: a few flakes, steam curling off the pools, and the geyser now and then
+      bits(16, function () { return { x: CC.rand(0, W), y: CC.rand(0, H), ph: CC.rand(0, 9), s: CC.rand(10, 18) }; }).forEach(function (b) {
+        b.y += dt * b.s; b.x += dt * (Math.sin(t * 1.3 + b.ph) * 6 - 3);
+        g.fillStyle = 'rgba(255,255,255,0.8)'; g.fillRect(Math.round(wrapX(b)), Math.round(wrapY(b)), 1, 1);
+      });
+      amb.steam = amb.steam || [];
+      for (var sp = 0; sp < 3; sp++) {
+        var tx = Math.floor((cx + Math.random() * W) / T), ty = Math.floor((cy + Math.random() * H) / T);
+        if (map.rows[ty] && map.rows[ty][tx] === '~' && Math.random() < dt * 9) amb.steam.push({ x: tx * T + CC.rand(2, 14), y: ty * T + CC.rand(4, 12), age: 0, life: CC.rand(1.4, 2.4), s: CC.rand(2, 3.5), up: 16 });
+      }
+      var lm = map.landmarkAt;
+      if (lm && map.geyser) {
+        var phase = t % 11, gx0 = (lm.x + lm.w / 2) * T, gy0 = (lm.y + lm.h) * T - 16;
+        if (phase < 2.2 && Math.random() < dt * 40) amb.steam.push({ x: gx0 + CC.rand(-5, 5), y: gy0, age: 0, life: CC.rand(1.2, 2), s: CC.rand(3, 5), up: 70 });
+      }
+      amb.steam = amb.steam.filter(function (p) {
+        p.age += dt; if (p.age > p.life) return false;
+        var k = p.age / p.life, x = p.x + Math.sin(p.age * 2 + p.y) * 3 - cx, y = p.y - k * p.up - cy;
+        g.globalAlpha = 0.4 * (1 - k); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(x, y, p.s + k * 4, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1;
+        return true;
+      });
+    } else if (wx === 'bayou') { // the bayou: a light mist, and fireflies that come out in their hundreds after dark
+      var nk = CC.daylight().night;
+      for (var bf = 0; bf < 3; bf++) {
+        var bfx = ((t * (4 + bf * 2) + bf * 110) % (W + 160)) - 80, bfy = 30 + bf * 50 + Math.sin(t * 0.4 + bf) * 8;
+        g.fillStyle = 'rgba(190,220,200,0.07)'; g.beginPath(); g.ellipse(bfx, bfy, 90, 12, 0, 0, Math.PI * 2); g.fill();
+      }
+      var tree = map.landmarkAt;
+      if (tree && nk > 0.2) {
+        var lx2 = self.screenX((tree.x + tree.w / 2) * T), ly2 = self.screenY((tree.y + tree.h / 2) * T - 10);
+        glowAt(lx2, ly2, 60 + Math.sin(t * 1.5) * 6, 'rgb(255,220,110)', 0.35 * nk);
+      }
+      this.fireflies(amb, '#f8e070', cx, cy, dt, 10 + Math.round(nk * 36));
+      lights();
     } else if (wx === 'night') {
       var nd = g.createRadialGradient(pxl, pyl, 30, pxl, pyl, 150);
       nd.addColorStop(0, 'rgba(14,14,50,0.12)'); nd.addColorStop(1, 'rgba(10,10,40,0.5)');
@@ -983,10 +1018,11 @@ CC.world = {
       });
     }
   },
-  fireflies: function (amb, col, cx, cy, dt) {
-    var g = CC.g, t = CC.time, map = this.map;
-    if (!amb.ff) { amb.ff = []; var W = map.rows[0].length * T, H = map.rows.length * T; for (var i = 0; i < 14; i++) amb.ff.push({ x: CC.rand(16, W - 16), y: CC.rand(16, H - 16), ph: CC.rand(0, 9) }); }
-    amb.ff.forEach(function (f) {
+  fireflies: function (amb, col, cx, cy, dt, n) {
+    var g = CC.g, t = CC.time, map = this.map, W = map.rows[0].length * T, H = map.rows.length * T;
+    amb.ff = amb.ff || [];
+    while (amb.ff.length < (n || 14)) amb.ff.push({ x: CC.rand(16, W - 16), y: CC.rand(16, H - 16), ph: CC.rand(0, 9) });
+    amb.ff.slice(0, n || 14).forEach(function (f) {
       f.x += Math.sin(t * 0.6 + f.ph) * dt * 8; f.y += Math.cos(t * 0.5 + f.ph * 2) * dt * 6;
       var a = 0.5 + Math.sin(t * 2.5 + f.ph) * 0.5, x = Math.round(f.x - cx), y = Math.round(f.y - cy);
       if (x < -6 || y < -6 || x > CC.W + 6 || y > CC.H + 6) return;
