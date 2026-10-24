@@ -21,7 +21,7 @@ var CC = window.CC || (window.CC = {});
       B = {
         wild: !!opts.wild, trainer: opts.trainer || null, resolve: resolve,
         foeTeam: opts.wild ? [opts.wild] : opts.trainer.team, foeIndex: 0,
-        allyIndex: CC.firstHealthy(), runs: 0, fought: {}, leveled: {}, shake: 0, flashScreen: 0, intro: 0, trainerShown: !!opts.trainer,
+        allyIndex: CC.firstHealthy(), runs: 0, fought: {}, shake: 0, flashScreen: 0, intro: 0, trainerShown: !!opts.trainer,
         bg: opts.bg || (CC.world.map && CC.world.map.spawns) || 'grassland',
         noCatch: opts.noCatch, noRun: opts.noRun, introText: opts.introText, boss: opts.boss,
         turnLines: opts.turnLines, turn: 0, // turnLines: a line to say at the start of each turn after the first (gentle battles)
@@ -635,17 +635,34 @@ var CC = window.CC || (window.CC = {});
   }
 
   // ---------- winning and growing ----------
-  // XP goes to every creature that fought (and is still standing), split between them
+  // XP goes to every creature that fought (and is still standing), split between them. Each share is scaled by the
+  // level gap: more from a stronger foe (up to x1.5), less from a much weaker one (down to x0.5). The rest of the
+  // team (awake and under Lv 50) learns by watching: half a share each, scaled by its own level the same way.
+  // Catching a creature gives the same XP as beating it.
+  function xpScale(foeLv, lv) { return CC.clamp(1 + 0.08 * (foeLv - lv), 0.5, 1.5); }
   async function gainXp(foeMon) {
-    var who = Object.keys(B.fought).map(Number).filter(function (i) { var m = CC.state.party[i]; return m && m.hp > 0 && m.lv < 50; });
-    if (!who.length) return;
+    var party = CC.state.party, canGrow = function (i) { var m = party[i]; return m && m.hp > 0 && m.lv < 50; };
+    var fought = Object.keys(B.fought).map(Number).filter(function (i) { return party[i] && party[i].hp > 0; });
+    if (!fought.length) return;
+    var who = fought.filter(canGrow); // a Lv 50 creature takes no share, but the rest of the team still learns from it
     var total = Math.max(1, Math.floor(CC.mon.sp(foeMon).xpYield * foeMon.lv / 5 * (B.wild ? 1 : 1.5)));
-    var each = Math.max(1, Math.ceil(total / who.length));
-    for (var w = 0; w < who.length; w++) await grow(CC.state.party[who[w]], who[w], each);
+    var each = Math.max(1, Math.ceil(total / (who.length || fought.length)));
+    for (var w = 0; w < who.length; w++) {
+      var m = party[who[w]];
+      await grow(m, Math.max(1, Math.round(each * xpScale(foeMon.lv, m.lv))));
+    }
+    var rest = party.map(function (m, i) { return i; }).filter(function (i) { return !B.fought[i] && canGrow(i); });
+    if (!rest.length) return;
+    await CC.say('The rest of your team gained XP too!', { auto: 0.6 });
+    for (var r = 0; r < rest.length; r++) {
+      var b = party[rest[r]];
+      await grow(b, Math.max(1, Math.round(each * 0.5 * xpScale(foeMon.lv, b.lv))), true);
+    }
   }
-  async function grow(m, index, gain) {
+  // quiet: no "gained N XP" line and no stat panel (the rest of the team); level-ups and new moves still show
+  async function grow(m, gain, quiet) {
     var out = m === B.ally.mon, s = out ? B.ally : null, name = CC.mon.name(m);
-    await CC.say(name + ' gained ' + gain + ' XP!', out ? {} : { auto: 0.6 });
+    if (!quiet) await CC.say(name + ' gained ' + gain + ' XP!', out ? {} : { auto: 0.6 });
     var target = m.xp + gain;
     while (m.lv < 50) {
       var next = CC.mon.xpFor(m.lv + 1), from = m.xp, to = Math.min(target, next);
@@ -661,10 +678,10 @@ var CC = window.CC || (window.CC = {});
         for (var i = 0; i < 14; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y, vx: 0, vy: -CC.rand(30, 70), life: 0.9, kind: 'star', color: CC.pick(['#f8e050', '#ffffff']), size: 3 });
         pop('LEVEL UP!', s.home.x, s.home.y - 70, '#f8e050');
       }
-      B.leveled[index] = true;
+      if (CC.mon.canEvolve(m)) m.evoAsk = true; // asked after this battle, or after a later win if it fainted
       CC.sfx('levelup');
       await CC.say(name + ' grew to Lv ' + m.lv + '!');
-      await CC.statPanel(m, before, after);
+      if (!quiet) await CC.statPanel(m, before, after);
       var learn = CC.mon.newMovesAt(m.id, m.lv);
       for (var j = 0; j < learn.length; j++) await CC.learnMove(m, learn[j]);
     }
@@ -810,12 +827,18 @@ var CC = window.CC || (window.CC = {});
       CC.state.coins += extra; CC.sfx('buy');
       await CC.say(B.coinSwipe.by + ' swiped ' + extra + ' shiny coins during the battle!');
     }
-    // evolution after the battle, for anyone who grew
-    for (var k in B.leveled) {
-      var m = CC.state.party[k];
-      if (!m || m.hp <= 0 || !CC.mon.canEvolve(m)) continue;
-      if (await CC.yesNo(CC.mon.name(m) + ' is ready to evolve! Let it?')) await CC.evolveScene(m);
-      else await CC.say(CC.mon.name(m) + ' will ask again after its next level.');
+    // evolution after the battle, for anyone who reached its evolution level (m.evoAsk, set in grow). A creature
+    // that fainted keeps its turn for a later win. One answer clears it: yes, no, or B during the scene.
+    var party = CC.state.party;
+    for (var k = 0; k < party.length; k++) {
+      var m = party[k];
+      if (!m.evoAsk) continue;
+      if (!CC.mon.canEvolve(m)) { delete m.evoAsk; continue; }
+      if (m.hp <= 0) continue;
+      delete m.evoAsk;
+      var name = CC.mon.name(m), later = 'You can evolve ' + name + ' later from the party menu.';
+      if (await CC.yesNo(name + ' is ready to evolve! Let it?')) { if (!(await CC.evolveScene(m))) await CC.say(later); }
+      else await CC.say('Okay! ' + later);
     }
   }
 })();
