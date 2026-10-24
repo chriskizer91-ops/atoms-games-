@@ -2,6 +2,16 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
+## v11: the final creatures
+The creature list is now final at **175**.
+- **39 new forms from the Evolution Lab,** his picks, with his ideas built in. Yetitan (a yeti with bigfoot colors), Mirelich (a moss lich), Gemonitor (a lizard covered in gems), Pufferoar (Tidepuff with its colors flipped), Bogtusk (a muddier, furrier, fiercer pig), Oakenowl (an owl that looks like an oak tree when it sits still) and **Crescub**, a lynx cub that grows into Moonlynx at Lv 30. Eleven families now have three forms, including Tuftail, Fleecling, Bumblop, Dewt, Pebblepup, Sprigkin, Bubblefin, Crabbit, Shellbit, Puffling and Owlcorn.
+- **The family's designs:** **? Pop** (Mystery Pop, drawn by A.S.K.), an ice pop with ears that lives in Frostpeak Pass and grows into **Pup Pop** at Lv 22 and **Doggy Woggy** at Lv 30, with its own move, **Sprink Magick**. Clovermouse grows into **Clove Tastical** at Lv 18 (Lucky Leaf), and Hopsprout into **Hoppin Pop** at Lv 20 (Fantastic Hop, which raises its Speed each time it hops).
+- **Nobody's creature got weaker:** a creature that gained a form keeps the stats it had, so caught creatures in old saves are just as strong, with a new form to look forward to.
+- **New wild creatures:** both ? Pop and Pup Pop in Frostpeak Pass; Crescub in the Night Ruins (Moonlynx from Lv 30); and Leviafin, Cragmastiff and Oakenowl at the Moonlit Spire, Furnadillo in the Dawn Temple and Stalagwing in the Hollow Deep.
+- **A Runescroll counts as three Glyphlings** at the Ancients' Archive wall.
+- The Creature Log, the Field Guide and the roster number every new form right after its family. A.S.K. is in the second credits roll.
+- `docs/creature-catch-lore-bible.md` is the whole world in one place, made from the game's own data.
+
 ## v10: a field guide in journey order
 - **New numbering:** creatures are numbered in the order you can meet them on the journey, place by place: the starters first, then the Meadow Path, the Grassland, Willowbrook Orchard, and on to the Hollow Deep. A creature's evolutions sit right after it. The Creature Log in the game and the Field Guide use the same numbers.
 - **The Field Guide has a tab for each place**, in the order you reach it, and opens on Home Village. Each place's page shows where it is, its wild levels, who to meet, the creatures first found there, and "Also found here" for creatures from earlier pages that live there too. Cards say how rare a creature is in that place and whether it only comes out by day or at night.

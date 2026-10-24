@@ -307,10 +307,12 @@ var CC = window.CC || (window.CC = {});
   // the blank wall: three Glyphlings make it speak
   async function glyphWall() {
     if (CC.hasPage(10)) { await say('The blank wall. One word glows on it now, in the Ancients\' runes: "Kindness."'); return; }
-    var s = CC.state, n = s.party.concat(s.vault || []).filter(function (m) { return m.id === 'glyphling'; }).length;
+    // a Runescroll is three Glyphlings joined together, so it counts as three
+    var s = CC.state, mine = s.party.concat(s.vault || []), scroll = mine.some(function (m) { return m.id === 'runescroll'; });
+    var n = mine.reduce(function (t, m) { return t + (m.id === 'glyphling' ? 1 : m.id === 'runescroll' ? 3 : 0); }, 0);
     if (!F().ilsaWall) { await say('A smooth, blank stone tablet. There are faint grooves in it, like letters that wandered off.'); return; }
     if (n < 3) { await say('The blank wall. ' + (n ? 'Your Glyphling' + (n > 1 ? 's glow' : ' glows') + ' a little near it, but nothing happens. Archivist Ilsa said it takes three.' : 'Archivist Ilsa said three Glyphlings might make it speak.')); return; }
-    await say('Your three Glyphlings float up to the blank wall. They glow brighter and brighter... and the wall lights up with one word: "Kindness."');
+    await say((scroll ? 'Your Runescroll unrolls in front of the blank wall. Its three letters' : 'Your three Glyphlings float up to the blank wall. They') + ' glow brighter and brighter... and the wall lights up with one word: "Kindness."');
     CC.sfx('moon');
     await say('It says "Kindness." The whole wall, just that. And look, this was tucked behind the stone!', 'Archivist Ilsa');
     await CC.givePage(10);

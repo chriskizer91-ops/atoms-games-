@@ -138,6 +138,9 @@ CC.MOVES = {
   shadedust: { name: 'Shade Dust', type: 'Shadow', tier: 'sig', power: 60, acc: 100, pp: 15, fx: { status: 'sleep', chance: 30 } },
   dawnbreak: { name: 'Dawnbreak', type: 'Fire', tier: 'sig', power: 100, acc: 100, pp: 5, fx: { drain: 0.25 } },
   duskfall: { name: 'Duskfall', type: 'Shadow', tier: 'sig', power: 90, acc: 100, pp: 5, fx: { status: 'sleep', chance: 30 } },
+  // the family's two new evolutions (src/js/12c-data-final.js); it hops higher each time it hops
+  luckyleaf: { name: 'Lucky Leaf', type: 'Plant', tier: 'sig', power: 70, acc: 100, pp: 15, fx: { crit: true } },
+  fantastichop: { name: 'Fantastic Hop', type: 'Plant', tier: 'sig', power: 65, acc: 95, pp: 15, fx: { stat: 'spd', stages: 1, self: true } },
 };
 
 // The basic / strong / utility move of each type

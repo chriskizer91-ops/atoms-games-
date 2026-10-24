@@ -153,9 +153,12 @@ The expansion follows `creature-catch-expansion-guide.md`. Where the guide left 
 - **Creature numbers follow the journey** (`src/js/13c-field-order.js`): the places in the order you reach them (the main road, each side area right after the road it hangs off, then the places after the story), and each creature numbered in the first place you can meet any of its line, with its evolutions right after it. The starters are 1 to 9. The family's Moonborn come after the Hollow Deep, and a Keeper is numbered with its side area. The Creature Log and the Field Guide share these numbers.
 - **The Field Guide is spoiler-safe:** one tab per place, opening on Home Village. The places after the story and the "Every creature" page ask first, and the Night Ruins' guardians are hidden until you tap them.
 
-## 16. Planned for the final version
+## 16. Added in v11 (the final creatures)
 
-- **The creature list is final:** the 131 creatures in v10, plus the family's 5 designs (the ice cream pup's three forms, Clovetastical and Hoppin Pop), plus the new forms picked in the Evolution Lab: 39 Yes and 6 Maybe. No more creatures are added at this stage.
-- **`creature-catch-lore-bible.md`** holds the world, the story and every creature with its place, types, level and lore. It wins for lore.
-- **`creature-catch-final-creature-prompts.md`** has the art prompts. The final pass starts once those pictures arrive.
-
+- **The creature list is final at 175:** the 131 from v10, the 39 new forms his Evolution Lab votes picked, and the family's 5 designs (? Pop, Pup Pop, Doggy Woggy, Clove Tastical, Hoppin Pop). His six Maybes weren't made, so they're out. No more creatures at this stage.
+- **Names keep his spelling,** including **Sprink Magick**. ? Pop is read "Mystery Pop"; its id (for its picture and the codes) is `mysterypop`.
+- **? Pop evolves at Lv 22,** so both of the ice cream pup's first forms show up in Frostpeak Pass (Lv 20 to 26).
+- **A.S.K. drew ? Pop.** The other new creatures are his ideas. Only ? Pop carries a "Drawn by" credit.
+- **Nobody's creature gets weaker:** a creature that gained a form keeps its stats. A new second form gets the usual evolved budget; a new third form gets a third more than the form before it, at most 450.
+- **Crescub** (Moonlynx's baby form, Lv 30) takes Moonlynx's place in the Night Ruins. **Runescroll** counts as three Glyphlings at the Archive wall.
+- **`creature-catch-lore-bible.md`** holds the world, the story and every creature. It wins for lore.

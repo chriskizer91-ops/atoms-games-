@@ -1,0 +1,50 @@
+// Lore for the final creatures (src/js/12c-data-final.js), from docs/creature-catch-lore-bible.md, and new field notes
+// for the creatures that gained a form.
+var CC = window.CC || (window.CC = {});
+
+Object.assign(CC.LORE, {
+  clovetastical: { lore: 'It wraps itself in a cloak of four-leaf clovers. Meeting one is said to bring a whole day of good luck.', note: 'Clovermouse evolves into it at Lv 18. Plant and Normal.' },
+  hoppinpop: { lore: 'Its sprout has bloomed into a crown of flowers, and its legs are stronger than ever. It tries to hop higher each time it hops, and one day it\'s sure it will reach the moon.', note: 'Hopsprout evolves into it at Lv 20. A Plant type now.' },
+  bloomstag: { lore: 'Its antlers have grown into a blooming tree. Birds nest in them every spring, and Bloomstag walks very carefully so it never wakes the chicks.', note: 'Budstag evolves into it at Lv 24. Plant and Lumen.' },
+  queenbuzz: { lore: 'The queen of every Bumblop hive. When it hums, every flower in the meadow turns to face it and the whole hive crackles with static.', note: 'Bumblazer evolves into it at Lv 36. Bolt and Plant.' },
+  gemonitor: { lore: 'It never stopped eating shiny stones, and now it\'s covered in gems from nose to tail. It glitters so much it can\'t hide anywhere, and it doesn\'t want to.', note: 'Gemlin evolves into it at Lv 28. Earth and Lumen.' },
+  yetitan: { lore: 'Half the old stories say it\'s white and half say it\'s brown, and both are right. It carries a giant snowball everywhere, just in case a snowball fight breaks out.', note: 'Yetiny evolves into it at Lv 32. Frost and Earth.' },
+  lilyswan: { lore: 'The fluffy duckling grew into a swan that glides across the swamp on its own lily pad. Wherever it rests, lotus flowers open.', note: 'Lilypadle evolves into it at Lv 34. Water and Plant.' },
+  mushroyal: { lore: 'Its cap is so wide that little Mushlings nap under it when it rains. It\'s the oldest mushroom in the Forest and only moves when it absolutely must.', note: 'Mushling evolves into it at Lv 20. Shadow and Plant.' },
+  shellcastle: { lore: 'It moved out of its conch and into a whole sandcastle. Little crabs rent rooms in the towers, and Shellcastle never asks for rent.', note: 'Conchord evolves into it at Lv 38. Water and Earth.' },
+  pufferoar: { lore: 'When it gets angry, it puffs up bigger than a boulder and roars bubbles. Its colors flipped when it evolved, so fishers call it Tidepuff turned inside out.', note: 'Tidepuff evolves into it at Lv 24.' },
+  beaconseal: { lore: 'Its lamp shines across the whole lake at night. Keeper Wren says the Lantern Isle lighthouse was built because sailors kept steering toward Beaconseals.', note: 'Sealamp evolves into it at Lv 26. Lumen and Water.' },
+  sunfennec: { lore: 'Its mane is the color of a desert sunset and its tail burns like a campfire. Safi\'s people follow one home when the stars are hidden.', note: 'Dunefox evolves into it at Lv 30. Fire and Lumen.' },
+  drillotl: { lore: 'It drills with its tail and lights the way with its hard-hat lamp. If you hear humming in the flooded tunnels, a Drillotl is singing while it works.', note: 'Pickaxolotl evolves into it at Lv 32.' },
+  sylvantail: { lore: 'A forest spirit with three leafy tails. Flowers sprout in its footprints, and in spring you can follow its trail across the whole Grassland.', note: 'Verdantail evolves into it at Lv 34. Plant and Lumen.' },
+  tempestram: { lore: 'Its wool is a whole storm. Farmers watch for it in dry summers, because wherever Tempestram grazes, rain follows, and a rainbow comes after.', note: 'Cloudram evolves into it at Lv 36.' },
+  typhoonewt: { lore: 'It rides a storm cloud like a little boat. After it passes, the air smells like rain and there is always a rainbow.', note: 'Monsoonewt evolves into it at Lv 36. Water and Bolt.' },
+  cragmastiff: { lore: 'It\'s so big that birds mistake it for a mountain. A little waterfall runs down its back, and it wags its tail so hard the ground shakes.', note: 'Boulderhound evolves into it at Lv 34. Earth and Normal.' },
+  elderkin: { lore: 'Old Fennick says the Grandmother Oak has a friend living in her roots. This is it: Elderkin has guarded the Whispering Grove since the Ancients planted it.', note: 'Grovekin evolves into it at Lv 40.' },
+  leviafin: { lore: 'The gentle giant of the lake. It swims slowly with its mouth open, and little Bubblefin ride along beside it like a parade.', note: 'Surgefin evolves into it at Lv 34.' },
+  paladcrab: { lore: 'A crab knight that guards the Lakeshore. It holds its big claw up like a shield and lets small creatures hide behind it during storms.', note: 'Rampacrab evolves into it at Lv 36.' },
+  puffadmiral: { lore: 'It leads the whole Lantern Isle flock across the sea in perfect lines. It salutes the lighthouse every morning, and Keeper Wren swears the lighthouse blinks back.', note: 'Puffcaptain evolves into it at Lv 40.' },
+  lanternfly: { lore: 'When every firefly in the bayou gathers on the Lantern Tree, a Lanternfly is always at the very top. Boatman Bo steers home by its glow.', note: 'Fireflink evolves into it at Lv 36.' },
+  scrapcoon: { lore: 'It builds armor out of whatever Copperbell throws away. Pots, gears, an old bell: if it shines, Scrapcoon wears it.', note: 'Rustcoon evolves into it at Lv 28.' },
+  bellcondor: { lore: 'Its body rings like a bell when it flaps its wings. Old Toll says the first Dusk Bell was cast in its shape.', note: 'Dingdove evolves into it at Lv 28.' },
+  gooseidon: { lore: 'The grumpiest creature on the Lakeshore. One honk sends a wave across the whole lake, and Fisher Gus has learned to wear a raincoat.', note: 'Honkwave evolves into it at Lv 24.' },
+  stalagwing: { lore: 'Hanging from a cave ceiling, it looks like one more row of stalactites. Explorers in the Hollow Deep learn to look twice.', note: 'Stalagbat evolves into it at Lv 28. Shadow and Earth.' },
+  burrboar: { lore: 'It rolls through the Forest like a spiky wheel, and every seed stuck to it gets planted somewhere new. Whole groves grew where Burrboar likes to roll.', note: 'Burrhog evolves into it at Lv 22.' },
+  scarecrown: { lore: 'The crow became the scarecrow. Now it stands in Willowbrook Orchard at night, and all the crows come to sit on its arms and tell it the news.', note: 'Scarecrowl evolves into it at Lv 22. Shadow and Plant.' },
+  iglooshell: { lore: 'Its shell is an ice castle with real rooms inside. Travelers caught in a blizzard on Frostpeak Pass sometimes wake up warm inside one.', note: 'Sleetle evolves into it at Lv 32. Frost and Earth.' },
+  rimedrake: { lore: 'It still licks everything, but now whatever it licks freezes solid. The frozen pond in the Crystal Cave is said to be one Rimedrake\'s fault.', note: 'Rimeskink evolves into it at Lv 28.' },
+  runescroll: { lore: 'Three Glyphlings joined into one living word. Archivist Ilsa has been trying to read it for years. She thinks it says "friend," but it keeps changing.', note: 'Glyphling evolves into it at Lv 40.' },
+  timberbeetle: { lore: 'Its shell has become a mossy tree stump with a little tree growing on top. Squirrels have lived on its back for generations.', note: 'Barkbeetle evolves into it at Lv 22. Earth and Plant.' },
+  saguaroad: { lore: 'Once a year a huge flower blooms on its head, and every creature in the desert comes to see it. Saguaroad pretends not to notice.', note: 'Cactoad evolves into it at Lv 30. Plant and Earth.' },
+  furnadillo: { lore: 'Its shell is as hot as a kiln. The Ancients baked the bricks of the Dawn Temple on the backs of sleeping Furnadillos.', note: 'Kilnadillo evolves into it at Lv 30.' },
+  stormeel: { lore: 'It swims through the bayou air as easily as through water. On stormy nights people mistake it for a bolt of lightning that forgot to leave.', note: 'Wispeel evolves into it at Lv 36. Bolt and Water.' },
+  tunnelpede: { lore: 'It\'s as long as a minecart train. Grit says the deepest tunnels in Glimmer Mine were there before the miners ever came.', note: 'Rumblepede evolves into it at Lv 30.' },
+  constellastar: { lore: 'On clear nights it lies on the beach and copies the stars. Sailors once found their way home by the Constellastars of Driftwood Cove.', note: 'Glimstar evolves into it with a Moon Shard.' },
+  bogtusk: { lore: 'Still a pig, only bigger, muddier and much grumpier. When it charges through the bayou, even the fireflies get out of its way.', note: 'Mudtusk evolves into it at Lv 38.' },
+  oakenowl: { lore: 'When it sits still it looks exactly like an old oak tree. Travelers have picnicked under one and never known, until it blinked.', note: 'Timberowl evolves into it at Lv 40. Plant and Normal.' },
+  mirelich: { lore: 'An old swamp spirit that wears the bog like a royal cloak. It isn\'t scary once you know it. It\'s just very, very old, and it still hums the songs nobody remembers.', note: 'Mireling evolves into it at Lv 36. Shadow and Plant.' },
+  crescub: { lore: 'A lynx kitten with a crescent moon on its forehead that only glows when it\'s happy. On a clear night, it grows into Moonlynx.', note: 'Rare in the Night Ruins. It grows into Moonlynx at Lv 30.' },
+});
+// they're not solo any more
+['budstag', 'gemlin', 'yetiny', 'lilypadle', 'tidepuff', 'sealamp', 'dunefox', 'stalagbat', 'sleetle', 'cactoad', 'wispeel', 'rumblepede', 'mireling'].forEach(function (id) { CC.LORE[id].note = CC.LORE[id].note.replace(/ Solo\.$/, ''); });
+CC.LORE.moonlynx.note = 'Crescub evolves into it at Lv 30. The rarest creature in the Night Ruins, and very hard to catch.';

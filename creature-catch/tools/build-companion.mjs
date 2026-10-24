@@ -11,7 +11,7 @@ import { SRC } from './load-data.mjs';
 const ROOT = path.join(SRC, '..');
 const ctx = { window: {} };
 vm.createContext(ctx);
-for (const f of ['10-data-types.js', '11-data-moves.js', '12-data-creatures.js', '12b-data-expansion.js', '13-data-lore.js', '13a-lore-expansion.js', '13b-family-creatures.js', '13c-field-order.js', '04-ui.js', '17-expansion.js']) {
+for (const f of ['10-data-types.js', '11-data-moves.js', '12-data-creatures.js', '12b-data-expansion.js', '12c-data-final.js', '13-data-lore.js', '13a-lore-expansion.js', '13b-family-creatures.js', '13c-field-order.js', '13d-lore-final.js', '04-ui.js', '17-expansion.js']) {
   vm.runInContext(fs.readFileSync(path.join(SRC, 'js', f), 'utf8'), ctx, { filename: f });
 }
 const CC = ctx.window.CC;

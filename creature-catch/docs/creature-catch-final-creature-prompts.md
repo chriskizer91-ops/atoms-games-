@@ -1,6 +1,8 @@
 # Creature Catch: Final Creature Prompts
 
-The last new creatures for this stage of the game, picked in the Evolution Lab. **39 pictures** for his Yes votes, plus **6 optional ones** for his Maybe votes (only make those if he decides yes). The family's own five designs (the ice cream pup's three forms, Clovetastical and Hoppin Pop) are already done: they were cut from the drawings.
+The last new creatures for this stage of the game, picked in the Evolution Lab: **39 pictures** for his Yes votes. **All 39 arrived and are in the game as of v11.** His six Maybes (Mittengrizz, Blossomfly, Hoardmunk, Mossloth, Blizzpaca and Mirahare) weren't made, so they're out. The family's own five designs (the ice cream pup's three forms, Clove Tastical and Hoppin Pop) came from the drawings.
+
+This file stays as the record of how each picture was asked for, in case one ever needs redoing.
 
 Each creature's name, types, level and lore are in `creature-catch-lore-bible.md`, under the place where it lives.
 
@@ -17,53 +19,47 @@ Each creature's name, types, level and lore are in `creature-catch-lore-bible.md
 
 ## Checklist
 
-| # | New creature | Grows from | Where | His vote |
-|---|---|---|---|---|
-| 1 | **Tempestram** | Cloudram | Meadow Path | Yes |
-| 2 | **Hoardmunk** | Stashmunk | Meadow Path | Maybe |
-| 3 | **Queenbuzz** | Bumblazer | Grassland | Yes |
-| 4 | **Sylvantail** | Verdantail | Grassland | Yes |
-| 5 | **Typhoonewt** | Monsoonewt | Grassland | Yes |
-| 6 | **Cragmastiff** | Boulderhound | Grassland | Yes |
-| 7 | **Scarecrown** | Scarecrowl | Willowbrook Orchard | Yes |
-| 8 | **Blossomfly** | Wormapple | Willowbrook Orchard | Maybe |
-| 9 | **Bloomstag** | Budstag | Forest | Yes |
-| 10 | **Mushroyal** | Mushling | Forest | Yes |
-| 11 | **Burrboar** | Burrhog | Forest | Yes |
-| 12 | **Timberbeetle** | Barkbeetle | Forest | Yes |
-| 13 | **Oakenowl** | Timberowl | Forest | Yes |
-| 14 | **Elderkin** | Grovekin | Whispering Grove | Yes |
-| 15 | **Mossloth** | Snoozeloth | Whispering Grove | Maybe |
-| 16 | **Pufferoar** | Tidepuff | Lakeshore | Yes |
-| 17 | **Beaconseal** | Sealamp | Lakeshore | Yes |
-| 18 | **Leviafin** | Surgefin | Lakeshore | Yes |
-| 19 | **Paladcrab** | Rampacrab | Lakeshore | Yes |
-| 20 | **Gooseidon** | Honkwave | Lakeshore | Yes |
-| 21 | **Shellcastle** | Conchord | Driftwood Cove | Yes |
-| 22 | **Constellastar** | Glimstar | Driftwood Cove | Yes |
-| 23 | **Puffadmiral** | Puffcaptain | Lantern Isle | Yes |
-| 24 | **Gemonitor** | Gemlin | Crystal Cave | Yes |
-| 25 | **Stalagwing** | Stalagbat | Crystal Cave | Yes |
-| 26 | **Rimedrake** | Rimeskink | Crystal Cave | Yes |
-| 27 | **Tunnelpede** | Rumblepede | Crystal Cave | Yes |
-| 28 | **Scrapcoon** | Rustcoon | Copperbell Town | Yes |
-| 29 | **Bellcondor** | Dingdove | Copperbell Town | Yes |
-| 30 | **Drillotl** | Pickaxolotl | Glimmer Mine | Yes |
-| 31 | **Sunfennec** | Dunefox | Sunscorch Desert | Yes |
-| 32 | **Saguaroad** | Cactoad | Sunscorch Desert | Yes |
-| 33 | **Furnadillo** | Kilnadillo | Sunscorch Desert | Yes |
-| 34 | **Mirahare** | Mirajack | Sunscorch Desert | Maybe |
-| 35 | **Yetitan** | Yetiny | Frostpeak Pass | Yes |
-| 36 | **Iglooshell** | Sleetle | Frostpeak Pass | Yes |
-| 37 | **Blizzpaca** | Flurrpaca | Frostpeak Pass | Maybe |
-| 38 | **Mittengrizz** | Mittencub | Steamvent Springs | Maybe |
-| 39 | **Lilyswan** | Lilypadle | Murkmire Swamp | Yes |
-| 40 | **Lanternfly** | Fireflink | Murkmire Swamp | Yes |
-| 41 | **Stormeel** | Wispeel | Murkmire Swamp | Yes |
-| 42 | **Mirelich** | Mireling | Murkmire Swamp | Yes |
-| 43 | **Bogtusk** | Mudtusk | Firefly Bayou | Yes |
-| 44 | **Runescroll** | Glyphling | Night Ruins | Yes |
-| 45 | **Crescub** | grows into Moonlynx | Night Ruins | Yes |
+| # | New creature | Grows from | Where |
+|---|---|---|---|
+| 1 | **Tempestram** | Cloudram | Meadow Path |
+| 2 | **Queenbuzz** | Bumblazer | Grassland |
+| 3 | **Sylvantail** | Verdantail | Grassland |
+| 4 | **Typhoonewt** | Monsoonewt | Grassland |
+| 5 | **Cragmastiff** | Boulderhound | Grassland |
+| 6 | **Scarecrown** | Scarecrowl | Willowbrook Orchard |
+| 7 | **Bloomstag** | Budstag | Forest |
+| 8 | **Mushroyal** | Mushling | Forest |
+| 9 | **Burrboar** | Burrhog | Forest |
+| 10 | **Timberbeetle** | Barkbeetle | Forest |
+| 11 | **Oakenowl** | Timberowl | Forest |
+| 12 | **Elderkin** | Grovekin | Whispering Grove |
+| 13 | **Pufferoar** | Tidepuff | Lakeshore |
+| 14 | **Beaconseal** | Sealamp | Lakeshore |
+| 15 | **Leviafin** | Surgefin | Lakeshore |
+| 16 | **Paladcrab** | Rampacrab | Lakeshore |
+| 17 | **Gooseidon** | Honkwave | Lakeshore |
+| 18 | **Shellcastle** | Conchord | Driftwood Cove |
+| 19 | **Constellastar** | Glimstar | Driftwood Cove |
+| 20 | **Puffadmiral** | Puffcaptain | Lantern Isle |
+| 21 | **Gemonitor** | Gemlin | Crystal Cave |
+| 22 | **Stalagwing** | Stalagbat | Crystal Cave |
+| 23 | **Rimedrake** | Rimeskink | Crystal Cave |
+| 24 | **Tunnelpede** | Rumblepede | Crystal Cave |
+| 25 | **Scrapcoon** | Rustcoon | Copperbell Town |
+| 26 | **Bellcondor** | Dingdove | Copperbell Town |
+| 27 | **Drillotl** | Pickaxolotl | Glimmer Mine |
+| 28 | **Sunfennec** | Dunefox | Sunscorch Desert |
+| 29 | **Saguaroad** | Cactoad | Sunscorch Desert |
+| 30 | **Furnadillo** | Kilnadillo | Sunscorch Desert |
+| 31 | **Yetitan** | Yetiny | Frostpeak Pass |
+| 32 | **Iglooshell** | Sleetle | Frostpeak Pass |
+| 33 | **Lilyswan** | Lilypadle | Murkmire Swamp |
+| 34 | **Lanternfly** | Fireflink | Murkmire Swamp |
+| 35 | **Stormeel** | Wispeel | Murkmire Swamp |
+| 36 | **Mirelich** | Mireling | Murkmire Swamp |
+| 37 | **Bogtusk** | Mudtusk | Firefly Bayou |
+| 38 | **Runescroll** | Glyphling | Night Ruins |
+| 39 | **Crescub** | grows into Moonlynx | Night Ruins |
 
 ---
 
@@ -72,10 +68,6 @@ Each creature's name, types, level and lore are in `creature-catch-lore-bible.md
 **Tempestram**
 Grows from Cloudram at Lv 36. Normal / Bolt. Attach: `cloudram.png` (and `fleecling.png`).
 > Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Tempestram, the final evolved form of Cloudram the thundercloud ram: a huge majestic ram whose wool is a towering storm front, dark blue-gray and white, with rain streaking down its sides, enormous spiral horns glowing with yellow lightning, a small rainbow arching between its horns, black face and hooves, a mighty stance. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, filling most of the frame, centered on a solid flat magenta #FF00FF background, no text, no shadow.
-
-**Hoardmunk** (Maybe: only if he decides yes)
-Grows from Stashmunk at Lv 32. Normal / Plant. Attach: `stashmunk.png` (and `puffmunk.png`).
-> Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Hoardmunk, the final evolved form of Stashmunk the chipmunk: a big chubby brown chipmunk with cream and dark stripes and huge round cheeks, wearing a hollow-log backpack stuffed with acorns, nuts and red berries, an acorn-cap crown, a big bushy tail, a proud happy face. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, filling most of the frame, centered on a solid flat magenta #FF00FF background, no text, no shadow.
 
 ---
 
@@ -104,10 +96,6 @@ Grows from Boulderhound at Lv 34. Earth / Normal. Attach: `boulderhound.png` (an
 **Scarecrown**
 Grows from Scarecrowl at Lv 22. Shadow / Plant. Attach: `scarecrowl.png`.
 > Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Scarecrown, the evolved form of Scarecrowl the crow in a scarecrow hat: a tall scarecrow king made of straw and patched cloth, a crown woven from straw on top of its tattered hat, a carved pumpkin lantern glowing orange in one hand, two small black crows perched on its outstretched arms, faint orange glowing eyes, a long patched scarf. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
-
-**Blossomfly** (Maybe: only if he decides yes)
-Grows from Wormapple at Lv 18. Plant / Normal. Attach: `wormapple.png`. He picked this idea.
-> Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Blossomfly, the evolved form of Wormapple the apple worm: a cute butterfly with a soft green body, two big wings shaped like pink-and-white apple blossoms with red edges, a little green leaf on its head like an apple stem, big friendly eyes, holding a tiny red apple. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
 
 ---
 
@@ -140,10 +128,6 @@ Grows from Timberowl at Lv 40. Plant / Normal. Attach: `timberowl.png` (and `owl
 **Elderkin**
 Grows from Grovekin at Lv 40. Plant / Lumen. Attach: `grovekin.png` (and `sprigkin.png`).
 > Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Elderkin, the final evolved form of Grovekin the forest spirit: an ancient walking tree spirit with a kind wrinkled face in its bark, a long beard of green moss, branch antlers full of leaves and small glowing white flowers, a cloak of overlapping leaves, root feet, holding a gnarled wooden staff topped with a glowing white blossom, glowing yellow-green eyes. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, filling most of the frame, centered on a solid flat magenta #FF00FF background, no text, no shadow.
-
-**Mossloth** (Maybe: only if he decides yes)
-Grows from Snoozeloth at Lv 26. Normal / Plant. Attach: `snoozeloth.png`.
-> Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Mossloth, the evolved form of Snoozeloth the sleepy sloth: a giant sloth so covered in moss that it looks like a small hill, little trees, flowers and mushrooms growing on its back, long claws hugging a thick branch, eyes closed in a peaceful sleepy smile. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
 
 ---
 
@@ -245,10 +229,6 @@ Grows from Cactoad at Lv 30. Plant / Earth. Attach: `cactoad.png`.
 Grows from Kilnadillo at Lv 30. Fire / Earth. Attach: `kilnadillo.png`.
 > Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Furnadillo, the evolved form of Kilnadillo the clay armadillo: a big armored armadillo with a thick banded shell like a terracotta clay furnace, bright glowing orange cracks between the bands, a small chimney on top of its shell, a tan face and snout, strong clawed feet. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
 
-**Mirahare** (Maybe: only if he decides yes)
-Grows from Mirajack with a Sun Shard. Lumen. Attach: `mirajack.png`.
-> Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Mirahare, the evolved form of Mirajack the desert jackrabbit: a tall graceful golden hare with extremely tall ears with pale gold insides, wavy shimmering pale-gold mirage stripes in its tan fur, a glowing golden sun mark on its forehead, big amber eyes, standing tall and alert. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
-
 ---
 
 ## Frostpeak Pass
@@ -260,18 +240,6 @@ Grows from Yetiny at Lv 32. Frost / Earth. Attach: `yetiny.png`. His idea: "a ye
 **Iglooshell**
 Grows from Sleetle at Lv 32. Frost / Earth. Attach: `sleetle.png`.
 > Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Iglooshell, the evolved form of Sleetle the ice snail: a big slow snail with a soft light-blue body and a huge shell shaped like a frosty ice castle with little towers and windows, two antennae topped with snowflakes, a gentle sleepy smile. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
-
-**Blizzpaca** (Maybe: only if he decides yes)
-Grows from Flurrpaca at Lv 32. Frost / Normal. Attach: `flurrpaca.png`.
-> Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Blizzpaca, the evolved form of Flurrpaca the fluffy alpaca: a huge tall llama with an enormous swirling mane of white-and-pale-blue wool like a blizzard, snowflakes woven into its fur, a big red woven saddle blanket with tassels, rosy cheeks, a very smug face. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
-
----
-
-## Steamvent Springs
-
-**Mittengrizz** (Maybe: only if he decides yes)
-Grows from Mittencub at Lv 34. Fire / Frost. Attach: `mittencub.png`. His idea: "a red and blue bear with mittens, of course."
-> Using the attached sprite for colors, markings and design, draw its evolved form. Pixel art game sprite of Mittengrizz, the evolved form of Mittencub the polar bear cub: a big strong bear with fluffy white fur patterned with red and blue, wearing big warm glowing red mittens on its paws and a long knitted red-and-blue striped scarf, rosy cheeks, arms open in a big friendly hug. Game Boy Advance JRPG style, 64x64 pixels, front-facing 3/4 view, bold dark outline, limited 16-color palette, flat shading, cute and expressive, centered on a solid flat magenta #FF00FF background, no text, no shadow.
 
 ---
 
@@ -317,12 +285,12 @@ A new baby form: grows into Moonlynx at Lv 30. Lumen. Attach: `moonlynx.png`. Hi
 
 ## The family's designs (done)
 
-These came from the drawings, so there's nothing to generate. They're cut out and waiting in `incoming/family-designs/` (with the original pictures), ready to go in with everything else.
+These came from the drawings, so there was nothing to generate. A.S.K. drew ? Pop; the rest are his designs. The original pictures are kept in `incoming/family-designs/`.
 
 | Creature | Grows from | Picture |
 |---|---|---|
-| **? Pop** (name to pick) | a new first form | from the drawing |
-| **Pup Pop** | ? Pop at Lv 16 | from the drawing |
+| **? Pop** | a new first form | drawn by A.S.K. |
+| **Pup Pop** | ? Pop at Lv 22 | from the drawing |
 | **Doggy Woggy** | Pup Pop at Lv 30 | from the drawing |
-| **Clovetastical** | Clovermouse at Lv 18 | from the drawing |
+| **Clove Tastical** | Clovermouse at Lv 18 | from the drawing |
 | **Hoppin Pop** | Hopsprout at Lv 20 | from the drawing |

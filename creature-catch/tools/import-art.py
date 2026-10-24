@@ -277,12 +277,16 @@ def main(src):
     import re
     data = open(os.path.join(ROOT, 'src', 'js', '12-data-creatures.js')).read()
     ids = set(re.findall(r"^  \['(\w+)', '", data, re.M)) | {'duskfang'}
+    final = os.path.join(ROOT, 'src', 'js', '12c-data-final.js')  # the final creatures' rows, and Crescub
+    if os.path.exists(final): ids |= set(re.findall(r"^    \['(\w+)', '", open(final).read(), re.M)) | {'crescub'}
     # family creatures: every name: '...' in src/js/13b-family-creatures.js that isn't in a comment
     fam = os.path.join(ROOT, 'src', 'js', '13b-family-creatures.js')
     if os.path.exists(fam):
         for line in open(fam).read().splitlines():
             m = re.match(r"\s*(?:\{\s*)?name:\s*'([^']+)'", line)
-            if m and not line.strip().startswith('//'): ids.add(re.sub(r'[^a-z0-9]', '', m.group(1).lower()))
+            if m and not line.strip().startswith('//'):
+                own = re.search(r"\bid:\s*'(\w+)'", line)  # a name with symbols in it (? Pop) gives its id
+                ids.add(own.group(1) if own else re.sub(r'[^a-z0-9]', '', m.group(1).lower()))
     alias = {'optional-middle-stage-duskfang': 'duskfang', 'lunarion-dimmed': 'lunariond'}
     for name, path in sorted(files.items()):
         base = alias.get(name[:-4], name[:-4])

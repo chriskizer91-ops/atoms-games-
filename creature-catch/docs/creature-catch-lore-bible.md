@@ -1,10 +1,10 @@
 # Creature Catch: The Lore Bible
 
-Everything about the world of Creature Catch in one place: the story from the first dim night to the Balance, every place in the order you reach it, the people you meet there, and **every creature**, including the 50 new ones planned for the final version (his 39 Yes picks and 6 Maybes from the Evolution Lab, and the family's 5 designs). After these, no more creatures are being added at this stage.
+Everything about the world of Creature Catch in one place: the story from the first dim night to the Balance, every place in the order you reach it, the people you meet there, and **all 175 creatures**, including the 44 added in v11 (his 39 Evolution Lab picks and the family's 5 designs). This is the final creature list for this stage of the game.
 
-The 131 creatures already in the game take their lore from the game's data (`src/js/13-data-lore.js` and `13a-lore-expansion.js`). The new ones are marked **★ new** and their lore is written here first; the final pass puts it into the game. For rules and numbers, `creature-catch-decisions-2.md` still wins. For the world and the story, this file wins.
+This file is made from the game's own data, so the creatures, places and lore here are exactly what's in the game. The v11 creatures are marked **★**. For rules and numbers, `creature-catch-decisions-2.md` wins. For the world and the story, this file wins.
 
-**Contents:** 1. The world in one page · 2. The story · 3. The Lost Pages · 4. Places, people and creatures · 5. The new creatures at a glance · 6. Notes for the final pass · 7. Still to decide
+**Contents:** 1. The world in one page · 2. The story · 3. The Lost Pages · 4. Places, people and creatures · 5. The v11 creatures at a glance · 6. How they work in the game · 7. What the family decided
 
 ---
 
@@ -113,7 +113,7 @@ Elder Willow's book has 12 pages scattered across the land. He gives 5 Great Cub
 
 ## 4. Places, people and creatures
 
-In the order you reach them. Each place lists the creature families you can **first** meet there (a whole family is listed where you first meet any of it, the same way the Creature Log numbers them), then the ones from earlier places that also live there. **★ new** marks the new creatures; *(Maybe)* marks the ones that only go in if he decides yes.
+In the order you reach them. Each place lists the creature families you can **first** meet there (a whole family is listed where you first meet any of it, the same way the Creature Log numbers them), then the ones from earlier places that also live there. **★** marks the creatures added in v11.
 
 ### 4.1 Home Village
 
@@ -147,20 +147,19 @@ Flowers and short grass. Only Normal creatures live here, so no starter has it t
 
 **First found here:**
 
-- **Clovermouse → ★ Clovetastical** (Common)
+- **Clovermouse → ★ Clove Tastical** (Common)
   - **Clovermouse** · Normal: It wears a four-leaf clover like a hat and is said to bring good luck to anyone who sees it first. It is shy and scurries off at the first footstep.
-  - ★ **Clovetastical** *(the family's design)* · Plant / Normal (from Clovermouse at Lv 18): It wraps itself in a cloak of four-leaf clovers. Meeting one is said to bring a whole day of good luck.
+  - ★ **Clove Tastical** *(his design)* · Plant / Normal (from Clovermouse at Lv 18): It wraps itself in a cloak of four-leaf clovers. Meeting one is said to bring a whole day of good luck.
 - **Hopsprout → ★ Hoppin Pop** (Common)
   - **Hopsprout** · Normal: The two-leaf sprout on its head turns to follow the sun all day. It can leap ten times its own height to snatch a falling seed.
-  - ★ **Hoppin Pop** *(the family's design)* · Plant (from Hopsprout at Lv 20): Its sprout has bloomed into a crown of flowers, and its legs are stronger than ever. It tries to hop higher each time it hops, and one day it's sure it will reach the moon.
-- **Puffmunk → Stashmunk → ★ Hoardmunk** (Uncommon, day only)
+  - ★ **Hoppin Pop** *(his design)* · Plant (from Hopsprout at Lv 20): Its sprout has bloomed into a crown of flowers, and its legs are stronger than ever. It tries to hop higher each time it hops, and one day it's sure it will reach the moon.
+- **Puffmunk → Stashmunk** (Uncommon, day only)
   - **Puffmunk** · Normal: A chipmunk that stuffs its cheeks so full of berries it can barely see over them. It hides spare berries all over the meadow and forgets where.
   - **Stashmunk** · Normal (from Puffmunk at Lv 16): It digs secret pantries under the meadow and guards them fiercely. Lost travelers have made it through whole winters on its forgotten stashes.
-  - ★ **Hoardmunk** *(Maybe)* · Normal / Plant (from Stashmunk at Lv 32): The king of snacks. Its hollow-log backpack holds enough food for a whole winter, and it shares with anyone who asks nicely.
 - **Fleecling → Cloudram → ★ Tempestram** (Rare, day only)
   - **Fleecling** · Normal: A lamb whose wool is a real little cloud. On hot days it rains a few drops on itself to cool off.
   - **Cloudram** · Normal / Bolt (from Fleecling at Lv 22): Its cloud wool has become a thunderhead. When it charges, thunder rolls across the meadow before it arrives.
-  - ★ **Tempestram** *new* · Normal / Bolt (from Cloudram at Lv 36): Its wool is a whole storm. Farmers watch for it in dry summers, because wherever Tempestram grazes, rain follows, and a rainbow comes after.
+  - ★ **Tempestram** *(new in v11)* · Normal / Bolt (from Cloudram at Lv 36): Its wool is a whole storm. Farmers watch for it in dry summers, because wherever Tempestram grazes, rain follows, and a rainbow comes after.
 
 ### 4.3 Grassland
 
@@ -176,19 +175,19 @@ Wide open fields, the first outpost (Fern keeps it), and Farmer Bramble's farm. 
 - **Tuftail → Verdantail → ★ Sylvantail** (Common)
   - **Tuftail** · Plant: This fox's tail is a bundle of living grass. It hides in tall grass with only the tip showing, and you only spot it when the tail blinks.
   - **Verdantail** · Plant (from Tuftail at Lv 18): Flowers bloom in its huge grassy tail, and they change with the seasons. A field it naps in grows greener overnight.
-  - ★ **Sylvantail** *new* · Plant / Lumen (from Verdantail at Lv 34): A forest spirit with three leafy tails. Flowers sprout in its footprints, and in spring you can follow its trail across the whole Grassland.
+  - ★ **Sylvantail** *(new in v11)* · Plant / Lumen (from Verdantail at Lv 34): A forest spirit with three leafy tails. Flowers sprout in its footprints, and in spring you can follow its trail across the whole Grassland.
 - **Pebblepup → Boulderhound → ★ Cragmastiff** (Common)
   - **Pebblepup** · Earth: A playful puppy with rocky patches in its fur and a pebble stuck to its nose that it refuses to let go of. It fetches anything, especially rocks.
   - **Boulderhound** · Earth (from Pebblepup at Lv 18): Boulder armor covers its shoulders and back, and it stands guard over farms through the night. One bark can be heard across the whole valley.
-  - ★ **Cragmastiff** *new* · Earth / Normal (from Boulderhound at Lv 34): It's so big that birds mistake it for a mountain. A little waterfall runs down its back, and it wags its tail so hard the ground shakes.
+  - ★ **Cragmastiff** *(new in v11)* · Earth / Normal (from Boulderhound at Lv 34): It's so big that birds mistake it for a mountain. A little waterfall runs down its back, and it wags its tail so hard the ground shakes.
 - **Bumblop → Bumblazer → ★ Queenbuzz** (Uncommon)
   - **Bumblop** · Bolt: Half bee, half bunny, all fluff. It buzzes clumsily from flower to flower and gives off tiny sparks of static when it is excited.
   - **Bumblazer** · Bolt (from Bumblop at Lv 20): Its wings crackle with electricity and it zips about too fast to follow. A swarm of Bumblazer over a field means a thunderstorm is coming.
-  - ★ **Queenbuzz** *new* · Bolt / Plant (from Bumblazer at Lv 36): The queen of every Bumblop hive. When it hums, every flower in the meadow turns to face it and the whole hive crackles with static.
+  - ★ **Queenbuzz** *(new in v11)* · Bolt / Plant (from Bumblazer at Lv 36): The queen of every Bumblop hive. When it hums, every flower in the meadow turns to face it and the whole hive crackles with static.
 - **Dewt → Monsoonewt → ★ Typhoonewt** (Uncommon, day only)
   - **Dewt** · Water: A newt made of morning dew. It sparkles on the grass at sunrise and turns to mist if you startle it.
   - **Monsoonewt** · Water (from Dewt at Lv 20): It carries a little raincloud over its head everywhere it goes. Farmers welcome it in dry summers.
-  - ★ **Typhoonewt** *new* · Water / Bolt (from Monsoonewt at Lv 36): It rides a storm cloud like a little boat. After it passes, the air smells like rain and there is always a rainbow.
+  - ★ **Typhoonewt** *(new in v11)* · Water / Bolt (from Monsoonewt at Lv 36): It rides a storm cloud like a little boat. After it passes, the air smells like rain and there is always a rainbow.
 - **Dandylion → Sunmane** (Rare)
   - **Dandylion** · Fire: A lion cub with a mane of dandelion puffs. When it roars, the puffs scatter on the wind, and new dandelions sprout wherever they land.
   - **Sunmane** · Fire / Lumen (from Dandylion with a Sun Shard): Touched by a Sun Shard, its mane blazes like the summer sun. It is said to appear on the longest day of the year to warm the fields.
@@ -205,12 +204,11 @@ Sunny rows of apple trees, a red barn with a cider press, beehives and a scarecr
 
 **First found here:**
 
-- **Wormapple → ★ Blossomfly** (Common, day only)
+- **Wormapple** (Common, day only)
   - **Wormapple** · Plant / Normal: A worm that lives inside a red apple and wears it like a house. It pops out to say hello and pops back in when it's shy. Marigold thought it was eating her apples, but it's actually chasing the pests away.
-  - ★ **Blossomfly** *(Maybe)* · Plant / Normal (from Wormapple at Lv 18): After a long nap inside its apple, it comes out with wings like apple blossoms. Marigold says a good harvest always starts with Blossomflies in the orchard.
 - **Scarecrowl → ★ Scarecrown** (Uncommon, night only)
   - **Scarecrowl** · Shadow: A crow wearing a tattered scarecrow hat. Marigold put up the scarecrow to keep it away, and it moved right in.
-  - ★ **Scarecrown** *new* · Shadow / Plant (from Scarecrowl at Lv 22): The crow became the scarecrow. Now it stands in Willowbrook Orchard at night, and all the crows come to sit on its arms and tell it the news.
+  - ★ **Scarecrown** *(new in v11)* · Shadow / Plant (from Scarecrowl at Lv 22): The crow became the scarecrow. Now it stands in Willowbrook Orchard at night, and all the crows come to sit on its arms and tell it the news.
 
 **Also here:** Puffmunk, Bumblop, Dandylion.
 
@@ -228,23 +226,23 @@ Tall trees and falling leaves around the Elder Tree. Owls should fill it at nigh
 
 - **Barkbeetle → ★ Timberbeetle** (Common)
   - **Barkbeetle** · Earth: Its shell is so much like tree bark that woodcutters have tried to chop it. It munches fallen logs and leaves the forest floor tidy.
-  - ★ **Timberbeetle** *new* · Earth / Plant (from Barkbeetle at Lv 22): Its shell has become a mossy tree stump with a little tree growing on top. Squirrels have lived on its back for generations.
+  - ★ **Timberbeetle** *(new in v11)* · Earth / Plant (from Barkbeetle at Lv 22): Its shell has become a mossy tree stump with a little tree growing on top. Squirrels have lived on its back for generations.
 - **Mushling → ★ Mushroyal** (Common)
   - **Mushling** · Shadow: A mushroom creature that peeks out from under its spotted cap and darts back if you look at it. Its spores can make you sleepy, so don't sniff too close.
-  - ★ **Mushroyal** *new* · Shadow / Plant (from Mushling at Lv 20): Its cap is so wide that little Mushlings nap under it when it rains. It's the oldest mushroom in the Forest and only moves when it absolutely must.
+  - ★ **Mushroyal** *(new in v11)* · Shadow / Plant (from Mushling at Lv 20): Its cap is so wide that little Mushlings nap under it when it rains. It's the oldest mushroom in the Forest and only moves when it absolutely must.
 - **Owlcorn → Timberowl → ★ Oakenowl** (Uncommon)
   - **Owlcorn** · Plant: It wears a giant acorn cap as a hat and never takes it off, even to sleep. It hoards acorns in hollow trees and forgets most of them, which is how new oaks grow.
   - **Timberowl** · Plant (from Owlcorn at Lv 22): Its feathers have hardened like bark and its acorn crown sprouts fresh oak leaves. Strong enough to carry a person, it is the bird that answers the Wooden Whistle.
-  - ★ **Oakenowl** *new* · Plant / Normal (from Timberowl at Lv 40): When it sits still it looks exactly like an old oak tree. Travelers have picnicked under one and never known, until it blinked.
+  - ★ **Oakenowl** *(new in v11)* · Plant / Normal (from Timberowl at Lv 40): When it sits still it looks exactly like an old oak tree. Travelers have picnicked under one and never known, until it blinked.
 - **Mothlight → Radimoth** (Uncommon)
   - **Mothlight** · Lumen: A pale moth whose wings glow softly in the dark. Lost travelers follow its light, and it always leads them to a path.
   - **Radimoth** · Lumen (from Mothlight with a Moon Shard): Bathed in moonlight from a Moon Shard, its wings now shine with sunburst patterns. Its glow keeps shadows away from anyone it decides to protect.
 - **Burrhog → ★ Burrboar** (Uncommon)
   - **Burrhog** · Plant / Earth: A hedgehog whose spines are sticky burrs. Seeds catch in them as it rolls, so it plants half the forest without meaning to.
-  - ★ **Burrboar** *new* · Plant / Earth (from Burrhog at Lv 22): It rolls through the Forest like a spiky wheel, and every seed stuck to it gets planted somewhere new. Whole groves grew where Burrboar likes to roll.
+  - ★ **Burrboar** *(new in v11)* · Plant / Earth (from Burrhog at Lv 22): It rolls through the Forest like a spiky wheel, and every seed stuck to it gets planted somewhere new. Whole groves grew where Burrboar likes to roll.
 - **Budstag → ★ Bloomstag** (Rare)
   - **Budstag** · Plant: A young deer whose branch-like antlers bud with pink blossoms each spring. Where it walks, flowers open a little earlier.
-  - ★ **Bloomstag** *new* · Plant / Lumen (from Budstag at Lv 24): Its antlers have grown into a blooming tree. Birds nest in them every spring, and Bloomstag walks very carefully so it never wakes the chicks.
+  - ★ **Bloomstag** *(new in v11)* · Plant / Lumen (from Budstag at Lv 24): Its antlers have grown into a blooming tree. Birds nest in them every spring, and Bloomstag walks very carefully so it never wakes the chicks.
 
 ### 4.6 Whispering Grove
 
@@ -261,10 +259,9 @@ Huge ancient trees, fairy-ring mushrooms and drifting lights. The Grandmother Oa
 - **Sprigkin → Grovekin → ★ Elderkin** (Common)
   - **Sprigkin** · Plant / Lumen: A tiny forest spirit with a leaf for a hat. Sprigkin sing to the old trees at dawn so they remember to wake up.
   - **Grovekin** · Plant / Lumen (from Sprigkin at Lv 24): Now the grove's gardener, as tall as a sapling. Wherever it plants its staff, a glowing flower blooms.
-  - ★ **Elderkin** *new* · Plant / Lumen (from Grovekin at Lv 40): Old Fennick says the Grandmother Oak has a friend living in her roots. This is it: Elderkin has guarded the Whispering Grove since the Ancients planted it.
-- **Snoozeloth → ★ Mossloth** (Rare)
+  - ★ **Elderkin** *(new in v11)* · Plant / Lumen (from Grovekin at Lv 40): Old Fennick says the Grandmother Oak has a friend living in her roots. This is it: Elderkin has guarded the Whispering Grove since the Ancients planted it.
+- **Snoozeloth** (Rare)
   - **Snoozeloth** · Normal / Plant: A sloth so sleepy that moss grows on it, and then flowers grow on the moss. It has hung from the same branch since Old Fennick was a boy.
-  - ★ **Mossloth** *(Maybe)* · Normal / Plant (from Snoozeloth at Lv 26): It sleeps so long that a little garden grows on its back. Old Fennick waters it.
 
 **Also here:** Owlcorn, Mothlight (night), Budstag.
 
@@ -283,23 +280,23 @@ A wide lake with docks, reeds and a lighthouse on the point. The Ancients made t
 - **Bubblefin → Surgefin → ★ Leviafin** (Common)
   - **Bubblefin** · Water: A tiny round fish that blows bubbles when it's happy, which is nearly always. Children chase its bubbles along the shore.
   - **Surgefin** · Water (from Bubblefin at Lv 16): It has grown sleek and fast, with a spiky fin and a toothy grin. It rides the strongest currents just for fun.
-  - ★ **Leviafin** *new* · Water (from Surgefin at Lv 34): The gentle giant of the lake. It swims slowly with its mouth open, and little Bubblefin ride along beside it like a parade.
+  - ★ **Leviafin** *(new in v11)* · Water (from Surgefin at Lv 34): The gentle giant of the lake. It swims slowly with its mouth open, and little Bubblefin ride along beside it like a parade.
 - **Crabbit → Rampacrab → ★ Paladcrab** (Common)
   - **Crabbit** · Water: A crab with long rabbit ears that it uses to listen for danger under the sand. It hops sideways faster than you'd expect.
   - **Rampacrab** · Water / Earth (from Crabbit at Lv 20): Its ears and shell are armored with stone, and it builds little sea walls out of rocks. Fisher Gus calls it the harbor's doorman.
-  - ★ **Paladcrab** *new* · Water / Earth (from Rampacrab at Lv 36): A crab knight that guards the Lakeshore. It holds its big claw up like a shield and lets small creatures hide behind it during storms.
+  - ★ **Paladcrab** *(new in v11)* · Water / Earth (from Rampacrab at Lv 36): A crab knight that guards the Lakeshore. It holds its big claw up like a shield and lets small creatures hide behind it during storms.
 - **Splotter → Tidotter** (Common, day only)
   - **Splotter** · Water: A playful otter that floats on its back juggling pebbles. It shows off its best pebble to anyone who stops to watch.
   - **Tidotter** · Water (from Splotter at Lv 20): It surfs the waves standing up, with its favorite pebble tucked under one arm. It races boats for fun and usually wins.
 - **Honkwave → ★ Gooseidon** (Common, day only)
   - **Honkwave** · Normal / Water: A grumpy goose that honks so loudly it makes ripples. Fisher Gus says the lake had no peace until Honkwave learned to nap.
-  - ★ **Gooseidon** *new* · Normal / Water (from Honkwave at Lv 24): The grumpiest creature on the Lakeshore. One honk sends a wave across the whole lake, and Fisher Gus has learned to wear a raincoat.
+  - ★ **Gooseidon** *(new in v11)* · Normal / Water (from Honkwave at Lv 24): The grumpiest creature on the Lakeshore. One honk sends a wave across the whole lake, and Fisher Gus has learned to wear a raincoat.
 - **Tidepuff → ★ Pufferoar** (Uncommon)
   - **Tidepuff** · Water: When startled it puffs up into a spiky ball and bobs to the surface, looking very offended. It deflates slowly, one sigh at a time.
-  - ★ **Pufferoar** *new* · Water (from Tidepuff at Lv 24): When it gets angry, it puffs up bigger than a boulder and roars bubbles. Its colors flipped when it evolved, so fishers call it Tidepuff turned inside out.
+  - ★ **Pufferoar** *(new in v11)* · Water (from Tidepuff at Lv 24): When it gets angry, it puffs up bigger than a boulder and roars bubbles. Its colors flipped when it evolved, so fishers call it Tidepuff turned inside out.
 - **Sealamp → ★ Beaconseal** (Uncommon)
   - **Sealamp** · Lumen: A baby seal with a glowing bulb on its forehead that lights up the deep water. Sailors once used Sealamp light to find their way home.
-  - ★ **Beaconseal** *new* · Lumen / Water (from Sealamp at Lv 26): Its lamp shines across the whole lake at night. Keeper Wren says the Lantern Isle lighthouse was built because sailors kept steering toward Beaconseals.
+  - ★ **Beaconseal** *(new in v11)* · Lumen / Water (from Sealamp at Lv 26): Its lamp shines across the whole lake at night. Keeper Wren says the Lantern Isle lighthouse was built because sailors kept steering toward Beaconseals.
 - **Koiling → Koidrake** (Rare)
   - **Koiling** · Water: An elegant koi with long ribbon fins and golden whiskers. Legend says a Koiling that swims up a waterfall becomes a dragon.
   - **Koidrake** · Water / Lumen (from Koiling at Lv 24): The legend was true. Its scales shimmer gold and its fins glow like lanterns underwater. It is a sign of good fortune.
@@ -319,10 +316,10 @@ A sandy beach with tide pools, driftwood, sandcastles and a shipwreck stuck on t
 - **Shellbit → Conchord → ★ Shellcastle** (Common)
   - **Shellbit** · Water / Normal: A hermit crab whose seashell hums like the sea. It trades shells with friends to try out new songs.
   - **Conchord** · Water / Normal (from Shellbit at Lv 24): Its shell has grown into a giant conch horn. When it blows, every creature on the beach comes running.
-  - ★ **Shellcastle** *new* · Water / Earth (from Conchord at Lv 38): It moved out of its conch and into a whole sandcastle. Little crabs rent rooms in the towers, and Shellcastle never asks for rent.
+  - ★ **Shellcastle** *(new in v11)* · Water / Earth (from Conchord at Lv 38): It moved out of its conch and into a whole sandcastle. Little crabs rent rooms in the towers, and Shellcastle never asks for rent.
 - **Glimstar → ★ Constellastar** (Uncommon, night only)
   - **Glimstar** · Water / Lumen: A starfish that glows on the beach at night. Long ago, lost sailors steered home by the starfish on the sand instead of the stars in the sky.
-  - ★ **Constellastar** *new* · Water / Lumen (from Glimstar with a Moon Shard): On clear nights it lies on the beach and copies the stars. Sailors once found their way home by the Constellastars of Driftwood Cove.
+  - ★ **Constellastar** *(new in v11)* · Water / Lumen (from Glimstar with a Moon Shard): On clear nights it lies on the beach and copies the stars. Sailors once found their way home by the Constellastars of Driftwood Cove.
 - **Krakling → Kraketide** (Rare, night only)
   - **Krakling** · Water / Shadow: A baby kraken that hides in the lighthouse's shadow. It's curious about boats and wraps a tentacle around their anchor ropes to say hi.
   - **Kraketide** · Water / Shadow (from Krakling at Lv 34): A huge deep-sea kraken. Old sailors' songs say it once lifted a sunken ship back to the surface just to give it back.
@@ -344,7 +341,7 @@ A rocky island of sea cliffs, puffin nests and tide caves around a tall striped 
 - **Puffling → Puffcaptain → ★ Puffadmiral** (Common)
   - **Puffling** · Water / Frost: A round puffin chick with a bright striped beak. It dives into freezing waves without a second thought.
   - **Puffcaptain** · Water / Frost (from Puffling at Lv 26): It wears a little sailor's cap and leads its flock in perfect lines. Keeper Wren swears it salutes her every morning.
-  - ★ **Puffadmiral** *new* · Water / Frost (from Puffcaptain at Lv 40): It leads the whole Lantern Isle flock across the sea in perfect lines. It salutes the lighthouse every morning, and Keeper Wren swears the lighthouse blinks back.
+  - ★ **Puffadmiral** *(new in v11)* · Water / Frost (from Puffcaptain at Lv 40): It leads the whole Lantern Isle flock across the sea in perfect lines. It salutes the lighthouse every morning, and Keeper Wren swears the lighthouse blinks back.
 
 **Also here:** Bubblefin, Surgefin, Sealamp, Krakling (night), Koiling.
 
@@ -364,16 +361,16 @@ A mountain of tunnels lit by crystals that glow brightest under a full moon. The
   - **Prismole** · Bolt / Earth (from Glimmole at Lv 22): Crystals cover its back, and they hum with stored electricity. Miners follow Prismole to find the richest veins.
 - **Stalagbat → ★ Stalagwing** (Common)
   - **Stalagbat** · Shadow: It hangs so still from cave ceilings that it looks like a stalactite. Only its glowing yellow eyes give it away.
-  - ★ **Stalagwing** *new* · Shadow / Earth (from Stalagbat at Lv 28): Hanging from a cave ceiling, it looks like one more row of stalactites. Explorers in the Hollow Deep learn to look twice.
+  - ★ **Stalagwing** *(new in v11)* · Shadow / Earth (from Stalagbat at Lv 28): Hanging from a cave ceiling, it looks like one more row of stalactites. Explorers in the Hollow Deep learn to look twice.
 - **Rumblepede → ★ Tunnelpede** (Uncommon)
   - **Rumblepede** · Earth: An armored centipede that coils into a wheel and rolls through tunnels. You hear it coming as a deep rumble long before you see it.
-  - ★ **Tunnelpede** *new* · Earth (from Rumblepede at Lv 30): It's as long as a minecart train. Grit says the deepest tunnels in Glimmer Mine were there before the miners ever came.
+  - ★ **Tunnelpede** *(new in v11)* · Earth (from Rumblepede at Lv 30): It's as long as a minecart train. Grit says the deepest tunnels in Glimmer Mine were there before the miners ever came.
 - **Gemlin → ★ Gemonitor** (Uncommon)
   - **Gemlin** · Earth: A cheeky lizard with gems along its back. It grows a new gem each time it eats a shiny stone, so keep your rings in your pocket.
-  - ★ **Gemonitor** *new* · Earth / Lumen (from Gemlin at Lv 28): It never stopped eating shiny stones, and now it's covered in gems from nose to tail. It glitters so much it can't hide anywhere, and it doesn't want to.
+  - ★ **Gemonitor** *(new in v11)* · Earth / Lumen (from Gemlin at Lv 28): It never stopped eating shiny stones, and now it's covered in gems from nose to tail. It glitters so much it can't hide anywhere, and it doesn't want to.
 - **Rimeskink → ★ Rimedrake** (Uncommon)
   - **Rimeskink** · Frost: A small lizard from the icy pools deep in the cave. It licks the frost off crystals and leaves them sparkling.
-  - ★ **Rimedrake** *new* · Frost (from Rimeskink at Lv 28): It still licks everything, but now whatever it licks freezes solid. The frozen pond in the Crystal Cave is said to be one Rimedrake's fault.
+  - ★ **Rimedrake** *(new in v11)* · Frost (from Rimeskink at Lv 28): It still licks everything, but now whatever it licks freezes solid. The frozen pond in the Crystal Cave is said to be one Rimedrake's fault.
 - **Magmite → Volcaneetle** (Rare)
   - **Magmite** · Fire: A beetle with a charcoal shell split by glowing lava cracks. It keeps the deepest caves warm.
   - **Volcaneetle** · Fire (from Magmite at Lv 26): Its shell has become a little volcano that rumbles when it's angry. Smoke from its crater tells you to keep your distance.
@@ -395,10 +392,10 @@ A lively hill town of brick and copper roofs, built on copper from the mine. Its
 
 - **Rustcoon → ★ Scrapcoon** (Common, night only)
   - **Rustcoon** · Normal / Earth: A raccoon that collects copper coins, bottle caps, and anything shiny. Half the town's lost buttons are in its den.
-  - ★ **Scrapcoon** *new* · Normal / Earth (from Rustcoon at Lv 28): It builds armor out of whatever Copperbell throws away. Pots, gears, an old bell: if it shines, Scrapcoon wears it.
+  - ★ **Scrapcoon** *(new in v11)* · Normal / Earth (from Rustcoon at Lv 28): It builds armor out of whatever Copperbell throws away. Pots, gears, an old bell: if it shines, Scrapcoon wears it.
 - **Dingdove → ★ Bellcondor** (Uncommon, day only)
   - **Dingdove** · Normal / Bolt: A plump dove that roosts in the bell tower. Its coo rings like a tiny bell, and Old Toll sets the town clock by it.
-  - ★ **Bellcondor** *new* · Normal / Bolt (from Dingdove at Lv 28): Its body rings like a bell when it flaps its wings. Old Toll says the first Dusk Bell was cast in its shape.
+  - ★ **Bellcondor** *(new in v11)* · Normal / Bolt (from Dingdove at Lv 28): Its body rings like a bell when it flaps its wings. Old Toll says the first Dusk Bell was cast in its shape.
 
 ### 4.12 Glimmer Mine
 
@@ -417,7 +414,7 @@ An old copper mine of support beams, minecart tracks, glittering ore and flooded
   - **Coalossus** · Fire / Earth (from Coalcub at Lv 30): Its body has hardened into glowing coal rock. Miners once used its warmth to keep the whole mine cozy through the winter.
 - **Pickaxolotl → ★ Drillotl** (Uncommon)
   - **Pickaxolotl** · Water / Earth: An axolotl whose head is shaped like a pickaxe. It lives in the mine's flooded tunnels and taps out new ones for fun.
-  - ★ **Drillotl** *new* · Water / Earth (from Pickaxolotl at Lv 32): It drills with its tail and lights the way with its hard-hat lamp. If you hear humming in the flooded tunnels, a Drillotl is singing while it works.
+  - ★ **Drillotl** *(new in v11)* · Water / Earth (from Pickaxolotl at Lv 32): It drills with its tail and lights the way with its hard-hat lamp. If you hear humming in the flooded tunnels, a Drillotl is singing while it works.
 
 **Also here:** Glimmole, Prismole, Rumblepede, Shardling (night).
 
@@ -435,19 +432,18 @@ Blazing dunes, blowing sand and an oasis of palm trees. Safi's people cross the 
 
 - **Cactoad → ★ Saguaroad** (Common)
   - **Cactoad** · Plant: A toad covered in cactus spines, with a little pink flower on its head that blooms after rain. It can go a whole year without a drink.
-  - ★ **Saguaroad** *new* · Plant / Earth (from Cactoad at Lv 30): Once a year a huge flower blooms on its head, and every creature in the desert comes to see it. Saguaroad pretends not to notice.
+  - ★ **Saguaroad** *(new in v11)* · Plant / Earth (from Cactoad at Lv 30): Once a year a huge flower blooms on its head, and every creature in the desert comes to see it. Saguaroad pretends not to notice.
 - **Sandwyrm → Duneserpent** (Common)
   - **Sandwyrm** · Earth: A baby sand worm that pops out of little mounds to look around. If you hear the sand hiss, one is right below you.
   - **Duneserpent** · Earth (from Sandwyrm at Lv 24): An armored serpent that swims through dunes like water. Safi the Nomad reads its trails to find hidden oases.
 - **Dunefox → ★ Sunfennec** (Uncommon)
   - **Dunefox** · Fire: Its huge ears hear beetles walking under the sand from far away. It stays cool by napping in the shade of cacti.
-  - ★ **Sunfennec** *new* · Fire / Lumen (from Dunefox at Lv 30): Its mane is the color of a desert sunset and its tail burns like a campfire. Safi's people follow one home when the stars are hidden.
+  - ★ **Sunfennec** *(new in v11)* · Fire / Lumen (from Dunefox at Lv 30): Its mane is the color of a desert sunset and its tail burns like a campfire. Safi's people follow one home when the stars are hidden.
 - **Kilnadillo → ★ Furnadillo** (Uncommon, day only)
   - **Kilnadillo** · Fire / Earth: An armadillo whose shell bakes hot in the sun. It curls into a ball and rolls over the dunes, leaving glassy tracks in the sand.
-  - ★ **Furnadillo** *new* · Fire / Earth (from Kilnadillo at Lv 30): Its shell is as hot as a kiln. The Ancients baked the bricks of the Dawn Temple on the backs of sleeping Furnadillos.
-- **Mirajack → ★ Mirahare** (Uncommon, day only)
+  - ★ **Furnadillo** *(new in v11)* · Fire / Earth (from Kilnadillo at Lv 30): Its shell is as hot as a kiln. The Ancients baked the bricks of the Dawn Temple on the backs of sleeping Furnadillos.
+- **Mirajack** (Uncommon, day only)
   - **Mirajack** · Lumen: A jackrabbit that makes shimmering copies of itself in the heat. Safi says you can only catch the real one by looking for its shadow.
-  - ★ **Mirahare** *(Maybe)* · Lumen (from Mirajack with a Sun Shard): It runs so fast across the hot sand that it leaves shimmering copies of itself behind. Nobody knows which one is real, sometimes not even Mirahare.
 - **Scarabolt → Thundarab** (Rare)
   - **Scarabolt** · Bolt: A blue and gold scarab whose shell stores sunlight as electricity. Desert nomads say it rolls the sun across the sky.
   - **Thundarab** · Bolt / Fire (from Scarabolt at Lv 26): A ring of crackling energy orbits its body, and lightning bolts glow on its shell. One charge can light a camp for a night.
@@ -469,20 +465,19 @@ A snowy mountain pass. The waterfall froze solid the night the moon began to dim
   - **Pengarch** · Frost / Water (from Pengloo at Lv 22): A tall, noble penguin that leads its colony across the ice, with a crown of ice shards and a gold-edged scarf. It is very serious about being in charge.
 - **Sleetle → ★ Iglooshell** (Common)
   - **Sleetle** · Frost: A snail whose shell is made of ice crystals that never melt. It moves slowly but leaves a sparkling trail of frost.
-  - ★ **Iglooshell** *new* · Frost / Earth (from Sleetle at Lv 32): Its shell is an ice castle with real rooms inside. Travelers caught in a blizzard on Frostpeak Pass sometimes wake up warm inside one.
-- **Flurrpaca → ★ Blizzpaca** (Common)
+  - ★ **Iglooshell** *(new in v11)* · Frost / Earth (from Sleetle at Lv 32): Its shell is an ice castle with real rooms inside. Travelers caught in a blizzard on Frostpeak Pass sometimes wake up warm inside one.
+- **Flurrpaca** (Common)
   - **Flurrpaca** · Frost / Normal: A super-fluffy alpaca that loves the cold. Frida's camp uses them to carry supplies over the pass, and they spit snowballs at anyone who's rude.
-  - ★ **Blizzpaca** *(Maybe)* · Frost / Normal (from Flurrpaca at Lv 32): Its wool is a swirling blizzard, and when it shakes, it snows. It knows exactly how fluffy it is.
 - **Frostoat → Glacistoat** (Uncommon)
   - **Frostoat** · Frost: A white stoat with an icicle for a tail. It vanishes against fresh snow, so most people only ever see its tail.
   - **Glacistoat** · Frost (from Frostoat at Lv 24): Ice-blue crystal armor runs down its back, and its tail is a blade of ice. It hunts across frozen lakes without a sound.
 - **★ ? Pop → ★ Pup Pop → ★ Doggy Woggy** (Uncommon)
-  - ★ **? Pop** *(the family's design)* · Frost: An ice pop that came alive on a snowy night, with two little ears and a stick for a leg. It hops across the ice and leaves sticky footprints.
-  - ★ **Pup Pop** *(the family's design)* · Frost (from ? Pop at Lv 16): Dipped in chocolate and covered in sprinkles, it runs around on the snow and ice on its four popsicle-stick legs. Its ears are tipped with ice crystals.
-  - ★ **Doggy Woggy** *(the family's design)* · Frost (from Pup Pop at Lv 30): A proud ice cream dog with a whipped-cream mane and a cherry on top. It loves running on the snow and ice more than anything, and it never, ever melts.
+  - ★ **? Pop** *(drawn by A.S.K.)* · Frost: Mystery Pop: an ice pop that came alive on a snowy night, with two little ears and a stick for a leg. It hops across the ice and leaves sticky footprints.
+  - ★ **Pup Pop** *(his design)* · Frost (from ? Pop at Lv 22): Dipped in chocolate and covered in sprinkles, it runs around on the snow and ice on its four popsicle-stick legs. Its ears are tipped with ice crystals.
+  - ★ **Doggy Woggy** *(his design)* · Frost (from Pup Pop at Lv 30): A proud ice cream dog with a whipped-cream mane and a cherry on top. It loves running on the snow and ice more than anything, and it never, ever melts.
 - **Yetiny → ★ Yetitan** (Rare)
   - **Yetiny** · Frost: A small shaggy yeti that loves snowball fights and always throws first. Its big footprints are how the old yeti stories started.
-  - ★ **Yetitan** *new* · Frost / Earth (from Yetiny at Lv 32): Half the old stories say it's white and half say it's brown, and both are right. It carries a giant snowball everywhere, just in case a snowball fight breaks out.
+  - ★ **Yetitan** *(new in v11)* · Frost / Earth (from Yetiny at Lv 32): Half the old stories say it's white and half say it's brown, and both are right. It carries a giant snowball everywhere, just in case a snowball fight breaks out.
 - **Aurorelly** (Rare, night only)
   - **Aurorelly** · Frost / Lumen: A jellyfish that floats through the night sky above the mountains. When a swarm drifts past, the northern lights ripple behind them.
 
@@ -501,9 +496,8 @@ A warm valley tucked in the snow, with steaming pools, stone lanterns and Auntie
 - **Steamacaque → Geysape** (Common)
   - **Steamacaque** · Fire / Water: A snow monkey that soaks in the hot springs all day with a towel on its head. Steam rises from its fur, so it never gets cold.
   - **Geysape** · Fire / Water (from Steamacaque at Lv 32): When it beats its chest, boiling water shoots up from the ground. It keeps the springs bubbling for everyone.
-- **Mittencub → ★ Mittengrizz** (Rare)
+- **Mittencub** (Rare)
   - **Mittencub** · Fire / Frost: A white polar bear cub whose paws glow warm and red, like mittens. Its hugs can thaw a frozen creature in seconds.
-  - ★ **Mittengrizz** *(Maybe)* · Fire / Frost (from Mittencub at Lv 34): Its mittens are warm enough to melt ice and its fur is cold enough to freeze water, so it's never sure if it's hot or cold. Auntie Yuzu knits it a new scarf every winter.
 
 **Also here:** Flurrpaca, Sleetle, Yetiny.
 
@@ -520,22 +514,22 @@ Fog, reeds and boardwalks. Granny Moss lives here and remembers the last time th
 
 - **Lilypadle → ★ Lilyswan** (Common)
   - **Lilypadle** · Water: A fluffy duckling that rides its own lily pad around the swamp. It refuses to leave the pad, even to eat.
-  - ★ **Lilyswan** *new* · Water / Plant (from Lilypadle at Lv 34): The fluffy duckling grew into a swan that glides across the swamp on its own lily pad. Wherever it rests, lotus flowers open.
+  - ★ **Lilyswan** *(new in v11)* · Water / Plant (from Lilypadle at Lv 34): The fluffy duckling grew into a swan that glides across the swamp on its own lily pad. Wherever it rests, lotus flowers open.
 - **Mudgator → Mudgatron** (Common)
   - **Mudgator** · Earth: A baby gator caked in mud that loves wallowing in the warmest puddles. Its tiny teeth don't stop it from acting tough.
   - **Mudgatron** · Earth (from Mudgator at Lv 28): A huge gator armored in hardened mud plates. It lies still for days looking like a mossy log, until something steps on it.
 - **Fireflink → ★ Lanternfly** (Common, night only)
   - **Fireflink** · Fire / Bolt: A firefly that blinks with sparks instead of light. Hundreds blink together over the bayou, so the whole swamp flickers like a little storm.
-  - ★ **Lanternfly** *new* · Fire / Bolt (from Fireflink at Lv 36): When every firefly in the bayou gathers on the Lantern Tree, a Lanternfly is always at the very top. Boatman Bo steers home by its glow.
+  - ★ **Lanternfly** *(new in v11)* · Fire / Bolt (from Fireflink at Lv 36): When every firefly in the bayou gathers on the Lantern Tree, a Lanternfly is always at the very top. Boatman Bo steers home by its glow.
 - **Wispeel → ★ Stormeel** (Uncommon)
   - **Wispeel** · Bolt: Its tail ends in a glowing orb of swamp gas. Travelers mistake it for a lantern and wander off the boardwalk.
-  - ★ **Stormeel** *new* · Bolt / Water (from Wispeel at Lv 36): It swims through the bayou air as easily as through water. On stormy nights people mistake it for a bolt of lightning that forgot to leave.
+  - ★ **Stormeel** *(new in v11)* · Bolt / Water (from Wispeel at Lv 36): It swims through the bayou air as easily as through water. On stormy nights people mistake it for a bolt of lightning that forgot to leave.
 - **Snaptrap → Gnashtrap** (Uncommon)
   - **Snaptrap** · Plant / Shadow: A flytrap with a toothy grin that snaps at anything that buzzes. It's ticklish inside, which is why it always lets go so fast.
   - **Gnashtrap** · Plant / Shadow (from Snaptrap at Lv 32): Its jaws can snap a log in two. At night it roots by the boardwalk with its mouth open and looks exactly like a bush.
 - **Mireling → ★ Mirelich** (Rare)
   - **Mireling** · Shadow: A gentle ghost covered in moss and hanging vines. It drifts over the swamp at night, humming songs nobody remembers.
-  - ★ **Mirelich** *new* · Shadow / Plant (from Mireling at Lv 36): An old swamp spirit that wears the bog like a royal cloak. It isn't scary once you know it. It's just very, very old, and it still hums the songs nobody remembers.
+  - ★ **Mirelich** *(new in v11)* · Shadow / Plant (from Mireling at Lv 36): An old swamp spirit that wears the bog like a royal cloak. It isn't scary once you know it. It's just very, very old, and it still hums the songs nobody remembers.
 
 ### 4.17 Firefly Bayou
 
@@ -551,7 +545,7 @@ Dark water, mossy cypress trees, thousands of fireflies and glowing lotus flower
 
 - **Mudtusk → ★ Bogtusk** (Common)
   - **Mudtusk** · Earth / Normal: A boar that wallows in bayou mud until it's caked like armor. It blows mud bubbles when it's happy.
-  - ★ **Bogtusk** *new* · Earth / Normal (from Mudtusk at Lv 38): Still a pig, only bigger, muddier and much grumpier. When it charges through the bayou, even the fireflies get out of its way.
+  - ★ **Bogtusk** *(new in v11)* · Earth / Normal (from Mudtusk at Lv 38): Still a pig, only bigger, muddier and much grumpier. When it charges through the bayou, even the fireflies get out of its way.
 - **Lotusprite → Lotusage** (Uncommon, night only)
   - **Lotusprite** · Water / Lumen: A tiny fairy that sleeps inside a lotus by day and glows across the bayou at night.
   - **Lotusage** · Water / Lumen (from Lotusprite at Lv 36): A wise bayou spirit now. Boatman Bo says it lights the safe channels for anyone lost on the water.
@@ -584,9 +578,9 @@ The old city of the Ancients, lit by blue runes and guarded by Pebbleton golems.
   - **Rosferatu** · Shadow / Plant (from Duskfang at Lv 42): An elegant vampire lord with crimson-lined wings and a fully bloomed rose on its chest. It tends a secret night garden deep in the ruins and drains the energy of anyone who tramples its roses.
 - **Glyphling → ★ Runescroll** (Uncommon, night only)
   - **Glyphling** · Lumen: A glowing rune that peeled itself off an ancient wall and wandered off. Archivist Ilsa thinks each one is a word, and that together they once told a story.
-  - ★ **Runescroll** *new* · Lumen (from Glyphling at Lv 40): Three Glyphlings joined into one living word. Archivist Ilsa has been trying to read it for years. She thinks it says "friend," but it keeps changing.
+  - ★ **Runescroll** *(new in v11)* · Lumen (from Glyphling at Lv 40): Three Glyphlings joined into one living word. Archivist Ilsa has been trying to read it for years. She thinks it says "friend," but it keeps changing.
 - **★ Crescub → Moonlynx** (Rare)
-  - ★ **Crescub** *new* · Lumen: A lynx kitten with a crescent moon on its forehead that only glows when it's happy. On a clear night, it grows into Moonlynx.
+  - ★ **Crescub** *(new in v11)* · Lumen: A lynx kitten with a crescent moon on its forehead that only glows when it's happy. On a clear night, it grows into Moonlynx.
   - **Moonlynx** · Lumen (from Crescub at Lv 30): A silver lynx with a glowing crescent moon on its forehead. It only appears on clear nights, and catching one is said to be the mark of a true creature catcher.
 - **Mimicube → Mimichest** (Rare)
   - **Mimicube** · Shadow: It disguises itself as an ancient capture cube lying on the ground. When a creature catcher bends to pick it up... chomp! It's mostly harmless and very pleased with itself.
@@ -684,85 +678,74 @@ The deepest dark under the world: dim violet crystals, still black pools and ech
 
 ---
 
-## 5. The new creatures at a glance
+## 5. The v11 creatures at a glance
 
-39 from his Yes votes, 6 Maybes, and the family's 5. Prompts for the pictures are in `creature-catch-final-creature-prompts.md`.
+39 from his Evolution Lab picks and the family's 5. How each picture was asked for is in `creature-catch-final-creature-prompts.md`.
 
-| New creature | Types | Grows from | When | Where it lives | Picture |
+| Creature | Types | Grows from | When | Where it lives | Picture |
 |---|---|---|---|---|---|
-| **? Pop** | Frost | (grows into Pup Pop) | Lv 16 → Pup Pop | Frostpeak Pass | done (from the drawing) |
-| **Pup Pop** | Frost | ? Pop | Lv 16 | Frostpeak Pass | done (from the drawing) |
-| **Doggy Woggy** | Frost | Pup Pop | Lv 30 | Frostpeak Pass | done (from the drawing) |
-| **Clovetastical** | Plant / Normal | Clovermouse | Lv 18 | Meadow Path | done (from the drawing) |
-| **Hoppin Pop** | Plant | Hopsprout | Lv 20 | Meadow Path | done (from the drawing) |
-| **Tempestram** | Normal / Bolt | Cloudram | Lv 36 | Meadow Path | prompt ready |
-| **Hoardmunk** *(Maybe)* | Normal / Plant | Stashmunk | Lv 32 | Meadow Path | prompt ready |
-| **Queenbuzz** | Bolt / Plant | Bumblazer | Lv 36 | Grassland | prompt ready |
-| **Sylvantail** | Plant / Lumen | Verdantail | Lv 34 | Grassland | prompt ready |
-| **Typhoonewt** | Water / Bolt | Monsoonewt | Lv 36 | Grassland | prompt ready |
-| **Cragmastiff** | Earth / Normal | Boulderhound | Lv 34 | Grassland | prompt ready |
-| **Scarecrown** | Shadow / Plant | Scarecrowl | Lv 22 | Willowbrook Orchard | prompt ready |
-| **Blossomfly** *(Maybe)* | Plant / Normal | Wormapple | Lv 18 | Willowbrook Orchard | prompt ready |
-| **Bloomstag** | Plant / Lumen | Budstag | Lv 24 | Forest | prompt ready |
-| **Mushroyal** | Shadow / Plant | Mushling | Lv 20 | Forest | prompt ready |
-| **Burrboar** | Plant / Earth | Burrhog | Lv 22 | Forest | prompt ready |
-| **Timberbeetle** | Earth / Plant | Barkbeetle | Lv 22 | Forest | prompt ready |
-| **Oakenowl** | Plant / Normal | Timberowl | Lv 40 | Forest | prompt ready |
-| **Elderkin** | Plant / Lumen | Grovekin | Lv 40 | Whispering Grove | prompt ready |
-| **Mossloth** *(Maybe)* | Normal / Plant | Snoozeloth | Lv 26 | Whispering Grove | prompt ready |
-| **Pufferoar** | Water | Tidepuff | Lv 24 | Lakeshore | prompt ready |
-| **Beaconseal** | Lumen / Water | Sealamp | Lv 26 | Lakeshore | prompt ready |
-| **Leviafin** | Water | Surgefin | Lv 34 | Lakeshore | prompt ready |
-| **Paladcrab** | Water / Earth | Rampacrab | Lv 36 | Lakeshore | prompt ready |
-| **Gooseidon** | Normal / Water | Honkwave | Lv 24 | Lakeshore | prompt ready |
-| **Shellcastle** | Water / Earth | Conchord | Lv 38 | Driftwood Cove | prompt ready |
-| **Constellastar** | Water / Lumen | Glimstar | a Moon Shard | Driftwood Cove | prompt ready |
-| **Puffadmiral** | Water / Frost | Puffcaptain | Lv 40 | Lantern Isle | prompt ready |
-| **Gemonitor** | Earth / Lumen | Gemlin | Lv 28 | Crystal Cave | prompt ready |
-| **Stalagwing** | Shadow / Earth | Stalagbat | Lv 28 | Crystal Cave | prompt ready |
-| **Rimedrake** | Frost | Rimeskink | Lv 28 | Crystal Cave | prompt ready |
-| **Tunnelpede** | Earth | Rumblepede | Lv 30 | Crystal Cave | prompt ready |
-| **Scrapcoon** | Normal / Earth | Rustcoon | Lv 28 | Copperbell Town | prompt ready |
-| **Bellcondor** | Normal / Bolt | Dingdove | Lv 28 | Copperbell Town | prompt ready |
-| **Drillotl** | Water / Earth | Pickaxolotl | Lv 32 | Glimmer Mine | prompt ready |
-| **Sunfennec** | Fire / Lumen | Dunefox | Lv 30 | Sunscorch Desert | prompt ready |
-| **Saguaroad** | Plant / Earth | Cactoad | Lv 30 | Sunscorch Desert | prompt ready |
-| **Furnadillo** | Fire / Earth | Kilnadillo | Lv 30 | Sunscorch Desert | prompt ready |
-| **Mirahare** *(Maybe)* | Lumen | Mirajack | a Sun Shard | Sunscorch Desert | prompt ready |
-| **Yetitan** | Frost / Earth | Yetiny | Lv 32 | Frostpeak Pass | prompt ready |
-| **Iglooshell** | Frost / Earth | Sleetle | Lv 32 | Frostpeak Pass | prompt ready |
-| **Blizzpaca** *(Maybe)* | Frost / Normal | Flurrpaca | Lv 32 | Frostpeak Pass | prompt ready |
-| **Mittengrizz** *(Maybe)* | Fire / Frost | Mittencub | Lv 34 | Steamvent Springs | prompt ready |
-| **Lilyswan** | Water / Plant | Lilypadle | Lv 34 | Murkmire Swamp | prompt ready |
-| **Lanternfly** | Fire / Bolt | Fireflink | Lv 36 | Murkmire Swamp | prompt ready |
-| **Stormeel** | Bolt / Water | Wispeel | Lv 36 | Murkmire Swamp | prompt ready |
-| **Mirelich** | Shadow / Plant | Mireling | Lv 36 | Murkmire Swamp | prompt ready |
-| **Bogtusk** | Earth / Normal | Mudtusk | Lv 38 | Firefly Bayou | prompt ready |
-| **Runescroll** | Lumen | Glyphling | Lv 40 | Night Ruins | prompt ready |
-| **Crescub** | Lumen | (grows into Moonlynx) | Lv 30 → Moonlynx | Night Ruins | prompt ready |
+| **? Pop** | Frost | (grows into Pup Pop) | Lv 22 → Pup Pop | Frostpeak Pass | drawn by A.S.K. |
+| **Pup Pop** | Frost | ? Pop | Lv 22 | Frostpeak Pass | his design |
+| **Doggy Woggy** | Frost | Pup Pop | Lv 30 | Frostpeak Pass | his design |
+| **Clove Tastical** | Plant / Normal | Clovermouse | Lv 18 | Meadow Path | his design |
+| **Hoppin Pop** | Plant | Hopsprout | Lv 20 | Meadow Path | his design |
+| **Tempestram** | Normal / Bolt | Cloudram | Lv 36 | Meadow Path | from his idea |
+| **Queenbuzz** | Bolt / Plant | Bumblazer | Lv 36 | Grassland | from his idea |
+| **Sylvantail** | Plant / Lumen | Verdantail | Lv 34 | Grassland | from his idea |
+| **Typhoonewt** | Water / Bolt | Monsoonewt | Lv 36 | Grassland | from his idea |
+| **Cragmastiff** | Earth / Normal | Boulderhound | Lv 34 | Grassland | from his idea |
+| **Scarecrown** | Shadow / Plant | Scarecrowl | Lv 22 | Willowbrook Orchard | from his idea |
+| **Bloomstag** | Plant / Lumen | Budstag | Lv 24 | Forest | from his idea |
+| **Mushroyal** | Shadow / Plant | Mushling | Lv 20 | Forest | from his idea |
+| **Burrboar** | Plant / Earth | Burrhog | Lv 22 | Forest | from his idea |
+| **Timberbeetle** | Earth / Plant | Barkbeetle | Lv 22 | Forest | from his idea |
+| **Oakenowl** | Plant / Normal | Timberowl | Lv 40 | Forest | from his idea |
+| **Elderkin** | Plant / Lumen | Grovekin | Lv 40 | Whispering Grove | from his idea |
+| **Pufferoar** | Water | Tidepuff | Lv 24 | Lakeshore | from his idea |
+| **Beaconseal** | Lumen / Water | Sealamp | Lv 26 | Lakeshore | from his idea |
+| **Leviafin** | Water | Surgefin | Lv 34 | Lakeshore | from his idea |
+| **Paladcrab** | Water / Earth | Rampacrab | Lv 36 | Lakeshore | from his idea |
+| **Gooseidon** | Normal / Water | Honkwave | Lv 24 | Lakeshore | from his idea |
+| **Shellcastle** | Water / Earth | Conchord | Lv 38 | Driftwood Cove | from his idea |
+| **Constellastar** | Water / Lumen | Glimstar | a Moon Shard | Driftwood Cove | from his idea |
+| **Puffadmiral** | Water / Frost | Puffcaptain | Lv 40 | Lantern Isle | from his idea |
+| **Gemonitor** | Earth / Lumen | Gemlin | Lv 28 | Crystal Cave | from his idea |
+| **Stalagwing** | Shadow / Earth | Stalagbat | Lv 28 | Crystal Cave | from his idea |
+| **Rimedrake** | Frost | Rimeskink | Lv 28 | Crystal Cave | from his idea |
+| **Tunnelpede** | Earth | Rumblepede | Lv 30 | Crystal Cave | from his idea |
+| **Scrapcoon** | Normal / Earth | Rustcoon | Lv 28 | Copperbell Town | from his idea |
+| **Bellcondor** | Normal / Bolt | Dingdove | Lv 28 | Copperbell Town | from his idea |
+| **Drillotl** | Water / Earth | Pickaxolotl | Lv 32 | Glimmer Mine | from his idea |
+| **Sunfennec** | Fire / Lumen | Dunefox | Lv 30 | Sunscorch Desert | from his idea |
+| **Saguaroad** | Plant / Earth | Cactoad | Lv 30 | Sunscorch Desert | from his idea |
+| **Furnadillo** | Fire / Earth | Kilnadillo | Lv 30 | Sunscorch Desert | from his idea |
+| **Yetitan** | Frost / Earth | Yetiny | Lv 32 | Frostpeak Pass | from his idea |
+| **Iglooshell** | Frost / Earth | Sleetle | Lv 32 | Frostpeak Pass | from his idea |
+| **Lilyswan** | Water / Plant | Lilypadle | Lv 34 | Murkmire Swamp | from his idea |
+| **Lanternfly** | Fire / Bolt | Fireflink | Lv 36 | Murkmire Swamp | from his idea |
+| **Stormeel** | Bolt / Water | Wispeel | Lv 36 | Murkmire Swamp | from his idea |
+| **Mirelich** | Shadow / Plant | Mireling | Lv 36 | Murkmire Swamp | from his idea |
+| **Bogtusk** | Earth / Normal | Mudtusk | Lv 38 | Firefly Bayou | from his idea |
+| **Runescroll** | Lumen | Glyphling | Lv 40 | Night Ruins | from his idea |
+| **Crescub** | Lumen | (grows into Moonlynx) | Lv 30 → Moonlynx | Night Ruins | from his idea |
 
 ---
 
-## 6. Notes for the final pass
+## 6. How they work in the game
 
-- **Nobody's creature gets weaker.** A creature that gains an evolution keeps the stats it has now; the new form gets the usual evolved budget (about 1.6 times a first form's), and a new third form lands about a third above the current final form, the way Rosferatu sits above Duskfang. Creatures already caught in a save update on their own.
-- **Moves.** Each new form shares its family's signature move, like every family in the game, and learns the rest from the usual pattern. The family's designs bring three new moves: **Lucky Leaf** (Clovetastical, Plant), **Fantastic Hop** (Hoppin Pop, Plant) and **Sprink Magick** (the ice cream pup's family, Frost).
-- **Numbers** follow the journey automatically (`src/js/13c-field-order.js`): each new form slots in right after its family, Crescub just before Moonlynx, and the ice cream pup with Frostpeak Pass. The Creature Log and the Field Guide follow along.
-- **Spawns.** Crescub takes Moonlynx's place in the Night Ruins' rare list, and Moonlynx then shows up there by level (Lv 30 and up). Everything else appears by evolving, and the "a wild creature past its evolution level shows up evolved" rule already puts some new forms in the wild: Cragmastiff in Moonlit Spire, Oakenowl in Moonlit Spire, Leviafin in Moonlit Spire, Furnadillo in Dawn Temple, Stalagwing in Hollow Deep.
-- **Runescroll and the Archive wall.** Ilsa's wall needs three Glyphlings; a Runescroll is three Glyphlings joined together, so it counts as three.
-- **Updated field notes.** Creatures that gain an evolution lose their "Solo" note, and Moonlynx's note changes to "Crescub evolves into it at Lv 30."
-- **Trainers.** The guides' rematches in the Moonlit Spire (Lv 44 to 47) and Juniper's last battle (Lv 50) are a good place to show off a few new final forms.
-- **Credits.** The second credits roll lists every name in "Creatures drawn by." A line like "Evolution ideas by ___" would credit his Evolution Lab picks too.
+- **Nobody's creature got weaker.** A creature that gained a form kept the stats it had. A new second form gets the usual evolved budget (1.6 times a first form's), and a new third form a third more than the form before it, at most 450 like the other three-form families. Creatures already caught in a save picked this up on their own. The data is in `src/js/12c-data-final.js`.
+- **Moves.** Each new form shares its family's signature move and learns the rest from the usual pattern. The family's designs brought three new moves: **Lucky Leaf** (Clove Tastical, Plant, often lands a critical hit), **Fantastic Hop** (Hoppin Pop, Plant, raises its Speed every time, so it hops higher each time it hops) and **Sprink Magick** (the ice cream pup's family, Frost).
+- **Numbers** follow the journey (`src/js/13c-field-order.js`): each new form sits right after its family, Crescub just before Moonlynx, and the ice cream pup with Frostpeak Pass. The Creature Log and the Field Guide share them.
+- **Where they turn up.** ? Pop lives in Frostpeak Pass and evolves at Lv 22, so you meet ? Pop at Lv 20 and 21 and Pup Pop from 22. Crescub took Moonlynx's place in the Night Ruins, and Moonlynx shows up there by level, from Lv 30. Everything else comes by evolving, and since a wild creature past its evolution level is met evolved, some new forms live in the wild too: Cragmastiff in Moonlit Spire, Oakenowl in Moonlit Spire, Leviafin in Moonlit Spire, Furnadillo in Dawn Temple, Stalagwing in Hollow Deep.
+- **Runescroll and the Archive wall.** Ilsa's wall needs three Glyphlings, and a Runescroll is three Glyphlings joined together, so it counts as three.
+- **Credits.** The second credits roll lists A.S.K. under "Creatures drawn by."
 
 ---
 
-## 7. Still to decide
+## 7. What the family decided
 
-Quick answers are enough for each.
-
-1. **The ice cream pup's first form needs a name.** He wrote "? Pop." It's an ice pop with ears, so ideas that fit: **Icepop**, **Lickpop**, **Popsicub** or **Tinypop**.
-2. **Name spelling.** He typed "clove tastical," "hoppin pop," "pup pop" and "doggy woggy." This file uses **Clovetastical** (one word, like the game's other names), **Hoppin Pop**, **Pup Pop** and **Doggy Woggy**. Change any of them.
-3. **Sprink Magick** is spelled the way he typed it. Keep it, or make it "Sprinkle Magic"?
-4. **Where the first ice cream form shows up.** He chose Frostpeak Pass and an evolution at Lv 16, but Frostpeak's wild creatures are Lv 20 to 26, and a wild creature past its evolution level shows up evolved, so you'd only ever meet Pup Pop there. Options: (a) **Baker Bun in Copperbell gives you the first form** ("it came alive in my freezer!"), and Pup Pop lives wild in Frostpeak (my pick); (b) it evolves at Lv 24 instead, so the first form shows up wild in Frostpeak at Lv 20 to 23; (c) the first form also lives in Copperbell's park (Lv 15 to 19).
-5. **The 6 Maybes** (Mittengrizz, Blossomfly, Hoardmunk, Mossloth, Blizzpaca, Mirahare): in or out? Their prompts are ready either way.
-6. **Drawn by.** The ice cream pup is credited to A.S.K. Are Clovetastical and Hoppin Pop by A.S.K. too?
+- **? Pop** (Mystery Pop) is the ice cream pup's first form. It evolves into Pup Pop at Lv 22, so both show up in Frostpeak Pass, and into Doggy Woggy at Lv 30.
+- **Names are spelled the way he wrote them:** ? Pop, Pup Pop, Doggy Woggy, Clove Tastical and Hoppin Pop. **Sprink Magick** is short on purpose.
+- **A.S.K. drew ? Pop.** Pup Pop, Doggy Woggy, Clove Tastical, Hoppin Pop and the 39 Evolution Lab picks are his ideas.
+- **The six Maybes are out:** Mittengrizz, Blossomfly, Hoardmunk, Mossloth, Blizzpaca and Mirahare.
+- **No more creatures at this stage.** What's in this file is the final list.

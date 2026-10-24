@@ -26,13 +26,13 @@ Hold L + R and press MENU (or press Up Up Down Down Left Right Left Right B A on
 
 The current version is in `VERSION` and shows on the title screen. `CHANGELOG.md` lists what each version changed.
 
-## What's in the game (v9, with the expansion)
+## What's in the game (v11)
 
 **The Fading Moon.** The moon over the land is dimming, and frightened creatures hide in the tall grass. Elder Willow gives you your first creature and sends you north to find out why.
 
 - **The main road:** Home Village, Meadow Path, Grassland, Forest, Lakeshore, Crystal Cave, Copperbell Town, Sunscorch Desert, Frostpeak Pass, Murkmire Swamp and the Night Ruins. Each region has its own tiles, weather and landmark, an outpost (Healing Hut keeper and Cube Vault), a guide's home, route trainers and treasure chests.
 - **Side areas** off the road: Willowbrook Orchard, Whispering Grove, Driftwood Cove, Lantern Isle, Glimmer Mine, Steamvent Springs, Firefly Bayou and the Ancients' Archive, each with its own people, landmark and secrets.
-- **131 creatures**, some only out by day and some only at night.
+- **175 creatures**, some only out by day and some only at night, including families the kids designed.
 - **8 guide trials** (Bramble, Oakley, Gus, Dusty, Safi, Frida, Granny Moss, Corvin). Each gives a trail charm and a piece of the story, and opens the gate north.
 - **Juniper**, your rival, battles you five times with a team built against your starter.
 - **Fly** comes from Dusty after the Cave trial: the Wooden Whistle takes you to any place you've been.
@@ -72,7 +72,7 @@ node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.ht
 - `tools/`: build and doc scripts.
 - `docs/`: design and prompts. Read in this order:
   1. `creature-catch-decisions-2.md`: the latest decisions. It wins over everything below.
-  2. `creature-catch-lore-bible.md`: the whole world in one place: the story, the Lost Pages, every place with its people, and every creature, including the 50 new ones planned for the final version. Their art prompts are in `creature-catch-final-creature-prompts.md`.
+  2. `creature-catch-lore-bible.md`: the whole world in one place: the story, the Lost Pages, every place with its people, and all 175 creatures (made from the game's data). How the v11 creatures' pictures were asked for is in `creature-catch-final-creature-prompts.md`.
   3. `creature-catch-expansion-guide.md`: the v9 expansion (places, people, the Lost Pages, the post-game arc, the kids' creatures), with its art in `creature-catch-expansion-image-prompts.md`. `creature-catch-future-creatures.md` holds 19 more creature ideas, not in the game.
   4. `creature-catch-handoff.md`: the full design.
   5. `creature-catch-roster.md`: every creature's stats, learnset, and moves (generated).

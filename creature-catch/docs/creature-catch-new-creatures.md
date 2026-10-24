@@ -78,6 +78,7 @@ What each line means:
 | Line | What to write |
 |---|---|
 | `name` | Its name. Two creatures can't share a name. |
+| `id` | (Optional) only for a name with symbols in it, like `? Pop`: the plain id its picture and the codes use (`mysterypop`, so its picture is `mysterypop.png` and `GIVE MYSTERYPOP 22` works). |
 | `types` | One or two types, like `['Fire']` or `['Water', 'Frost']`. |
 | `lives` | Where it shows up in the wild (only for a first form or a creature with no evolution): `meadow`, `grassland`, `forest`, `water`, `cave`, `desert`, `snow`, `swamp`, `ruins`, `spire`, one of the new places (`orchard`, `grove`, `cove`, `isle`, `copperbell`, `mine`, `springs`, `bayou`, `archive`, `temple`, `hollow`), `anywhere` for a **Moonborn**, or `nowhere`. |
 | `keeper` | (Instead of `lives`) makes it the **Keeper** of a side area: `orchard`, `grove`, `cove`, `isle`, `mine`, `springs`, `bayou` or `archive`. See "Moonborn and Keepers" below. |

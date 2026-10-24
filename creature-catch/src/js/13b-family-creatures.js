@@ -6,6 +6,8 @@
 //
 //   {
 //     name: 'Sparkpup',              its name. Its picture is art/creatures/sparkpup.png (the name in lower case)
+//     id: 'sparkpup',                optional: for a name with symbols in it (? Pop is 'mysterypop'), the id its picture
+//                                    and the codes use
 //     types: ['Bolt'],               one or two of: Normal Fire Water Plant Earth Bolt Frost Shadow Lumen
 //     lives: 'forest',               where it's found: meadow grassland forest water cave desert snow swamp ruins spire,
 //                                    or a new place: orchard grove cove isle copperbell mine springs bayou archive temple hollow,
@@ -25,6 +27,14 @@ var CC = window.CC || (window.CC = {});
 
 CC.FAMILY_CREATURES = [
   // your creatures go here
+  { name: '? Pop', id: 'mysterypop', types: ['Frost'], lives: 'snow', rarity: 'uncommon', evolvesInto: 'Pup Pop', evolvesAt: 22,
+    move: { name: 'Sprink Magick', type: 'Frost', power: 70 },
+    lore: 'Mystery Pop: an ice pop that came alive on a snowy night, with two little ears and a stick for a leg. It hops across the ice and leaves sticky footprints.',
+    drawnBy: 'A.S.K.' },
+  { name: 'Pup Pop', types: ['Frost'], evolvesInto: 'Doggy Woggy', evolvesAt: 30,
+    lore: 'Dipped in chocolate and covered in sprinkles, it runs around on the snow and ice on its four popsicle-stick legs. Its ears are tipped with ice crystals.' },
+  { name: 'Doggy Woggy', types: ['Frost'],
+    lore: 'A proud ice cream dog with a whipped-cream mane and a cherry on top. It loves running on the snow and ice more than anything, and it never, ever melts.' },
 ];
 
 // ---------- how the blocks above become real creatures (no need to change anything below) ----------
@@ -43,18 +53,18 @@ CC.FAMILY_CREATURES = [
   var hash = function (s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003; return h; };
 
   // first, every name, so evolutions can point forward or backward in the list
-  var byId = {};
+  var byId = {}, byName = {};
   list.forEach(function (c) {
-    var id = idOf(c.name);
+    var id = idOf(c.id || c.name);
     if (!id) { warn('a block has no name'); return; }
     if (CC.CREATURES[id] || byId[id]) { warn('"' + c.name + '" is already taken; give it another name'); return; }
-    byId[id] = c; c.id = id;
+    byId[id] = c; c.id = id; byName[String(c.name).toLowerCase()] = id;
   });
   var into = {}, from = {};
   Object.keys(byId).forEach(function (id) {
     var c = byId[id];
     if (!c.evolvesInto) return;
-    var to = idOf(c.evolvesInto);
+    var to = byName[String(c.evolvesInto).toLowerCase()] || idOf(c.evolvesInto);
     if (!byId[to] && !CC.CREATURES[to]) { warn(c.name + ' evolves into "' + c.evolvesInto + '", but there is no block for it'); return; }
     into[id] = to; from[to] = id;
   });
@@ -113,8 +123,8 @@ CC.FAMILY_CREATURES = [
   // lore for the Creature Log and the Field Guide
   Object.keys(byId).forEach(function (id) {
     var c = byId[id], first = byId[root(id)], place = function (k) { return (CC.SPAWNS[k] || { name: k }).name; };
-    var where = from[id] ? 'Evolves from ' + byId[from[id]].name + '.' : first.keeper ? 'The Keeper of ' + place(first.keeper) + '. It waits at the landmark there.'
-      : first.lives === 'anywhere' ? 'Moonborn: dreamed up under the full moon, it can turn up in any tall grass.' : first.lives && first.lives !== 'nowhere' ? 'Lives in the ' + place(first.lives) + '.' : '';
-    CC.LORE[id] = { lore: c.lore || c.name + ' is a brand-new creature. Nobody knows much about it yet!', note: (c.drawnBy ? 'Drawn by ' + c.drawnBy + '. ' : '') + where };
+    var at = from[id] && CC.CREATURES[from[id]].evo.at, where = from[id] ? byId[from[id]].name + ' evolves into it ' + (typeof at === 'string' ? 'with a ' + (at === 'sunshard' ? 'Sun' : 'Moon') + ' Shard.' : 'at Lv ' + at + '.') : first.keeper ? 'The Keeper of ' + place(first.keeper) + '. It waits at the landmark there.'
+      : first.lives === 'anywhere' ? 'Moonborn: dreamed up under the full moon, it can turn up in any tall grass.' : first.lives && first.lives !== 'nowhere' ? 'Found in ' + place(first.lives) + '.' : '';
+    CC.LORE[id] = { lore: c.lore || c.name + ' is a brand-new creature. Nobody knows much about it yet!', note: (c.drawnBy ? 'Drawn by ' + String(c.drawnBy).replace(/\.$/, '') + '. ' : '') + where };
   });
 })();
