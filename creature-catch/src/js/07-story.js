@@ -315,7 +315,7 @@ CC.titleScreen = function () {
         if (CC.input.pressed.a && typed.slice(-SECRET.length + 1).join() === lead) { typed = []; CC.sfx('catch'); CC.openCodes(); return; }
         ['up', 'down', 'left', 'right', 'a', 'b'].forEach(function (k) { if (CC.input.pressed[k]) typed.push(k); });
         typed = typed.slice(-SECRET.length);
-        if (CC.input.pressed.down || CC.input.pressed.up) { sel = (sel + 1) % items.length; CC.sfx('blip'); }
+        if (CC.input.pressed.down || CC.input.pressed.up) { sel = (sel + (CC.input.pressed.down ? 1 : items.length - 1)) % items.length; CC.sfx('blip'); }
         if (scr.busy) return;
         if ((CC.input.pressed.a || CC.input.pressed.start) && items[sel] === 'Options') { CC.sfx('select'); scr.busy = true; CC.optionsScreen().then(function () { scr.busy = false; }); return; }
         if (CC.input.pressed.a || CC.input.pressed.start) { CC.sfx('select'); CC.pop(scr); resolve(items[sel]); }
@@ -363,14 +363,25 @@ CC.titleScreen = function () {
 // ---------- the save files: pick one to continue, or one to start a new game in ----------
 var CHARM_REGIONS = ['grassland', 'forest', 'water', 'cave', 'desert', 'snow', 'swamp', 'ruins'];
 function playTime(sec) { var m = Math.floor(sec / 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
+// what a save file holds: 'empty', 'ok', or 'damaged' (something is there but it can't be read)
+CC.slotStatus = function (n) {
+  var raw;
+  try { raw = localStorage.getItem(CC.slotKey(n)); } catch (e) { return 'empty'; }
+  if (!raw) return 'empty';
+  try { var s = JSON.parse(raw); return s && typeof s === 'object' ? 'ok' : 'damaged'; } catch (e) { return 'damaged'; }
+};
+// a damaged file is copied to a backup key before a new game is saved over it, just in case
+CC.backupSlot = function (n) {
+  try { var raw = localStorage.getItem(CC.slotKey(n)); if (raw) localStorage.setItem(CC.slotKey(n) + '-damaged', raw); } catch (e) { /* no storage */ }
+};
 CC.filePicker = function (mode) {
   return new Promise(function (resolve) {
-    var infos = [], busy = false;
-    var refresh = function () { infos = []; for (var i = 1; i <= CC.SLOTS; i++) infos.push(CC.saveInfo(i)); };
+    var infos = [], status = [], busy = false;
+    var refresh = function () { infos = []; status = []; for (var i = 1; i <= CC.SLOTS; i++) { infos.push(CC.saveInfo(i)); status.push(CC.slotStatus(i)); } };
     refresh();
     var sel = 0, last = (CC.opts.lastSlot || 1) - 1;
     if (mode === 'continue') sel = infos[last] ? last : Math.max(0, infos.findIndex(Boolean));
-    else sel = infos.findIndex(function (x) { return !x; }) >= 0 ? infos.findIndex(function (x) { return !x; }) : 0;
+    else sel = Math.max(0, status.indexOf('empty'));
     var done = function (n) { CC.pop(scr); resolve(n); };
     var scr = {
       name: 'files', opaque: true,
@@ -382,10 +393,12 @@ CC.filePicker = function (mode) {
         if (!CC.input.pressed.a) return;
         var n = sel + 1, info = infos[sel];
         if (mode === 'continue') {
-          if (!info) { CC.sfx('bump'); return; }
+          if (!info || status[sel] === 'damaged') { CC.sfx('bump'); return; }
           CC.sfx('select'); busy = true;
           CC.menu(['Play', 'Delete', 'Back'], { x: 168, y: 18 + sel * 44 }).then(async function (c) {
             busy = false;
+            // the file may have gone (another tab, cleared site data) since the list was read
+            if (c === 0 && !CC.hasSave(n)) { CC.sfx('bump'); refresh(); if (!CC.hasSave()) done(0); return; }
             if (c === 0) done(n);
             else if (c === 1 && await CC.yesNo('Delete File ' + n + '? This can\'t be undone.')) {
               CC.deleteSave(n); CC.sfx('back'); refresh();
@@ -395,6 +408,11 @@ CC.filePicker = function (mode) {
           return;
         }
         CC.sfx('select');
+        if (status[sel] === 'damaged') {
+          busy = true;
+          CC.yesNo('File ' + n + ' is damaged and can\'t be loaded. Start a new game in it? (A copy of it is kept.)').then(function (yes) { busy = false; if (yes) { CC.backupSlot(n); done(n); } });
+          return;
+        }
         if (!info) { done(n); return; }
         busy = true;
         CC.yesNo('File ' + n + ' already has a game in it. Start over and erase it?').then(function (yes) { busy = false; if (yes) done(n); });
@@ -407,14 +425,15 @@ CC.filePicker = function (mode) {
         infos.forEach(function (info, i) {
           var y = 18 + i * 44, on = i === sel;
           CC.box(8, y, 224, 40, { fill: on ? '#fff8d0' : '#fbf3e0', edge: on ? '#e8a838' : '#c8a878' });
-          CC.text('File ' + (i + 1), 16, y + 4, '#6a3a2a', { size: 9 });
+          CC.textNum('File ' + (i + 1), 16, y + 4, '#6a3a2a', { size: 9 });
           if (on) CC.cursor(10, y + 18);
+          if (status[i] === 'damaged') { CC.text('Damaged file', 120, y + 15, '#a85a4a', { align: 'center' }); return; }
           if (!info) { CC.text(mode === 'new' ? 'Empty: start here' : 'Empty', 120, y + 15, '#a89c90', { align: 'center' }); return; }
           var face = CC.img('portraits/' + info.look);
           if (face) { CC.rect(16, y + 14, 22, 22, '#3a2a22'); g.drawImage(face, 17, y + 15, 20, 20); }
           if (info.lead) CC.drawSprite(CC.creatureSprite(info.lead), 54, y + 38, { scale: 0.42, sy: 1 + (on ? Math.sin(CC.time * 6) * 0.04 : 0) });
           CC.text(info.place, 72, y + 4, '#2a2230', { size: 9 });
-          CC.text('Caught ' + info.caught + '   Time ' + playTime(info.time) + (info.lead ? '   Lv ' + info.leadLv : ''), 72, y + 15, '#6a5a50', { size: 8 });
+          CC.textNum('Caught ' + info.caught + '   Time ' + playTime(info.time) + (info.lead ? '   Lv ' + info.leadLv : ''), 72, y + 15, '#6a5a50', { size: 8 });
           CHARM_REGIONS.forEach(function (r, j) {
             var icon = CC.img('ui/charm-' + r), cx = 72 + j * 12, cy = y + 26;
             if (j < info.charms && icon) g.drawImage(icon, cx, cy, 10, 10);
@@ -478,11 +497,38 @@ CC.newGame = async function () {
     await CC.say('Elder Willow lives in the big house with the mossy roof. Go and say hello!');
   });
 };
+// false when the file can't be loaded (the title shows again)
 CC.continueGame = function () {
-  CC.loadGame();
+  if (!CC.loadGame() || CC.slotStatus(CC.slot) !== 'ok') return false;
   var s = CC.state;
+  s.flags = s.flags || {}; s.caught = s.caught || {};
   if (s.flags.trial1) B_moveAside();
+  // a save from before v12 could be made during Gloaming's catch battle, after Page 12 saved the game: it waits by the pool
+  if (s.flags.gloamingCalm && !s.flags.gloamingWaits && !s.caught.gloaming) s.flags.gloamingWaits = true;
+  var h = s.lastHeal || { map: 'village', x: 11, y: 6 };
+  if (!CC.MAPS[s.map]) { s.map = h.map; s.x = h.x; s.y = h.y; }
   CC.world.enter(s.map, s.x, s.y, s.dir);
+  // a spot that has since been built on (a newer version's map): the nearest free tile, else where you last rested
+  if (CC.world.solidAt(s.x, s.y)) {
+    var free = nearestFree(s.x, s.y);
+    if (free) CC.world.enter(s.map, free[0], free[1], s.dir); else CC.world.enter(h.map, h.x, h.y, 'down');
+  }
   CC.push(CC.world);
   CC.world.run(CC.applyPendingCodes);
+  return true;
 };
+// the closest tile you can stand on, searching outward from x, y on the current map
+function nearestFree(x, y) {
+  var w = CC.world, rows = w.map.rows, seen = {}, q = [[x, y]];
+  seen[x + ',' + y] = true;
+  while (q.length) {
+    var c = q.shift();
+    if (!w.solidAt(c[0], c[1])) return c;
+    for (var d in CC.DIRS) {
+      var nx = c[0] + CC.DIRS[d][0], ny = c[1] + CC.DIRS[d][1];
+      if (nx < 0 || ny < 0 || ny >= rows.length || nx >= rows[0].length || seen[nx + ',' + ny]) continue;
+      seen[nx + ',' + ny] = true; q.push([nx, ny]);
+    }
+  }
+  return null;
+}
