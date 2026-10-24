@@ -2,8 +2,9 @@
 // The readable table is docs/creature-catch-roster.md (node tools/roster-doc.mjs).
 var CC = window.CC || (window.CC = {});
 
-// Regions in order. r = index used for the stat budget.
-CC.REGIONS = ['Home Village', 'Meadow Path', 'Grassland', 'Forest', 'Water', 'Cave', 'Desert', 'Snow', 'Swamp', 'Night Ruins'];
+// Regions in order. r = index used for the stat budget (the side areas use the step of the road they hang off; 10 is
+// the places after the story). Only the roster doc shows these names.
+CC.REGIONS = ['Home Village', 'Meadow Path', 'Grassland', 'Forest', 'Lakeshore', 'Crystal Cave', 'Sunscorch Desert', 'Frostpeak Pass', 'Murkmire Swamp', 'Night Ruins', 'After the story'];
 
 // Stat shapes, weights for HP / Attack / Defense / Speed (each row sums to 4)
 CC.PROFILES = {
