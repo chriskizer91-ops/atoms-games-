@@ -62,6 +62,7 @@ What's drawn in code on top of the art: path edges and shorelines, NPC breathing
 node tools/build.mjs        # writes creature-catch.html from src/ and art/
 node tools/roster-doc.mjs   # writes docs/creature-catch-roster.md from the game data
 node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.html
+node tests/run-all.mjs     # the browser tests (tests/README.md)
 ```
 
 ## Layout
@@ -70,7 +71,8 @@ node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.ht
 - `src/shell.html`: the page around the game. `src/js/`: the game, in load order. `src/fonts/`: Pixelify Sans (SIL Open Font License).
 - `art/`: game-ready pictures made by `tools/import-art.py` (`MANIFEST.json` lists them).
 - `tools/`: build and doc scripts.
-- `docs/`: design and prompts. Read in this order:
+- `tests/`: browser tests and their runner (`tests/README.md`).
+- `docs/`: design and prompts. **Starting a bug run? Read `creature-catch-handoff-bug-run.md` first:** the code map, the tests, the known issues and a plan. Otherwise, read in this order:
   1. `creature-catch-decisions-2.md`: the latest decisions. It wins over everything below.
   2. `creature-catch-lore-bible.md`: the whole world in one place: the story, the Lost Pages, every place with its people, and all 175 creatures (made from the game's data). How the v11 creatures' pictures were asked for is in `creature-catch-final-creature-prompts.md`.
   3. `creature-catch-expansion-guide.md`: the v9 expansion (places, people, the Lost Pages, the post-game arc, the kids' creatures), with its art in `creature-catch-expansion-image-prompts.md`. `creature-catch-future-creatures.md` holds 19 more creature ideas, not in the game.
