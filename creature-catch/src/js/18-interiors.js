@@ -67,9 +67,14 @@ var CC = window.CC || (window.CC = {});
   CC.NPCS.village = CC.NPCS.village.filter(function (n) { return n.look !== 'rosa'; });
   CC.NPCS['inn-in'] = [{ x: 5, y: 2, look: 'rosa', art: 'rosa', h: 25, dir: 'down', talk: innkeeper }];
   var REST_COST = 30;
+  // It's night by the game clock, whatever Options shows ("Always day" only changes the look). This replaces the
+  // CC.isNight in 17-expansion.js, which went by the drawn light: night creatures, the firefly stump, the Dusk Cube
+  // and resting "Until night" here work with Always day too.
+  CC.isNight = function () { return CC.clockLight().night >= 0.4; };
   async function innkeeper() {
     var line = CC.linesFor({ early: ['Welcome to the Inn! Need a rest? I\'ll wake you at sunrise, or at nightfall, whichever you like.', 'Some creatures only come out after dark. A night\'s rest here is the easy way to meet them.'] });
-    await say(line[(innkeeper.n = (innkeeper.n || 0) + 1) % line.length], 'Rosa');
+    var n = innkeeper.n || 0; innkeeper.n = n + 1; // the welcome first
+    await say(line[n % line.length], 'Rosa');
     var c = await CC.ask('Rest at the Inn? (' + REST_COST + ' coins, and your creatures are healed)', ['Until morning', 'Until night', 'No thanks']);
     if (c === 2 || c < 0) { await say('Come back any time, dear.', 'Rosa'); return; }
     if (CC.state.coins < REST_COST) { await say('Oh, you\'re a little short. Next time, then!', 'Rosa'); return; }
@@ -80,10 +85,9 @@ var CC = window.CC || (window.CC = {});
     CC.state.clockShift = (((CC.state.clockShift || 0) + ((want - now + 24) % 24)) % 24 + 24) % 24;
     CC.state.lastHeal = { map: 'inn-in', x: 5, y: 5 };
     await CC.sleep(1.2); CC.unfade();
-    var day = CC.opts.daynight === 'clock';
     await say(c === 0 ? 'You slept until morning. The sun is up, and your creatures are full of energy!'
-      : 'You rested until nightfall. Your creatures are full of energy!' + (day ? ' The night creatures will be out.' : ''));
-    if (!day) await say('(Day and night is set to "Always day" in Options, so it still looks like day.)');
+      : 'You rested until nightfall. Your creatures are full of energy! The night creatures will be out.');
+    if (c === 1 && CC.opts.daynight !== 'clock') await say('(Day and night is set to "Always day" in Options, so it still looks like day.)');
     CC.saveGame();
   }
 
