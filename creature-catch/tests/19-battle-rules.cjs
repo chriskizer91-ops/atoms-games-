@@ -282,7 +282,12 @@ const { chromium } = require('playwright');
   // ---- 8. catch rarity: a form met already evolved uses its earlier form's rarity; Moonlynx and the legends keep theirs
   const cat = await p.evaluate(async () => {
     const C = __cc, V = __V, out = {};
-    out.leviafin = [C.RARITY.leviafin || null, C.rarityOf('leviafin')];
+    // with no entry of its own, a form falls back to its earlier form's rarity (the spawn data now gives most of them
+    // one too, from the list entry they're met from; both must agree)
+    const own = C.RARITY.leviafin; delete C.RARITY.leviafin;
+    out.leviafin = [own || null, C.rarityOf('leviafin')];
+    C.RARITY.leviafin = own; if (!own) delete C.RARITY.leviafin;
+    out.leviafinNow = C.rarityOf('leviafin');
     out.puppop = [C.RARITY.puppop || null, C.rarityOf('puppop')];
     out.moonlynx = C.rarityOf('moonlynx'); out.solarion = C.rarityOf('solarion'); out.lunarion = C.rarityOf('lunarion');
     out.missing = C.CREATURE_ORDER.filter(id => !C.rarityOf(id));
@@ -314,7 +319,7 @@ const { chromium } = require('playwright');
     return out;
   });
   console.log('catching', JSON.stringify(cat));
-  check(!cat.leviafin[0] && cat.leviafin[1] === 'common' && cat.puppop[1] === 'uncommon', 'Leviafin and Pup Pop (met evolved) use Surgefin\'s and ? Pop\'s rarity');
+  check(cat.leviafin[1] === 'common' && cat.leviafinNow === 'common' && cat.puppop[1] === 'uncommon', 'Leviafin and Pup Pop (met evolved) catch like Surgefin and ? Pop, with or without an entry of their own');
   check(cat.moonlynx === 'veryrare' && cat.solarion === 'veryrare' && cat.lunarion === 'veryrare', 'Moonlynx and the legends stay very rare');
   check(cat.leviafinCatch === 'caught', 'a Basic Cube catches a full-HP Leviafin on a roll of 12 (the common bonus counts)');
   check(cat.threwUltra === 'You threw an Ultra Cube!' && cat.threw === 'You threw a Basic Cube!', 'an Ultra Cube, a Basic Cube');
