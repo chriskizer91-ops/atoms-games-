@@ -12,16 +12,19 @@ var CC = window.CC || (window.CC = {});
   }
   function nm(s) { return (s.foe ? (B.wild ? 'The wild ' : B.trainer.name + '\'s ') : '') + CC.mon.name(s.mon); }
   function nmShort(s) { return CC.mon.name(s.mon); }
+  function an(word) { return (/^[aeiou]/i.test(word) ? 'an ' : 'a ') + word; } // an Ultra Cube, a Potion
 
   var B = null; // the battle now running
   CC.currentBattle = function () { return B; };
 
   CC.startBattle = function (opts) {
+    // nobody in the party can fight: no battle at all, it counts as a loss (CC.fight sends you to the Healing Hut)
+    if (CC.firstHealthy() < 0) return Promise.resolve('lose');
     return new Promise(function (resolve) {
       B = {
         wild: !!opts.wild, trainer: opts.trainer || null, resolve: resolve,
         foeTeam: opts.wild ? [opts.wild] : opts.trainer.team, foeIndex: 0,
-        allyIndex: CC.firstHealthy(), runs: 0, fought: {}, leveled: {}, shake: 0, flashScreen: 0, intro: 0, trainerShown: !!opts.trainer,
+        allyIndex: CC.firstHealthy(), runs: 0, fought: {}, shake: 0, flashScreen: 0, intro: 0, trainerShown: !!opts.trainer,
         bg: opts.bg || (CC.world.map && CC.world.map.spawns) || 'grassland',
         noCatch: opts.noCatch, noRun: opts.noRun, introText: opts.introText, boss: opts.boss,
         turnLines: opts.turnLines, turn: 0, // turnLines: a line to say at the start of each turn after the first (gentle battles)
@@ -104,15 +107,29 @@ var CC = window.CC || (window.CC = {});
     }
   }
 
+  // The HP plates. Top row: the name, and at the right Lv with the 'caught' cube beside it. Second row: the status
+  // tag (when there is one), HP and the bar. Nothing is drawn over the name: a name too wide for the room left
+  // shrinks to size 9, and is cut at the edge if even that doesn't fit.
+  var PLATE_W = { foe: 120, ally: 110 };
+  function plateName(str, x, y, room) { // measured the way CC.text draws it (with the ligatures broken)
+    var drawn = String(str).replace(/f([filt])/g, 'f\u200c$1'), size = CC.textWidth(drawn, 10) <= room ? 10 : 9;
+    if (CC.textWidth(drawn, size) <= room) { CC.text(str, x, y + 10 - size, '#2a2230', { size: size }); return; }
+    var g = CC.g;
+    g.save(); g.beginPath(); g.rect(x, y - 2, room, 16); g.clip();
+    CC.text(str, x, y + 1, '#2a2230', { size: 9 });
+    g.restore();
+  }
   function drawPlate(s, x, y, ally) {
     if (!s.mon || (s.scale <= 0 && !(s.foe && B.cube))) return;
-    var m = s.mon, max = CC.mon.maxHp(m), w = ally ? 110 : 104, h = ally ? 38 : 26;
+    var m = s.mon, max = CC.mon.maxHp(m), w = ally ? PLATE_W.ally : PLATE_W.foe, h = ally ? 38 : 26;
     CC.box(x, y, w, h, { fill: '#fbf3e0' });
-    CC.text(CC.mon.name(m), x + 6, y + 3, '#2a2230');
-    CC.text('Lv' + m.lv, x + w - 6, y + 4, '#6a5a50', { size: 9, align: 'right' });
-    CC.statusTag(m.status, x + w - 46, y + 4);
-    CC.text('HP', x + 6, y + 15, '#c86a2a', { size: 8 });
-    CC.bar(x + 20, y + 18, w - 28, s.hpShown / max);
+    var left = x + w - 6 - CC.textNum('Lv' + m.lv, x + w - 6, y + 4, '#6a5a50', { size: 9, align: 'right' });
+    if (!ally && CC.state.caught[m.id] && B.wild) { CC.drawCube(left - 6, y + 8, 5); left -= 11; }
+    plateName(CC.mon.name(m), x + 6, y + 3, left - 3 - (x + 6));
+    var hx = x + 6;
+    if (m.status) { CC.statusTag(m.status, hx + 10, y + 15); hx += 33; } // the tag's picture sits left of it
+    CC.text('HP', hx, y + 15, '#c86a2a', { size: 8 });
+    CC.bar(hx + 14, y + 18, x + w - 8 - (hx + 14), s.hpShown / max);
     if (ally) {
       CC.num(Math.ceil(s.hpShown) + '/' + max, x + w - 8, y + 23, '#2a2230', 'right');
       var lo = CC.mon.xpFor(m.lv), hi = CC.mon.xpFor(m.lv + 1), bw = w - 30;
@@ -121,8 +138,6 @@ var CC = window.CC || (window.CC = {});
       CC.rect(x + 23, y + h - 7, bw + 2, 5, '#3a2a22'); CC.rect(x + 24, y + h - 6, bw, 3, '#5a5060');
       CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 3, '#48a8e8'); CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 1, '#a8dcff');
       if (s.xpShown != null) { var sw = (CC.time * 90) % (bw + 12) - 6; CC.g.globalAlpha = 0.6; CC.rect(x + 24 + CC.clamp(sw, 0, bw * xk), y + h - 6, 2, 3, '#ffffff'); CC.g.globalAlpha = 1; }
-    } else if (CC.state.caught[m.id] && B.wild) {
-      CC.drawCube(x + w - 54, y + 8, 5);
     }
     if (m.shiny) { CC.g.save(); CC.drawParticle('sparkle', x + w - 3, y + 2, 4, '#f8e050'); CC.g.restore(); }
   }
@@ -369,8 +384,8 @@ var CC = window.CC || (window.CC = {});
       if (slot) slot.pp = Math.max(0, slot.pp - 1);
     }
     await CC.say(nm(user) + ' used ' + move.name + '!', { auto: 0.35 });
-    // accuracy
-    if (move.acc && !(fx.self || fx.heal)) {
+    // accuracy (a move that only raises its user's stats or heals it can't miss; an attack with a boost can)
+    if (move.acc && !(!move.power && (fx.self || fx.heal))) {
       var acc = move.acc * stageMult(user.st.acc);
       if (Math.random() * 100 >= acc) { pop('MISS', target.home.x, target.home.y - 56, '#d8d0c8'); await CC.say(nm(user) + '\'s attack missed!'); return; }
     }
@@ -416,7 +431,7 @@ var CC = window.CC || (window.CC = {});
     // moves without power
     if (fx.heal) {
       var mx = CC.mon.maxHp(user.mon);
-      if (user.mon.hp >= mx) { await CC.say('But ' + nm(user) + ' is already at full HP!'); return; }
+      if (user.mon.hp >= mx) { await CC.say(nm(user) + ' is already at full HP!'); return; }
       user.mon.hp = Math.min(mx, user.mon.hp + Math.floor(mx * fx.heal)); await hpTo(user);
       await CC.say(nm(user) + ' got its HP back!'); return;
     }
@@ -436,6 +451,8 @@ var CC = window.CC || (window.CC = {});
 
   // ---------- choosing ----------
   function usableMoves(m) { return m.moves.filter(function (x) { return x.pp > 0; }); }
+  // a stat change that can't happen: the stage is already at +3 (going up) or -3 (going down)
+  function statMaxed(s, stat, n) { return n > 0 ? s.st[stat] >= 3 : s.st[stat] <= -3; }
   function foeChoice() {
     var f = B.foe, m = f.mon, opts = usableMoves(m);
     if (!opts.length) return 'struggle';
@@ -444,7 +461,10 @@ var CC = window.CC || (window.CC = {});
     opts.forEach(function (x) {
       var mv = CC.MOVES[x.id], sc;
       if (mv.power) sc = mv.power * CC.typeMult(mv.type, CC.mon.sp(B.ally.mon).types) * (CC.mon.sp(m).types.indexOf(mv.type) >= 0 ? 1.25 : 1);
-      else sc = (mv.fx.status && !B.ally.mon.status) ? 45 : mv.fx.heal ? (m.hp < CC.mon.maxHp(m) / 2 ? 70 : 0) : 30;
+      else if (mv.fx.status) sc = B.ally.mon.status ? 0 : 45; // it can't work on a creature that already has one
+      else if (mv.fx.heal) sc = m.hp < CC.mon.maxHp(m) / 2 ? 70 : 0;
+      else if (mv.fx.stat) sc = statMaxed(mv.fx.self ? f : B.ally, mv.fx.stat, mv.fx.stages) ? 0 : 30;
+      else sc = 30;
       sc *= CC.rand(0.7, 1.3);
       if (sc > bestScore) { bestScore = sc; best = x.id; }
     });
@@ -499,10 +519,10 @@ var CC = window.CC || (window.CC = {});
           });
           var mv = CC.MOVES[m.moves[sel].id], slot = m.moves[sel];
           CC.box(162, 112, 78, 48);
-          CC.text('PP ' + slot.pp + '/' + mv.pp, 170, 118, slot.pp ? '#2a2230' : '#c83a3a', { size: 9 });
+          CC.textNum('PP ' + slot.pp + '/' + mv.pp, 170, 118, slot.pp ? '#2a2230' : '#c83a3a', { size: 9 }); // pixel digits: the font's 2 and 5 read as 8 and S
           if (mv.type) CC.typeBadge(mv.type, 170, 131);
           var e = mv.power ? CC.typeMult(mv.type, CC.mon.sp(B.foe.mon).types) : 1;
-          CC.text(mv.power ? 'Power ' + mv.power + (e > 1 ? ' ++' : e < 1 ? ' -' : '') : 'Effect', 170, 143, '#6a5a50', { size: 9 });
+          CC.textNum(mv.power ? 'Power ' + mv.power + (e > 1 ? ' ++' : e < 1 ? ' -' : '') : 'Effect', 170, 143, '#6a5a50', { size: 9 });
         },
       };
       CC.push(scr);
@@ -555,7 +575,7 @@ var CC = window.CC || (window.CC = {});
       var info = function (i) { CC.box(0, 112, 240, 48); CC.wrap(CC.ITEMS[items[i]].info, 222, 10).slice(0, 2).forEach(function (l, j) { CC.text(l, 9, 119 + j * 15, '#2a2230'); }); };
       var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, maxRows: 5, under: info }); // ends above the item's info box
       if (c < 0) continue;
-      var k = items[c], i = await CC.partyScreen('pick', { title: 'Use a ' + CC.ITEMS[k].name + ' on...' });
+      var k = items[c], i = await CC.partyScreen('pick', { title: 'Use ' + an(CC.ITEMS[k].name) + ' on...' });
       if (i < 0) continue;
       var problem = CC.itemProblem(k, CC.state.party[i]);
       if (problem) { await CC.say(problem); continue; }
@@ -565,7 +585,7 @@ var CC = window.CC || (window.CC = {});
   async function useItem(act) {
     var m = CC.state.party[act.index], it = CC.ITEMS[act.item];
     if (!CC.dev.infItems) CC.state.bag[act.item]--;
-    await CC.say('You used a ' + it.name + ' on ' + CC.mon.name(m) + '.', { auto: 0.3 });
+    await CC.say('You used ' + an(it.name) + ' on ' + CC.mon.name(m) + '.', { auto: 0.3 });
     var r = CC.useItemOn(act.item, m);
     if (typeof r === 'string') { await CC.say(r); return; }
     CC.sfx('heal');
@@ -580,18 +600,26 @@ var CC = window.CC || (window.CC = {});
 
   // ---------- catching ----------
   var RARITY_BONUS = { common: 25, uncommon: 10, rare: -5, veryrare: -15 };
+  // how rare a creature is to catch: its own entry, or (for a form met already evolved) its earlier form's
+  var rarityOf = CC.rarityOf = function (id) {
+    for (var c = id; c && CC.CREATURES[c]; c = CC.CREATURES[c].from) if (CC.RARITY[c]) return CC.RARITY[c];
+    return null;
+  };
   function catchChance(m) {
-    var it = CC.ITEMS[B.cubeKind || 'cube'], bonus = it.duskCube ? (CC.isNight() ? it.duskCube : it.cube) : it.cube;
+    // the Dusk Cube's dusk starts as the light warms (17:00), by the game clock (CC.clockLight, where Options' Always
+    // day only changes the look; CC.daylight otherwise)
+    var it = CC.ITEMS[B.cubeKind || 'cube'], dusk = CC.isNight() || (CC.clockLight || CC.daylight)().night > 0;
+    var bonus = it.duskCube ? (dusk ? it.duskCube : it.cube) : it.cube;
     if (CC.dev.catchAll || bonus >= 999) return 100;
     var max = CC.mon.maxHp(m), st = m.status;
-    var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[CC.RARITY[m.id]] || 0) + bonus;
+    var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[rarityOf(m.id)] || 0) + bonus;
     return CC.clamp(c, 5, 95);
   }
   async function throwCube(kind) {
     kind = kind || 'cube';
     if (!CC.dev.infItems) CC.state.bag[kind]--;
     B.cubeKind = kind;
-    await CC.say('You threw a ' + CC.ITEMS[kind].name + '!', { auto: 0.2 });
+    await CC.say('You threw ' + an(CC.ITEMS[kind].name) + '!', { auto: 0.2 });
     var f = B.foe, to = { x: f.home.x, y: f.home.y - 30 };
     B.cube = { x: 30, y: 120, rot: 0, open: 0, kind: kind };
     CC.sfx('throw');
@@ -635,17 +663,34 @@ var CC = window.CC || (window.CC = {});
   }
 
   // ---------- winning and growing ----------
-  // XP goes to every creature that fought (and is still standing), split between them
+  // XP goes to every creature that fought (and is still standing), split between them. Each share is scaled by the
+  // level gap: more from a stronger foe (up to x1.5), less from a much weaker one (down to x0.5). The rest of the
+  // team (awake and under Lv 50) learns by watching: half a share each, scaled by its own level the same way.
+  // Catching a creature gives the same XP as beating it.
+  function xpScale(foeLv, lv) { return CC.clamp(1 + 0.08 * (foeLv - lv), 0.5, 1.5); }
   async function gainXp(foeMon) {
-    var who = Object.keys(B.fought).map(Number).filter(function (i) { var m = CC.state.party[i]; return m && m.hp > 0 && m.lv < 50; });
-    if (!who.length) return;
+    var party = CC.state.party, canGrow = function (i) { var m = party[i]; return m && m.hp > 0 && m.lv < 50; };
+    var fought = Object.keys(B.fought).map(Number).filter(function (i) { return party[i] && party[i].hp > 0; });
+    if (!fought.length) return;
+    var who = fought.filter(canGrow); // a Lv 50 creature takes no share, but the rest of the team still learns from it
     var total = Math.max(1, Math.floor(CC.mon.sp(foeMon).xpYield * foeMon.lv / 5 * (B.wild ? 1 : 1.5)));
-    var each = Math.max(1, Math.ceil(total / who.length));
-    for (var w = 0; w < who.length; w++) await grow(CC.state.party[who[w]], who[w], each);
+    var each = Math.max(1, Math.ceil(total / (who.length || fought.length)));
+    for (var w = 0; w < who.length; w++) {
+      var m = party[who[w]];
+      await grow(m, Math.max(1, Math.round(each * xpScale(foeMon.lv, m.lv))));
+    }
+    var rest = party.map(function (m, i) { return i; }).filter(function (i) { return !B.fought[i] && canGrow(i); });
+    if (!rest.length) return;
+    await CC.say('The rest of your team gained XP too!', { auto: 0.6 });
+    for (var r = 0; r < rest.length; r++) {
+      var b = party[rest[r]];
+      await grow(b, Math.max(1, Math.round(each * 0.5 * xpScale(foeMon.lv, b.lv))), true);
+    }
   }
-  async function grow(m, index, gain) {
+  // quiet: no "gained N XP" line and no stat panel (the rest of the team); level-ups and new moves still show
+  async function grow(m, gain, quiet) {
     var out = m === B.ally.mon, s = out ? B.ally : null, name = CC.mon.name(m);
-    await CC.say(name + ' gained ' + gain + ' XP!', out ? {} : { auto: 0.6 });
+    if (!quiet) await CC.say(name + ' gained ' + gain + ' XP!', out ? {} : { auto: 0.6 });
     var target = m.xp + gain;
     while (m.lv < 50) {
       var next = CC.mon.xpFor(m.lv + 1), from = m.xp, to = Math.min(target, next);
@@ -661,10 +706,10 @@ var CC = window.CC || (window.CC = {});
         for (var i = 0; i < 14; i++) CC.fx.add({ x: s.home.x + CC.rand(-20, 20), y: s.home.y, vx: 0, vy: -CC.rand(30, 70), life: 0.9, kind: 'star', color: CC.pick(['#f8e050', '#ffffff']), size: 3 });
         pop('LEVEL UP!', s.home.x, s.home.y - 70, '#f8e050');
       }
-      B.leveled[index] = true;
+      if (CC.mon.canEvolve(m)) m.evoAsk = true; // asked after this battle, or after a later win if it fainted
       CC.sfx('levelup');
       await CC.say(name + ' grew to Lv ' + m.lv + '!');
-      await CC.statPanel(m, before, after);
+      if (!quiet) await CC.statPanel(m, before, after);
       var learn = CC.mon.newMovesAt(m.id, m.lv);
       for (var j = 0; j < learn.length; j++) await CC.learnMove(m, learn[j]);
     }
@@ -773,27 +818,35 @@ var CC = window.CC || (window.CC = {});
     if (B.foe.mon.hp <= 0) {
       await faintAnim(B.foe);
       await CC.say(nm(B.foe) + ' fainted!');
+      var last = B.wild || B.foeIndex >= B.foeTeam.length - 1;
+      // both went down at once (recoil) on the last foe: yours faints too, before anyone's XP
+      if (last && B.ally.mon.hp <= 0) {
+        await faintAnim(B.ally);
+        await CC.say(nmShort(B.ally) + ' fainted!');
+      }
       await gainXp(B.foe.mon);
-      if (!B.wild && B.foeIndex < B.foeTeam.length - 1) {
+      if (!last) {
         B.foeIndex++;
         B.foe = side(B.foeTeam[B.foeIndex], true); CC.markSeen(B.foe.mon.id);
         await CC.say(B.trainer.name + ' sent out ' + CC.mon.name(B.foe.mon) + '!', { auto: 0.4 });
         await sendOut(B.foe);
         out = 'next';
       } else {
+        if (CC.firstHealthy() < 0) return await lost(); // with nobody left standing, a double faint is a loss
         await afterWin();
         return 'win';
       }
     }
     if (B.ally.mon.hp <= 0) {
-      if (!(await allyFainted())) {
-        if (B.trainer && B.trainer.loseText) await CC.say(B.trainer.loseText, { who: B.trainer.name });
-        await CC.say('You have no creatures left that can fight...');
-        return 'lose';
-      }
+      if (!(await allyFainted())) return await lost();
       out = 'next';
     }
     return out;
+  }
+  async function lost() {
+    if (B.trainer && B.trainer.loseText) await CC.say(B.trainer.loseText, { who: B.trainer.name });
+    await CC.say('You have no creatures left that can fight...');
+    return 'lose';
   }
 
   async function afterWin() {
@@ -810,12 +863,20 @@ var CC = window.CC || (window.CC = {});
       CC.state.coins += extra; CC.sfx('buy');
       await CC.say(B.coinSwipe.by + ' swiped ' + extra + ' shiny coins during the battle!');
     }
-    // evolution after the battle, for anyone who grew
-    for (var k in B.leveled) {
-      var m = CC.state.party[k];
-      if (!m || m.hp <= 0 || !CC.mon.canEvolve(m)) continue;
-      if (await CC.yesNo(CC.mon.name(m) + ' is ready to evolve! Let it?')) await CC.evolveScene(m);
-      else await CC.say(CC.mon.name(m) + ' will ask again after its next level.');
+    // evolution after the battle, for anyone who reached its evolution level (m.evoAsk, set in grow). A creature
+    // that fainted keeps its turn for a later win. One answer clears it: yes, no, or B during the scene.
+    var party = CC.state.party;
+    for (var k = 0; k < party.length; k++) {
+      var m = party[k];
+      if (!m.evoAsk) continue;
+      if (!CC.mon.canEvolve(m)) { delete m.evoAsk; continue; }
+      if (m.hp <= 0) continue;
+      delete m.evoAsk;
+      var name = CC.mon.name(m), later = 'You can evolve ' + name + ' later from the party menu.';
+      if (await CC.yesNo(name + ' is ready to evolve! Let it?')) {
+        if (!(await CC.evolveScene(m))) await CC.say(later);
+        else if (CC.mon.canEvolve(m)) m.evoAsk = true; // its new form is already past its own level: asked after the next win
+      } else await CC.say('Okay! ' + later);
     }
   }
 })();
