@@ -61,11 +61,13 @@ const path = require('path');
   console.log('S3 evolve', JSON.stringify(await p.evaluate(() => __cc.state.party.map(m => m.id + ':' + m.lv + ' ' + m.moves.map(x => x.id).join(',')))));
 
   // ---- S4: party full -> vault, and the hut vault menu
-  await p.evaluate(() => { const C = __cc; C.state.party = ['embroak', 'tuftail', 'pebblepup', 'bumblop'].map(id => C.mon.make(id, 10)); C.state.vault = []; C.state.bag.cube = 20; C.world.enter('meadow', 3, 6, 'up'); C.world.run(() => C.wildEncounter('meadow')); });
+  await p.evaluate(() => { const C = __cc; C.state.party = ['embroak', 'tuftail', 'pebblepup', 'bumblop'].map(id => C.mon.make(id, 10)); C.state.vault = []; C.state.bag.cube = 20; C.dev.catchAll = true; C.world.enter('meadow', 3, 6, 'up'); C.world.run(() => C.wildEncounter('meadow')); });
   ok = await play('catch', idle, 60000);
+  await p.evaluate(() => { __cc.dev.catchAll = false; }); // the catch is sure, so the Vault has one to swap
   console.log('S4 vault', JSON.stringify(await p.evaluate(() => ({ party: __cc.state.party.length, vault: __cc.state.vault.map(m => m.id) }))));
   await p.evaluate(() => { __cc.world.enter('hut-in', 5, 4, 'up'); }); await tap('KeyZ'); await p.waitForTimeout(1200); await tap('KeyZ'); await p.waitForTimeout(300);
   await tap('ArrowDown'); await tap('KeyZ'); await p.waitForTimeout(300); await shot('vault-menu'); await tap('KeyZ'); await p.waitForTimeout(300); await shot('vault-list');
+  await tap('KeyZ'); await p.waitForTimeout(300); await shot('vault-action'); // Swap in / Summary / Back
   await tap('KeyZ'); await p.waitForTimeout(400); await shot('vault-swap'); await tap('KeyZ'); await p.waitForTimeout(300);
   await play('attack', s => s.name === 'menu', 4000);
   console.log('S4b swap', JSON.stringify(await p.evaluate(() => ({ party: __cc.state.party.map(m => m.id), vault: __cc.state.vault.map(m => m.id) }))));

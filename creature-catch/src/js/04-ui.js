@@ -62,19 +62,30 @@ CC.talk = async function (who, lines) {
 // ---------- menus ----------
 // CC.menu(items, opts) resolves to the chosen index, or -1 on B (unless opts.noCancel).
 // items: strings or { label, right, disabled }
+// A list too long for the screen scrolls: it shows the rows that fit, with arrows when there are more, and left and
+// right turn a page.
 CC.menu = function (items, opts) {
   opts = opts || {};
   return new Promise(function (resolve) {
-    var sel = opts.start || 0, rowH = opts.rowH || 14;
+    var sel = opts.start || 0, rowH = opts.rowH || 14, head = opts.title ? 14 : 0;
     var labels = items.map(function (it) { return typeof it === 'string' ? { label: it } : it; });
     var w = opts.w || Math.max.apply(null, labels.map(function (l) { return CC.textWidth(l.label, 10) + (l.right ? CC.textWidth(l.right, 10) + 12 : 0) + (l.icon ? 14 : 0); })) + 26;
-    var h = labels.length * rowH + 10 + (opts.title ? 14 : 0);
+    var room = opts.y != null ? CC.H - 2 - opts.y : 108; // a menu without a y sits just above the dialog box
+    var fit = function (pad) { return opts.maxRows || Math.max(3, Math.floor((room - 10 - head - pad * 2) / rowH)); };
+    var rows = labels.length > fit(0) ? Math.min(labels.length, fit(3)) : labels.length, top = 0;
+    var pad = rows < labels.length ? 3 : 0, h = rows * rowH + 10 + head + pad * 2; // a scrolling list has room for its arrows
     var x = opts.x != null ? opts.x : CC.W - w - 2, y = opts.y != null ? opts.y : 110 - h;
+    var follow = function () { top = CC.clamp(top, Math.max(0, sel - rows + 1), Math.min(sel, labels.length - rows)); };
+    follow();
     var scr = {
       name: 'menu',
       update: function () {
-        if (CC.repeat('down')) { sel = (sel + 1) % labels.length; CC.sfx('blip'); if (opts.onMove) opts.onMove(sel); }
-        if (CC.repeat('up')) { sel = (sel + labels.length - 1) % labels.length; CC.sfx('blip'); if (opts.onMove) opts.onMove(sel); }
+        var was = sel, n = labels.length;
+        if (CC.repeat('down')) sel = (sel + 1) % n;
+        if (CC.repeat('up')) sel = (sel + n - 1) % n;
+        if (n > rows && CC.repeat('right')) sel = Math.min(n - 1, sel + rows);
+        if (n > rows && CC.repeat('left')) sel = Math.max(0, sel - rows);
+        if (sel !== was) { follow(); CC.sfx('blip'); if (opts.onMove) opts.onMove(sel); }
         if (CC.input.pressed.a) {
           if (labels[sel].disabled) { CC.sfx('bump'); return; }
           CC.sfx('select'); CC.pop(scr); resolve(sel);
@@ -83,20 +94,29 @@ CC.menu = function (items, opts) {
       draw: function () {
         if (opts.under) opts.under(sel);
         CC.box(x, y, w, h);
-        var ty = y + 6;
+        var ty = y + 6, icons = labels.some(function (o) { return o.icon; });
         if (opts.title) { CC.text(opts.title, x + 8, ty, '#6a3a2a', { size: 9 }); ty += 14; }
-        labels.forEach(function (l, i) {
+        ty += pad;
+        labels.slice(top, top + rows).forEach(function (l, i) {
           var icon = l.icon && CC.img(l.icon), tx = x + 16;
           if (icon) { var k = 11 / Math.max(icon.width, icon.height); CC.g.drawImage(icon, tx, ty + i * rowH + 1, icon.width * k, icon.height * k); }
-          if (labels.some(function (o) { return o.icon; })) tx += 14;
+          if (icons) tx += 14;
           CC.text(l.label, tx, ty + i * rowH, l.disabled ? '#a89c90' : '#2a2230');
           if (l.right) CC.text(l.right, x + w - 8, ty + i * rowH, '#6a5a50', { align: 'right' });
         });
-        CC.cursor(x + 7, ty + sel * rowH + 2);
+        CC.cursor(x + 7, ty + (sel - top) * rowH + 2);
+        if (top > 0) CC.scrollArrow(x + w - 14, ty - 4, -1);
+        if (top + rows < labels.length) CC.scrollArrow(x + w - 14, ty + rows * rowH, 1);
       },
     };
     CC.push(scr);
   });
+};
+// a small bobbing triangle that says a list goes on (dir -1 up, 1 down); x, y is its top left
+CC.scrollArrow = function (x, y, dir) {
+  var bob = Math.round(Math.sin(CC.time * 6)) * dir;
+  CC.g.fillStyle = '#6a3a2a';
+  for (var i = 0; i < 3; i++) CC.g.fillRect(x + i, y + bob + (dir > 0 ? i : 2 - i), 7 - i * 2, 1);
 };
 CC.yesNo = async function (question, who) {
   var p = CC.say(question, { who: who });
@@ -115,8 +135,9 @@ CC.ask = function (question, options, who) {
 };
 
 // ---------- small creature card pieces ----------
+CC.typeBadgeWidth = function (type) { return CC.textWidth(type.toUpperCase(), 8) + 6 + (CC.img('ui/type-' + type) ? 9 : 0); };
 CC.typeBadge = function (type, x, y) {
-  var c = CC.TYPE_COLORS[type] || CC.TYPE_COLORS.Normal, icon = CC.img('ui/type-' + type), iw = icon ? 9 : 0, w = CC.textWidth(type.toUpperCase(), 8) + 6 + iw;
+  var c = CC.TYPE_COLORS[type] || CC.TYPE_COLORS.Normal, icon = CC.img('ui/type-' + type), iw = icon ? 9 : 0, w = CC.typeBadgeWidth(type);
   CC.rect(x, y, w, 10, c[2]); CC.rect(x + 1, y + 1, w - 2, 8, c[1]);
   if (icon) CC.g.drawImage(icon, x + 1, y + 1, 8, 8);
   CC.text(type.toUpperCase(), x + 3 + iw, y + 1, '#ffffff', { size: 8, shadow: c[2] });
@@ -314,7 +335,7 @@ CC.bagScreen = async function () {
   while (true) {
     var keys = Object.keys(CC.ITEMS).filter(function (k) { var it = CC.ITEMS[k]; return it.key ? CC.state.flags[it.key] : CC.state.bag[k] > 0; });
     if (!keys.length) { await CC.say('Your bag is empty.'); return; }
-    var c = await CC.menu(keys.map(function (k) { var it = CC.ITEMS[k]; return { label: it.name, right: it.key ? (it.count ? it.count() : '') : 'x' + CC.state.bag[k], icon: it.icon }; }), { title: 'Bag', w: 150 });
+    var c = await CC.menu(keys.map(function (k) { var it = CC.ITEMS[k]; return { label: it.name, right: it.key ? (it.count ? it.count() : '') : 'x' + CC.state.bag[k], icon: it.icon }; }), { title: 'Bag', w: 150, y: 4 });
     if (c < 0) return;
     var k = keys[c], it = CC.ITEMS[k];
     if (k === 'whistle') {
@@ -388,14 +409,101 @@ CC.shopScreen = async function (stock, who) {
 };
 
 // ---------- the Cube Vault ----------
+// Take out opens the whole Vault on one screen: a scrolling list on the left (left and right turn a page) and the
+// creature you're on, big, on the right. MENU sorts the list (it only changes how it's shown, not the Vault).
+var VAULT_SORTS = [
+  { name: 'Newest', key: function (m, i) { return -i; } },
+  { name: 'Level', key: function (m, i) { return -m.lv * 10000 + i; } },
+  { name: 'Name', key: function (m) { return CC.mon.name(m).replace(/^[^a-z0-9]+/i, '').toLowerCase(); } },
+  { name: 'Log No.', key: function (m, i) { return CC.CREATURE_ORDER.indexOf(m.id) * 10000 + i; } },
+];
+CC.vaultSort = 0;
+CC.vaultList = function () {
+  return new Promise(function (resolve) {
+    var ROWS = 10, ROW = 12, sel = 0, top = 0, order = [];
+    var vault = function () { return CC.state.vault; };
+    var resort = function (keepIndex) {
+      var srt = VAULT_SORTS[CC.vaultSort];
+      order = vault().map(function (m, i) { return { i: i, k: srt.key(m, i) }; });
+      order.sort(function (p, q) { return p.k < q.k ? -1 : p.k > q.k ? 1 : p.i - q.i; });
+      order = order.map(function (o) { return o.i; });
+      if (keepIndex != null && order.indexOf(keepIndex) >= 0) sel = order.indexOf(keepIndex);
+      sel = CC.clamp(sel, 0, Math.max(0, order.length - 1));
+      top = CC.clamp(top, Math.max(0, sel - ROWS + 1), Math.min(sel, Math.max(0, order.length - ROWS)));
+    };
+    resort();
+    var scr = {
+      name: 'vault', opaque: true, busy: false,
+      update: function () {
+        if (scr.busy) return;
+        var n = order.length, was = sel;
+        if (CC.input.pressed.b) { CC.sfx('back'); CC.pop(scr); resolve(-1); return; }
+        if (!n) return;
+        if (CC.repeat('down')) sel = (sel + 1) % n;
+        if (CC.repeat('up')) sel = (sel + n - 1) % n;
+        if (CC.repeat('right')) sel = Math.min(n - 1, sel + ROWS);
+        if (CC.repeat('left')) sel = Math.max(0, sel - ROWS);
+        if (sel !== was) { CC.sfx('blip'); top = CC.clamp(top, Math.max(0, sel - ROWS + 1), Math.min(sel, n - ROWS)); }
+        if (CC.input.pressed.start) { CC.sfx('select'); CC.vaultSort = (CC.vaultSort + 1) % VAULT_SORTS.length; resort(order[sel]); }
+        if (CC.input.pressed.a) {
+          CC.sfx('select'); scr.busy = true;
+          var v = order[sel], m = vault()[v];
+          CC.menu([CC.state.party.length < 4 ? 'Take out' : 'Swap in', 'Summary', 'Back'], { x: 6, y: 60, w: 96 }).then(function (c) {
+            if (c === 1) return CC.summary(m).then(function () { scr.busy = false; });
+            scr.busy = false;
+            if (c === 0) { CC.pop(scr); resolve(v); }
+          });
+        }
+      },
+      draw: function () {
+        var list = vault(), n = order.length;
+        CC.rect(0, 0, 240, 160, '#4a6a90');
+        for (var yy = 0; yy < 160; yy += 8) CC.rect(0, yy, 240, 4, '#466489');
+        CC.text('Cube Vault', 8, 3, '#ffffff', { shadow: '#22344e' });
+        CC.text(n + (n === 1 ? ' creature' : ' creatures'), 232, 4, '#e8f0ff', { size: 9, align: 'right', shadow: '#22344e' });
+        // the list
+        CC.box(4, 16, 126, ROWS * ROW + 12);
+        if (!n) CC.text('The Vault is empty.', 67, 70, '#6a5a50', { size: 9, align: 'center' });
+        for (var r = 0; r < ROWS && top + r < n; r++) {
+          var m = list[order[top + r]], y = 22 + r * ROW, on = top + r === sel;
+          if (on) CC.rect(7, y - 2, 120, ROW, '#fff2c8');
+          var nm = CC.mon.name(m);
+          if (CC.textWidth(nm, 9) > 72) { while (nm.length > 3 && CC.textWidth(nm + '.', 9) > 72) nm = nm.slice(0, -1); nm += '.'; }
+          CC.text(nm, 18, y, '#2a2230', { size: 9 });
+          if (m.shiny) CC.drawParticle('sparkle', 98, y + 4, 3, '#e8b838');
+          CC.num(String(m.lv), 125, y + 2, '#6a5a50', 'right'); CC.text('Lv', 122 - CC.numWidth(String(m.lv)), y, '#6a5a50', { size: 9, align: 'right' });
+          if (on) CC.cursor(9, y + 1);
+        }
+        if (top > 0) CC.scrollArrow(116, 18, -1);
+        if (top + ROWS < n) CC.scrollArrow(116, 16 + ROWS * ROW + 7, 1);
+        // the one you're on
+        CC.box(134, 16, 102, ROWS * ROW + 12, { fill: '#f4ecd8' });
+        if (n) {
+          var cur = list[order[sel]], sp = CC.mon.sp(cur), st = CC.mon.stats(cur);
+          CC.g.fillStyle = 'rgba(90,70,40,0.18)'; CC.g.beginPath(); CC.g.ellipse(185, 78, 22, 4, 0, 0, Math.PI * 2); CC.g.fill();
+          CC.drawSprite(CC.creatureSprite(cur.id, cur.shiny), 185, 80, { scale: 0.85, sy: 1 + Math.sin(CC.time * 3) * 0.03 });
+          CC.text(sp.name, 185, 84, '#2a2230', { align: 'center', size: CC.textWidth(sp.name, 10) > 94 ? 9 : 10 });
+          var bw = sp.types.reduce(function (w, t) { return w + CC.typeBadgeWidth(t) + 2; }, -2), bx = 185 - bw / 2;
+          sp.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 97) + 2; });
+          CC.text('Lv', 140, 111, '#6a5a50', { size: 9 }); CC.num(String(cur.lv), 153, 113, '#2a2230');
+          CC.text('HP', 140, 122, '#6a5a50', { size: 9 });
+          CC.bar(156, 126, 74, cur.hp / st.hp);
+          CC.num(cur.hp + '/' + st.hp, 230, 112, '#2a2230', 'right');
+          CC.text('No.', 140, 20, '#9a8a70', { size: 8 }); CC.num(String(CC.CREATURE_ORDER.indexOf(cur.id) + 1).padStart(3, '0'), 154, 21, '#9a8a70');
+        }
+        CC.text('A: choose   < >: page   MENU: sort (' + VAULT_SORTS[CC.vaultSort].name + ')', 120, 149, '#e8f0ff', { size: 8, align: 'center', shadow: '#22344e' });
+      },
+    };
+    CC.push(scr);
+  });
+};
 CC.vaultScreen = async function () {
   while (true) {
     var c = await CC.menu(['Take out', 'Put away', 'Done'], { title: 'Cube Vault (' + CC.state.vault.length + ')', w: 130, x: 104, y: 20 });
     if (c < 0 || c === 2) return;
     if (c === 0) {
       if (!CC.state.vault.length) { await CC.say('The Vault is empty.'); continue; }
-      var items = CC.state.vault.map(function (m) { return { label: CC.mon.name(m), right: 'Lv ' + m.lv }; });
-      var v = await CC.menu(items, { title: 'Take out which?', w: 150, x: 84, y: 8 });
+      var v = await CC.vaultList();
       if (v < 0) continue;
       var m = CC.state.vault[v];
       if (CC.state.party.length < 4) {

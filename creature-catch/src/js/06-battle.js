@@ -553,7 +553,7 @@ var CC = window.CC || (window.CC = {});
       }
       if (!items.length) { await CC.say('You don\'t have any items you can use in battle.'); continue; }
       var info = function (i) { CC.box(0, 112, 240, 48); CC.wrap(CC.ITEMS[items[i]].info, 222, 10).slice(0, 2).forEach(function (l, j) { CC.text(l, 9, 119 + j * 15, '#2a2230'); }); };
-      var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, under: info });
+      var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, maxRows: 5, under: info }); // ends above the item's info box
       if (c < 0) continue;
       var k = items[c], i = await CC.partyScreen('pick', { title: 'Use a ' + CC.ITEMS[k].name + ' on...' });
       if (i < 0) continue;
