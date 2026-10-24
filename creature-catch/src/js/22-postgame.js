@@ -276,7 +276,8 @@ var CC = window.CC || (window.CC = {});
     await say('The Dusk Pool. Its water glows violet and orange, like a sunset held very still.');
   };
   people('hollow', [{ x: 14, y: 22, creature: 'gloaming', h: 26, when: function () { return F().gloamingWaits && !CC.state.caught.gloaming; }, talk: gloamingAgain }]);
-  CC.TRIGGERS.hollow = function (x, y) { return y >= 21 && !F().gloamingCalm && !F().gloamingSeen ? findGloaming : null; };
+  // walking down to the pool finds Gloaming (again, after a loss: findGloaming only shows the picture the first time)
+  CC.TRIGGERS.hollow = function (x, y) { return y >= 21 && !F().gloamingCalm ? findGloaming : null; };
   var GENTLE = ['Gloaming flinches away.', 'Gloaming peeks out from behind its smoky tail.', 'Gloaming trembles, but it doesn\'t run.', 'Gloaming looks at you for the first time.'];
   async function findGloaming() {
     if (!F().gloamingSeen) {
@@ -290,13 +291,14 @@ var CC = window.CC || (window.CC = {});
     });
     if (r !== 'win') return;
     CC.sfx('moon'); await flash(1.4);
-    F().gloamingCalm = true;
+    // it waits by the pool from now until it's caught: Page 12 saves the game before the catch battle
+    F().gloamingCalm = true; F().gloamingWaits = true;
     await say('Gloaming uncurls. Its edges glow soft orange and pink, like the last light of the day.');
     await CC.talk('Gloaming', ['...You came all this way... for me?', '...Solarion said that? That I was never forgotten?', '...I kept this. It was always meant for whoever came.']);
     await CC.givePage(12);
     var r2 = await CC.fight({ wild: CC.mon.make('gloaming', 50), bg: 'dusk-pool', boss: true, canLose: true, noVs: true, music: 'lullaby', introText: 'Gloaming looks up at you, a little less afraid.' });
     if (r2 === 'caught') { F().gloamingWaits = false; await say('Gloaming is curled up in its cube, warm and safe. It isn\'t alone anymore.'); }
-    else { F().gloamingWaits = true; CC.healParty(); await say('Gloaming settles by the Dusk Pool, watching you. It will wait here for you.'); }
+    else { CC.healParty(); await say('Gloaming settles by the Dusk Pool, watching you. It will wait here for you.'); }
     await say('Somewhere far above, very faintly, a bell rings once.');
     CC.saveGame();
   }
@@ -304,6 +306,7 @@ var CC = window.CC || (window.CC = {});
     await say('Gloaming wags its smoky tail when it sees you.');
     var r = await CC.fight({ wild: CC.mon.make('gloaming', 50), bg: 'dusk-pool', boss: true, canLose: true, noVs: true, music: 'lullaby', introText: 'Gloaming bounds over to you!' });
     if (r === 'caught') F().gloamingWaits = false;
+    else { CC.healParty(); await say('Gloaming settles by the Dusk Pool, watching you. It will wait here for you.'); }
     CC.saveGame();
   }
   CC.PORTRAITS.Gloaming = 'amani';
