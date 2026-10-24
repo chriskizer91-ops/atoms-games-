@@ -40,6 +40,8 @@ A single test runs on its own too: `NODE_PATH=$(npm root -g) node tests/10-final
 | `11-final-spawns.cjs` | Who turns up wild where the v11 creatures live: both ice cream forms in Frostpeak Pass, Crescub and Moonlynx, the Spire. |
 | `12-field-guide.cjs` | The Field Guide: place tabs and numbering, "Also found here" links, the spoiler covers, remembering the tab, phone width. |
 | `13-field-guide-spoilers.cjs` | The Field Guide: the hidden Night Ruins guardians, link jumps between tabs, dark mode, the phone's tab row. |
+| `15-every-evolution.cjs` | Every creature with an evolution (87) evolves for real: the level ones through the question after a won battle, the shard ones from the Bag. Checks the new form, HP, moves, the moves it is offered and the Log. About 3 minutes. |
+| `19-battle-rules.cjs` | The XP rule (more from stronger foes, less from much weaker ones, half a share for the rest of the team, which still learns moves and is asked to evolve), a creature that fainted at its evolution level is asked after a later win, a double faint, no battle when nobody can fight, accuracy, the trainer AI, catch odds (a form met evolved, the Dusk Cube at dusk), the HP plates for all 175 names, the pixel digits. |
 
 ## Writing a new one
 
