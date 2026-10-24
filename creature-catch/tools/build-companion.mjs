@@ -176,7 +176,7 @@ nav.bar a { font-family: 'Pixelify', sans-serif; text-decoration: none; color: v
 nav.bar a:hover { background: var(--line); }
 nav.bar .spacer { flex: 1; }
 nav.bar button { font: inherit; font-family: 'Pixelify', sans-serif; border: 0; background: var(--chip); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
-section { padding: 30px 0 10px; }
+section { padding: 30px 0 10px; scroll-margin-top: 30px; } /* the nav's links land with the heading below the sticky bar */
 section h2 { font-size: 30px; margin: 0 0 6px; color: var(--accent); }
 section > .wrap > p.lead { margin: 0 0 18px; color: var(--soft); max-width: 760px; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
@@ -260,6 +260,7 @@ td.x1 { color: var(--soft); opacity: 0.6; }
   .tabs button { flex: none; white-space: nowrap; }
   .tabs .group { width: auto; flex: none; white-space: nowrap; align-self: center; margin: 0 0 0 8px; }
   nav.bar .wrap { flex-wrap: wrap; } nav.bar .spacer { display: none; } /* two rows, so Light / dark stays on the screen */
+  section { scroll-margin-top: 72px; } /* and the taller bar doesn't cover a heading it jumps to */
 }
 .minis { display: flex; flex-wrap: wrap; gap: 6px; }
 .minis a { display: flex; align-items: center; gap: 4px; text-decoration: none; color: var(--ink); background: var(--chip); border-radius: 999px; padding: 2px 10px 2px 2px; font-size: 13px; }

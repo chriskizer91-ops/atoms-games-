@@ -74,6 +74,10 @@ const { chromium } = require('playwright');
     const nav = await ph.evaluate(() => { const r = (el) => el.getBoundingClientRect(); const all = [...document.querySelectorAll('nav.bar a, nav.bar button')]; return { off: all.filter(el => r(el).left < 0 || r(el).right > window.innerWidth).map(el => el.textContent), page: document.documentElement.scrollWidth > window.innerWidth }; });
     check(!nav.off.length && !nav.page, 'phone ' + w + ' px: the whole nav bar is on the screen' + (nav.off.length ? ' (off: ' + nav.off.join(', ') + ')' : ''));
   }
+  // the nav's Map link lands with the Map heading below the (two-row) sticky bar
+  await ph.click('nav.bar a[href="#map"]'); await ph.waitForTimeout(600);
+  const land = await ph.evaluate(() => ({ nav: Math.round(document.querySelector('nav.bar').getBoundingClientRect().bottom), h2: Math.round(document.querySelector('#map h2').getBoundingClientRect().top) }));
+  check(land.h2 >= land.nav, 'phone: the Map link shows its heading below the nav bar (' + land.h2 + ' px, the bar ends at ' + land.nav + ')');
   console.log(errs.join('\n') || (fails.length ? fails.length + ' checks failed' : 'no errors'));
   await b.close();
 })();
