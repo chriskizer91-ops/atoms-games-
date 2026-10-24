@@ -153,7 +153,7 @@ Flowers and short grass. Only Normal creatures live here, so no starter has it t
 - **Hopsprout → ★ Hoppin Pop** (Common)
   - **Hopsprout** · Normal: The two-leaf sprout on its head turns to follow the sun all day. It can leap ten times its own height to snatch a falling seed.
   - ★ **Hoppin Pop** *(his design)* · Plant (from Hopsprout at Lv 20): Its sprout has bloomed into a crown of flowers, and its legs are stronger than ever. It tries to hop higher each time it hops, and one day it's sure it will reach the moon.
-- **Puffmunk → Stashmunk** (Uncommon, day only)
+- **Puffmunk → Stashmunk** (Uncommon)
   - **Puffmunk** · Normal: A chipmunk that stuffs its cheeks so full of berries it can barely see over them. It hides spare berries all over the meadow and forgets where.
   - **Stashmunk** · Normal (from Puffmunk at Lv 16): It digs secret pantries under the meadow and guards them fiercely. Lost travelers have made it through whole winters on its forgotten stashes.
 - **Fleecling → Cloudram → ★ Tempestram** (Rare, day only)
@@ -206,7 +206,7 @@ Sunny rows of apple trees, a red barn with a cider press, beehives and a scarecr
 
 - **Wormapple** (Common, day only)
   - **Wormapple** · Plant / Normal: A worm that lives inside a red apple and wears it like a house. It pops out to say hello and pops back in when it's shy. Marigold thought it was eating her apples, but it's actually chasing the pests away.
-- **Scarecrowl → ★ Scarecrown** (Uncommon, night only)
+- **Scarecrowl → ★ Scarecrown** (Common, night only)
   - **Scarecrowl** · Shadow: A crow wearing a tattered scarecrow hat. Marigold put up the scarecrow to keep it away, and it moved right in.
   - ★ **Scarecrown** *(new in v11)* · Shadow / Plant (from Scarecrowl at Lv 22): The crow became the scarecrow. Now it stands in Willowbrook Orchard at night, and all the crows come to sit on its arms and tell it the news.
 
@@ -263,7 +263,7 @@ Huge ancient trees, fairy-ring mushrooms and drifting lights. The Grandmother Oa
 - **Snoozeloth** (Rare)
   - **Snoozeloth** · Normal / Plant: A sloth so sleepy that moss grows on it, and then flowers grow on the moss. It has hung from the same branch since Old Fennick was a boy.
 
-**Also here:** Owlcorn, Mothlight (night), Budstag.
+**Also here:** Mushling, Owlcorn, Mothlight (night), Budstag.
 
 ### 4.7 Lakeshore
 
@@ -393,9 +393,11 @@ A lively hill town of brick and copper roofs, built on copper from the mine. Its
 - **Rustcoon → ★ Scrapcoon** (Common, night only)
   - **Rustcoon** · Normal / Earth: A raccoon that collects copper coins, bottle caps, and anything shiny. Half the town's lost buttons are in its den.
   - ★ **Scrapcoon** *(new in v11)* · Normal / Earth (from Rustcoon at Lv 28): It builds armor out of whatever Copperbell throws away. Pots, gears, an old bell: if it shines, Scrapcoon wears it.
-- **Dingdove → ★ Bellcondor** (Uncommon, day only)
+- **Dingdove → ★ Bellcondor** (Common, day only)
   - **Dingdove** · Normal / Bolt: A plump dove that roosts in the bell tower. Its coo rings like a tiny bell, and Old Toll sets the town clock by it.
   - ★ **Bellcondor** *(new in v11)* · Normal / Bolt (from Dingdove at Lv 28): Its body rings like a bell when it flaps its wings. Old Toll says the first Dusk Bell was cast in its shape.
+
+**Also here:** Clovermouse, ★ Clove Tastical, Pebblepup, Boulderhound.
 
 ### 4.12 Glimmer Mine
 
@@ -550,7 +552,7 @@ Dark water, mossy cypress trees, thousands of fireflies and glowing lotus flower
   - **Lotusprite** · Water / Lumen: A tiny fairy that sleeps inside a lotus by day and glows across the bayou at night.
   - **Lotusage** · Water / Lumen (from Lotusprite at Lv 36): A wise bayou spirit now. Boatman Bo says it lights the safe channels for anyone lost on the water.
 
-**Also here:** Fireflink (night), Snaptrap, Gnashtrap, Wispeel.
+**Also here:** Lilypadle, Fireflink (night), Snaptrap, Gnashtrap, Wispeel.
 
 ### 4.18 Night Ruins
 
@@ -608,7 +610,7 @@ An underground library lit by floating runes, with towering shelves, a clockwork
 - **Clocktoise** (Rare)
   - **Clocktoise** · Earth / Bolt: An ancient tortoise with a brass clock face on its shell. The Ancients used it to keep time, and a thousand years later it still ticks exactly on time.
 
-**Also here:** Glyphling, Pebbleton, Mimicube.
+**Also here:** Wispkin, Glyphling, Pebbleton, Mimicube.
 
 ### 4.20 Moonlit Spire
 
@@ -650,7 +652,7 @@ Sandstone halls lit by shafts of sunlight. Three mirrors send the light through 
 - **Solarion** (A guardian)
   - **Solarion** · Fire / Lumen: The guardian of the sun, a golden winged lion whose mane is the sunrise. It slept under the desert for a thousand years, warming the oasis above with its dreams. Once woken, it watches over whoever woke it.
 
-**Also here:** ★ Furnadillo, Mirajack.
+**Also here:** ★ Furnadillo, Mirajack, Thundarab.
 
 ### 4.22 Hollow Deep
 

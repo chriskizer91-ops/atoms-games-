@@ -36,7 +36,7 @@ Object.assign(CC.LORE, {
   runescroll: { lore: 'Three Glyphlings joined into one living word. Archivist Ilsa has been trying to read it for years. She thinks it says "friend," but it keeps changing.', note: 'Glyphling evolves into it at Lv 40.' },
   timberbeetle: { lore: 'Its shell has become a mossy tree stump with a little tree growing on top. Squirrels have lived on its back for generations.', note: 'Barkbeetle evolves into it at Lv 22. Earth and Plant.' },
   saguaroad: { lore: 'Once a year a huge flower blooms on its head, and every creature in the desert comes to see it. Saguaroad pretends not to notice.', note: 'Cactoad evolves into it at Lv 30. Plant and Earth.' },
-  furnadillo: { lore: 'Its shell is as hot as a kiln. The Ancients baked the bricks of the Dawn Temple on the backs of sleeping Furnadillos.', note: 'Kilnadillo evolves into it at Lv 30.' },
+  furnadillo: { lore: 'Its shell is as hot as a kiln. The Ancients baked the bricks of the Dawn Temple on the backs of sleeping Furnadillos.', note: 'Kilnadillo evolves into it at Lv 30. Wild ones live in the Dawn Temple.' },
   stormeel: { lore: 'It swims through the bayou air as easily as through water. On stormy nights people mistake it for a bolt of lightning that forgot to leave.', note: 'Wispeel evolves into it at Lv 36. Bolt and Water.' },
   tunnelpede: { lore: 'It\'s as long as a minecart train. Grit says the deepest tunnels in Glimmer Mine were there before the miners ever came.', note: 'Rumblepede evolves into it at Lv 30.' },
   constellastar: { lore: 'On clear nights it lies on the beach and copies the stars. Sailors once found their way home by the Constellastars of Driftwood Cove.', note: 'Glimstar evolves into it with a Moon Shard.' },
@@ -47,4 +47,4 @@ Object.assign(CC.LORE, {
 });
 // they're not solo any more
 ['budstag', 'gemlin', 'yetiny', 'lilypadle', 'tidepuff', 'sealamp', 'dunefox', 'stalagbat', 'sleetle', 'cactoad', 'wispeel', 'rumblepede', 'mireling'].forEach(function (id) { CC.LORE[id].note = CC.LORE[id].note.replace(/ Solo\.$/, ''); });
-CC.LORE.moonlynx.note = 'Crescub evolves into it at Lv 30. The rarest creature in the Night Ruins, and very hard to catch.';
+CC.LORE.moonlynx.note = 'Crescub evolves into it at Lv 30. The rarest in the Night Ruins, very hard to catch.';
