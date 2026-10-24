@@ -163,7 +163,7 @@ var CC = window.CC || (window.CC = {});
   CC.addTrainers('temple', [
     { id: 'temple-1', art: 'trainer-29', name: 'Explorer Indira', x: 17, y: 13, dir: 'left', sight: 4, team: [['sphinxie', 42], ['kilnadillo', 42], ['mirajack', 43]],
       intro: 'A real temple! And a real trainer! Today is the best day!', win: 'Even losing here is an adventure.', after: 'Mummoth isn\'t spooky. It\'s just tangled.' },
-    { id: 'temple-2', art: 'trainer-30', name: 'Explorer Rafe', x: 6, y: 6, dir: 'right', sight: 4, team: [['mummoth', 43], ['sphinxie', 43], ['sphinxar', 44]],
+    { id: 'temple-2', art: 'trainer-30', name: 'Explorer Rafe', x: 6, y: 6, dir: 'right', sight: 4, team: [['mummoth', 43], ['sphinxie', 43], ['sphinxar', 46]],
       intro: 'My torch says battle! My torch is very wise.', win: 'My torch was wrong.', after: 'Sphinxie asks riddles, then forgets the answers. I like that about it.' },
   ]);
   // the Sun Altar: page 11, and Solarion wakes
@@ -222,9 +222,10 @@ var CC = window.CC || (window.CC = {});
     await say('Grit and I\'ll wait right here. Go on. We\'ve got the beans.', 'Dusty');
     CC.saveGame();
   };
+  // their 'final' lines start as soon as Gloaming is calmed (the Balance comes later)
   people('mine', [
-    { x: 10, y: 4, art: 'grit', name: 'Grit', h: 26, when: function () { return F().doorOpen; }, lines: { after: ['Go on down. Take it slow. Bring it home.'], final: ['You did it. That cold\'s gone. Feels like a warm afternoon down here now.'] } },
-    { x: 15, y: 4, art: 'dusty', name: 'Dusty', h: 26, dir: 'down', when: function () { return F().doorOpen; }, lines: { after: ['Forty years Grit\'s been worried about that door. Look at him now. Still worried.'], final: ['Grit smiled. I saw it. Don\'t tell anyone.'] } },
+    { x: 10, y: 4, art: 'grit', name: 'Grit', h: 26, when: function () { return F().doorOpen; }, talk: CC.chatOn('gloamingCalm', 'Grit', { after: ['Go on down. Take it slow. Bring it home.'], final: ['You did it. That cold\'s gone. Feels like a warm afternoon down here now.'] }, 'mineGrit') },
+    { x: 15, y: 4, art: 'dusty', name: 'Dusty', h: 26, dir: 'down', when: function () { return F().doorOpen; }, talk: CC.chatOn('gloamingCalm', 'Dusty', { after: ['Forty years Grit\'s been worried about that door. Look at him now. Still worried.'], final: ['Grit smiled. I saw it. Don\'t tell anyone.'] }, 'mineDusty') },
   ]);
 
   // ================= the Hollow Deep =================
@@ -276,7 +277,8 @@ var CC = window.CC || (window.CC = {});
     await say('The Dusk Pool. Its water glows violet and orange, like a sunset held very still.');
   };
   people('hollow', [{ x: 14, y: 22, creature: 'gloaming', h: 26, when: function () { return F().gloamingWaits && !CC.state.caught.gloaming; }, talk: gloamingAgain }]);
-  CC.TRIGGERS.hollow = function (x, y) { return y >= 21 && !F().gloamingCalm && !F().gloamingSeen ? findGloaming : null; };
+  // walking down to the pool finds Gloaming (again, after a loss: findGloaming only shows the picture the first time)
+  CC.TRIGGERS.hollow = function (x, y) { return y >= 21 && !F().gloamingCalm ? findGloaming : null; };
   var GENTLE = ['Gloaming flinches away.', 'Gloaming peeks out from behind its smoky tail.', 'Gloaming trembles, but it doesn\'t run.', 'Gloaming looks at you for the first time.'];
   async function findGloaming() {
     if (!F().gloamingSeen) {
@@ -290,13 +292,14 @@ var CC = window.CC || (window.CC = {});
     });
     if (r !== 'win') return;
     CC.sfx('moon'); await flash(1.4);
-    F().gloamingCalm = true;
+    // it waits by the pool from now until it's caught: Page 12 saves the game before the catch battle
+    F().gloamingCalm = true; F().gloamingWaits = true;
     await say('Gloaming uncurls. Its edges glow soft orange and pink, like the last light of the day.');
     await CC.talk('Gloaming', ['...You came all this way... for me?', '...Solarion said that? That I was never forgotten?', '...I kept this. It was always meant for whoever came.']);
     await CC.givePage(12);
     var r2 = await CC.fight({ wild: CC.mon.make('gloaming', 50), bg: 'dusk-pool', boss: true, canLose: true, noVs: true, music: 'lullaby', introText: 'Gloaming looks up at you, a little less afraid.' });
     if (r2 === 'caught') { F().gloamingWaits = false; await say('Gloaming is curled up in its cube, warm and safe. It isn\'t alone anymore.'); }
-    else { F().gloamingWaits = true; CC.healParty(); await say('Gloaming settles by the Dusk Pool, watching you. It will wait here for you.'); }
+    else { CC.healParty(); await say('Gloaming settles by the Dusk Pool, watching you. It will wait here for you.'); }
     await say('Somewhere far above, very faintly, a bell rings once.');
     CC.saveGame();
   }
@@ -304,6 +307,7 @@ var CC = window.CC || (window.CC = {});
     await say('Gloaming wags its smoky tail when it sees you.');
     var r = await CC.fight({ wild: CC.mon.make('gloaming', 50), bg: 'dusk-pool', boss: true, canLose: true, noVs: true, music: 'lullaby', introText: 'Gloaming bounds over to you!' });
     if (r === 'caught') F().gloamingWaits = false;
+    else { CC.healParty(); await say('Gloaming settles by the Dusk Pool, watching you. It will wait here for you.'); }
     CC.saveGame();
   }
   CC.PORTRAITS.Gloaming = 'amani';
@@ -364,7 +368,7 @@ var CC = window.CC || (window.CC = {});
     await say('Elder Willow takes out The Long Dusk and writes on the last page, slowly: "And the world was kept, by the sun, the moon, and the dusk, and by a friend."');
     await CC.showPrize('items/long-dusk-book', 'You are now the Keeper of the Long Dusk!');
     await say('Cubesmith Ada asked for the Dusk Cube recipe from the book. I sent it to her. Go and see her in Copperbell.', 'Elder Willow');
-    await say('And they say that now the moon is full and the guardians are together, the world is dreaming more than ever. New creatures, born of dreams, will turn up more often now.', 'Elder Willow');
+    await say('And they say that now the moon is full and the guardians are together, the world is dreaming more than ever.', 'Elder Willow');
     CC.state.lastHeal = { map: 'hut-in', x: 5, y: 4 };
     CC.saveGame();
   }

@@ -27,7 +27,7 @@ A single test runs on its own too: `NODE_PATH=$(npm root -g) node tests/10-final
 
 | Test | What it covers |
 |---|---|
-| `01-core-flows.cjs` | The core loop: the starter, a catch, the first trial, evolving, the Cube Vault, a blackout, saving and Continue. |
+| `01-core-flows.cjs` | The core loop: the starter, a catch, the first trial, evolving, the Cube Vault, losing a wild battle in the tall grass (you wake up healed where you last rested), saving and Continue. |
 | `02-full-game.cjs` | A route trainer spotting you, Juniper in the Crystal Cave, Dusty's trial and the Wooden Whistle, Fly, Tobias, Continue. |
 | `03-battle-bag.cjs` | The Bag in battle: the cube and item pockets, a Potion in battle, throwing a cube. |
 | `04-polish.cjs` | Side-walk frames, the field menu, the Creature Log, the four VS intros, place signs, footprints, guides walking, the Bag. |
@@ -40,6 +40,8 @@ A single test runs on its own too: `NODE_PATH=$(npm root -g) node tests/10-final
 | `11-final-spawns.cjs` | Who turns up wild where the v11 creatures live: both ice cream forms in Frostpeak Pass, Crescub and Moonlynx, the Spire. |
 | `12-field-guide.cjs` | The Field Guide: place tabs and numbering, "Also found here" links, the spoiler covers, remembering the tab, phone width. |
 | `13-field-guide-spoilers.cjs` | The Field Guide: the hidden Night Ruins guardians, link jumps between tabs, dark mode, the phone's tab row. |
+| `16-walk-every-map.cjs` | Every map at four story stages: every exit, door, stairs, Fly spot and warp lands on a free tile with a way out; people, chests, signs and landmarks can be reached; patrols are free. Then it walks through every exit and door for real. Fails on any high or medium issue except the few it lists as by design (gates shut before their trial, the Dawn Temple's halls before the mirrors). |
+| `17-story-fixes.cjs` | The v12 story fixes: losing any wild battle sends you back to rest (and no battle starts with a fainted party), the blackout line names the place, Gloaming waits by the pool (old saves mended), Always day only changes the look, the Moon Altar's daily Moon Shard, trainers' creatures in their form for their level, damaged save files, Continue on a moved spot, the Fly map on the Spire, people who walk, Copperbell's bell lines, the Inn, dev codes with spaces. |
 
 ## Writing a new one
 

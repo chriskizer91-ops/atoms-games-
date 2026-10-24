@@ -285,12 +285,17 @@ var CC = window.CC || (window.CC = {});
   function cubePickup(id, mimic) {
     return async function (d) {
       if (F()['cube:' + id]) return;
-      F()['cube:' + id] = true; d.img = null; d.solid = false; CC.world.refresh();
-      if (!mimic) { CC.state.bag.cube = (CC.state.bag.cube || 0) + 1; CC.sfx('buy'); await CC.showPrize('ui/cube', 'You found an old Basic Cube!'); return; }
+      if (!mimic) {
+        F()['cube:' + id] = true; d.img = null; d.solid = false; CC.world.refresh();
+        CC.state.bag.cube = (CC.state.bag.cube || 0) + 1; CC.sfx('buy'); await CC.showPrize('ui/cube', 'You found an old Basic Cube!'); return;
+      }
+      // a Mimicube: it hops off its spot and battles you (it's only gone for good once that battle has been)
+      var ready = CC.firstHealthy() >= 0, mapId = CC.world.mapId;
       await say('You bend down to pick up the cube... The cube blinked at you!'); CC.sfx('encounter');
-      await CC.battleTransition();
-      var sp = CC.SPAWNS[CC.world.mapId === 'ruins' ? 'ruins' : 'archive'];
-      await CC.startBattle({ wild: CC.mon.make('mimicube', CC.randi(sp.levels[0], sp.levels[1])) });
+      if (ready) { d.img = null; d.solid = false; CC.world.refresh(); await CC.battleTransition(); }
+      var sp = CC.SPAWNS[mapId === 'ruins' ? 'ruins' : 'archive'];
+      await CC.fight({ wild: CC.mon.make('mimicube', CC.randi(sp.levels[0], sp.levels[1])) }); // too tired to battle: back to rest
+      if (ready) F()['cube:' + id] = true;
     };
   }
   R.decor.push({ x: 16, y: 13, cube: 'ruins-mimic', img: 'ui/cube', h: 8, talk: cubePickup('ruins-mimic', true) }, { x: 2, y: 21, cube: 'ruins-real', img: 'ui/cube', h: 8, talk: cubePickup('ruins-real', false) });

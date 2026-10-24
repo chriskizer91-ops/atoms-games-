@@ -60,6 +60,7 @@ Codes typed on the title screen wait until you start or continue a game, then th
 | `DEV` | Shows which toggles are on and which codes are waiting |
 
 Creature names can be shortened to their start (`WILD DANDY 6`). Your own creatures from `src/js/13b-family-creatures.js` work in every code too.
+Type names with spaces as one word (CLOVETASTICAL) or with the spaces; ? Pop is MYSTERYPOP. (`GIVE CLOVE TASTICAL 12` and `TEAM DOGGY WOGGY 30 HOPPIN POP 20` work; a number is never read as part of a name.)
 
 The toggles (`NOWILD`, `CATCHALL`, `ONEHIT`, `FAST`, `INFINITE`, `GODMODE`) last until you reload the page. They aren't saved. Everything else changes your save the next time you save.
 

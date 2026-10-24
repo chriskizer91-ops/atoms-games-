@@ -5,7 +5,7 @@ var CC = window.CC || (window.CC = {});
 
 (function () {
   function F() { return CC.state.flags; }
-  function team(list) { return list.map(function (p) { return CC.mon.make(p[0], p[1]); }); }
+  function team(list) { return CC.trainerTeam(list); } // each creature in its form at that level
 
   // ---------- story stills: a full-screen picture with lines under it ----------
   CC.showStill = async function (id, lines, opts) {
@@ -81,7 +81,7 @@ var CC = window.CC || (window.CC = {});
     },
     water: {
       name: 'Fisher Gus', art: 'gus', flag: 'trialWater', charm: 'Lake Trail Charm', coins: 750,
-      team: [['crabbit', 14], ['tidepuff', 14], ['bubblefin', 15]],
+      team: [['crabbit', 15], ['tidepuff', 15], ['sealamp', 16], ['bubblefin', 17]],
       hello: ['Ahoy! Name\'s Gus. I ferry folks to the mountain, once the rockslide\'s cleared.', 'I clear it for trainers who can hold their own on the water.'],
       intro: 'Reel \'em in, crew!', winText: 'Hooked, line and sinker. Well fished!', loseText: 'The lake wins today. Come back stronger.',
       lore: ['The tides have gone all wrong. The moon pulls on the lake, and now it barely ripples.', 'Old fishers\' tale: on full-moon nights, a silver wolf drinks from this lake. Haven\'t seen a full moon in months.'],
@@ -89,7 +89,7 @@ var CC = window.CC || (window.CC = {});
     },
     cave: {
       name: 'Dusty', art: 'dusty', flag: 'trialCave', charm: 'Cave Trail Charm', coins: 1000,
-      team: [['glimmole', 19], ['stalagbat', 19], ['gemlin', 20], ['rumblepede', 20]],
+      team: [['glimmole', 20], ['stalagbat', 20], ['gemlin', 21], ['rumblepede', 22]],
       hello: ['Dusty\'s the name, mining\'s the game. The tunnel out to the Desert is through here.', 'But the sand\'s been blowing in something fierce. Only a real trainer gets through.'],
       intro: 'Dig in, team!', winText: 'Well, I\'ll be. You\'re a gem!', loseText: 'Caved in! Rest up and come back down.',
       lore: ['Down here the crystals glow when the moon is full. They\'ve been going dark, one by one.', 'We found old carvings in the deep tunnels: a wolf, a crescent moon, and an altar far to the north, in the ruins.'],
@@ -97,7 +97,7 @@ var CC = window.CC || (window.CC = {});
     },
     desert: {
       name: 'Safi', art: 'safi', flag: 'trialDesert', charm: 'Desert Trail Charm', coins: 1200,
-      team: [['cactoad', 23], ['dunefox', 23], ['scarabolt', 24], ['duneserpent', 24]],
+      team: [['cactoad', 24], ['dunefox', 24], ['scarabolt', 25], ['duneserpent', 26]],
       hello: ['Peace, traveler. I am Safi. My people cross these dunes by the stars.', 'The sandstorm guards the mountain path. I can calm it, for one who proves themselves.'],
       intro: 'The desert tests everyone. Now it tests you!', winText: 'The stars were right about you.', loseText: 'The sand swallows the unready. Rest, and return.',
       lore: ['One star is missing from the sky. We call it the Moon\'s Eye. My grandmother said it rests in the crest of the moon\'s guardian.', 'If the guardian is hurting, so is its star. That is why the nights grow dark.'],
@@ -105,7 +105,7 @@ var CC = window.CC || (window.CC = {});
     },
     snow: {
       name: 'Frida', art: 'frida', flag: 'trialSnow', charm: 'Snow Trail Charm', coins: 1400,
-      team: [['sleetle', 27], ['yetiny', 27], ['pengarch', 28], ['glacistoat', 28]],
+      team: [['sleetle', 27], ['yetiny', 28], ['pengarch', 28], ['glacistoat', 29]],
       hello: ['Brr! Frida, explorer. I\'ve mapped every peak in the north.', 'The ice wall at the pass only melts for trainers who can take the cold.'],
       intro: 'Let\'s see if you can keep your cool!', winText: 'You thawed my whole team!', loseText: 'Too chilly for you yet. Warm up at the outpost.',
       lore: ['From the summit you can see the old ruins. At night a shadow sits over them, darker than the sky around it.', 'Something up there is hurting. I could feel it in the wind.'],
@@ -113,7 +113,7 @@ var CC = window.CC || (window.CC = {});
     },
     swamp: {
       name: 'Granny Moss', art: 'moss', flag: 'trialSwamp', charm: 'Swamp Trail Charm', coins: 1600,
-      team: [['lilypadle', 31], ['mireling', 31], ['wispeel', 32], ['mudgatron', 32]],
+      team: [['lilypadle', 31], ['mireling', 32], ['wispeel', 33], ['mudgatron', 34]],
       hello: ['Oh, a visitor! Sit, sit. I\'m Granny Moss.', 'The boardwalk to the ruins broke in a storm. I\'ll mend it for you, but first, a little battle. I\'m old, not done!'],
       intro: 'Don\'t go easy on Granny now!', winText: 'Oh my! Just like the heroes in my stories.', loseText: 'Heh heh. Granny still has it. Try again, dearie.',
       lore: ['I\'ve seen this once before, when I was a tiny girl. The moon\'s guardian grew tired, and the shadow crept into it.', 'Someone has to calm it, not beat it. Battle it with a kind heart, and the light comes back. Oh, and look for the Moon Shard in my swamp.'],
@@ -121,7 +121,7 @@ var CC = window.CC || (window.CC = {});
     },
     ruins: {
       name: 'Corvin', art: 'corvin', flag: 'trialRuins', charm: 'Night Trail Charm', coins: 2000,
-      team: [['bonepanther', 36], ['pebbleton', 36], ['beaconwraith', 37], ['duskfang', 37]],
+      team: [['bonepanther', 33], ['pebbleton', 34], ['beaconwraith', 35], ['duskfang', 36]],
       hello: ['Halt. I am Corvin, the night watchman of these ruins.', 'Beyond this rune gate is the Moon Altar. Only the strongest may pass. Prove it.'],
       intro: 'The night is long. Let\'s begin.', winText: 'Hm. You\'re the one we\'ve been waiting for.', loseText: 'Not tonight. Rest and return.',
       lore: ['I watch the altar every night. Lunarion is there, but it\'s not itself. Dimmed, angry, confused. It lets no one near.', 'Take this. The ancients made it for this night. And go gently.'],
@@ -202,7 +202,7 @@ var CC = window.CC || (window.CC = {});
     ],
     snow: [
       { id: 'snow-1', art: 'trainer-9', name: 'Skier Lena', x: 8, y: 18, dir: 'left', sight: 3, team: [['pengloo', 24], ['sleetle', 24]],
-        intro: 'Coming through! Whoa, battle!', win: 'Wipeout!', after: 'Pengloo slides faster than I ski.' },
+        intro: 'Coming through! Whoa, battle!', win: 'Wipeout!', after: 'Pengarch slides faster than I ski.' },
       { id: 'snow-2', art: 'trainer-10', name: 'Mountaineer Hal', x: 14, y: 12, dir: 'right', sight: 3, team: [['frostoat', 25], ['yetiny', 25], ['pengloo', 26]],
         intro: 'Every peak, every battle. Let\'s climb!', win: 'I\'ll need a rest after that.', after: 'From the top, the ruins look so dark at night.' },
     ],
@@ -213,9 +213,9 @@ var CC = window.CC || (window.CC = {});
         intro: 'My lantern sees ghosts. And you!', win: 'Spooked out...', after: 'The ghosts in the ruins are restless. Something\'s wrong up there.' },
     ],
     ruins: [
-      { id: 'ruins-1', art: 'trainer-13', name: 'Scholar Edith', x: 7, y: 22, dir: 'left', sight: 3, team: [['pebbleton', 32], ['wispkin', 32], ['bonecat', 33]],
+      { id: 'ruins-1', art: 'trainer-13', name: 'Scholar Edith', x: 7, y: 22, dir: 'left', sight: 3, team: [['pebbleton', 33], ['wispkin', 33], ['bonecat', 34]],
         intro: 'These runes say: "battle the traveler." I think. Let\'s go!', win: 'I mistranslated that.', after: 'The runes speak of a guardian who keeps the moon alight.' },
-      { id: 'ruins-2', art: 'trainer-14', name: 'Moon Priestess Selene', x: 15, y: 13, dir: 'left', sight: 3, team: [['moonlynx', 33], ['wispkin', 33], ['fangling', 34]],
+      { id: 'ruins-2', art: 'trainer-14', name: 'Moon Priestess Selene', x: 15, y: 13, dir: 'left', sight: 3, team: [['moonlynx', 34], ['wispkin', 34], ['fangling', 35]],
         intro: 'The moon watches us. Let it see you battle.', win: 'The moon has chosen well.', after: 'Lunarion is in pain. Please, be gentle with it.' },
     ],
   };
@@ -229,6 +229,7 @@ var CC = window.CC || (window.CC = {});
   }
   // called after every step: does a trainer who hasn't battled you see you?
   CC.trainerSight = function (mapId, x, y) {
+    if (CC.firstHealthy() < 0) return null; // nobody can battle: trainers let you walk by
     var list = CC.NPCS[mapId] || [];
     for (var i = 0; i < list.length; i++) {
       var n = list[i];
@@ -252,11 +253,13 @@ var CC = window.CC || (window.CC = {});
   };
 
   // ---------- Juniper, your rival ----------
-  // her team covers your starter's weaknesses; it grows with each meeting
+  // her team covers your starter's weaknesses; it grows with each meeting, level with the guide you just beat or a
+  // little above (team() grows each creature into its form at its level: at the Spire, meeting 6, her Bumblazer,
+  // Timberowl and Rampacrab come as Queenbuzz, Oakenowl and Paladcrab)
   var RIVAL_TEAMS = {
-    drizzlon: { 2: [['bumblop', 11], ['mossback', 12]], 3: [['bumblop', 20], ['owlcorn', 21], ['thornshell', 22]], 4: [['bumblazer', 30], ['prismole', 30], ['timberowl', 31], ['elderoak', 32]], 5: [['bumblazer', 38], ['prismole', 38], ['timberowl', 39], ['elderoak', 40]], 6: [['bumblazer', 48], ['prismole', 48], ['timberowl', 49], ['elderoak', 50]] },
-    mossback: { 2: [['frostoat', 11], ['embroak', 12]], 3: [['frostoat', 20], ['magmite', 21], ['cinderfrog', 22]], 4: [['glacistoat', 30], ['volcaneetle', 30], ['sunmane', 31], ['infernotoad', 32]], 5: [['glacistoat', 38], ['volcaneetle', 38], ['sunmane', 39], ['infernotoad', 40]], 6: [['glacistoat', 48], ['volcaneetle', 48], ['sunmane', 49], ['infernotoad', 50]] },
-    embroak: { 2: [['crabbit', 11], ['drizzlon', 12]], 3: [['rampacrab', 20], ['koiling', 21], ['rapidrake', 22]], 4: [['rampacrab', 30], ['radimoth', 30], ['koidrake', 31], ['tsunadrake', 32]], 5: [['rampacrab', 38], ['radimoth', 38], ['koidrake', 39], ['tsunadrake', 40]], 6: [['rampacrab', 48], ['radimoth', 48], ['koidrake', 49], ['tsunadrake', 50]] },
+    drizzlon: { 2: [['bumblop', 9], ['mossback', 10]], 3: [['bumblop', 17], ['owlcorn', 18], ['thornshell', 20]], 4: [['bumblazer', 24], ['prismole', 24], ['timberowl', 25], ['thornshell', 26]], 5: [['bumblazer', 34], ['prismole', 34], ['timberowl', 35], ['elderoak', 36]], 6: [['bumblazer', 47], ['prismole', 47], ['timberowl', 48], ['elderoak', 50]] },
+    mossback: { 2: [['frostoat', 9], ['embroak', 10]], 3: [['frostoat', 17], ['magmite', 18], ['cinderfrog', 20]], 4: [['glacistoat', 24], ['sunmane', 24], ['volcaneetle', 26], ['cinderfrog', 26]], 5: [['glacistoat', 34], ['volcaneetle', 34], ['sunmane', 35], ['infernotoad', 36]], 6: [['glacistoat', 47], ['volcaneetle', 47], ['sunmane', 48], ['infernotoad', 50]] },
+    embroak: { 2: [['crabbit', 9], ['drizzlon', 10]], 3: [['crabbit', 17], ['koiling', 18], ['rapidrake', 20]], 4: [['rampacrab', 24], ['radimoth', 24], ['koidrake', 25], ['rapidrake', 26]], 5: [['rampacrab', 34], ['radimoth', 34], ['koidrake', 35], ['tsunadrake', 36]], 6: [['rampacrab', 47], ['radimoth', 47], ['koidrake', 48], ['tsunadrake', 50]] },
   };
   var WEAK = { drizzlon: 'Plant and Bolt', mossback: 'Fire and Frost', embroak: 'Water and Lumen' };
   function rivalLines(no) {
@@ -321,7 +324,7 @@ var CC = window.CC || (window.CC = {});
   // a few region props to dress each map (walk-through unless solid)
   var PROPS = {
     forest: [{ x: 1, y: 4, img: 'props/rocks-and-bushes-12', h: 14 }, { x: 20, y: 9, img: 'props/rocks-and-bushes-11', h: 13 }, { x: 8, y: 22, img: 'props/rocks-and-bushes-13', h: 13 }],
-    water: [{ x: 7, y: 6, img: 'props/water-props-3', h: 11, solid: false, dy: 2 }, { x: 22, y: 14, img: 'props/rocks-and-bushes-6', h: 12 }, { x: 20, y: 24, img: 'props/rocks-and-bushes-7', h: 12 }],
+    water: [{ x: 7, y: 6, img: 'props/water-props-3', h: 11, solid: false, dy: 2 }, { x: 22, y: 14, img: 'props/rocks-and-bushes-6', h: 12 }, { x: 22, y: 24, img: 'props/rocks-and-bushes-7', h: 12 }],
     cave: [{ x: 15, y: 3, img: 'props/cave-and-ruins-props-1', h: 18 }, { x: 4, y: 21, img: 'props/cave-and-ruins-props-3', h: 14 }, { x: 15, y: 16, img: 'props/cave-and-ruins-props-2', h: 18 }],
     desert: [{ x: 19, y: 2, img: 'props/trees-5', h: 24 }, { x: 4, y: 9, img: 'props/rocks-and-bushes-3', h: 12 }, { x: 21, y: 22, img: 'props/rocks-and-bushes-13', h: 12, dx: 0 }],
     snow: [{ x: 21, y: 6, img: 'props/rocks-and-bushes-4', h: 12 }, { x: 2, y: 16, img: 'props/rocks-and-bushes-10', h: 13 }],
@@ -364,14 +367,15 @@ var CC = window.CC || (window.CC = {});
     });
   });
   Object.keys(RIVAL_SPOTS).forEach(function (k) {
-    CC.NPCS[k].push({ id: 'rival', x: 0, y: 0, art: 'juniper', sheet: 'juniper', h: 26, dir: 'down', show: false,
-      when: function () { return this.show; }, talk: function () {} });
     var no = RIVAL_SPOTS[k].no;
+    // while she's still standing there after a battle, she says her goodbye again
+    CC.NPCS[k].push({ id: 'rival', x: 0, y: 0, art: 'juniper', sheet: 'juniper', h: 26, dir: 'down', show: false,
+      when: function () { return this.show; }, talk: function () { var bye = rivalLines(no).bye; return CC.talk('Juniper', bye.slice(-1)); } });
     var prev = CC.TRIGGERS[k];
     CC.TRIGGERS[k] = function (x, y) {
       var t = prev && prev(x, y);
       if (t) return t;
-      if (!F()['juniper' + no] && RIVAL_SPOTS[k].step(x, y) && (no !== 5 || F().trialRuins)) return function () { return rivalScene(k); };
+      if (!F()['juniper' + no] && CC.firstHealthy() >= 0 && RIVAL_SPOTS[k].step(x, y) && (no !== 5 || F().trialRuins)) return function () { return rivalScene(k); };
       return null;
     };
   });
@@ -482,6 +486,13 @@ var CC = window.CC || (window.CC = {});
     CC.saveGame();
   }
   CC.finale = finale;
+  // the altar itself (A on it): once the moon is whole, its light leaves a little Moon Shard there once a day, so a
+  // shard used up never locks a Moon Shard evolution away. The finale starts from the steps, not from here.
+  CC.MAPS.ruins.landmarkTalk = async function () {
+    if (!F().moonRestored) { await CC.say('The old Moon Altar. Its runes are cold, and above it the moon is only a thin, pale sliver.'); return; }
+    await CC.daily('moonaltar', 'moonshard', 'Moonlight pools on the altar and leaves a little Moon Shard behind. You got a Moon Shard!',
+      'The Moon Altar glows softly in the moonlight. Maybe the moon will leave another gift tomorrow.');
+  };
   function flashWhite() {
     var k = 0, scr = { name: 'flash', update: function () {}, draw: function () { CC.g.globalAlpha = Math.sin(k * Math.PI); CC.rect(0, 0, CC.W, CC.H, '#ffffff'); CC.g.globalAlpha = 1; } };
     CC.push(scr);

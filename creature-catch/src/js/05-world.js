@@ -666,7 +666,9 @@ CC.world = {
     if (CC.tileSolid(this.map, t)) return true;
     if (this.buildingAt(x, y)) return true;
     if ((this.map.decor || []).some(function (d) { return d.x === x && d.y === y && d.solid !== false; })) return true;
-    return !!this.npcAt(x, y);
+    if (this.npcAt(x, y)) return true;
+    // a person part-way through a step has the tile they're stepping into too
+    return this.npcs.some(function (n) { return n.mv && (!n.when || n.when()) && n.mv.tx === x && n.mv.ty === y; });
   },
   buildingAt: function (x, y) {
     return this.map.buildings.find(function (b) { return x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h; });
@@ -706,7 +708,8 @@ CC.world = {
       var dx = Math.sign(goal[0] - n.x), dy = dx ? 0 : Math.sign(goal[1] - n.y);
       var nx = n.x + dx, ny = n.y + dy;
       n.dir = dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
-      if ((dx || dy) && !(nx === s.x && ny === s.y) && !self.solidAt(nx, ny)) { n.mv = { fx: n.x, fy: n.y, tx: nx, ty: ny, k: 0 }; n.wait = 0.05 + (n.leg === 0 ? 0 : 0); }
+      var into = self.moving && nx === self.moving.tx && ny === self.moving.ty; // the tile you're stepping into
+      if ((dx || dy) && !(nx === s.x && ny === s.y) && !into && !self.solidAt(nx, ny)) { n.mv = { fx: n.x, fy: n.y, tx: nx, ty: ny, k: 0 }; n.wait = 0.05 + (n.leg === 0 ? 0 : 0); }
     });
     if (this.busy) return;
     if (this.moving) {
@@ -1205,7 +1208,7 @@ CC.wildEncounter = async function (key) {
   w.hop = null;
   var wild = CC.mon.make(roll.id, roll.lv);
   if (shiny) wild.shiny = true;
-  await CC.startBattle({ wild: wild });
+  await CC.fight({ wild: wild }); // losing sends you back to rest
 };
 
 // bars sweep in from both sides, flashing, then the battle starts
@@ -1244,13 +1247,15 @@ CC.fieldMenu = async function () {
     if (c < 0 || pick === 'Close') return;
     start = c;
     if (pick === 'Party') await CC.partyScreen('field');
-    if (pick === 'Bag') await CC.bagScreen();
+    if (pick === 'Bag' && (await CC.bagScreen()) === 'flew') return; // the Wooden Whistle flew you somewhere
     if (pick === 'Log') await CC.creatureLog();
     if (pick === 'Vault') await CC.vaultScreen();
     if (pick === 'Options') await CC.optionsScreen();
     if (pick === 'Fly') { await CC.flyScreen(); return; }
     if (pick === 'Save') {
-      var seen = Object.keys(CC.state.seen).length, caught = Object.keys(CC.state.caught).length;
+      // the Creature Log's counts: real creatures only
+      var st = CC.state, seen = CC.CREATURE_ORDER.filter(function (id) { return st.seen[id] || st.caught[id]; }).length,
+        caught = CC.CREATURE_ORDER.filter(function (id) { return st.caught[id]; }).length;
       if (await CC.yesNo('Save to File ' + CC.slot + '? (Creature Log: ' + caught + ' caught, ' + seen + ' seen. Coins: ' + CC.state.coins + '.)')) {
         if (CC.saveGame()) { CC.sfx('select'); await CC.say('Your game is saved.'); } else await CC.say('This browser won\'t let the game save, sorry.');
       }

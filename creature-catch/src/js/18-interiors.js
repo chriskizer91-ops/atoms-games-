@@ -61,15 +61,20 @@ var CC = window.CC || (window.CC = {});
     piece(3, 2, 'inn-8', 18, { talk: function () { CC.sfx('select'); return say('You plink out a little tune on the piano. Rosa hums along.'); } }),
     piece(10, 2, 'inn-6', 22, { talk: 'Stairs up to the guest rooms. Rosa keeps them spotless.' }),
     onWall(8, 'inn-5', 14, 'The notice board: "Boat to Lantern Isle: ask Fisher Gus." "Copperbell Bakery: Copper Rolls, fresh daily!" "Lost: one Puffmunk\'s stash. Finder keeps it."'),
-    piece(2, 5, 'inn-2', 14), piece(9, 5, 'inn-10', 14), piece(10, 6, 'inn-7', 15), piece(1, 6, 'furn-5', 15),
+    piece(2, 5, 'inn-2', 14), piece(9, 5, 'inn-3', 20, { talk: 'A guest bed, fresh and turned down. Rosa has put a little mint on the pillow.' }), piece(10, 6, 'inn-7', 15), piece(1, 6, 'furn-5', 15),
   ], { rug: [4, 4, 4, 2] });
   CC.DOORS.inn = 'inn-in';
   CC.NPCS.village = CC.NPCS.village.filter(function (n) { return n.look !== 'rosa'; });
   CC.NPCS['inn-in'] = [{ x: 5, y: 2, look: 'rosa', art: 'rosa', h: 25, dir: 'down', talk: innkeeper }];
   var REST_COST = 30;
+  // It's night by the game clock, whatever Options shows ("Always day" only changes the look). This replaces the
+  // CC.isNight in 17-expansion.js, which went by the drawn light: night creatures, the firefly stump, the Dusk Cube
+  // and resting "Until night" here work with Always day too.
+  CC.isNight = function () { return CC.clockLight().night >= 0.4; };
   async function innkeeper() {
     var line = CC.linesFor({ early: ['Welcome to the Inn! Need a rest? I\'ll wake you at sunrise, or at nightfall, whichever you like.', 'Some creatures only come out after dark. A night\'s rest here is the easy way to meet them.'] });
-    await say(line[(innkeeper.n = (innkeeper.n || 0) + 1) % line.length], 'Rosa');
+    var n = innkeeper.n || 0; innkeeper.n = n + 1; // the welcome first
+    await say(line[n % line.length], 'Rosa');
     var c = await CC.ask('Rest at the Inn? (' + REST_COST + ' coins, and your creatures are healed)', ['Until morning', 'Until night', 'No thanks']);
     if (c === 2 || c < 0) { await say('Come back any time, dear.', 'Rosa'); return; }
     if (CC.state.coins < REST_COST) { await say('Oh, you\'re a little short. Next time, then!', 'Rosa'); return; }
@@ -80,10 +85,9 @@ var CC = window.CC || (window.CC = {});
     CC.state.clockShift = (((CC.state.clockShift || 0) + ((want - now + 24) % 24)) % 24 + 24) % 24;
     CC.state.lastHeal = { map: 'inn-in', x: 5, y: 5 };
     await CC.sleep(1.2); CC.unfade();
-    var day = CC.opts.daynight === 'clock';
     await say(c === 0 ? 'You slept until morning. The sun is up, and your creatures are full of energy!'
-      : 'You rested until nightfall. Your creatures are full of energy!' + (day ? ' The night creatures will be out.' : ''));
-    if (!day) await say('(Day and night is set to "Always day" in Options, so it still looks like day.)');
+      : 'You rested until nightfall. Your creatures are full of energy! The night creatures will be out.');
+    if (c === 1 && CC.opts.daynight !== 'clock') await say('(Day and night is set to "Always day" in Options, so it still looks like day.)');
     CC.saveGame();
   }
 

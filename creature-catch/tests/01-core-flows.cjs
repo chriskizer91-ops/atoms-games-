@@ -1,4 +1,5 @@
-// The core loop: starter, a catch, the first trial, evolving, a blackout and saving.
+// The core loop: starter, a catch, the first trial, evolving, losing a wild battle in the tall grass (you wake up
+// healed where you last rested) and saving.
 //   node tests/01-core-flows.cjs (from the creature-catch folder, after node tools/build.mjs; tests/README.md)
 const { GAME, GUIDE, OUT, shotPath } = require('./lib.cjs');
 const { chromium } = require('playwright');
@@ -7,6 +8,7 @@ const path = require('path');
   const out = process.argv[2] || OUT;
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 720, height: 480 } }); const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + e.stack)); p.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
+  const fails = []; const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (!ok) fails.push(what); };
   await p.goto(GAME);
   let n = 0; const shot = async (name) => { await p.screenshot({ path: `${out}/01-${String(++n).padStart(2, '0')}-${name}.png` }); };
   const tap = async (k) => { await p.keyboard.down(k); await p.waitForTimeout(40); await p.keyboard.up(k); await p.waitForTimeout(40); };
@@ -74,10 +76,19 @@ const path = require('path');
   for (let i = 0; i < 6; i++) { await tap('KeyX'); await p.waitForTimeout(150); }
   await play('attack', idle, 6000);
 
-  // ---- S5: lose a wild battle -> back at the hut
-  await p.evaluate(() => { const C = __cc; const m = C.mon.make('hopsprout', 2); m.hp = 1; C.state.party = [m]; C.state.lastHeal = { map: 'grassland', x: 18, y: 12 }; C.world.enter('meadow', 3, 6, 'up'); C.world.run(() => C.fight({ wild: C.mon.make('pebblepup', 7) })); });
+  // ---- S5: lose a wild battle in the tall grass (the real encounter) -> back where you last rested, healed
+  await p.evaluate(() => {
+    const C = __cc; const m = C.mon.make('hopsprout', 2); m.hp = 1; C.state.party = [m]; C.state.lastHeal = { map: 'outpost-in', x: 4, y: 4 };
+    window.__said = []; const say = C.say; C.say = function (t) { window.__said.push(String(t)); return say.apply(this, arguments); };
+    const roll = C.rollSpawn; C.rollSpawn = function () { C.rollSpawn = roll; return { id: 'pebblepup', lv: 9 }; }; // a sure loss
+    C.world.enter('meadow', 3, 6, 'up'); C.world.run(() => C.wildEncounter('meadow'));
+  });
   await play('attack', idle, 40000);
-  console.log('S5 blackout', JSON.stringify(await p.evaluate(() => ({ map: __cc.state.map, x: __cc.state.x, y: __cc.state.y, hp: __cc.state.party[0].hp }))));
+  const s5 = await p.evaluate(() => ({ map: __cc.state.map, x: __cc.state.x, y: __cc.state.y, hp: __cc.state.party[0].hp, max: __cc.mon.maxHp(__cc.state.party[0]), said: window.__said.slice(-2) }));
+  console.log('S5 blackout', JSON.stringify(s5));
+  check(s5.map === 'outpost-in' && s5.x === 4 && s5.y === 4, 'losing in the tall grass wakes you where you last rested (the Grassland Outpost)');
+  check(s5.hp === s5.max, 'your creatures are healed');
+  check(s5.said.some((t) => /You hurried back to the Grassland Outpost/.test(t)), 'the line says where you went');
   await shot('after-blackout');
 
   // ---- S6: field menu, save, reload, continue
@@ -89,6 +100,8 @@ const path = require('path');
   await p.reload(); await p.waitForTimeout(1000); await shot('title-continue'); await tap('KeyZ'); await p.waitForTimeout(500); await tap('KeyZ'); await p.waitForTimeout(300); await tap('KeyZ'); await p.waitForTimeout(600);
   console.log('S6 save', saved, JSON.stringify(await p.evaluate(() => ({ map: __cc.state.map, party: __cc.state.party.map(m => m.id), top: __cc.top() === __cc.world }))));
   await shot('continued');
+  console.log(fails.length ? fails.length + ' checks failed' : 'all checks passed');
+  if (fails.length) errs.push('FAILED CHECKS: ' + fails.join('; '));
   console.log(errs.join('\n') || 'no errors');
   await b.close();
 })();

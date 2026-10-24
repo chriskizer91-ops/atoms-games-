@@ -28,7 +28,7 @@ const { chromium } = require('playwright');
   // 4: the bottle; 5: Wren at the top of the lighthouse
   await deco('cove', 11, 11); await npc('isle-light-3', 'Keeper Wren'); console.log('p4 p5', await pages());
   // 6: the three museum plaques, then Professor Hollis
-  await npc('cb-museum-in', 'Professor Hollis'); for (const x of [2, 5, 8]) await deco('cb-museum-in', x, 1); await npc('cb-museum-in', 'Professor Hollis'); console.log('p6', await pages());
+  await npc('cb-museum-in', 'hollis'); for (const x of [2, 5, 8]) await deco('cb-museum-in', x, 1); await npc('cb-museum-in', 'hollis'); console.log('p6', await pages());
   // 7: the lunchbox; 8: Auntie Yuzu (first she feeds you)
   await deco('mine', 2, 13); await npc('springs-inn-in', 'Auntie Yuzu'); await npc('springs-inn-in', 'Auntie Yuzu'); console.log('p7 p8', await pages(), 'soup', await p.evaluate(() => __cc.state.bag.warmsoup));
   // Willow's rewards for 4 and 8 pages

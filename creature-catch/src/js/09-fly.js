@@ -29,12 +29,17 @@ CC.FLY_SPOTS = [
   { name: 'Hollow Deep', map: 'hollow', x: 168, y: 56, land: [11, 4], from: 'Glimmer Mine' },
 ];
 
+// outdoor maps with no Fly spot of their own, and the spot they sit by (the Spire's only way out is the Night Ruins)
+var FLY_NEAR = { spire: 'ruins' };
+
 CC.flyScreen = function () {
   return new Promise(function (resolve) {
     var s = CC.state, visited = s.visited || {};
+    // here: your spot (-1 on a map with no spot of its own, like the Spire); the cursor and the flight start from
+    // the nearest spot then
     var here = CC.FLY_SPOTS.findIndex(function (p) { return p.map === s.map; });
-    if (here < 0) here = 0;
-    var sel = here, phase = 'pick', t = 0, from = CC.FLY_SPOTS[here], to = null, note = null;
+    var nearMap = FLY_NEAR[s.map] || 'village', near = here >= 0 ? here : Math.max(0, CC.FLY_SPOTS.findIndex(function (p) { return p.map === nearMap; }));
+    var sel = near, phase = 'pick', t = 0, from = CC.FLY_SPOTS[near], to = null, note = null;
     var canGo = function (p) { return s.flags.flyAll || (p.map && visited[p.map]); };
     var scr = {
       name: 'fly', opaque: true,

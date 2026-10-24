@@ -177,16 +177,25 @@ var CC = window.CC || (window.CC = {});
     });
   };
 
-  // ---------- day and night (by the clock, unless Options says always day) ----------
+  // ---------- day and night ----------
+  // The game clock says whether it's day or night: night creatures, the firefly stump and the Dusk Cube follow it.
+  // Options "Always day" only changes the look: the world is drawn in daylight whatever the clock says.
   // the hour of the day: the real clock, wound on by state.clockShift hours (resting at an inn moves it)
   CC.gameHour = function () {
     var d = new Date(), shift = (CC.state && CC.state.clockShift) || 0;
     return ((d.getHours() + d.getMinutes() / 60 + shift) % 24 + 24) % 24;
   };
-  // 0 = full day, 1 = full night; dusk and dawn fade between with a warm tint
+  // the light the world is drawn in: the clock's, or full day when Options says always day (a NIGHT, DAY or DUSK
+  // code still shows)
   CC.daylight = function () {
+    if (!CC.dev.time && CC.opts.daynight !== 'clock') return { night: 0, warm: 0 };
+    return CC.clockLight();
+  };
+  // the light by the game clock (a NIGHT, DAY or DUSK code first): 0 = full day, 1 = full night; dusk and dawn fade
+  // between with a warm tint. It's night (CC.isNight) from 0.4 on: about 18:07 to 06:06.
+  CC.clockLight = function () {
     var forced = CC.dev.time;
-    if (forced === 'day' || (!forced && CC.opts.daynight !== 'clock')) return { night: 0, warm: 0 };
+    if (forced === 'day') return { night: 0, warm: 0 };
     if (forced === 'night') return { night: 1, warm: 0 };
     if (forced === 'dusk') return { night: 0.45, warm: 1 };
     var h = CC.gameHour();

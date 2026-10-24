@@ -11,6 +11,23 @@ function creatureId(word) {
   if (CC.CREATURES[w]) return w;
   return CC.CREATURE_ORDER.find(function (id) { return id.indexOf(w) === 0; }) || null;
 }
+// the creature named by the words from a[i] on, and how many words its name took: a name with spaces can be typed
+// with them (CLOVE TASTICAL) or as one word (CLOVETASTICAL). 3, 2, then 1 words must match an id or a name exactly
+// (letters only, so ? POP is ? Pop); a number is never part of a name. Then one word's start (TUFT) will do.
+function creatureAt(a, i) {
+  var letters = function (s) { return s.toLowerCase().replace(/[^a-z]/g, ''); };
+  for (var n = 3; n >= 1; n--) {
+    var words = a.slice(i, i + n);
+    if (words.length < n || words.some(function (w) { return /^\d+$/.test(w); })) continue;
+    var want = letters(words.join(''));
+    if (!want) continue;
+    if (CC.CREATURES[want]) return { id: want, n: n };
+    var hit = CC.CREATURE_ORDER.find(function (id) { return letters(CC.CREATURES[id].name) === want; });
+    if (hit) return { id: hit, n: n };
+  }
+  var id = creatureId(a[i]);
+  return id ? { id: id, n: 1 } : null;
+}
 function num(word, lo, hi, dflt) {
   var n = parseInt(word, 10);
   return isNaN(n) ? dflt : CC.clamp(n, lo, hi);
@@ -62,14 +79,15 @@ CC.CODES = [
     return 'Party set to Lv ' + lv + '.';
   } },
   { words: ['GIVE'], needsGame: true, help: 'GIVE TUFTAIL 12: add a creature (level optional)', run: function (a) {
-    var id = creatureId(a[0]); if (!id) return 'No creature called "' + (a[0] || '') + '".';
-    var m = CC.mon.make(id, num(a[1], 1, 50, 5)); var where = CC.addCreature(m);
+    var c = creatureAt(a, 0); if (!c) return 'No creature called "' + (a[0] || '') + '".';
+    var id = c.id, m = CC.mon.make(id, num(a[c.n], 1, 50, 5)); var where = CC.addCreature(m);
     return CC.CREATURES[id].name + ' Lv ' + m.lv + ' joined your ' + (where === 'party' ? 'party.' : 'Vault.');
   } },
   { words: ['TEAM'], needsGame: true, help: 'TEAM EMBROAK 12 TUFTAIL 10: replace your party (up to 4)', run: function (a) {
     var team = [];
     for (var i = 0; i < a.length && team.length < 4; i++) {
-      var id = creatureId(a[i]); if (!id) continue;
+      var c = creatureAt(a, i); if (!c) continue;
+      var id = c.id; i += c.n - 1;
       var lv = num(a[i + 1], 1, 50, null); if (lv) i++;
       team.push(CC.mon.make(id, lv || 10)); CC.markCaught(id);
     }
@@ -130,9 +148,9 @@ CC.CODES = [
     return 'Off to ' + CC.MAPS[map].name + '.';
   } },
   { words: ['WILD'], needsGame: true, help: 'WILD DANDYLION 6: battle a wild creature right now', run: function (a) {
-    var id = creatureId(a[0]); if (!id) return 'No creature called "' + (a[0] || '') + '".';
+    var c = creatureAt(a, 0); if (!c) return 'No creature called "' + (a[0] || '') + '".';
     if (CC.firstHealthy() < 0) return 'You need a creature that can fight.';
-    var lv = num(a[1], 1, 50, 5);
+    var id = c.id, lv = num(a[c.n], 1, 50, 5);
     CC.dev.queue = function () { var m = CC.mon.make(id, lv); if (CC.dev.shinyNext) { m.shiny = true; CC.dev.shinyNext = false; } return CC.fight({ wild: m }); };
     return 'A wild ' + CC.CREATURES[id].name + ' is coming...';
   } },
