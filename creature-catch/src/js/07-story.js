@@ -291,7 +291,7 @@ function starterSelect() {
           if (on) { g.fillStyle = 'rgba(255,240,180,0.25)'; g.beginPath(); g.ellipse(x, 88, 30, 10, 0, 0, Math.PI * 2); g.fill(); }
           CC.drawSprite(CC.creatureSprite(id), x, 90 + (on ? Math.abs(Math.sin(CC.time * 6)) * -4 : 0), { scale: on ? 0.9 : 0.7, sy: 1 + Math.sin(CC.time * 2.6 + i) * 0.03, id: id });
           CC.text(c.name, x, 96, on ? '#fff4c0' : '#d8c8b0', { align: 'center', shadow: '#1a2a12' });
-          CC.typeBadge(c.types[0], x - 16, 110);
+          CC.typeBadge(c.types[0], x - CC.typeBadgeWidth(c.types[0]) / 2, 110);
         });
         CC.box(0, 126, 240, 34);
         var id = STARTERS[sel];

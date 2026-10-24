@@ -361,6 +361,6 @@ CC.saveInfo = function (n) {
   if (!s) return null;
   var charms = ['trial1', 'trialForest', 'trialWater', 'trialCave', 'trialDesert', 'trialSnow', 'trialSwamp', 'trialRuins'].filter(function (k) { return s.flags && s.flags[k]; }).length;
   var lead = s.party && s.party[0];
-  return { look: s.look || 'player-a', lead: lead && lead.id, leadLv: lead && lead.lv, caught: Object.keys(s.caught || {}).length,
+  return { look: s.look || 'player-a', lead: lead && lead.id, leadLv: lead && lead.lv, caught: Object.keys(s.caught || {}).filter(function (id) { return CC.CREATURES && CC.CREATURES[id]; }).length,
     charms: charms, time: s.playTime || 0, place: (CC.MAPS && CC.MAPS[s.map] && CC.MAPS[s.map].name) || '', moon: !!(s.flags && s.flags.moonRestored) };
 };

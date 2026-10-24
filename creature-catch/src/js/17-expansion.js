@@ -12,8 +12,10 @@ var CC = window.CC || (window.CC = {});
     var f = F();
     return f.balance ? 'final' : f.moonRestored ? 'after' : f.trialCave ? 'mid' : 'early';
   };
-  // dusk counts as night: night creatures come out as the light goes
-  CC.isNight = function () { return CC.daylight().night >= 0.4; };
+  // dusk counts as night: night creatures come out as the light goes. It goes by the game clock, whatever Options
+  // shows ("Always day" only changes the look), so night creatures, the firefly stump, the Dusk Cube and resting
+  // "Until night" at the Inn work with Always day too.
+  CC.isNight = function () { return CC.clockLight().night >= 0.4; };
 
   // ---------- people who say one line each time you talk, the next line next time ----------
   // talk: { early: [...], mid: [...], after: [...], final: [...], night: [...], lead: { Pebblepup: '...', Fire: '...' } }

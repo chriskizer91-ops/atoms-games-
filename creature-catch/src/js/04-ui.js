@@ -148,7 +148,7 @@ CC.typeBadge = function (type, x, y) {
   CC.text(type.toUpperCase(), x + 3 + iw, y + 1, '#ffffff', { size: 8, shadow: c[2] });
   return w;
 };
-var STATUS_TAG = { burn: ['BRN', '#e0582a'], freeze: ['FRZ', '#5ab0e0'], shock: ['SHK', '#d8b010'], poison: ['PSN', '#9a4ac8'], sleep: ['SLP', '#8a8aa0'] };
+var STATUS_TAG = { burn: ['BRN', '#e0582a'], freeze: ['ICE', '#5ab0e0'], shock: ['SHK', '#d8b010'], poison: ['PSN', '#9a4ac8'], sleep: ['SLP', '#8a8aa0'] };
 CC.statusTag = function (st, x, y) {
   if (!st) return;
   var t = STATUS_TAG[st]; CC.rect(x, y, 20, 9, t[1]); CC.text(t[0], x + 2, y, '#ffffff', { size: 8, shadow: false });

@@ -109,7 +109,8 @@ var CC = window.CC || (window.CC = {});
           CC.textNum('No. ' + String(sel + 1).padStart(3, '0'), 65, 14, faint, { size: 8, align: 'center' }); // after the picture, so a tall one doesn't hide it
           // the right page: the list, one creature to a ruled line
           var top = Math.floor(sel / PER_PAGE) * PER_PAGE;
-          CC.textNum('Seen ' + seenCount + '   Caught ' + caughtCount, 166, 124, faint, { size: 8, align: 'center' });
+          if (CC.img('ui/creature-log-book')) CC.rect(199, 117, 28, 29, '#efdcb8'); // plain paper over the art's paw-print doodle, for the counts
+          CC.textNum('Seen ' + seenCount + '  Caught ' + caughtCount, 176, 124, faint, { size: 8, align: 'center' }); // the right page is 130 to 228
           for (var i = 0; i < PER_PAGE && top + i < ids.length; i++) {
             var lid = ids[top + i], y = Math.round(LIST_Y + i * ROW), on = top + i === sel;
             if (on) { g.fillStyle = 'rgba(232,184,56,0.35)'; g.fillRect(131, y - 1, 96, 9); }
@@ -123,11 +124,10 @@ var CC = window.CC || (window.CC = {});
             if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 223, y + 2, 3, '#e8b838'); g.restore(); } // a glint on the cube
             if (on) CC.cursor(133, y + 1);
           }
-          CC.textNum('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });
+          CC.textNum('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 162, 134, faint, { size: 8, align: 'center' });
           var pg = CC.img('items/lost-page'); // the Lost Pages of The Long Dusk found so far
-          if (s.flags.anyPage && pg) { // on a patch of plain paper, over the book's paw-print doodle
-            CC.rect(202, 127, 22, 11, '#efdcb8');
-            g.drawImage(pg, 204, 128, 9, 9 * pg.height / pg.width); CC.num(String(CC.pageCount()), 215, 130, ink);
+          if (s.flags.anyPage && pg) { // on the patch of plain paper, below the Seen and Caught line
+            g.drawImage(pg, 204, 134, 9, 9 * pg.height / pg.width); CC.num(String(CC.pageCount()), 215, 136, ink);
           }
         },
       };

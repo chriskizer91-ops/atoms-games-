@@ -67,10 +67,6 @@ var CC = window.CC || (window.CC = {});
   CC.NPCS.village = CC.NPCS.village.filter(function (n) { return n.look !== 'rosa'; });
   CC.NPCS['inn-in'] = [{ x: 5, y: 2, look: 'rosa', art: 'rosa', h: 25, dir: 'down', talk: innkeeper }];
   var REST_COST = 30;
-  // It's night by the game clock, whatever Options shows ("Always day" only changes the look). This replaces the
-  // CC.isNight in 17-expansion.js, which went by the drawn light: night creatures, the firefly stump, the Dusk Cube
-  // and resting "Until night" here work with Always day too.
-  CC.isNight = function () { return CC.clockLight().night >= 0.4; };
   async function innkeeper() {
     var line = CC.linesFor({ early: ['Welcome to the Inn! Need a rest? I\'ll wake you at sunrise, or at nightfall, whichever you like.', 'Some creatures only come out after dark. A night\'s rest here is the easy way to meet them.'] });
     var n = innkeeper.n || 0; innkeeper.n = n + 1; // the welcome first
@@ -168,7 +164,7 @@ var CC = window.CC || (window.CC = {});
   // the ranger's board: one rare creature and when it comes out
   function sightings() {
     return async function () {
-      await say('SIGHTINGS BOARD. "Budstag: rare, in the Forest\'s tall grass. Mothlight: Forest, after dark. Burrhog: rolling through the Forest, any time."');
+      await say('SIGHTINGS BOARD. "Budstag: rare, in the Forest\'s tall grass. Mothlight: Forest, day and night. Burrhog: rolling through the Forest, any time."');
       await say('A newer note: "Whispering Grove (west): Snoozeloth, very rare. Hasn\'t moved in years. Might be a log."');
     };
   }

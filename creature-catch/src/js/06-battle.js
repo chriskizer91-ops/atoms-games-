@@ -18,7 +18,7 @@ var CC = window.CC || (window.CC = {});
   CC.currentBattle = function () { return B; };
 
   CC.startBattle = function (opts) {
-    // nobody in the party can fight: no battle at all, it counts as a loss (CC.fight sends you to the Healing Hut)
+    // nobody in the party can fight: no battle at all, it counts as a loss (CC.fight sends you back to where you last rested)
     if (CC.firstHealthy() < 0) return Promise.resolve('lose');
     return new Promise(function (resolve) {
       B = {
