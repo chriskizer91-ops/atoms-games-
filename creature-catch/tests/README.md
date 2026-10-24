@@ -38,8 +38,9 @@ A single test runs on its own too: `NODE_PATH=$(npm root -g) node tests/10-final
 | `09-old-save.cjs` | An older version's save loads in this one. `run-all.mjs` pulls the v8 and v10 builds out of git and runs it for each. |
 | `10-final-creatures.cjs` | The v11 creatures: evolving and the moves they pick up, the Moon Shard on Glimstar, a Runescroll at the Archive wall, a battle, the Log. |
 | `11-final-spawns.cjs` | Who turns up wild where the v11 creatures live: both ice cream forms in Frostpeak Pass, Crescub and Moonlynx, the Spire. |
-| `12-field-guide.cjs` | The Field Guide: place tabs and numbering, "Also found here" links, the spoiler covers, remembering the tab, phone width. |
+| `12-field-guide.cjs` | The Field Guide: place tabs and numbering, "Also found here" links, the spoiler covers, remembering the tab, phone width and the nav bar, what the cards say (tier and % in a place, signature moves, stat totals) and the item tags. |
 | `13-field-guide-spoilers.cjs` | The Field Guide: the hidden Night Ruins guardians, link jumps between tabs, dark mode, the phone's tab row. |
+| `18-spawns.cjs` | Wild spawns everywhere, day and night: commons above uncommons above rares, at least 3 creatures, rares 3 to 9%, the live roll matching `CC.spawnTable`, the new-creature bonus, catch rarity for every wild form, the Creature Log order, and every field note fitting the Log page. |
 
 ## Writing a new one
 
