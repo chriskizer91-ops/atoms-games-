@@ -348,8 +348,9 @@ CC.bagScreen = async function () {
       if (i < 0) continue;
       var m = CC.state.party[i], used = CC.useItemOn(k, m);
       if (typeof used === 'string') { await CC.say(used); continue; }
+      // a shard is used up only if the creature evolved (B stops an evolution, and the shard stays in the bag)
+      if (it.shard) { if ((await CC.evolveScene(m)) && !CC.dev.infItems) CC.state.bag[k]--; continue; }
       if (!CC.dev.infItems) CC.state.bag[k]--;
-      if (it.shard) { await CC.evolveScene(m); continue; }
       CC.sfx('heal'); await CC.say(used.text);
     } else await CC.say(it.info);
   }
@@ -364,7 +365,11 @@ function ppFull(m) { return m.moves.every(function (x) { return x.pp >= CC.MOVES
 // why an item would do nothing to this creature (a line to say), or null if it works
 CC.itemProblem = function (k, m) {
   var it = CC.ITEMS[k], max = CC.mon.maxHp(m), name = CC.mon.name(m);
-  if (it.shard) { var e = CC.CREATURES[m.id].evo; return !e || e.at !== k ? 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.' : null; }
+  if (it.shard) {
+    var e = CC.CREATURES[m.id].evo;
+    if (!e || e.at !== k) return 'Nothing happened. ' + name + ' doesn\'t react to the ' + it.name + '.';
+    return m.hp <= 0 ? name + ' has fainted. Heal it first!' : null; // evolving isn't a free Revive
+  }
   if (it.revive) return m.hp > 0 ? name + ' hasn\'t fainted.' : null;
   if (m.hp <= 0) return 'A ' + it.name + ' can\'t wake a fainted creature.';
   var helps = (it.heal && m.hp < max) || (it.cure && m.status && (it.cure === true || it.cure === m.status)) || (it.pp && !ppFull(m));
@@ -587,6 +592,7 @@ CC.evolveScene = function (m) {
       var newMoves = CC.mon.evolve(m);
       await CC.say('Congratulations! ' + CC.CREATURES[fromId].name + ' evolved into ' + CC.CREATURES[toId].name + '!');
       CC.markCaught(toId);
+      if (m.shiny) { CC.state.shinyCaught = CC.state.shinyCaught || {}; CC.state.shinyCaught[toId] = 1; } // the Log shows its new form shiny too
       for (var i = 0; i < newMoves.length; i++) await CC.learnMove(m, newMoves[i]);
       CC.pop(scr); resolve(true);
     })();

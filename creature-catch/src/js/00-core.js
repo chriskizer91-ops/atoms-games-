@@ -303,6 +303,8 @@ CC.loadGame = function (n) {
   if (!s) return false;
   if (n) CC.slot = n;
   CC.state = s;
+  // a shiny that evolved before v12 wasn't marked shiny for its new form in the Creature Log
+  (s.party || []).concat(s.vault || []).forEach(function (m) { if (m && m.shiny) { s.shinyCaught = s.shinyCaught || {}; s.shinyCaught[m.id] = 1; } });
   return true;
 };
 CC.deleteSave = function (n) { try { localStorage.removeItem(CC.slotKey(n)); } catch (e) { /* no storage */ } };
