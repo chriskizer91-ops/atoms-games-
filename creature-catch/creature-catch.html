@@ -5974,7 +5974,7 @@ CC.FAMILY_CREATURES = [
   // lore for the Creature Log and the Field Guide
   Object.keys(byId).forEach(function (id) {
     var c = byId[id], first = byId[root(id)], place = function (k) { return (CC.SPAWNS[k] || { name: k }).name; };
-    var where = from[id] ? 'Evolves from ' + byId[from[id]].name + '.' : first.keeper ? 'The Keeper of ' + place(first.keeper) + '. It waits at the landmark there.'
+    var at = from[id] && CC.CREATURES[from[id]].evo.at, where = from[id] ? byId[from[id]].name + ' evolves into it ' + (typeof at === 'string' ? 'with a ' + (at === 'sunshard' ? 'Sun' : 'Moon') + ' Shard.' : 'at Lv ' + at + '.') : first.keeper ? 'The Keeper of ' + place(first.keeper) + '. It waits at the landmark there.'
       : first.lives === 'anywhere' ? 'Moonborn: dreamed up under the full moon, it can turn up in any tall grass.' : first.lives && first.lives !== 'nowhere' ? 'Found in ' + place(first.lives) + '.' : '';
     CC.LORE[id] = { lore: c.lore || c.name + ' is a brand-new creature. Nobody knows much about it yet!', note: (c.drawnBy ? 'Drawn by ' + String(c.drawnBy).replace(/\.$/, '') + '. ' : '') + where };
   });
