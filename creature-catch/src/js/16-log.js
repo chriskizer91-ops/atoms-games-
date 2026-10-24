@@ -7,6 +7,7 @@ var CC = window.CC || (window.CC = {});
 
 (function () {
   var PER_PAGE = 13, ROW = 8.5, LIST_Y = 11; // the list sits on the journal's ruled lines
+  var NOTE_Y = 103, NOTE_ROW = 8; // the field note's 4 lines sit on the left page's ruled lines, 'A: read more' under them
 
   // the journal: the picture art, or the same layout drawn in code (left page 12-117 with a picture frame at
   // 21-109 x 10-76, the ribbon at 118-130, the right page 130-228 ruled every 8.5 px)
@@ -20,9 +21,22 @@ var CC = window.CC || (window.CC = {});
     CC.rect(117, 4, 13, 144, '#e0ccaa');
     g.fillStyle = 'rgba(160,130,90,0.28)';
     for (var y = 19.5; y < 140; y += ROW) g.fillRect(134, Math.round(y), 90, 1);
-    for (var y2 = 87; y2 < 132; y2 += ROW) g.fillRect(19, Math.round(y2), 92, 1);
+    for (var y2 = NOTE_Y + NOTE_ROW; y2 < 140; y2 += NOTE_ROW) g.fillRect(19, y2, 92, 1);
     g.strokeStyle = '#a8865a'; g.lineWidth = 1; g.strokeRect(21.5, 10.5, 88, 66); g.strokeRect(23.5, 12.5, 84, 62);
     CC.rect(120, 0, 8, 152, '#b8302a'); CC.rect(122, 0, 2, 152, '#d8484a'); // ribbon
+  }
+
+  // the field note on the left page (at most 4 lines). The journal art has a leaf sprig in the page's corner, under
+  // the start of the lines (12-48 x 104-142): there the letters get a rim of paper, so the leaf never hides them.
+  function noteLines(note) {
+    var g = CC.g;
+    CC.wrap(note, 88, 8).slice(0, 4).forEach(function (l, i) {
+      var y = NOTE_Y + i * NOTE_ROW;
+      g.save(); g.beginPath(); g.rect(12, 104, 36, 38); g.clip();
+      [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (d) { CC.text(l, 21 + d[0], y + d[1], '#efdcb8', { size: 8, shadow: false }); });
+      g.restore();
+      CC.text(l, 21, y, '#5a3a22', { size: 8 });
+    });
   }
 
   // what a shadow's page says: where a first form lives, or what an evolution grows from
@@ -78,16 +92,16 @@ var CC = window.CC || (window.CC = {});
             g.fillStyle = 'rgba(120,90,50,0.15)'; g.beginPath(); g.ellipse(65, 70, 20, 3, 0, 0, Math.PI * 2); g.fill();
             CC.drawSprite(sp, 65, 72, { scale: 0.62, sy: 1 + Math.sin(CC.time * 2.4) * 0.025, id: id });
             CC.text(c.name, 65, 79, ink, { align: 'center' });
-            var bw = c.types.reduce(function (w, t) { return w + CC.textWidth(t.toUpperCase(), 8) + 17; }, 0), bx = 65 - bw / 2;
+            var bw = c.types.reduce(function (w, t) { return w + CC.typeBadgeWidth(t) + 2; }, -2), bx = 65 - bw / 2;
             c.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 92) + 2; });
             var note = got ? (CC.LORE && CC.LORE[id] ? CC.LORE[id].note : '') : 'Seen in the wild. Catch one to fill in this page.';
-            CC.wrap(note, 88, 8).slice(0, 4).forEach(function (l, i) { CC.text(l, 21, 104 + i * ROW, '#5a3a22', { size: 8 }); });
-            if (got) CC.text('A: read more', 110, 132, faint, { size: 8, align: 'right' });
+            noteLines(note);
+            if (got) CC.text('A: read more', 110, NOTE_Y + 4 * NOTE_ROW + 1, faint, { size: 8, align: 'right' }); // under the note's 4th line
           } else if (shadow(id)) {
             g.fillStyle = 'rgba(120,90,50,0.15)'; g.beginPath(); g.ellipse(65, 70, 20, 3, 0, 0, Math.PI * 2); g.fill();
             CC.drawSprite(CC.tinted(CC.creatureSprite(id), '#3a2a1e', 'logshadow-' + id), 65, 72, { scale: 0.62, alpha: 0.85, sy: 1 + Math.sin(CC.time * 2.4) * 0.025 });
             CC.text('? ? ?', 65, 79, '#6a5038', { align: 'center' });
-            CC.wrap(shadowNote(id), 88, 8).slice(0, 4).forEach(function (l, i) { CC.text(l, 21, 104 + i * ROW, '#5a3a22', { size: 8 }); });
+            noteLines(shadowNote(id));
           } else {
             CC.text('?', 65, 30, '#c8b08a', { size: 22, align: 'center' });
             CC.text('Not seen yet', 65, 82, faint, { align: 'center' });
@@ -100,9 +114,13 @@ var CC = window.CC || (window.CC = {});
             var lid = ids[top + i], y = Math.round(LIST_Y + i * ROW), on = top + i === sel;
             if (on) { g.fillStyle = 'rgba(232,184,56,0.35)'; g.fillRect(131, y - 1, 96, 9); }
             CC.num(String(top + i + 1).padStart(3, '0'), 140, y + 1, faint);
-            CC.text(seen(lid) ? C[lid].name : shadow(lid) ? '? ? ?' : '- - - - -', 162, y, seen(lid) ? ink : shadow(lid) ? '#8a6a48' : '#c0a880', { size: 8 });
+            // the name ends before the caught cube (or the page's edge): the few that are longer are drawn a little narrower
+            var nm = seen(lid) ? C[lid].name : shadow(lid) ? '? ? ?' : '- - - - -', nw = CC.textWidth(nm, 8), room = (s.caught[lid] ? 216 : 226) - 162;
+            g.save(); g.translate(162, y); if (nw > room) g.scale(room / nw, 1);
+            CC.text(nm, 0, 0, seen(lid) ? ink : shadow(lid) ? '#8a6a48' : '#c0a880', { size: 8 });
+            g.restore();
             if (s.caught[lid]) CC.drawCube(220, y + 6, 3.5);
-            if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 212, y + 4, 3, '#e8b838'); g.restore(); }
+            if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 223, y + 2, 3, '#e8b838'); g.restore(); } // a glint on the cube
             if (on) CC.cursor(133, y + 1);
           }
           CC.textNum('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });

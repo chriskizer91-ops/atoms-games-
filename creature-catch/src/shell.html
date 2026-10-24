@@ -9,23 +9,28 @@
 @font-face { font-family: 'Pixelify'; src: url(data:font/ttf;base64,{{FONT}}) format('truetype'); }
 html, body { margin: 0; height: 100%; background: #1b1626; overflow: hidden; touch-action: none;
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-body { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Pixelify', monospace; }
-#screen { display: block; image-rendering: pixelated; image-rendering: crisp-edges; background: #000; }
-#pad { display: none; width: 100%; max-width: 520px; height: 200px; position: relative; flex: none; }
+/* the body keeps out of the notch and the home bar (viewport-fit=cover); CC.resize reads these insets back */
+body { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Pixelify', monospace;
+  box-sizing: border-box; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#screen { display: block; flex: none; image-rendering: pixelated; image-rendering: crisp-edges; background: #000; }
+/* the touch pad: two halves, each 180 x 210 (the d-pad and L; A, B, MENU and R). Upright, the pad sits under the
+   canvas; sideways (body.side), one half sits on each side of it. CC.resize places and scales the halves. */
+#pad { display: none; width: 100%; max-width: 520px; height: 210px; position: relative; flex: none; }
 body.touch #pad { display: block; }
+body.side #pad { position: fixed; left: 0; top: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; }
+.half { position: absolute; top: 0; width: 180px; height: 210px; transform-origin: 0 0; pointer-events: auto; }
+#padL { left: 0; } #padR { right: 0; }
 .btn { position: absolute; border-radius: 50%; background: #3a3150; color: #e8e0f8; font: 18px 'Pixelify', monospace;
   display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 #15111f; }
 .btn.on { background: #6e5aa0; transform: translateY(2px); box-shadow: 0 2px 0 #15111f; }
 .dir { width: 54px; height: 54px; border-radius: 10px; }
-#bUp { left: 74px; top: 22px; } #bDown { left: 74px; top: 130px; } #bLeft { left: 20px; top: 76px; } #bRight { left: 128px; top: 76px; }
-#bA { right: 26px; top: 56px; width: 70px; height: 70px; background: #7a3a6e; }
-#bB { right: 108px; top: 96px; width: 60px; height: 60px; background: #3a4a7a; }
-#bStart { right: 40px; top: 152px; width: 84px; height: 30px; border-radius: 15px; font-size: 14px; }
+#bUp { left: 63px; top: 40px; } #bDown { left: 63px; top: 148px; } #bLeft { left: 9px; top: 94px; } #bRight { left: 117px; top: 94px; }
+#bA { right: 26px; top: 70px; width: 70px; height: 70px; background: #7a3a6e; }
+#bB { right: 108px; top: 110px; width: 60px; height: 60px; background: #3a4a7a; }
+#bStart { right: 40px; top: 172px; width: 84px; height: 30px; border-radius: 15px; font-size: 14px; }
 #bA.on { background: #a44e94; } #bB.on { background: #5468a8; }
 .shoulder { top: 4px; width: 92px; height: 30px; border-radius: 15px 15px 6px 6px; font-size: 14px; background: #4a4060; }
 #bL { left: 14px; } #bR { right: 14px; }
-#bUp { top: 40px !important; } #bDown { top: 148px !important; } #bLeft, #bRight { top: 94px !important; } #bA { top: 70px !important; } #bB { top: 110px !important; } #bStart { top: 168px !important; }
-#pad { height: 210px !important; }
 /* the dev code box (a real text box so phone keyboards and paste work) */
 #codes { display: none; position: fixed; inset: 0; background: rgba(15,10,25,0.7); align-items: center; justify-content: center; z-index: 10; }
 #codes.open { display: flex; }
@@ -41,10 +46,15 @@ body.touch #pad { display: block; }
 <body>
 <canvas id="screen" width="240" height="160"></canvas>
 <div id="pad">
-  <div class="btn dir" id="bUp">&#9650;</div><div class="btn dir" id="bDown">&#9660;</div>
-  <div class="btn dir" id="bLeft">&#9664;</div><div class="btn dir" id="bRight">&#9654;</div>
-  <div class="btn" id="bB">B</div><div class="btn" id="bA">A</div><div class="btn" id="bStart">MENU</div>
-  <div class="btn shoulder" id="bL">L</div><div class="btn shoulder" id="bR">R</div>
+  <div class="half" id="padL">
+    <div class="btn shoulder" id="bL">L</div>
+    <div class="btn dir" id="bUp">&#9650;</div><div class="btn dir" id="bDown">&#9660;</div>
+    <div class="btn dir" id="bLeft">&#9664;</div><div class="btn dir" id="bRight">&#9654;</div>
+  </div>
+  <div class="half" id="padR">
+    <div class="btn shoulder" id="bR">R</div>
+    <div class="btn" id="bB">B</div><div class="btn" id="bA">A</div><div class="btn" id="bStart">MENU</div>
+  </div>
 </div>
 <div id="codes"><div class="panel">
   <h2>Dev codes</h2>

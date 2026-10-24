@@ -694,7 +694,6 @@ CC.world = {
 
   update: function (dt) {
     var s = CC.state, inp = CC.input, self = this;
-    s.playTime += dt;
     // people who walk: a step in progress, or (when nothing else is going on) the next step of their patrol
     this.npcs.forEach(function (n) {
       if (n.mv) { n.mv.k += dt * (n.mv.speed || 3.2); if (n.mv.k >= 1) { n.x = n.mv.tx; n.y = n.mv.ty; var done = n.mv.done; n.mv = null; if (done) done(); } return; }
