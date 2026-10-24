@@ -6,7 +6,7 @@ var CC = window.CC || (window.CC = {});
   function F() { return CC.state.flags; }
   var say = function (text, who) { return CC.say(text, who ? { who: who } : undefined); };
   var piece = CC.piece, onWall = CC.onWall;
-  function team(list) { return list.map(function (p) { return CC.mon.make(p[0], p[1]); }); }
+  function team(list) { return CC.trainerTeam(list); } // each creature in its form at that level
 
   // ---------- the tiles ----------
   // p: the brick market square. copperbell atlas: 0/14 cobbles, 1 brick, 2 fountain, 3/13 flower beds, 4 park grass, 5 tall grass, 6 flowers, 7 steps,

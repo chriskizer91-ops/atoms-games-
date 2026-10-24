@@ -95,7 +95,7 @@ CC.NPCS = {
             name: 'Farmer Bramble', look: 'bramble', art: 'bramble', coins: 240,
             intro: 'My critters have been working the fields all morning. Show me what you\'ve got!',
             winText: 'Well I\'ll be! You\'ve earned it.', loseText: 'Ha! Not quite yet. Rest up and try again.',
-            team: [CC.mon.make('hopsprout', 7), CC.mon.make('pebblepup', 7), CC.mon.make('tuftail', 8)],
+            team: CC.trainerTeam([['hopsprout', 7], ['pebblepup', 7], ['tuftail', 8]]),
           },
         });
         if (r !== 'win') return;
@@ -124,6 +124,9 @@ function B_moveAside() {
   var b = CC.NPCS.grassland.find(function (n) { return n.id === 'bramble'; });
   b.x = 15; b.y = 2; b.dir = 'left';
 }
+// a trainer's team from [id, level] pairs: each creature comes in the form it has at its level, the same rule as
+// wild creatures (CC.wildForm: level evolutions only, never shards)
+CC.trainerTeam = function (list) { return list.map(function (p) { return CC.mon.make(CC.wildForm(p[0], p[1]), p[1]); }); };
 
 // who speaks -> whose picture shows beside the dialog box
 CC.PORTRAITS = {
@@ -230,7 +233,7 @@ async function willowHouse() {
       name: 'Juniper', look: 'juniper', art: 'juniper', coins: 100,
       winText: 'What?! I had the type advantage! Next time, I\'m winning.',
       loseText: 'Ha! Told you. Type advantage, baby!',
-      team: [CC.mon.make(rival, 5)],
+      team: CC.trainerTeam([[rival, 5]]),
     },
   });
   F().juniper1 = result === 'win' ? 'won' : 'lost';

@@ -163,7 +163,7 @@ var CC = window.CC || (window.CC = {});
   CC.addTrainers('temple', [
     { id: 'temple-1', art: 'trainer-29', name: 'Explorer Indira', x: 17, y: 13, dir: 'left', sight: 4, team: [['sphinxie', 42], ['kilnadillo', 42], ['mirajack', 43]],
       intro: 'A real temple! And a real trainer! Today is the best day!', win: 'Even losing here is an adventure.', after: 'Mummoth isn\'t spooky. It\'s just tangled.' },
-    { id: 'temple-2', art: 'trainer-30', name: 'Explorer Rafe', x: 6, y: 6, dir: 'right', sight: 4, team: [['mummoth', 43], ['sphinxie', 43], ['sphinxar', 44]],
+    { id: 'temple-2', art: 'trainer-30', name: 'Explorer Rafe', x: 6, y: 6, dir: 'right', sight: 4, team: [['mummoth', 43], ['sphinxie', 43], ['sphinxar', 46]],
       intro: 'My torch says battle! My torch is very wise.', win: 'My torch was wrong.', after: 'Sphinxie asks riddles, then forgets the answers. I like that about it.' },
   ]);
   // the Sun Altar: page 11, and Solarion wakes
