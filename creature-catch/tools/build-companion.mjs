@@ -26,12 +26,13 @@ const fxText = (fx) => {
   const s = [];
   if (fx.status) s.push(`${fx.chance ? fx.chance + '% chance to ' : ''}${{ burn: 'burn', freeze: 'freeze', shock: 'shock', poison: 'poison', sleep: 'put to sleep' }[fx.status]}${fx.chance ? '' : ' the target'}`);
   if (fx.stat) s.push(`${fx.chance ? fx.chance + '% chance: ' : ''}${fx.self ? 'raises your' : 'lowers the target\'s'} ${{ atk: 'Attack', def: 'Defense', spd: 'Speed', acc: 'accuracy' }[fx.stat]}${Math.abs(fx.stages) > 1 ? ' sharply' : ''}`);
-  if (fx.drain) s.push('heals you for half the damage');
+  if (fx.drain) s.push('heals you for ' + (fx.drain === 0.5 ? 'half the damage' : fx.drain === 0.25 ? 'a quarter of the damage' : Math.round(fx.drain * 100) + '% of the damage'));
   if (fx.recoil) s.push('you take some recoil');
   if (fx.heal) s.push('heals half your HP');
   if (fx.crit) s.push('high critical-hit rate');
   if (fx.priority) s.push('always goes first');
   if (fx.hits) s.push(`hits ${fx.hits[0]}${fx.hits[1] !== fx.hits[0] ? ' to ' + fx.hits[1] : ''} times`);
+  if (fx.coins) s.push('your creature swipes extra coins if you win'); // only your own creature's swipes count
   return s.join(', ');
 };
 const how = (at) => typeof at === 'number' ? `Lv ${at}` : at === 'sunshard' ? 'Sun Shard' : 'Moon Shard';
@@ -42,27 +43,27 @@ const RARITY = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', veryrare:
 // in the place where you can first meet its line. Each place gets a tab; the creatures from earlier tabs that also
 // live there are listed under "Also found here".
 const C = CC.CREATURES;
-// the form a wild creature takes at a level: at or past its evolution level it shows up evolved, as in the game
-const formAt = (id, lv) => { let c = C[id]; while (c.evo && typeof c.evo.at === 'number' && lv >= c.evo.at) c = C[c.evo.into]; return c.id; };
 // the guardians: where you meet them, and whether you can catch them
 const LEGEND_AT = { lunariond: 'The Moon Altar, Night Ruins', lunarion: 'The Moon Altar, Night Ruins', groggysolarion: 'The Sun Altar, Dawn Temple', solarion: 'The Sun Altar, Dawn Temple', hidinggloaming: 'The Dusk Pool, Hollow Deep', gloaming: 'The Dusk Pool, Hollow Deep' };
 const CALMING = { lunariond: 1, groggysolarion: 1, hidinggloaming: 1 };
 const root = (id) => { let c = C[id]; while (c.from) c = C[c.from]; return c.id; };
 const zoneName = Object.fromEntries(CC.ZONES.map((z) => [z.key, z.name]));
 
-// where each form turns up in the wild: one { zone, tier, time } per place
+// where each form turns up in the wild: one { zone, tier, time, pct } per place, from the tables the game rolls from
+// (CC.spawnTable, with each place's own levels; a creature past its evolution level is met evolved). pct: how often
+// it turns up there by day and at night, in percent, once you've met everything there (the game's new-creature
+// bonus left out). A place with two lists (the Cove's grass and tide pools) takes the first list that has the form.
 const appear = {};
-for (const z of CC.ZONES) for (const k of z.spawns) {
-  const sp = CC.SPAWNS[k];
-  for (const t of ['common', 'uncommon', 'rare']) for (const id of sp[t]) {
-    const forms = new Set();
-    for (let lv = sp.levels[0]; lv <= sp.levels[1]; lv++) forms.add(formAt(id, lv));
-    for (const f of forms) {
-      const a = appear[f] || (appear[f] = []);
-      if (!a.some((x) => x.zone === z.key)) a.push({ zone: z.key, tier: RARITY[t], time: (sp.time || {})[id] || '' });
-    }
+for (const z of CC.ZONES) for (const k of z.spawns) for (const night of [false, true]) {
+  const list = CC.spawnTable(k, night), sum = list.reduce((n, e) => n + e.w, 0);
+  for (const e of list) for (let lv = e.levels[0]; lv <= e.levels[1]; lv++) {
+    const f = CC.wildForm(e.id, lv), a = appear[f] || (appear[f] = []);
+    let x = a.find((x) => x.zone === z.key);
+    if (!x) a.push(x = { zone: z.key, list: k, tier: RARITY[e.tier], time: (CC.SPAWNS[k].time || {})[e.id] || '', pct: [0, 0] });
+    if (x.list === k) x.pct[night ? 1 : 0] += 100 * e.w / sum / (e.levels[1] - e.levels[0] + 1);
   }
 }
+for (const a of Object.values(appear)) for (const x of a) { delete x.list; x.pct = x.pct.map((v) => v ? Math.max(1, Math.round(v)) : 0); }
 
 const creatures = CC.CREATURE_ORDER.map((id, i) => {
   const c = C[id], sig = CC.MOVES[c.sig], first = C[root(id)];
@@ -78,7 +79,8 @@ const creatures = CC.CREATURE_ORDER.map((id, i) => {
     id, num: i + 1, zone: CC.ZONE_OF[id], name: c.name, types: c.types, stage: STAGE[c.kind] || c.kind,
     kind: c.kind.startsWith('starter') ? 'starter' : c.kind === 'legend' ? 'legend' : c.kind === 'solo' ? 'solo' : c.from ? 'evolved' : 'first',
     found, from: c.from ? { name: C[c.from].name, how: how(C[c.from].evo.at) } : null, appear: appear[id] || [],
-    base: c.base, total: c.total, lore: lore.lore, note: lore.note,
+    // the total under the stat bars is the sum of the four (the data's total is the budget they're rounded from)
+    base: c.base, total: c.base.hp + c.base.atk + c.base.def + c.base.spd, lore: lore.lore, note: lore.note,
     sig: { name: sig.name, type: sig.type, power: sig.power || null, acc: sig.acc || null, pp: sig.pp, fx: fxText(sig.fx) },
     chain: chain.length > 1 ? chain : null, img: uri('creatures/' + id),
   };
@@ -123,7 +125,15 @@ const zones = CC.ZONES.map((z, i) => {
     bg: uri('bg/' + (BG[z.key] || z.key)),
   };
 });
-const items = Object.entries(CC.ITEMS).map(([k, it]) => ({ key: k, name: it.name, info: it.info, price: it.price || null, cube: it.cube, duskCube: it.duskCube || null, heal: it.heal, keyItem: !!it.key, icon: uri(it.icon) }));
+// the tag under an item's name: what it does, then its price
+const itemTag = (it) => {
+  const t = it.key ? ['Key item'] : it.cube >= 999 ? ['Always catches'] : it.duskCube ? [`+${it.cube} by day, +${it.duskCube} at night`]
+    : it.cube != null ? [it.cube ? `+${it.cube} catch bonus` : 'The basic cube'] : it.heal >= 999 ? ['Full heal']
+    : [it.heal ? `Heals ${it.heal} HP` : '', it.pp ? 'Restores PP' : '', it.cure ? (it.cure === true ? 'Cures status' : 'Cures ' + it.cure) : '', it.revive ? 'Revives' : '', it.shard ? 'Evolves some creatures' : ''];
+  if (it.price) t.push(it.price + ' coins');
+  return t.filter(Boolean).join(' · ');
+};
+const items = Object.entries(CC.ITEMS).map(([k, it]) => ({ key: k, name: it.name, info: it.info, tag: itemTag(it), icon: uri(it.icon) }));
 const data = { version, creatures, types, chart, typeIcons, typeColors, zones, items };
 
 const font = fs.readFileSync(path.join(SRC, 'fonts', 'PixelifySans.ttf')).toString('base64');
@@ -166,7 +176,7 @@ nav.bar a { font-family: 'Pixelify', sans-serif; text-decoration: none; color: v
 nav.bar a:hover { background: var(--line); }
 nav.bar .spacer { flex: 1; }
 nav.bar button { font: inherit; font-family: 'Pixelify', sans-serif; border: 0; background: var(--chip); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
-section { padding: 30px 0 10px; }
+section { padding: 30px 0 10px; scroll-margin-top: 30px; } /* the nav's links land with the heading below the sticky bar */
 section h2 { font-size: 30px; margin: 0 0 6px; color: var(--accent); }
 section > .wrap > p.lead { margin: 0 0 18px; color: var(--soft); max-width: 760px; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
@@ -249,6 +259,8 @@ td.x1 { color: var(--soft); opacity: 0.6; }
   .tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
   .tabs button { flex: none; white-space: nowrap; }
   .tabs .group { width: auto; flex: none; white-space: nowrap; align-self: center; margin: 0 0 0 8px; }
+  nav.bar .wrap { flex-wrap: wrap; } nav.bar .spacer { display: none; } /* two rows, so Light / dark stays on the screen */
+  section { scroll-margin-top: 72px; } /* and the taller bar doesn't cover a heading it jumps to */
 }
 .minis { display: flex; flex-wrap: wrap; gap: 6px; }
 .minis a { display: flex; align-items: center; gap: 4px; text-decoration: none; color: var(--ink); background: var(--chip); border-radius: 999px; padding: 2px 10px 2px 2px; font-size: 13px; }
@@ -279,7 +291,7 @@ footer { padding: 30px 0 50px; color: var(--soft); font-size: 13px; text-align: 
 
 <section id="creatures"><div class="wrap">
   <h2>Creatures</h2>
-  <p class="lead">This guide follows your journey. Each tab is one place, in the order you reach it, and the creatures are numbered the same way as the Creature Log in the game. Open a place's tab once you get there, so nothing is spoiled. Creatures hide in tall grass: weaken one, throw a cube, and it's yours.</p>
+  <p class="lead">This guide follows your journey. Each tab is one place, in the order you reach it, and the creatures are numbered the same way as the Creature Log in the game. Open a place's tab once you get there, so nothing is spoiled. Creatures hide in tall grass: weaken one, throw a cube, and it's yours. The % on a card says how often it turns up in its place's grass once you've met everything there (one you've never met turns up twice as often).</p>
   <div class="tabs" id="tabs" role="tablist" aria-label="Places"></div>
   <div id="zone"></div>
   <div id="filters">
@@ -331,11 +343,13 @@ var D = ${JSON.stringify(data)};
   var STATS = [['HP', 'hp', '#48c050'], ['Atk', 'atk', '#e8784a'], ['Def', 'def', '#e8c040'], ['Spd', 'spd', '#5aa8f0']];
   var zoneById = {}; D.zones.forEach(function (z) { zoneById[z.key] = z; });
   var when = function (t) { return t ? ' <span class="when ' + t + '">' + (t === 'night' ? 'night only' : 'day only') + '</span>' : ''; };
+  // how often it turns up there: one number, or one by day and one at night
+  var often = function (a) { var d = a.pct[0], n = a.pct[1]; return ' &middot; ' + (!d || !n || d === n ? (d || n) + '%' : d + '% by day, ' + n + '% at night'); };
   // where to find it, said from the page it's shown on
   function meta(c, zk) {
     var lines = [esc(c.stage)], here = c.appear.filter(function (a) { return a.zone === zk; })[0];
     if (c.found) lines.push(esc(c.found));
-    else if (here) lines.push(esc(here.tier) + ' here' + when(here.time));
+    else if (here) lines.push(esc(here.tier) + ' here' + when(here.time) + often(here));
     else if (c.from) lines.push('Evolves from ' + esc(c.from.name) + ' (' + esc(c.from.how) + ')');
     var others = c.appear.filter(function (a) { return a.zone !== zk; }).map(function (a) { return esc(zoneById[a.zone].name); });
     if (others.length) lines.push('Also in: ' + others.join(', '));
@@ -462,8 +476,7 @@ var D = ${JSON.stringify(data)};
   }).join('');
   // items
   $('itemlist').innerHTML = D.items.map(function (it) {
-    var tag = it.keyItem ? 'Key item' : it.cube >= 999 ? 'Always catches' : it.duskCube ? '+' + it.cube + ' by day, +' + it.duskCube + ' at night' : it.cube != null ? (it.cube ? '+' + it.cube + ' catch bonus' : 'The basic cube') : it.heal ? 'Heals ' + it.heal + ' HP' : '';
-    return '<div class="item">' + (it.icon ? '<img class="px" src="' + it.icon + '" alt="">' : '') + '<div><h3 class="pix">' + esc(it.name) + '</h3><span class="tag">' + tag + (it.price ? ' &middot; ' + it.price + ' coins' : '') + '</span><p>' + esc(it.info) + '</p></div></div>';
+    return '<div class="item">' + (it.icon ? '<img class="px" src="' + it.icon + '" alt="">' : '') + '<div><h3 class="pix">' + esc(it.name) + '</h3><span class="tag">' + esc(it.tag) + '</span><p>' + esc(it.info) + '</p></div></div>';
   }).join('');
   // light / dark
   var root = document.documentElement;

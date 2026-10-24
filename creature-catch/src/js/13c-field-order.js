@@ -39,4 +39,16 @@ var CC = window.CC || (window.CC = {});
   CC.CREATURE_ORDER = order;
   CC.ZONES = ZONES;
   CC.ZONE_OF = zoneOf;
+
+  // catch rarity for every form a wild creature can be met as (one past its evolution level is met evolved, see
+  // CC.spawnTable): a form with no rarity yet takes the tier of the first entry it's met from, in journey order. This
+  // runs after every spawn list exists (the family's creatures join theirs in 13b). Rarities already set stay, so
+  // Moonlynx and the legends keep 'veryrare'.
+  ZONES.forEach(function (z) {
+    z.spawns.forEach(function (k) {
+      [false, true].forEach(function (night) {
+        CC.spawnTable(k, night).forEach(function (e) { e.forms.forEach(function (f) { if (!CC.RARITY[f]) CC.RARITY[f] = e.tier; }); });
+      });
+    });
+  });
 })();

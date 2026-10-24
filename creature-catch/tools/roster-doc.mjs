@@ -20,6 +20,7 @@ const fxText = (fx) => {
   if (fx.crit) s.push('high crit');
   if (fx.priority) s.push('goes first');
   if (fx.hits) s.push(`hits ${fx.hits[0]}${fx.hits[1] !== fx.hits[0] ? ' to ' + fx.hits[1] : ''} times`);
+  if (fx.coins) s.push('your creature swipes extra coins if you win');
   return s.join(', ');
 };
 
@@ -38,11 +39,13 @@ L.push('- **Learnset pattern:** Lv 1 Tackle + type basic (starters: Tackle + Gro
 L.push('- **XP yield:** base total / 4, times the fainted creature\'s level / 5 (x1.5 against a trainer).', '');
 
 L.push('## Creatures', '');
-L.push('| # | Creature | Type | Region | Stage | Profile | HP | Atk | Def | Spd | Total | Evolves | Signature |');
-L.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+L.push('**Lives in** is the place its line is first met (the Creature Log\'s order). **Stat tier** is the region step its budget comes from. **Total** adds up the four stats; **Budget** is the total they are rounded from (and what the XP yield uses).', '');
+L.push('| # | Creature | Type | Lives in | Stat tier | Stage | Profile | HP | Atk | Def | Spd | Total | Budget | Evolves | Signature |');
+L.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+const zoneName = Object.fromEntries(CC.ZONES.map((z) => [z.key, z.name]));
 CC.CREATURE_ORDER.forEach((id, i) => {
   const c = CC.CREATURES[id], b = c.base;
-  L.push(`| ${i + 1} | ${c.name} | ${c.types.join(' / ')} | ${CC.REGIONS[c.region]} | ${kindName[c.kind]} | ${c.profile} | ${b.hp} | ${b.atk} | ${b.def} | ${b.spd} | ${c.total} | ${evoText(c.evo)} | ${M[c.sig].name} |`);
+  L.push(`| ${i + 1} | ${c.name} | ${c.types.join(' / ')} | ${zoneName[CC.ZONE_OF[id]] || '-'} | ${c.region} (${CC.REGIONS[c.region] || '?'}) | ${kindName[c.kind]} | ${c.profile} | ${b.hp} | ${b.atk} | ${b.def} | ${b.spd} | ${b.hp + b.atk + b.def + b.spd} | ${c.total} | ${evoText(c.evo)} | ${M[c.sig].name} |`);
 });
 L.push('');
 
@@ -62,9 +65,27 @@ for (const [id, m] of Object.entries(M)) {
 L.push('', '**Struggle** (used when every move is out of PP): Power 30, no type, 25% recoil.', '');
 
 L.push('## Wild spawns', '', 'In the order you reach each place (the same order the Creature Log numbers creatures in).', '');
+const W = CC.SPAWN_WEIGHT;
+L.push(`Each creature on a list turns up by its weight: common ${W.common}, uncommon ${W.uncommon}, rare ${W.rare}, unless the place sets its own (shown as a weight). A creature you have never met (in any form it can turn up as there) counts double. The level range is the place's, unless one is shown. A creature at or past its evolution level is met evolved. (\`CC.spawnTable\` in \`12-data-creatures.js\`, \`CC.rollSpawn\` in \`17-expansion.js\`.)`, '');
 L.push('| Area | Levels | Common | Uncommon | Rare |', '|---|---|---|---|---|');
-const nm = (a) => a.map((id) => CC.CREATURES[id].name).join(', ') || '-';
-for (const z of CC.ZONES) for (const k of z.spawns) { const s = CC.SPAWNS[k]; L.push(`| ${s.name} | ${s.levels[0]} to ${s.levels[1]} | ${nm(s.common)} | ${nm(s.uncommon)} | ${nm(s.rare)} |`); }
+const nm = (s, t) => s[t].map((id) => {
+  const extra = [s.weight && s.weight[id] != null ? `weight ${s.weight[id]}` : '', s.lv && s.lv[id] ? `Lv ${s.lv[id][0]} to ${s.lv[id][1]}` : '', (s.time || {})[id] || ''].filter(Boolean);
+  return CC.CREATURES[id].name + (extra.length ? ` (${extra.join(', ')})` : '');
+}).join(', ') || '-';
+for (const z of CC.ZONES) for (const k of z.spawns) { const s = CC.SPAWNS[k]; L.push(`| ${s.name} | ${s.levels[0]} to ${s.levels[1]} | ${nm(s, 'common')} | ${nm(s, 'uncommon')} | ${nm(s, 'rare')} |`); }
+L.push('');
+L.push('### How often each one turns up', '', 'The share of encounters once you have met everything there (no new-creature bonus). In brackets: the forms it is met as, when it can be met evolved.', '');
+L.push('| Area | By day | At night |', '|---|---|---|');
+const odds = (k, night) => {
+  const list = CC.spawnTable(k, night), sum = list.reduce((n, e) => n + e.w, 0), pc = (v) => (Math.round(v * 10) / 10) + '%';
+  return list.map((e) => {
+    const p = 100 * e.w / sum, n = e.levels[1] - e.levels[0] + 1, by = {};
+    for (let lv = e.levels[0]; lv <= e.levels[1]; lv++) { const f = CC.wildForm(e.id, lv); by[f] = (by[f] || 0) + p / n; }
+    const forms = Object.keys(by);
+    return CC.CREATURES[e.id].name + ' ' + pc(p) + (forms.length > 1 || forms[0] !== e.id ? ' (' + forms.map((f) => CC.CREATURES[f].name + ' ' + pc(by[f])).join(', ') + ')' : '');
+  }).join(', ');
+};
+for (const z of CC.ZONES) for (const k of z.spawns) L.push(`| ${CC.SPAWNS[k].name} | ${odds(k, false)} | ${odds(k, true)} |`);
 L.push('');
 
 const out = path.join(SRC, '..', 'docs', 'creature-catch-roster.md');

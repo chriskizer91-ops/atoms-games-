@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
   console.log(await p.evaluate(() => {
     const C = __cc, out = {};
     for (const k of ['snow', 'ruins', 'spire', 'hollow', 'temple']) {
-      const seen = {}; for (let i = 0; i < 6000; i++) { const s = C.rollSpawn(k); if (s && s.id) seen[s.id + '@' + s.level] = 1; }
+      const seen = {}; for (let i = 0; i < 6000; i++) { const s = C.rollSpawn(k); if (s && s.id) seen[s.id + '@' + s.lv] = 1; }
       const want = { snow: ['mysterypop', 'puppop'], ruins: ['crescub', 'moonlynx'], spire: ['leviafin', 'cragmastiff', 'oakenowl', 'timberowl'], hollow: ['stalagwing'], temple: ['furnadillo', 'kilnadillo'] }[k];
       out[k] = want.map(id => id + ':' + Object.keys(seen).filter(x => x.split('@')[0] === id).map(x => +x.split('@')[1]).sort((a, b) => a - b).join(',')).join(' | ');
     }

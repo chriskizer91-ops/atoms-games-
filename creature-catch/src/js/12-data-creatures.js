@@ -2,8 +2,9 @@
 // The readable table is docs/creature-catch-roster.md (node tools/roster-doc.mjs).
 var CC = window.CC || (window.CC = {});
 
-// Regions in order. r = index used for the stat budget.
-CC.REGIONS = ['Home Village', 'Meadow Path', 'Grassland', 'Forest', 'Water', 'Cave', 'Desert', 'Snow', 'Swamp', 'Night Ruins'];
+// Regions in order. r = index used for the stat budget (the side areas use the step of the road they hang off; 10 is
+// the places after the story). Only the roster doc shows these names.
+CC.REGIONS = ['Home Village', 'Meadow Path', 'Grassland', 'Forest', 'Lakeshore', 'Crystal Cave', 'Sunscorch Desert', 'Frostpeak Pass', 'Murkmire Swamp', 'Night Ruins', 'After the story'];
 
 // Stat shapes, weights for HP / Attack / Defense / Speed (each row sums to 4)
 CC.PROFILES = {
@@ -228,7 +229,7 @@ CC.CREATURE_ORDER.forEach(function (id) {
   if (c.evo) CC.CREATURES[c.evo.into].from = id;
 });
 
-// Wild spawns. Rarity roll: Common 60, Uncommon 30, Rare 10 (a missing tier rolls again).
+// Wild spawns: who lives where, by tier. How often each one turns up is CC.spawnTable (the end of this file).
 CC.SPAWNS = {
   meadow: { name: 'Meadow Path', levels: [2, 4], common: ['clovermouse', 'hopsprout'], uncommon: [], rare: [] },
   grassland: { name: 'Grassland', levels: [4, 7], common: ['tuftail', 'pebblepup'], uncommon: ['bumblop'], rare: ['dandylion'] },
@@ -236,9 +237,9 @@ CC.SPAWNS = {
   water: { name: 'Lakeshore', levels: [8, 13], common: ['bubblefin', 'crabbit'], uncommon: ['tidepuff', 'sealamp'], rare: ['koiling'] },
   cave: { name: 'Crystal Cave', levels: [12, 18], common: ['glimmole', 'stalagbat'], uncommon: ['rumblepede', 'gemlin'], rare: ['magmite'] },
   desert: { name: 'Sunscorch Desert', levels: [16, 22], common: ['cactoad', 'sandwyrm'], uncommon: ['dunefox'], rare: ['scarabolt'] },
-  snow: { name: 'Frostpeak Pass', levels: [20, 26], common: ['pengloo', 'sleetle'], uncommon: ['frostoat'], rare: ['yetiny'] },
+  snow: { name: 'Frostpeak Pass', levels: [20, 26], common: ['pengloo', 'sleetle'], uncommon: ['frostoat'], rare: ['yetiny'], lv: { pengloo: [20, 23], mysterypop: [20, 23] } },
   swamp: { name: 'Murkmire Swamp', levels: [24, 30], common: ['lilypadle', 'mudgator'], uncommon: ['wispeel'], rare: ['mireling'] },
-  ruins: { name: 'Night Ruins', levels: [28, 35], common: ['wispkin'], uncommon: ['pebbleton', 'bonecat', 'fangling'], rare: ['moonlynx'] },
+  ruins: { name: 'Night Ruins', levels: [28, 35], common: ['wispkin'], uncommon: ['pebbleton', 'bonecat', 'fangling'], rare: ['moonlynx'], lv: { bonecat: [28, 31], crescub: [28, 31] } },
 };
 
 // the form a creature has at a level: wild creatures and trainers' creatures at or past a level evolution come
@@ -257,3 +258,22 @@ Object.keys(CC.SPAWNS).forEach(function (k) {
   });
 });
 CC.RARITY.moonlynx = 'veryrare';
+
+// Wild spawns, part 2: who can turn up, and how often. Each creature on a place's list has a weight from its tier
+// (CC.SPAWN_WEIGHT): a common turns up twice as often as an uncommon and five times as often as a rare. A place can
+// set its own weight for a creature (weight: { id: n }) or its own levels (lv: { id: [lo, hi] }), so a first form
+// that would mostly be met evolved also turns up as itself. A creature listed for the other time of day
+// (time: { id: 'day' | 'night' }) sits out. forms: what it can be met as at those levels.
+CC.SPAWN_WEIGHT = { common: 10, uncommon: 5, rare: 2 };
+CC.spawnTable = function (key, night) {
+  var sp = CC.SPAWNS[key], time = sp.time || {}, out = [];
+  ['common', 'uncommon', 'rare'].forEach(function (t) {
+    sp[t].forEach(function (id) {
+      if (time[id] && (time[id] === 'night') !== !!night) return;
+      var w = sp.weight && sp.weight[id] != null ? sp.weight[id] : CC.SPAWN_WEIGHT[t], lv = (sp.lv && sp.lv[id]) || sp.levels, forms = [];
+      for (var l = lv[0]; l <= lv[1]; l++) { var f = CC.wildForm(id, l); if (forms.indexOf(f) < 0) forms.push(f); }
+      if (w > 0) out.push({ id: id, tier: t, w: w, levels: lv, forms: forms });
+    });
+  });
+  return out;
+};

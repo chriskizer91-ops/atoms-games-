@@ -170,13 +170,17 @@ var CC = window.CC || (window.CC = {});
 
   // ---------- wild creatures: by day or night, and grown up when they're past their evolution level ----------
   var MOON_CHANCE = function () { return F().balance ? 0.06 : 0.03; };
+  // each creature turns up by its weight (CC.spawnTable in 12-data-creatures.js). A creature you have never met (in
+  // any form it can turn up as here) counts double, so a kid meets every creature of a place quickly; after that the
+  // weights alone decide (1 turns this off)
+  var NEW_BONUS = 2;
   CC.rollSpawn = function (key) {
-    var sp = CC.SPAWNS[key], night = CC.isNight(), time = sp.time || {};
-    var ok = function (id) { var t = time[id]; return !t || (t === 'night') === night; };
-    var tiers = { common: sp.common.filter(ok), uncommon: sp.uncommon.filter(ok), rare: sp.rare.filter(ok) };
-    var r = Math.random() * 100, tier = r < 60 ? 'common' : r < 90 ? 'uncommon' : 'rare';
-    if (!tiers[tier].length) tier = ['common', 'uncommon', 'rare'].find(function (t) { return tiers[t].length; });
-    var id = CC.pick(tier ? tiers[tier] : sp.common), lv = CC.randi(sp.levels[0], sp.levels[1]);
+    var night = CC.isNight(), list = CC.spawnTable(key, night), seen = (CC.state && CC.state.seen) || {}, sum = 0, i;
+    if (!list.length) list = CC.spawnTable(key, !night); // nobody listed for this time: use the other time's list
+    var ws = list.map(function (e) { var w = e.w * (e.forms.some(function (f) { return !seen[f]; }) ? NEW_BONUS : 1); sum += w; return w; });
+    var r = Math.random() * sum, e = list[list.length - 1];
+    for (i = 0; i < list.length; i++) { r -= ws[i]; if (r < 0) { e = list[i]; break; } }
+    var id = e.id, lv = CC.randi(e.levels[0], e.levels[1]);
     // a Moonborn creature (the kids' creatures with lives: 'anywhere') can turn up anywhere
     if (CC.MOONBORN && CC.MOONBORN.length && Math.random() < MOON_CHANCE()) id = CC.pick(CC.MOONBORN);
     return { id: CC.wildForm(id, lv), lv: lv };

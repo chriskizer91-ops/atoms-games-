@@ -50,7 +50,7 @@ creature-catch/
   CHANGELOG.md  README.md
   src/shell.html               the page around the game; src/fonts/ (Pixelify Sans)
   src/js/*.js                  the game, concatenated in file-name order into one script (see section 3)
-  art/**                       game-ready pictures (949), embedded as base64 by the build; art/MANIFEST.json lists them
+  art/**                       game-ready pictures (948), embedded as base64 by the build; art/MANIFEST.json lists them
   companion/creature-catch-field-guide.html   the Field Guide (built)
   tools/build.mjs              builds creature-catch.html from src/ and art/
   tools/build-companion.mjs    builds the Field Guide from the game's data and art
