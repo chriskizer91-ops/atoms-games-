@@ -429,9 +429,10 @@ var VAULT_SORTS = [
   { name: 'Log No.', key: function (m, i) { return CC.CREATURE_ORDER.indexOf(m.id) * 10000 + i; } },
 ];
 CC.vaultSort = 0;
+CC.vaultAt = null; // where you left the list: { m, sel, top } (the creature you were on, its row, the first row shown)
 CC.vaultList = function () {
   return new Promise(function (resolve) {
-    var ROWS = 10, ROW = 12, sel = 0, top = 0, order = [];
+    var ROWS = 10, ROW = 12, last = CC.vaultAt, sel = last ? last.sel : 0, top = last ? last.top : 0, order = [];
     var vault = function () { return CC.state.vault; };
     var resort = function (keepIndex) {
       var srt = VAULT_SORTS[CC.vaultSort];
@@ -442,19 +443,20 @@ CC.vaultList = function () {
       sel = CC.clamp(sel, 0, Math.max(0, order.length - 1));
       top = CC.clamp(top, Math.max(0, sel - ROWS + 1), Math.min(sel, Math.max(0, order.length - ROWS)));
     };
-    resort();
+    resort(last ? vault().indexOf(last.m) : null); // back on the same creature, or on the row it was on
+    var leave = function (v) { CC.vaultAt = { m: vault()[order[sel]], sel: sel, top: top }; CC.pop(scr); resolve(v); };
     var scr = {
       name: 'vault', opaque: true, busy: false,
       update: function () {
         if (scr.busy) return;
         var n = order.length, was = sel;
-        if (CC.input.pressed.b) { CC.sfx('back'); CC.pop(scr); resolve(-1); return; }
+        if (CC.input.pressed.b) { CC.sfx('back'); leave(-1); return; }
         if (!n) return;
         if (CC.repeat('down')) sel = (sel + 1) % n;
         if (CC.repeat('up')) sel = (sel + n - 1) % n;
         if (CC.repeat('right')) sel = Math.min(n - 1, sel + ROWS);
         if (CC.repeat('left')) sel = Math.max(0, sel - ROWS);
-        if (sel !== was) { CC.sfx('blip'); top = CC.clamp(top, Math.max(0, sel - ROWS + 1), Math.min(sel, n - ROWS)); }
+        if (sel !== was) { CC.sfx('blip'); top = CC.clamp(top, Math.max(0, sel - ROWS + 1), Math.min(sel, Math.max(0, n - ROWS))); } // (a short list starts at the top)
         if (CC.input.pressed.start) { CC.sfx('select'); CC.vaultSort = (CC.vaultSort + 1) % VAULT_SORTS.length; resort(order[sel]); }
         if (CC.input.pressed.a) {
           CC.sfx('select'); scr.busy = true;
@@ -462,7 +464,7 @@ CC.vaultList = function () {
           CC.menu([CC.state.party.length < 4 ? 'Take out' : 'Swap in', 'Summary', 'Back'], { x: 6, y: 60, w: 96 }).then(function (c) {
             if (c === 1) return CC.summary(m).then(function () { scr.busy = false; });
             scr.busy = false;
-            if (c === 0) { CC.pop(scr); resolve(v); }
+            if (c === 0) leave(v);
           });
         }
       },
@@ -524,7 +526,9 @@ CC.vaultScreen = async function () {
         var p = await CC.partyScreen('pick', { title: 'Swap ' + CC.mon.name(m) + ' with...', hint: 'Your party is full: pick one to put away.' });
         if (p < 0) continue;
         var out = CC.state.party[p];
-        CC.state.party[p] = m; CC.state.vault[v] = out;
+        CC.state.party[p] = m;
+        if (CC.firstHealthy() < 0) { CC.state.party[p] = out; await CC.say('Keep at least one creature that can fight!'); continue; } // like Put away
+        CC.state.vault[v] = out;
         await CC.say(CC.mon.name(m) + ' joined, and ' + CC.mon.name(out) + ' went into the Vault.');
       }
     } else {
