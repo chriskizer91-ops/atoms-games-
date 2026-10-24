@@ -113,7 +113,7 @@ The files load in name order, and later files often patch earlier ones (wrapping
 
 - **The screen stack:** `CC.push(screen)`, `CC.pop(screen)`, `CC.top()`, `CC.stack`. A screen is `{ name, update, draw, opaque }`. The world is `CC.world`; scripted scenes run inside `CC.world.run(async () => ...)`, which sets `CC.world.busy`. Idle means `!CC.world.busy && CC.stack.length === 1`.
 - **Maps:** `CC.MAPS[id]` with ASCII `rows`, a `legend`, `exits` (side, range, target map and tile, optional `check` and `onArrive`), `decor`, and hooks `onEnter`, `landmarkTalk`, `drawOver`. Rooms come from `CC.room(name, rows, [mapId, x, y], decor, extra)`; upstairs floors from `CC.upstairs`. People are in `CC.NPCS[mapId]`, door targets in `CC.DOORS`, sign text in `CC.SIGNS['map:x,y']`. Move the player with `CC.world.enter(map, x, y, dir)`.
-- **Creatures:** `CC.CREATURES[id]` = `{ name, types, region, kind, profile, sig, evo: { into, at }, from, look, base, total, learn, xpYield }`. `kind` is `starter1..3`, `base`, `mid`, `final`, `solo` or `legend`. `CC.CREATURE_ORDER` is the Creature Log order (made by `13c`). `CC.SPAWNS[place]` = `{ name, levels, common, uncommon, rare, time }`; `CC.RARITY[id]` drives catch odds; `CC.ZONES` lists the places in journey order.
+- **Creatures:** `CC.CREATURES[id]` = `{ name, types, region, kind, profile, sig, evo: { into, at }, from, look, base, total, learn, xpYield }`. `kind` is `starter1..3`, `base`, `mid`, `final`, `solo` or `legend`. `CC.CREATURE_ORDER` is the Creature Log order (made by `13c`). `CC.SPAWNS[place]` = `{ name, levels, common, uncommon, rare, time, weight, lv }` (since v12 each creature is picked by its weight: common 10, uncommon 5, rare 2, or its own `weight`; `lv` gives one creature its own levels; `CC.spawnTable(place, night)` is the table the game, the Field Guide and the roster read); `CC.RARITY[id]` drives catch odds; `CC.ZONES` lists the places in journey order.
 - **A wild creature at or past its evolution level is met already evolved** (`CC.rollSpawn`). This doesn't apply to trainers' teams, which are hand-written (see section 5).
 - **Stat budgets:** `budget()` in `12-data-creatures.js`. The v11 forms in `12c-data-final.js` keep their old forms' stats unchanged.
 - **The family creatures system** (`13b`): plain blocks become creatures (stats from where they live). `id:` overrides the id for a name with symbols (? Pop).
@@ -155,6 +155,8 @@ don't run `playwright install`. Screenshots are the best way to check text overf
 ---
 
 ## 5. Known issues (found while writing this, not fixed)
+
+*v12 status: items 1 to 4 and 8 are fixed; item 5's landmark lines are fixed (Moonborn and Keepers stay unused and run without errors); item 6 is fixed on the battle plates and the Log list; item 9's phone layout is now covered by emulation (tests/20), not a real phone. See `CHANGELOG.md`.*
 
 1. **Spire rematch teams are behind the v11 evolutions (v11 regression).** In `15-story-full.js`, `REMATCH` (Lv 44 to 47) still uses forms that now evolve much lower:
    Oakley: Budstag 44 (now Bloomstag at 24), Barkbeetle 45 (Timberbeetle, 22), Timberowl 46 (Oakenowl, 40).

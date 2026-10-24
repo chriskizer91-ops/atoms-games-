@@ -50,6 +50,7 @@ Shadow and Lumen deal 2x to each other, so before this fix each resisted only on
 
 - **Moon Shard:** moved to a chest in the **Swamp** (it used to be in the Night Ruins). Mothlight and Wispkin can now evolve before the finale.
 - **Sun Shard:** stays in the Desert.
+- **Since v9** there's a third Moon Shard in the Ancients' Archive and a second Sun Shard in the Dawn Temple. **Since v12** the Moon Altar in the Night Ruins gives one Moon Shard a day once the moon is back, because four creatures (Mothlight, Wispkin, Mimicube, Glimstar) need one. A shard is used up only when the evolution finishes, and never on a fainted creature.
 
 ## 6. New Creature: Fangling and Rosferatu
 
@@ -70,18 +71,18 @@ Two things stop you from skipping ahead:
 1. **Wild levels.** Each region's wild creatures are stronger than the last.
 2. **Guide trials.** Each region's guide stands at its exit. Beat their trial battle to earn their **trail charm**, and they open the way forward.
 
-| Region | Guide | Trial team level | Gate they open |
+| Region | Guide | Trial team level (best creature, v12) | Gate they open |
 |---|---|---|---|
 | Grassland | Farmer Bramble | 8 | Fallen mossy log into the Forest |
 | Forest | Ranger Oakley | 12 | Rope bridge to the lake |
-| Water | Fisher Gus | 15 | Ferry to the cave mountain (boulders cleared) |
-| Cave | Dusty the Miner | 20 | Tunnel out into the Desert |
-| Desert | Safi the Nomad | 24 | Path through the sandstorm |
-| Snow | Frida the Explorer | 28 | Ice wall at the mountain pass |
-| Swamp | Granny Moss | 32 | Rebuilt boardwalk to the Ruins |
-| Night Ruins | Night Watchman Corvin | 37 | The rune gate to the finale |
+| Water | Fisher Gus | 17 (four creatures) | Ferry to the cave mountain (boulders cleared) |
+| Cave | Dusty the Miner | 22 | Tunnel out into the Desert |
+| Desert | Safi the Nomad | 26 | Path through the sandstorm |
+| Snow | Frida the Explorer | 29 | Ice wall at the mountain pass |
+| Swamp | Granny Moss | 34 | Rebuilt boardwalk to the Ruins |
+| Night Ruins | Night Watchman Corvin | 36 | The rune gate to the finale |
 
-Juniper's rival fights stay at Lv 5, 12, 22, 32, and 40.
+Juniper's rival fights are at Lv 5, 10, 20, 26 and 36, and her last battle at the Spire is Lv 47 to 50 (v12; they were 5, 12, 22, 32, 40 and 50). Before v12 the guides' teams were 8, 12, 15, 20, 24, 28, 32 and 37. Section 17 says why.
 
 ## 8. Story and Finale: Three Suggestions (not decided)
 
@@ -132,7 +133,7 @@ They're generated in `creature-catch/src/js/12-data-creatures.js` and `11-data-m
 - **Gates:** log (Bramble), rope bridge (Oakley), rockslide (Gus), tunnel (Dusty), sandstorm (Safi), ice wall (Frida), boardwalk (Granny Moss, into the Night Ruins), and Corvin's rune gate in the middle of the ruins (to the altar).
 - **Rewards:** Dusty gives the Wooden Whistle (Fly), Corvin the Master Cube. The Sun Shard is in a Desert chest; Moon Shards are in the Swamp and the Night Ruins.
 - **Tobias** sells Ultra Cubes, tonics and Revives at the outposts from the Desert on.
-- **Post-game:** the Moonlit Spire (wilds Lv 38 to 48, seven guide rematches at Lv 44 to 47, Juniper at Lv 50).
+- **Post-game:** the Moonlit Spire (wilds Lv 38 to 48, seven guide rematches at Lv 44 to 47, Juniper at Lv 50; 47 to 50 since v12).
 
 ## 14. Added in v9 (the expansion)
 
@@ -164,3 +165,20 @@ The expansion follows `creature-catch-expansion-guide.md`. Where the guide left 
 - **Nobody's creature gets weaker:** a creature that gained a form keeps its stats. A new second form gets the usual evolved budget; a new third form gets a third more than the form before it, at most 450.
 - **Crescub** (Moonlynx's baby form, Lv 30) takes Moonlynx's place in the Night Ruins. **Runescroll** counts as three Glyphlings at the Archive wall.
 - **`creature-catch-lore-bible.md`** holds the world, the story and every creature. It wins for lore.
+
+## 17. Added in v12 (the bug run)
+
+- **Leveling: XP scales with the level gap.** A creature gets more XP from a stronger foe and less from a much weaker one: its share times 1 + 0.08 for each level the foe is above it (at most 1.5 times, at least half). The creatures that fought still split the XP; the x1.5 for trainers, XP for a catch, Lv cubed and the Lv 50 cap are unchanged.
+- **The rest of the team learns too.** Every awake party member under Lv 50 that didn't fight gets half a fighter's share (scaled by its own level), after one line, "The rest of your team gained XP too!". It still levels up, learns moves and is asked to evolve.
+- **Why:** a simulated kid (every trainer, a few or a lot of wild battles, three starters) arrived at the guides 2 to 13 levels above their best creature, with the rest of the team about 20 levels behind, while Juniper's fights were won 0 to 27% of the time. With these rules and the team levels in section 7, the kid arrives at about each guide's level and Juniper is a fair fight. The numbers are in the bug-run notes.
+- **Trainers' creatures come in the form they'd have at their level,** the same rule as wild ones (level evolutions only). This fixes the Spire rematches, Juniper's teams and the route trainers past their evolution level.
+- **Evolving:** a creature that reaches its evolution level is asked after that battle, or after your next win if it fainted or you lost. If you say No or stop it with B, you can evolve it any time from the party menu (Evolve), as long as it hasn't fainted. That also covers Lv 50 and creatures from older saves whose line gained a form.
+- **Wild creatures are picked by weight,** not by a 60/30/10 tier roll: each creature on a place's list weighs 10 (common), 5 (uncommon) or 2 (rare), so tiers no longer dilute each other. A place can set one creature's weight (the Spire's rares weigh 3) or its levels (`weight` and `lv` in `CC.SPAWNS`). `CC.spawnTable(place, night)` is the one table the game, the Field Guide and the roster all read. Every place has at least three creatures by day and at night, and rares are about 4 to 8%.
+- **New-creature bonus:** a creature you've never met (in any form it can turn up as there) counts double, so a kid meets everything in a place quickly. After that, rares are rare again.
+- **Catch rarity:** a creature met already evolved catches like the list entry it came from (Pup Pop catches like ? Pop). Moonlynx and the guardians stay very rare.
+- **Losing:** if every creature faints in any plain battle (tall grass, tide pool, fairy ring, Mimicube, route trainers), you wake up healed where you last rested, and the line says where. No battle starts when nobody can fight. A double knockout with nobody left is a loss. Story battles that may be lost still end their own way.
+- **"Always day"** in Options only changes how the world looks. Night creatures, Lost Page 9, the Dusk Cube and resting "Until night" at the Inn follow the game clock.
+- **The Cube Vault:** Take out opens its own screen (a scrolling list, the creature you're on shown big, sorting with MENU). A swap must leave at least one creature that can fight, the same as Put away. Every long menu scrolls.
+- **The Creature Log shows shadows:** every first form you haven't met (the guardians stay secret), with where to look, and every evolution of a creature you have met, with what it grows from and when. A creature you've seen shows its real picture.
+- **Phones:** upright, the buttons sit under the game; sideways, they split beside it, so the game is about twice as big. Small phones shrink the buttons so they never overlap.
+- **Play time** counts whenever a game is on, in real time.

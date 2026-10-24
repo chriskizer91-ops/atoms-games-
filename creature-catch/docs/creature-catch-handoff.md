@@ -273,7 +273,7 @@ Juniper's sprite and portrait don't need to change per branch, but each branch n
 
 ## 9. Regions and Spawns
 
-**Encounter rules:** each step in tall grass (or the region's equivalent) has a **12% encounter chance**, with a 3-step cooldown after a fight. Roll rarity first: Common 60%, Uncommon 30%, Rare 10%. Then pick a random creature in that tier. Only base forms spawn in the wild.
+**Encounter rules:** each step in tall grass (or the region's equivalent) has a **12% encounter chance**, with a 3-step cooldown after a fight. Roll rarity first: Common 60%, Uncommon 30%, Rare 10%. Then pick a random creature in that tier. *(Replaced in v12 by a weight for each creature: see `creature-catch-decisions-2.md` section 17.)* Only base forms spawn in the wild.
 
 | Region | Wild levels | Common | Uncommon | Rare |
 |---|---|---|---|---|

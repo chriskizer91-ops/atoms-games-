@@ -2,6 +2,80 @@
 
 The newest version is at the top. Each version is the `creature-catch.html` built from the commit labeled with it.
 
+## v12: the bug run
+Everything on the list, plus a sweep of the whole game for bugs.
+
+**Leveling: more of a fun challenge**
+- The guides are a real match now. Before, a starter usually showed up 5 to 13 levels above each guide and won in a hit or two. Gus, Dusty, Safi, Frida and Granny Moss have stronger teams (Gus has four creatures), and Corvin's is a little lower, so your team arrives at about their level.
+- **XP depends on who you beat:** more from a stronger creature, less from a much weaker one, so grinding easy battles doesn't run away.
+- **The whole team grows:** creatures that didn't fight get half a share ("The rest of your team gained XP too!"). Switching to a creature with the right type is a real plan now.
+- **Juniper is beatable.** Her fights were nearly walls (won less than 1 time in 4). They're now Lv 10, 20, 26 and 36, and her last fight at the Spire is Lv 47 to 50.
+- **Trainers' creatures come evolved when they should,** the same as wild ones: the Spire rematches, Juniper's teams, Skier Lena, Sailor Pete, Explorer Indira and others.
+- Trainers no longer waste turns on moves that can't work.
+
+**Wild creatures (every place checked)**
+- Each creature has its own chance, so a "rare" one is really rarer than an "uncommon" one. Before, the Forest's rare Budstag was as common as each uncommon, and some uncommons beat the commons.
+- **The first places have more variety:** Puffmunk is on the Meadow Path at night too.
+- **A creature you've never met turns up twice as often,** so a kid meets everything in a place quickly. After that, rares are rare again.
+- **Every place has at least three creatures,** day and night:
+  - Copperbell's park had only Dingdove by day and Rustcoon at night. Now Pebblepup and Clovermouse live there too, so Boulderhound and Clove Tastical can be met wild.
+  - Scarecrowl is common in the Orchard at night.
+  - Mushling, Lilypadle, Wispkin and Scarabolt join the Grove, the Bayou, the Archive and the Dawn Temple.
+- **No place is one creature over and over.** Before, the Bayou was 70% Mudtusk.
+- **? Pop is met as itself more often in Frostpeak Pass,** and so are Pengloo, Bonecat and Crescub.
+- A creature met already evolved is as easy to catch as the form it came from.
+
+**Evolutions**
+- **All 87 evolutions work,** and a new test checks every one through the real game.
+- **Stopping an evolution with B no longer wastes a Moon or Sun Shard.** A shard can't be used on a fainted creature.
+- **The Moon Altar gives a Moon Shard once a day** after the moon is back. There were only three shards for four creatures that need one.
+- **New "Evolve" choice in the party menu** for a creature that's ready but didn't evolve: you said No, it fainted at the level-up, it's at Lv 50, or it's from an older save whose line gained a form.
+- A shiny that evolves stays shiny in the Creature Log.
+
+**The Creature Log**
+- **Shadows:** the Log shows the shadow of every first-form creature you haven't met yet, with where to look ("Look for it around the Meadow Path."). Once you meet a creature, its evolutions appear as shadows too ("Tuftail grows into this one at Lv 18."). The legendary guardians stay a secret.
+- A creature you've seen shows its real picture.
+- The numbers use clearer digits (the old font's 2 looked like an 8, so 120 read 180). Seen counts only real creatures.
+- Notes fit their page, and use the places' real names (the Lakeshore, Frostpeak Pass).
+
+**The Cube Vault on phones**
+- **Take out opens a full Vault screen:** a scrolling list, the creature you're on shown big with its types, level and HP, left and right to turn a page, and MENU to sort by newest, level, name or Log number. Before, the list didn't scroll, so past nine creatures the rest ran off the bottom of the screen.
+- **Every long list scrolls now.** The Bag and the Lost Pages book had the same problem at the top of the screen.
+- **Turn the phone sideways** and the buttons move beside the game, which gets about twice as big. Before, it shrank to tiny text.
+- On small phones the B button no longer covers the arrows, and sliding your thumb across the arrows changes direction.
+
+**Bugs fixed**
+- **Losing a wild battle** now sends you back to heal, and the line says where you went. Before, you stayed in the grass with every creature fainted, and the next trainer battle broke.
+- **Gloaming can't be lost:** closing the game during its catch battle used to lose it for good. Losing to it at the Dusk Pool heals you now.
+- **Opening the party before you have a starter** no longer freezes the game, and one broken screen can't freeze the whole game.
+- **"Always day" in Options only changes the look.** It used to hide every night creature and Lost Page 9.
+- **Battles:**
+  - Long names are never covered.
+  - Levels and PP use clear digits.
+  - A tie where both last creatures faint counts as a loss.
+  - Kiln Roll and Fantastic Hop can miss like their numbers say.
+  - The Dusk Cube works from sunset.
+- **Saves:**
+  - A damaged file says so instead of looking empty, and New Game asks before using it.
+  - Up on the title screen moves up.
+  - File numbers read right.
+  - Play time counts all play.
+- **Yes or No questions** stay on screen while you choose.
+- **Type icons show on every type badge.**
+- **People and places:**
+  - The Great Geode speaks.
+  - Juniper finishes her walk in the village, and talks after her fifth battle.
+  - Coming up from Driftwood Cove no longer drops you in a bush.
+  - Fly works from the Moonlit Spire.
+  - Walkers don't step onto you.
+  - Copperbell notices the bell ringing again.
+  - Rosa's Inn has no invisible wall.
+  - Flying from the Bag closes the menu.
+  - "an Ultra Cube", "What a lovely Inkwing!"
+- **The Field Guide:** draining moves say the right amount, items say what they do, stat totals add up, the menu fits on phones, and each card says how often a creature turns up.
+- **Dev codes** take names with spaces (GIVE CLOVE TASTICAL 12).
+- **Six new browser tests:** every evolution, every map walked, the story fixes, spawns, battle rules and phones.
+
 ## v11: the final creatures
 The creature list is now final at **175**.
 - **39 new forms from the Evolution Lab,** his picks, with his ideas built in. Yetitan (a yeti with bigfoot colors), Mirelich (a moss lich), Gemonitor (a lizard covered in gems), Pufferoar (Tidepuff with its colors flipped), Bogtusk (a muddier, furrier, fiercer pig), Oakenowl (an owl that looks like an oak tree when it sits still) and **Crescub**, a lynx cub that grows into Moonlynx at Lv 30. Eleven families now have three forms, including Tuftail, Fleecling, Bumblop, Dewt, Pebblepup, Sprigkin, Bubblefin, Crabbit, Shellbit, Puffling and Owlcorn.

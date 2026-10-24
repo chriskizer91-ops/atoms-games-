@@ -202,7 +202,7 @@ Fire 4, Water 6, Plant 7, Earth 7, Bolt 4, Frost 4, Shadow 4, Lumen 4.
 
 ## 9. Spawn Tables
 
-**Encounter rules:** each step in tall grass (or region equivalent) has a **12% chance** of an encounter, with a 3-step cooldown after a fight. Roll rarity first: **Common 60%, Uncommon 30%, Rare 10%**. Then pick a random creature in that tier. Only base-form creatures spawn in the wild.
+**Encounter rules:** each step in tall grass (or region equivalent) has a **12% chance** of an encounter, with a 3-step cooldown after a fight. Roll rarity first: **Common 60%, Uncommon 30%, Rare 10%**. Then pick a random creature in that tier. *(Replaced in v12 by a weight for each creature: see `creature-catch-decisions-2.md` section 17.)* Only base-form creatures spawn in the wild.
 
 | Region | Levels | Common | Uncommon | Rare |
 |---|---|---|---|---|

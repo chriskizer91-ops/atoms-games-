@@ -26,7 +26,7 @@ Hold L + R and press MENU (or press Up Up Down Down Left Right Left Right B A on
 
 The current version is in `VERSION` and shows on the title screen. `CHANGELOG.md` lists what each version changed.
 
-## What's in the game (v11)
+## What's in the game (v12)
 
 **The Fading Moon.** The moon over the land is dimming, and frightened creatures hide in the tall grass. Elder Willow gives you your first creature and sends you north to find out why.
 
@@ -36,10 +36,11 @@ The current version is in `VERSION` and shows on the title screen. `CHANGELOG.md
 - **8 guide trials** (Bramble, Oakley, Gus, Dusty, Safi, Frida, Granny Moss, Corvin). Each gives a trail charm and a piece of the story, and opens the gate north.
 - **Juniper**, your rival, battles you five times with a team built against your starter.
 - **Fly** comes from Dusty after the Cave trial: the Wooden Whistle takes you to any place you've been.
-- **The finale** at the Moon Altar: calm the Dimmed Lunarion, then try to catch it. Then the credits, and the **Moonlit Spire** after the story (Lv 38 to 48 wilds, guide rematches, Juniper at Lv 50).
+- **The finale** at the Moon Altar: calm the Dimmed Lunarion, then try to catch it. Then the credits, and the **Moonlit Spire** after the story (Lv 38 to 48 wilds, guide rematches, Juniper at Lv 47 to 50).
 - **The Lost Pages and the Long Dusk:** find the 12 missing pages of Elder Willow's book. Eight of them open the Dawn Temple, where Solarion sleeps; its Sun Ember lights the way to the Hollow Deep and shy Gloaming; and the three guardians meet at the top of the Spire for the Balance.
+- **The Creature Log** shows every creature you've met, and the shadows of the ones still to find. **The Cube Vault** has its own scrolling screen.
 - **Music and options:** a chiptune soundtrack made in code, and an Options screen for volumes, text speed, the follower, and day and night.
-- **Battles:** Fight / Bag / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP, level-ups, learning moves, evolving after a battle (or with the Sun and Moon Shards), five kinds of cube, and the catch formula with a wobbling cube.
+- **Battles:** Fight / Bag / Swap / Run, the 8-type chart plus Normal, PP, status effects, stat stages, critical hits, XP (more for beating stronger creatures, and a share for the rest of the team), level-ups, learning moves, evolving after a battle or from the party menu (or with the Sun and Moon Shards), five kinds of cube, and the catch formula with a wobbling cube.
 - **Your own creatures:** draw one and add it in `src/js/13b-family-creatures.js`, as a creature of any place, a Moonborn that can show up anywhere, or the Keeper of a side area (`docs/creature-catch-new-creatures.md`).
 - **Code-drawn life:** creatures breathe, bob, lunge, flash, shake and faint; attacks throw type particles and bursts; the maps have smoke, butterflies, falling leaves, snow, fog, fireflies, heat shimmer and glowing crystals.
 
