@@ -12,6 +12,7 @@ var CC = window.CC || (window.CC = {});
   }
   function nm(s) { return (s.foe ? (B.wild ? 'The wild ' : B.trainer.name + '\'s ') : '') + CC.mon.name(s.mon); }
   function nmShort(s) { return CC.mon.name(s.mon); }
+  function an(word) { return (/^[aeiou]/i.test(word) ? 'an ' : 'a ') + word; } // an Ultra Cube, a Potion
 
   var B = null; // the battle now running
   CC.currentBattle = function () { return B; };
@@ -106,15 +107,29 @@ var CC = window.CC || (window.CC = {});
     }
   }
 
+  // The HP plates. Top row: the name, and at the right Lv with the 'caught' cube beside it. Second row: the status
+  // tag (when there is one), HP and the bar. Nothing is drawn over the name: a name too wide for the room left
+  // shrinks to size 9, and is cut at the edge if even that doesn't fit.
+  var PLATE_W = { foe: 120, ally: 110 };
+  function plateName(str, x, y, room) { // measured the way CC.text draws it (with the ligatures broken)
+    var drawn = String(str).replace(/f([filt])/g, 'f\u200c$1'), size = CC.textWidth(drawn, 10) <= room ? 10 : 9;
+    if (CC.textWidth(drawn, size) <= room) { CC.text(str, x, y + 10 - size, '#2a2230', { size: size }); return; }
+    var g = CC.g;
+    g.save(); g.beginPath(); g.rect(x, y - 2, room, 16); g.clip();
+    CC.text(str, x, y + 1, '#2a2230', { size: 9 });
+    g.restore();
+  }
   function drawPlate(s, x, y, ally) {
     if (!s.mon || (s.scale <= 0 && !(s.foe && B.cube))) return;
-    var m = s.mon, max = CC.mon.maxHp(m), w = ally ? 110 : 104, h = ally ? 38 : 26;
+    var m = s.mon, max = CC.mon.maxHp(m), w = ally ? PLATE_W.ally : PLATE_W.foe, h = ally ? 38 : 26;
     CC.box(x, y, w, h, { fill: '#fbf3e0' });
-    CC.text(CC.mon.name(m), x + 6, y + 3, '#2a2230');
-    CC.text('Lv' + m.lv, x + w - 6, y + 4, '#6a5a50', { size: 9, align: 'right' });
-    CC.statusTag(m.status, x + w - 46, y + 4);
-    CC.text('HP', x + 6, y + 15, '#c86a2a', { size: 8 });
-    CC.bar(x + 20, y + 18, w - 28, s.hpShown / max);
+    var left = x + w - 6 - CC.textNum('Lv' + m.lv, x + w - 6, y + 4, '#6a5a50', { size: 9, align: 'right' });
+    if (!ally && CC.state.caught[m.id] && B.wild) { CC.drawCube(left - 6, y + 8, 5); left -= 11; }
+    plateName(CC.mon.name(m), x + 6, y + 3, left - 3 - (x + 6));
+    var hx = x + 6;
+    if (m.status) { CC.statusTag(m.status, hx + 10, y + 15); hx += 33; } // the tag's picture sits left of it
+    CC.text('HP', hx, y + 15, '#c86a2a', { size: 8 });
+    CC.bar(hx + 14, y + 18, x + w - 8 - (hx + 14), s.hpShown / max);
     if (ally) {
       CC.num(Math.ceil(s.hpShown) + '/' + max, x + w - 8, y + 23, '#2a2230', 'right');
       var lo = CC.mon.xpFor(m.lv), hi = CC.mon.xpFor(m.lv + 1), bw = w - 30;
@@ -123,8 +138,6 @@ var CC = window.CC || (window.CC = {});
       CC.rect(x + 23, y + h - 7, bw + 2, 5, '#3a2a22'); CC.rect(x + 24, y + h - 6, bw, 3, '#5a5060');
       CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 3, '#48a8e8'); CC.rect(x + 24, y + h - 6, Math.round(bw * xk), 1, '#a8dcff');
       if (s.xpShown != null) { var sw = (CC.time * 90) % (bw + 12) - 6; CC.g.globalAlpha = 0.6; CC.rect(x + 24 + CC.clamp(sw, 0, bw * xk), y + h - 6, 2, 3, '#ffffff'); CC.g.globalAlpha = 1; }
-    } else if (CC.state.caught[m.id] && B.wild) {
-      CC.drawCube(x + w - 54, y + 8, 5);
     }
     if (m.shiny) { CC.g.save(); CC.drawParticle('sparkle', x + w - 3, y + 2, 4, '#f8e050'); CC.g.restore(); }
   }
@@ -418,7 +431,7 @@ var CC = window.CC || (window.CC = {});
     // moves without power
     if (fx.heal) {
       var mx = CC.mon.maxHp(user.mon);
-      if (user.mon.hp >= mx) { await CC.say('But ' + nm(user) + ' is already at full HP!'); return; }
+      if (user.mon.hp >= mx) { await CC.say(nm(user) + ' is already at full HP!'); return; }
       user.mon.hp = Math.min(mx, user.mon.hp + Math.floor(mx * fx.heal)); await hpTo(user);
       await CC.say(nm(user) + ' got its HP back!'); return;
     }
@@ -506,10 +519,10 @@ var CC = window.CC || (window.CC = {});
           });
           var mv = CC.MOVES[m.moves[sel].id], slot = m.moves[sel];
           CC.box(162, 112, 78, 48);
-          CC.text('PP ' + slot.pp + '/' + mv.pp, 170, 118, slot.pp ? '#2a2230' : '#c83a3a', { size: 9 });
+          CC.textNum('PP ' + slot.pp + '/' + mv.pp, 170, 118, slot.pp ? '#2a2230' : '#c83a3a', { size: 9 }); // pixel digits: the font's 2 and 5 read as 8 and S
           if (mv.type) CC.typeBadge(mv.type, 170, 131);
           var e = mv.power ? CC.typeMult(mv.type, CC.mon.sp(B.foe.mon).types) : 1;
-          CC.text(mv.power ? 'Power ' + mv.power + (e > 1 ? ' ++' : e < 1 ? ' -' : '') : 'Effect', 170, 143, '#6a5a50', { size: 9 });
+          CC.textNum(mv.power ? 'Power ' + mv.power + (e > 1 ? ' ++' : e < 1 ? ' -' : '') : 'Effect', 170, 143, '#6a5a50', { size: 9 });
         },
       };
       CC.push(scr);
@@ -562,7 +575,7 @@ var CC = window.CC || (window.CC = {});
       var info = function (i) { CC.box(0, 112, 240, 48); CC.wrap(CC.ITEMS[items[i]].info, 222, 10).slice(0, 2).forEach(function (l, j) { CC.text(l, 9, 119 + j * 15, '#2a2230'); }); };
       var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, maxRows: 5, under: info }); // ends above the item's info box
       if (c < 0) continue;
-      var k = items[c], i = await CC.partyScreen('pick', { title: 'Use a ' + CC.ITEMS[k].name + ' on...' });
+      var k = items[c], i = await CC.partyScreen('pick', { title: 'Use ' + an(CC.ITEMS[k].name) + ' on...' });
       if (i < 0) continue;
       var problem = CC.itemProblem(k, CC.state.party[i]);
       if (problem) { await CC.say(problem); continue; }
@@ -572,7 +585,7 @@ var CC = window.CC || (window.CC = {});
   async function useItem(act) {
     var m = CC.state.party[act.index], it = CC.ITEMS[act.item];
     if (!CC.dev.infItems) CC.state.bag[act.item]--;
-    await CC.say('You used a ' + it.name + ' on ' + CC.mon.name(m) + '.', { auto: 0.3 });
+    await CC.say('You used ' + an(it.name) + ' on ' + CC.mon.name(m) + '.', { auto: 0.3 });
     var r = CC.useItemOn(act.item, m);
     if (typeof r === 'string') { await CC.say(r); return; }
     CC.sfx('heal');
@@ -604,7 +617,7 @@ var CC = window.CC || (window.CC = {});
     kind = kind || 'cube';
     if (!CC.dev.infItems) CC.state.bag[kind]--;
     B.cubeKind = kind;
-    await CC.say('You threw a ' + CC.ITEMS[kind].name + '!', { auto: 0.2 });
+    await CC.say('You threw ' + an(CC.ITEMS[kind].name) + '!', { auto: 0.2 });
     var f = B.foe, to = { x: f.home.x, y: f.home.y - 30 };
     B.cube = { x: 30, y: 120, rot: 0, open: 0, kind: kind };
     CC.sfx('throw');
