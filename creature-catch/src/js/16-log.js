@@ -78,11 +78,11 @@ var CC = window.CC || (window.CC = {});
             g.fillStyle = 'rgba(120,90,50,0.15)'; g.beginPath(); g.ellipse(65, 70, 20, 3, 0, 0, Math.PI * 2); g.fill();
             CC.drawSprite(sp, 65, 72, { scale: 0.62, sy: 1 + Math.sin(CC.time * 2.4) * 0.025, id: id });
             CC.text(c.name, 65, 79, ink, { align: 'center' });
-            var bw = c.types.reduce(function (w, t) { return w + CC.textWidth(t.toUpperCase(), 8) + 17; }, 0), bx = 65 - bw / 2;
+            var bw = c.types.reduce(function (w, t) { return w + CC.typeBadgeWidth(t) + 2; }, -2), bx = 65 - bw / 2;
             c.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 92) + 2; });
             var note = got ? (CC.LORE && CC.LORE[id] ? CC.LORE[id].note : '') : 'Seen in the wild. Catch one to fill in this page.';
             CC.wrap(note, 88, 8).slice(0, 4).forEach(function (l, i) { CC.text(l, 21, 104 + i * ROW, '#5a3a22', { size: 8 }); });
-            if (got) CC.text('A: read more', 110, 132, faint, { size: 8, align: 'right' });
+            if (got) CC.text('A: read more', 110, 136, faint, { size: 8, align: 'right' }); // under the note's 4th line, on the page's edge
           } else if (shadow(id)) {
             g.fillStyle = 'rgba(120,90,50,0.15)'; g.beginPath(); g.ellipse(65, 70, 20, 3, 0, 0, Math.PI * 2); g.fill();
             CC.drawSprite(CC.tinted(CC.creatureSprite(id), '#3a2a1e', 'logshadow-' + id), 65, 72, { scale: 0.62, alpha: 0.85, sy: 1 + Math.sin(CC.time * 2.4) * 0.025 });
@@ -100,9 +100,13 @@ var CC = window.CC || (window.CC = {});
             var lid = ids[top + i], y = Math.round(LIST_Y + i * ROW), on = top + i === sel;
             if (on) { g.fillStyle = 'rgba(232,184,56,0.35)'; g.fillRect(131, y - 1, 96, 9); }
             CC.num(String(top + i + 1).padStart(3, '0'), 140, y + 1, faint);
-            CC.text(seen(lid) ? C[lid].name : shadow(lid) ? '? ? ?' : '- - - - -', 162, y, seen(lid) ? ink : shadow(lid) ? '#8a6a48' : '#c0a880', { size: 8 });
+            // the name ends before the caught cube (or the page's edge): the few that are longer are drawn a little narrower
+            var nm = seen(lid) ? C[lid].name : shadow(lid) ? '? ? ?' : '- - - - -', nw = CC.textWidth(nm, 8), room = (s.caught[lid] ? 216 : 226) - 162;
+            g.save(); g.translate(162, y); if (nw > room) g.scale(room / nw, 1);
+            CC.text(nm, 0, 0, seen(lid) ? ink : shadow(lid) ? '#8a6a48' : '#c0a880', { size: 8 });
+            g.restore();
             if (s.caught[lid]) CC.drawCube(220, y + 6, 3.5);
-            if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 212, y + 4, 3, '#e8b838'); g.restore(); }
+            if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 223, y + 2, 3, '#e8b838'); g.restore(); } // a glint on the cube
             if (on) CC.cursor(133, y + 1);
           }
           CC.textNum('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });
