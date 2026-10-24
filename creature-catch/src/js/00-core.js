@@ -85,24 +85,40 @@ CC.W = 240; CC.H = 160;
   // ---------- loop ----------
   CC.time = 0;
   var last = 0;
+  // a screen that throws is reported once (not every frame), and the game keeps running
+  function oops(s, e) { if (!s.threw) { s.threw = true; console.error('Creature Catch: ' + (s.name || 'a screen') + ' broke:', e); } }
+  var loop = { name: 'the main loop' };
   function frame(now) {
-    var dt = Math.min(0.05, (now - last) / 1000 || 0.016) * ((CC.dev && CC.dev.speed) || 1); last = now;
+    try { step(now); } catch (e) { oops(loop, e); }
+    finally { for (var p in pressed) delete pressed[p]; requestAnimationFrame(frame); } // the next frame always comes
+  }
+  function step(now) {
+    var gap = (now - last) / 1000; last = now;
+    var dt = Math.min(0.05, gap || 0.016) * ((CC.dev && CC.dev.speed) || 1);
     CC.time += dt; CC.dt = dt;
+    // play time: real time while a game is going (battles, menus and talking too), not a hidden tab's gap or dev speed
+    if (CC.state && CC.world && CC.stack.indexOf(CC.world) >= 0 && gap > 0 && gap < 1) CC.state.playTime = (CC.state.playTime || 0) + gap;
     for (var k in repeatT) if (held[k]) { repeatT[k] -= dt; if (repeatT[k] <= 0) { pressed[k + '_rep'] = true; repeatT[k] += 0.09; } }
     var top = CC.top();
-    if (top && top.update) top.update(dt);
+    if (top && top.update) { try { top.update(dt); } catch (e) { oops(top, e); } }
     var ws = waiters; waiters = [];
-    ws.forEach(function (w) { if (w.pred()) w.res(); else waiters.push(w); });
+    ws.forEach(function (w) {
+      var done = true;
+      try { done = w.pred(); } catch (e) { console.error(e); } // a wait that breaks ends, so its script goes on
+      if (done) w.res(); else waiters.push(w);
+    });
     // draw
     g.setTransform(scale, 0, 0, scale, 0, 0);
-    g.imageSmoothingEnabled = false;
+    g.imageSmoothingEnabled = false; g.globalAlpha = 1;
     g.fillStyle = '#000'; g.fillRect(0, 0, CC.W, CC.H);
     var from = 0;
     for (var i = CC.stack.length - 1; i >= 0; i--) if (CC.stack[i].opaque) { from = i; break; }
-    for (var j = from; j < CC.stack.length; j++) { g.save(); CC.stack[j].draw(); g.restore(); }
+    for (var j = from; j < CC.stack.length; j++) {
+      var s = CC.stack[j];
+      g.save();
+      try { s.draw(); } catch (e) { oops(s, e); } finally { g.restore(); }
+    }
     CC.fx.draw();
-    for (var p in pressed) delete pressed[p];
-    requestAnimationFrame(frame);
   }
   CC.start = function () { CC.resize(); requestAnimationFrame(function (t) { last = t; frame(t); }); };
 })();
