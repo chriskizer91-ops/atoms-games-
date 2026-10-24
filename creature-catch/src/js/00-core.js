@@ -8,11 +8,31 @@ CC.W = 240; CC.H = 160;
   CC.canvas = canvas; CC.g = g;
   var scale = 1;
 
+  // the biggest scale that fits w x h (whole pixels when there's room)
+  function fit(w, h) { var s = Math.min(w / CC.W, h / CC.H); return s >= 2 ? Math.floor(s) : s; }
+  // Sizes the canvas to the window, inside the notch and home bar insets (the body's padding). On a touch screen the pad
+  // goes under the canvas (upright, scaled down on phones narrower than its two halves) or, when that gives a bigger
+  // game, one half on each side of it (sideways), as wide as the canvas leaves them. The halves' size comes from the CSS.
   CC.resize = function () {
-    var touch = document.body.classList.contains('touch');
-    var availW = window.innerWidth, availH = window.innerHeight - (touch ? 210 : 0);
-    var s = Math.min(availW / CC.W, availH / CC.H);
-    if (s >= 2) s = Math.floor(s); // whole pixels when there's room
+    var body = document.body, cs = window.getComputedStyle(body), inset = function (k) { return parseFloat(cs['padding' + k]) || 0; };
+    var inL = inset('Left'), inR = inset('Right'), inT = inset('Top');
+    var availW = window.innerWidth - inL - inR, availH = window.innerHeight - inT - inset('Bottom');
+    var s = fit(availW, availH);
+    if (body.classList.contains('touch')) {
+      var pad = document.getElementById('pad'), halves = [document.getElementById('padL'), document.getElementById('padR')];
+      var pw = halves[0].offsetWidth, ph = halves[0].offsetHeight;
+      var kU = Math.min(1, availW / (2 * pw)), sU = fit(availW, availH - ph * kU);
+      var kS = CC.clamp((availW - Math.min(2 * CC.W, availH * CC.W / CC.H)) / 2 / pw, 0.7, 1), sS = fit(availW - 2 * pw * kS, availH);
+      var side = availW > availH && sS >= sU, k = side ? kS : kU;
+      body.classList.toggle('side', side);
+      pad.style.height = side ? '' : ph * k + 'px';
+      var rightX = side ? window.innerWidth - inR - pw * k : pad.clientWidth - pw * k, y = side ? inT + (availH - ph * k) / 2 : 0;
+      halves.forEach(function (h, i) {
+        h.style.left = (i ? rightX : side ? inL : 0) + 'px'; h.style.right = 'auto'; h.style.top = y + 'px';
+        h.style.transform = k < 1 ? 'scale(' + k + ')' : '';
+      });
+      s = side ? sS : sU;
+    }
     var cssW = Math.floor(CC.W * s), cssH = Math.floor(CC.H * s);
     var dpr = window.devicePixelRatio || 1;
     canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
@@ -49,10 +69,16 @@ CC.W = 240; CC.H = 160;
   window.addEventListener('touchstart', enableTouch, { passive: true });
   if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
   Object.keys(PAD).forEach(function (id) {
-    var el = document.getElementById(id), b = PAD[id];
+    var el = document.getElementById(id), b = PAD[id], dir = /^(up|down|left|right)$/.test(b);
     function on(e) { e.preventDefault(); el.classList.add('on'); down(b); }
     function off(e) { e.preventDefault(); el.classList.remove('on'); up(b); }
-    el.addEventListener('pointerdown', on); el.addEventListener('pointerup', off);
+    el.addEventListener('pointerdown', function (e) {
+      // the d-pad lets go of a touch, so a thumb sliding onto another direction presses that one (A, B and MENU keep it)
+      if (dir && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+      on(e);
+    });
+    if (dir) el.addEventListener('pointerenter', function (e) { if (e.pointerType === 'touch' || (e.buttons & 1)) on(e); });
+    el.addEventListener('pointerup', off);
     el.addEventListener('pointerleave', off); el.addEventListener('pointercancel', off);
   });
 
