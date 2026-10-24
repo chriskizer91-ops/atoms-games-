@@ -24,6 +24,6 @@ const { chromium } = require('playwright');
   await ph.evaluate(() => document.getElementById('creatures').scrollIntoView());
   await ph.screenshot({ path: shotPath('13-gt-8-phone.png') });
   console.log('phone overflow', await ph.evaluate(() => document.documentElement.scrollWidth > window.innerWidth));
-  console.log('errors', errs);
+  console.log(errs.join('\n') || 'no errors');
   await b.close();
 })();
