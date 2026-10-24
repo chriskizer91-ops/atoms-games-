@@ -1,8 +1,9 @@
 // Battle rules: the XP rule (the level scale both ways, the rest of the team's share, which still learns moves and is
-// asked to evolve), a creature that reached its level and fainted is asked after a later win, a double faint with
-// nobody left is a loss, no battle starts when nobody can fight, Kiln Roll can miss, trainers don't pick moves that
-// can't work, the catch rarity of a form met evolved, the Dusk Cube at dusk, the HP plates (nothing covers a name,
-// for all 175 names) and the pixel digits in battle.
+// asked to evolve), a creature that reached its level and fainted is asked after a later win (and a new form already
+// past its own level), a double faint with nobody left is a loss (both faints shown before any XP), no battle starts
+// when nobody can fight, Kiln Roll can miss, trainers don't pick moves that can't work, the catch rarity of a form
+// met evolved, the Dusk Cube at dusk, the HP plates (nothing covers a name, for all 175 names) and the pixel digits
+// in battle.
 //   node tests/19-battle-rules.cjs (from the creature-catch folder, after node tools/build.mjs; tests/README.md)
 const { GAME, OUT } = require('./lib.cjs');
 const { chromium } = require('playwright');
@@ -154,6 +155,15 @@ const { chromium } = require('playwright');
     out.third = await V.run(() => C.startBattle({ wild: V.mk('pebblepup', 2) }));
     out.thirdAsked = V.log.filter(x => /ready to evolve/.test(x)).length;
     out.canEvolve = C.mon.canEvolve(t);
+    // a Tuftail kept small until Lv 35 says Yes: its new form (Verdantail, Lv 34) is asked after the next win
+    V.reset(); C.dev.oneHit = true; V.yes = [true];
+    const big = V.mk('tuftail', 34, null, ['tackle']); big.xp = C.mon.xpFor(35) - 1;
+    C.state.party = [big];
+    await V.run(() => C.startBattle({ wild: V.mk('pebblepup', 2) }));
+    out.chain1 = { id: big.id, lv: big.lv, flag: !!big.evoAsk, asked: V.log.filter(x => /ready to evolve/.test(x)) };
+    V.reset(); C.dev.oneHit = true; V.yes = [false];
+    await V.run(() => C.startBattle({ wild: V.mk('pebblepup', 2) }));
+    out.chain2 = { id: big.id, lv: big.lv, flag: !!big.evoAsk, asked: V.log.filter(x => /ready to evolve/.test(x)) };
     return out;
   });
   console.log('asked later', JSON.stringify(later));
@@ -161,6 +171,8 @@ const { chromium } = require('playwright');
   check(later.second === 'win' && later.secondAsked.length === 1 && later.after2.id === 'tuftail' && !later.after2.flag, 'after a later win it is asked; No clears the question');
   check(later.noLine.length === 1 && /^Okay! You can evolve Tuftail later from the party menu\.$/.test(later.noLine[0]), 'the No line is gentle and true: ' + later.noLine[0]);
   check(later.thirdAsked === 0 && later.canEvolve, 'it is not asked again after the next win (the party menu can still evolve it)');
+  check(later.chain1.id === 'verdantail' && later.chain1.asked.length === 1 && later.chain1.flag && later.chain2.asked.length === 1 && /^\?Verdantail is ready/.test(later.chain2.asked[0]) && !later.chain2.flag,
+    'a form that evolves already past its own level (Verdantail at Lv 35) is asked after the next win');
 
   // ---- 4. a double faint: with nobody left it's a loss (and you go back to heal); with a friend left it's a win
   const dbl = await p.evaluate(async () => {
@@ -185,6 +197,12 @@ const { chromium } = require('playwright');
     C.state.party = [V.mk('embroak', 20, { hp: 1 }, ['scarabcharge']), V.mk('tuftail', 10)];
     out.friendRes = await V.run(() => C.fight({ wild: V.mk('pebblepup', 10, { hp: 2 }, ['growl']) }));
     out.friendLog = V.log.filter(t => /fainted/.test(t));
+    // the friend fought first (Tuftail, then a swap to Embroak): your faint is shown before the friend's XP
+    V.reset(); C.world.enter('meadow', 7, 12, 'up');
+    C.state.party = [V.mk('tuftail', 10, null, ['growl']), V.mk('embroak', 20, { hp: 1 }, ['scarabcharge'])];
+    V.plan = [{ k: 'swap' }]; V.party = [1]; V.menu = [0];
+    out.orderRes = await V.run(() => C.fight({ wild: V.mk('pebblepup', 10, { hp: 2 }, ['growl']) }));
+    out.orderLog = V.log.filter(t => /fainted|gained|rest of your team/.test(t));
     return out;
   });
   console.log('double faint', JSON.stringify(dbl));
@@ -192,6 +210,8 @@ const { chromium } = require('playwright');
   check(dbl.foeRes === 'lose' && dbl.foeLog.includes('Tuftail fainted!'), 'the foe\'s recoil after it knocks out your last creature: your faint is shown and it is a loss');
   check(dbl.trainerRes === 'lose', 'a double faint against a trainer\'s last creature is a loss (no trial passed)');
   check(dbl.friendRes === 'win' && dbl.friendLog.includes('Embroak fainted!'), 'with a friend still standing it is a win, and the faint is shown');
+  check(dbl.orderRes === 'win' && dbl.orderLog[0] === 'The wild Pebblepup fainted!' && dbl.orderLog[1] === 'Embroak fainted!' && /^Tuftail gained \d+ XP!$/.test(dbl.orderLog[2] || ''),
+    'both faints come first, then the XP for the friend that fought: ' + dbl.orderLog.join(' / '));
 
   // ---- 5. nobody can fight: no battle starts
   const none = await p.evaluate(async () => {
@@ -285,6 +305,11 @@ const { chromium } = require('playwright');
     out.duskCatch = await throwAt('pebblepup', 10, 'dusk', mid);
     C.state.clockShift = 12 - (new Date().getHours() + new Date().getMinutes() / 60);
     out.dayCatch = await throwAt('pebblepup', 10, 'dusk', mid);
+    // where Options' "Always day" only changes the look (CC.clockLight), the Dusk Cube still follows the clock
+    if (C.clockLight) {
+      C.opts.daynight = 'day'; C.state.clockShift = 17.5 - (new Date().getHours() + new Date().getMinutes() / 60);
+      out.duskAlwaysDay = await throwAt('pebblepup', 10, 'dusk', mid);
+    }
     C.state.clockShift = 0; C.opts.daynight = 'day';
     return out;
   });
@@ -294,6 +319,7 @@ const { chromium } = require('playwright');
   check(cat.leviafinCatch === 'caught', 'a Basic Cube catches a full-HP Leviafin on a roll of 12 (the common bonus counts)');
   check(cat.threwUltra === 'You threw an Ultra Cube!' && cat.threw === 'You threw a Basic Cube!', 'an Ultra Cube, a Basic Cube');
   check(cat.duskAt.night > 0 && !cat.duskAt.isNight && cat.duskCatch === 'caught' && cat.dayCatch !== 'caught', 'the Dusk Cube has its dusk odds at 17:30, and not at noon');
+  if ('duskAlwaysDay' in cat) check(cat.duskAlwaysDay === 'caught', 'with Always day on, the Dusk Cube still has its dusk odds at 17:30 (the clock decides)');
   console.log('no rarity at all (never met wild):', cat.missing.join(', '));
 
   // ---- 9. the HP plates: nothing covers a name, for all 175 names, both plates, with and without a status and the cube

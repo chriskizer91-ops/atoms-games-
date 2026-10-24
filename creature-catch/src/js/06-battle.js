@@ -606,7 +606,9 @@ var CC = window.CC || (window.CC = {});
     return null;
   };
   function catchChance(m) {
-    var it = CC.ITEMS[B.cubeKind || 'cube'], dusk = CC.isNight() || CC.daylight().night > 0; // dusk starts as the light warms
+    // the Dusk Cube's dusk starts as the light warms (17:00), by the game clock (CC.clockLight, where Options' Always
+    // day only changes the look; CC.daylight otherwise)
+    var it = CC.ITEMS[B.cubeKind || 'cube'], dusk = CC.isNight() || (CC.clockLight || CC.daylight)().night > 0;
     var bonus = it.duskCube ? (dusk ? it.duskCube : it.cube) : it.cube;
     if (CC.dev.catchAll || bonus >= 999) return 100;
     var max = CC.mon.maxHp(m), st = m.status;
@@ -816,20 +818,21 @@ var CC = window.CC || (window.CC = {});
     if (B.foe.mon.hp <= 0) {
       await faintAnim(B.foe);
       await CC.say(nm(B.foe) + ' fainted!');
+      var last = B.wild || B.foeIndex >= B.foeTeam.length - 1;
+      // both went down at once (recoil) on the last foe: yours faints too, before anyone's XP
+      if (last && B.ally.mon.hp <= 0) {
+        await faintAnim(B.ally);
+        await CC.say(nmShort(B.ally) + ' fainted!');
+      }
       await gainXp(B.foe.mon);
-      if (!B.wild && B.foeIndex < B.foeTeam.length - 1) {
+      if (!last) {
         B.foeIndex++;
         B.foe = side(B.foeTeam[B.foeIndex], true); CC.markSeen(B.foe.mon.id);
         await CC.say(B.trainer.name + ' sent out ' + CC.mon.name(B.foe.mon) + '!', { auto: 0.4 });
         await sendOut(B.foe);
         out = 'next';
       } else {
-        // both went down at once (recoil): yours faints too, and with nobody left standing it's a loss
-        if (B.ally.mon.hp <= 0) {
-          await faintAnim(B.ally);
-          await CC.say(nmShort(B.ally) + ' fainted!');
-          if (CC.firstHealthy() < 0) return await lost();
-        }
+        if (CC.firstHealthy() < 0) return await lost(); // with nobody left standing, a double faint is a loss
         await afterWin();
         return 'win';
       }
@@ -870,8 +873,10 @@ var CC = window.CC || (window.CC = {});
       if (m.hp <= 0) continue;
       delete m.evoAsk;
       var name = CC.mon.name(m), later = 'You can evolve ' + name + ' later from the party menu.';
-      if (await CC.yesNo(name + ' is ready to evolve! Let it?')) { if (!(await CC.evolveScene(m))) await CC.say(later); }
-      else await CC.say('Okay! ' + later);
+      if (await CC.yesNo(name + ' is ready to evolve! Let it?')) {
+        if (!(await CC.evolveScene(m))) await CC.say(later);
+        else if (CC.mon.canEvolve(m)) m.evoAsk = true; // its new form is already past its own level: asked after the next win
+      } else await CC.say('Okay! ' + later);
     }
   }
 })();
