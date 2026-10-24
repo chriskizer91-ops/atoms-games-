@@ -220,10 +220,12 @@ const { chromium, devices } = require('playwright');
     C.partyScreen('field'); const scr = C.top(), rows = [[], [], [], []], row = (y) => Math.floor((y - 18) / 30);
     const rb = C.typeBadge, rs = C.statusTag, rt = C.text, rn = C.num, rd = C.g.drawImage;
     C.typeBadge = function (t, x, y) { const w = rb.apply(this, arguments); rows[row(y)].push(['badge', x, x + w]); return w; };
-    C.statusTag = function (st, x, y) { if (st) rows[row(y)].push(['tag', x - 10, x + 20]); return rs.apply(this, arguments); };
+    let inTag = false; const icons = ['burn', 'freeze', 'shock', 'poison', 'sleep'].map((k) => C.img('ui/status-' + k));
+    C.statusTag = function (st, x, y) { if (st) rows[row(y)].push(['tag', x - 10, x + 20]); inTag = true; try { return rs.apply(this, arguments); } finally { inTag = false; } };
+    C.g.drawImage = function (img, x, y, w) { if (!inTag && icons.indexOf(img) >= 0) rows[row(y)].push(['icon', x, x + w]); return rd.apply(this, arguments); }; // a status shown as its icon alone
     C.text = function (s, x, y) { if (s === 'FAINTED') rows[row(y)].push(['fainted', x, x + C.textWidth(s, 8)]); return rt.apply(this, arguments); };
     C.num = function (s, x, y, c, al) { if (/\//.test(s)) rows[row(y)].push(['hp', x - C.numWidth(s), x]); return rn.apply(this, arguments); };
-    scr.draw(); C.typeBadge = rb; C.statusTag = rs; C.text = rt; C.num = rn;
+    scr.draw(); C.typeBadge = rb; C.statusTag = rs; C.text = rt; C.num = rn; delete C.g.drawImage;
     return rows;
   });
   await p.waitForTimeout(200); await shot('party'); await tap('KeyX'); await p.waitForTimeout(150);
@@ -231,29 +233,32 @@ const { chromium, devices } = require('playwright');
   party.forEach((r, i) => r.forEach((a, j) => r.slice(j + 1).forEach((c) => { if (a[1] < c[2] - 0.5 && c[1] < a[2] - 0.5) clash.push(i + ':' + a[0] + '/' + c[0]); })));
   console.log('party rows', JSON.stringify(party.map((r) => r.map((x) => x[0] + ' ' + Math.round(x[1]) + '-' + Math.round(x[2])).join(', '))));
   check(!clash.length && party[1].some((x) => x[0] === 'fainted'), 'nothing in the party list covers a type badge or the HP numbers ' + clash.join(' '));
+  check([0, 2, 3].every((i) => party[i].some((x) => x[0] === 'tag' || x[0] === 'icon')), 'every status still shows (as its icon alone when two wide badges leave no room for the tag)');
 
-  // ---- the Creature Log: 4 lines of note above 'A: read more', and list names end before the caught cube
+  // ---- the Creature Log: 4 lines of note above 'A: read more' (clear of the 4th line's tails, at size 8 a line's ink
+  // is 8 px tall), letters with a rim of paper over the page's leaf doodle, and list names end before the caught cube
   await fresh('STARTER EMBROAK');
   const logLay = await p.evaluate(() => {
     const C = __cc, ids = C.CREATURE_ORDER; ids.forEach((id) => C.markCaught(id)); C.state.shinyCaught = { constellastar: 1 };
-    C.creatureLog(); const scr = C.top(), k = C.canvas.width / 240, res = { note: [], hint: null, names: [] };
+    C.creatureLog(); const scr = C.top(), k = C.canvas.width / 240, res = { note: [], rim: 0, hint: null, names: [] };
     const rt = C.text;
     C.text = function (s, x, y, c, o) {
       const t = C.g.getTransform(), right = (t.a * (x + C.textWidth(s, (o && o.size) || 10)) + t.e) / k;
-      if (s === 'A: read more') res.hint = y; else if (x === 21) res.note.push(y); else if (Math.abs(t.e / k - 162) < 1) res.names.push([s, Math.round(right * 10) / 10]);
+      if (s === 'A: read more') res.hint = y; else if (c === '#efdcb8') res.rim++; else if (x === 21) res.note.push(y); else if (Math.abs(t.e / k - 162) < 1) res.names.push([s, Math.round(right * 10) / 10]);
       return rt.apply(this, arguments);
     };
     const move = (n) => { for (let i = 0; i < Math.abs(n); i++) { const d = n > 0 ? 'down' : 'up'; C.input.pressed[d] = true; scr.update(); delete C.input.pressed[d]; } };
     const saved = C.LORE.lunarion.note; C.LORE.lunarion.note = 'A long note that fills every line on the page. '.repeat(4);
     move(ids.indexOf('lunarion')); scr.draw(); C.LORE.lunarion.note = saved; // a note that fills all 4 lines
-    const note = res.note.slice(), hint = res.hint;
+    const note = res.note.slice(), hint = res.hint, rim = res.rim;
     move(ids.indexOf('constellastar') - ids.indexOf('lunarion')); res.names = []; scr.draw(); // the page with the longest name
     C.text = rt; C.input.pressed.b = true; scr.update(); delete C.input.pressed.b;
-    res.note = note; res.hint = hint;
+    res.note = note; res.hint = hint; res.rim = rim;
     return res;
   });
   console.log('Log layout', JSON.stringify(logLay).slice(0, 300));
-  check(logLay.note.length === 4 && logLay.hint >= logLay.note[3] + 6, '4 lines of note, and \'A: read more\' under the last one');
+  check(logLay.note.length === 4 && logLay.hint >= logLay.note[3] + 9 && logLay.hint + 7 <= 143, '4 lines of note, and \'A: read more\' under the last one, still on the page');
+  check(logLay.rim === 16, 'the note\'s letters have a rim of paper where the leaf doodle is (' + logLay.rim + ' rim draws for 4 lines)');
   check(logLay.names.length === 13 && logLay.names.every((n) => n[1] <= 216.5), 'list names end before the caught cube and the shiny glint (Constellastar ' + (logLay.names.find((n) => n[0] === 'Constellastar') || [])[1] + ')');
 
   // ---- play time counts in battles, menus and dialog too, in real time (not dev speed), and not on the title screen
