@@ -484,6 +484,13 @@ var CC = window.CC || (window.CC = {});
     CC.saveGame();
   }
   CC.finale = finale;
+  // the altar itself (A on it): once the moon is whole, its light leaves a little Moon Shard there once a day, so a
+  // shard used up never locks a Moon Shard evolution away. The finale starts from the steps, not from here.
+  CC.MAPS.ruins.landmarkTalk = async function () {
+    if (!F().moonRestored) { await CC.say('The old Moon Altar. Its runes are cold, and above it the moon is only a thin, pale sliver.'); return; }
+    await CC.daily('moonaltar', 'moonshard', 'Moonlight pools on the altar and leaves a little Moon Shard behind. You got a Moon Shard!',
+      'The Moon Altar glows softly in the moonlight. Maybe the moon will leave another gift tomorrow.');
+  };
   function flashWhite() {
     var k = 0, scr = { name: 'flash', update: function () {}, draw: function () { CC.g.globalAlpha = Math.sin(k * Math.PI); CC.rect(0, 0, CC.W, CC.H, '#ffffff'); CC.g.globalAlpha = 1; } };
     CC.push(scr);
