@@ -17,6 +17,8 @@ var CC = window.CC || (window.CC = {});
   CC.currentBattle = function () { return B; };
 
   CC.startBattle = function (opts) {
+    // nobody in the party can fight: no battle at all, it counts as a loss (CC.fight sends you to the Healing Hut)
+    if (CC.firstHealthy() < 0) return Promise.resolve('lose');
     return new Promise(function (resolve) {
       B = {
         wild: !!opts.wild, trainer: opts.trainer || null, resolve: resolve,
@@ -798,19 +800,26 @@ var CC = window.CC || (window.CC = {});
         await sendOut(B.foe);
         out = 'next';
       } else {
+        // both went down at once (recoil): yours faints too, and with nobody left standing it's a loss
+        if (B.ally.mon.hp <= 0) {
+          await faintAnim(B.ally);
+          await CC.say(nmShort(B.ally) + ' fainted!');
+          if (CC.firstHealthy() < 0) return await lost();
+        }
         await afterWin();
         return 'win';
       }
     }
     if (B.ally.mon.hp <= 0) {
-      if (!(await allyFainted())) {
-        if (B.trainer && B.trainer.loseText) await CC.say(B.trainer.loseText, { who: B.trainer.name });
-        await CC.say('You have no creatures left that can fight...');
-        return 'lose';
-      }
+      if (!(await allyFainted())) return await lost();
       out = 'next';
     }
     return out;
+  }
+  async function lost() {
+    if (B.trainer && B.trainer.loseText) await CC.say(B.trainer.loseText, { who: B.trainer.name });
+    await CC.say('You have no creatures left that can fight...');
+    return 'lose';
   }
 
   async function afterWin() {
