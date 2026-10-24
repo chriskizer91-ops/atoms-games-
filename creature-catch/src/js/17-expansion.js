@@ -179,9 +179,7 @@ var CC = window.CC || (window.CC = {});
     var id = CC.pick(tier ? tiers[tier] : sp.common), lv = CC.randi(sp.levels[0], sp.levels[1]);
     // a Moonborn creature (the kids' creatures with lives: 'anywhere') can turn up anywhere
     if (CC.MOONBORN && CC.MOONBORN.length && Math.random() < MOON_CHANCE()) id = CC.pick(CC.MOONBORN);
-    var c = CC.CREATURES[id];
-    while (c.evo && typeof c.evo.at === 'number' && lv >= c.evo.at) { id = c.evo.into; c = CC.CREATURES[id]; }
-    return { id: id, lv: lv };
+    return { id: CC.wildForm(id, lv), lv: lv };
   };
 
 })();

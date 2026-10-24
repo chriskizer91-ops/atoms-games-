@@ -241,6 +241,14 @@ CC.SPAWNS = {
   ruins: { name: 'Night Ruins', levels: [28, 35], common: ['wispkin'], uncommon: ['pebbleton', 'bonecat', 'fangling'], rare: ['moonlynx'] },
 };
 
+// the form a creature has at a level: wild creatures and trainers' creatures at or past a level evolution come
+// already evolved (shard evolutions never happen on their own)
+CC.wildForm = function (id, lv) {
+  var c = CC.CREATURES[id];
+  while (c.evo && typeof c.evo.at === 'number' && lv >= c.evo.at) { id = c.evo.into; c = CC.CREATURES[id]; }
+  return id;
+};
+
 // Catch rarity of each wild creature (Moonlynx spawns as Rare but catches as Very Rare)
 CC.RARITY = {};
 Object.keys(CC.SPAWNS).forEach(function (k) {

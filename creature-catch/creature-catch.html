@@ -210,6 +210,21 @@ CC.num = function (str, x, y, color, align) {
     }
   }
 };
+// a line of text whose numbers use the pixel digits; opts: size (of the words, default 10), align (left, center,
+// right), shadow. Only digits, / and spaces go to CC.num; everything else is drawn in the font.
+CC.textNumWidth = function (str, size) {
+  return String(str).split(/(\d[\d\/]*)/).reduce(function (w, t, i) { return w + (i % 2 ? CC.numWidth(t) : CC.textWidth(t, size || 10)); }, 0);
+};
+CC.textNum = function (str, x, y, color, opts) {
+  opts = opts || {};
+  var size = opts.size || 10, parts = String(str).split(/(\d[\d\/]*)/), w = CC.textNumWidth(str, size);
+  if (opts.align === 'center') x -= w / 2; else if (opts.align === 'right') x -= w;
+  parts.forEach(function (t, i) {
+    if (i % 2) { CC.num(t, x, y + Math.round((size - 6) / 2), color); x += CC.numWidth(t); }
+    else if (t) { CC.text(t, x, y, color, { size: size, shadow: opts.shadow }); x += CC.textWidth(t, size); }
+  });
+  return w;
+};
 CC.textWidth = function (str, size) {
   CC.g.font = (size || 10) + 'px ' + CC.FONT + ', monospace';
   return CC.g.measureText(str).width;
@@ -1335,19 +1350,30 @@ CC.talk = async function (who, lines) {
 // ---------- menus ----------
 // CC.menu(items, opts) resolves to the chosen index, or -1 on B (unless opts.noCancel).
 // items: strings or { label, right, disabled }
+// A list too long for the screen scrolls: it shows the rows that fit, with arrows when there are more, and left and
+// right turn a page.
 CC.menu = function (items, opts) {
   opts = opts || {};
   return new Promise(function (resolve) {
-    var sel = opts.start || 0, rowH = opts.rowH || 14;
+    var sel = opts.start || 0, rowH = opts.rowH || 14, head = opts.title ? 14 : 0;
     var labels = items.map(function (it) { return typeof it === 'string' ? { label: it } : it; });
     var w = opts.w || Math.max.apply(null, labels.map(function (l) { return CC.textWidth(l.label, 10) + (l.right ? CC.textWidth(l.right, 10) + 12 : 0) + (l.icon ? 14 : 0); })) + 26;
-    var h = labels.length * rowH + 10 + (opts.title ? 14 : 0);
+    var room = opts.y != null ? CC.H - 2 - opts.y : 108; // a menu without a y sits just above the dialog box
+    var fit = function (pad) { return opts.maxRows || Math.max(3, Math.floor((room - 10 - head - pad * 2) / rowH)); };
+    var rows = labels.length > fit(0) ? Math.min(labels.length, fit(3)) : labels.length, top = 0;
+    var pad = rows < labels.length ? 3 : 0, h = rows * rowH + 10 + head + pad * 2; // a scrolling list has room for its arrows
     var x = opts.x != null ? opts.x : CC.W - w - 2, y = opts.y != null ? opts.y : 110 - h;
+    var follow = function () { top = CC.clamp(top, Math.max(0, sel - rows + 1), Math.min(sel, labels.length - rows)); };
+    follow();
     var scr = {
       name: 'menu',
       update: function () {
-        if (CC.repeat('down')) { sel = (sel + 1) % labels.length; CC.sfx('blip'); if (opts.onMove) opts.onMove(sel); }
-        if (CC.repeat('up')) { sel = (sel + labels.length - 1) % labels.length; CC.sfx('blip'); if (opts.onMove) opts.onMove(sel); }
+        var was = sel, n = labels.length;
+        if (CC.repeat('down')) sel = (sel + 1) % n;
+        if (CC.repeat('up')) sel = (sel + n - 1) % n;
+        if (n > rows && CC.repeat('right')) sel = Math.min(n - 1, sel + rows);
+        if (n > rows && CC.repeat('left')) sel = Math.max(0, sel - rows);
+        if (sel !== was) { follow(); CC.sfx('blip'); if (opts.onMove) opts.onMove(sel); }
         if (CC.input.pressed.a) {
           if (labels[sel].disabled) { CC.sfx('bump'); return; }
           CC.sfx('select'); CC.pop(scr); resolve(sel);
@@ -1356,20 +1382,29 @@ CC.menu = function (items, opts) {
       draw: function () {
         if (opts.under) opts.under(sel);
         CC.box(x, y, w, h);
-        var ty = y + 6;
+        var ty = y + 6, icons = labels.some(function (o) { return o.icon; });
         if (opts.title) { CC.text(opts.title, x + 8, ty, '#6a3a2a', { size: 9 }); ty += 14; }
-        labels.forEach(function (l, i) {
+        ty += pad;
+        labels.slice(top, top + rows).forEach(function (l, i) {
           var icon = l.icon && CC.img(l.icon), tx = x + 16;
           if (icon) { var k = 11 / Math.max(icon.width, icon.height); CC.g.drawImage(icon, tx, ty + i * rowH + 1, icon.width * k, icon.height * k); }
-          if (labels.some(function (o) { return o.icon; })) tx += 14;
+          if (icons) tx += 14;
           CC.text(l.label, tx, ty + i * rowH, l.disabled ? '#a89c90' : '#2a2230');
           if (l.right) CC.text(l.right, x + w - 8, ty + i * rowH, '#6a5a50', { align: 'right' });
         });
-        CC.cursor(x + 7, ty + sel * rowH + 2);
+        CC.cursor(x + 7, ty + (sel - top) * rowH + 2);
+        if (top > 0) CC.scrollArrow(x + w - 14, ty - 4, -1);
+        if (top + rows < labels.length) CC.scrollArrow(x + w - 14, ty + rows * rowH, 1);
       },
     };
     CC.push(scr);
   });
+};
+// a small bobbing triangle that says a list goes on (dir -1 up, 1 down); x, y is its top left
+CC.scrollArrow = function (x, y, dir) {
+  var bob = Math.round(Math.sin(CC.time * 6)) * dir;
+  CC.g.fillStyle = '#6a3a2a';
+  for (var i = 0; i < 3; i++) CC.g.fillRect(x + i, y + bob + (dir > 0 ? i : 2 - i), 7 - i * 2, 1);
 };
 CC.yesNo = async function (question, who) {
   var p = CC.say(question, { who: who });
@@ -1388,8 +1423,9 @@ CC.ask = function (question, options, who) {
 };
 
 // ---------- small creature card pieces ----------
+CC.typeBadgeWidth = function (type) { return CC.textWidth(type.toUpperCase(), 8) + 6 + (CC.img('ui/type-' + type) ? 9 : 0); };
 CC.typeBadge = function (type, x, y) {
-  var c = CC.TYPE_COLORS[type] || CC.TYPE_COLORS.Normal, icon = CC.img('ui/type-' + type), iw = icon ? 9 : 0, w = CC.textWidth(type.toUpperCase(), 8) + 6 + iw;
+  var c = CC.TYPE_COLORS[type] || CC.TYPE_COLORS.Normal, icon = CC.img('ui/type-' + type), iw = icon ? 9 : 0, w = CC.typeBadgeWidth(type);
   CC.rect(x, y, w, 10, c[2]); CC.rect(x + 1, y + 1, w - 2, 8, c[1]);
   if (icon) CC.g.drawImage(icon, x + 1, y + 1, 8, 8);
   CC.text(type.toUpperCase(), x + 3 + iw, y + 1, '#ffffff', { size: 8, shadow: c[2] });
@@ -1587,7 +1623,7 @@ CC.bagScreen = async function () {
   while (true) {
     var keys = Object.keys(CC.ITEMS).filter(function (k) { var it = CC.ITEMS[k]; return it.key ? CC.state.flags[it.key] : CC.state.bag[k] > 0; });
     if (!keys.length) { await CC.say('Your bag is empty.'); return; }
-    var c = await CC.menu(keys.map(function (k) { var it = CC.ITEMS[k]; return { label: it.name, right: it.key ? (it.count ? it.count() : '') : 'x' + CC.state.bag[k], icon: it.icon }; }), { title: 'Bag', w: 150 });
+    var c = await CC.menu(keys.map(function (k) { var it = CC.ITEMS[k]; return { label: it.name, right: it.key ? (it.count ? it.count() : '') : 'x' + CC.state.bag[k], icon: it.icon }; }), { title: 'Bag', w: 150, y: 4 });
     if (c < 0) return;
     var k = keys[c], it = CC.ITEMS[k];
     if (k === 'whistle') {
@@ -1661,14 +1697,101 @@ CC.shopScreen = async function (stock, who) {
 };
 
 // ---------- the Cube Vault ----------
+// Take out opens the whole Vault on one screen: a scrolling list on the left (left and right turn a page) and the
+// creature you're on, big, on the right. MENU sorts the list (it only changes how it's shown, not the Vault).
+var VAULT_SORTS = [
+  { name: 'Newest', key: function (m, i) { return -i; } },
+  { name: 'Level', key: function (m, i) { return -m.lv * 10000 + i; } },
+  { name: 'Name', key: function (m) { return CC.mon.name(m).replace(/^[^a-z0-9]+/i, '').toLowerCase(); } },
+  { name: 'Log No.', key: function (m, i) { return CC.CREATURE_ORDER.indexOf(m.id) * 10000 + i; } },
+];
+CC.vaultSort = 0;
+CC.vaultList = function () {
+  return new Promise(function (resolve) {
+    var ROWS = 10, ROW = 12, sel = 0, top = 0, order = [];
+    var vault = function () { return CC.state.vault; };
+    var resort = function (keepIndex) {
+      var srt = VAULT_SORTS[CC.vaultSort];
+      order = vault().map(function (m, i) { return { i: i, k: srt.key(m, i) }; });
+      order.sort(function (p, q) { return p.k < q.k ? -1 : p.k > q.k ? 1 : p.i - q.i; });
+      order = order.map(function (o) { return o.i; });
+      if (keepIndex != null && order.indexOf(keepIndex) >= 0) sel = order.indexOf(keepIndex);
+      sel = CC.clamp(sel, 0, Math.max(0, order.length - 1));
+      top = CC.clamp(top, Math.max(0, sel - ROWS + 1), Math.min(sel, Math.max(0, order.length - ROWS)));
+    };
+    resort();
+    var scr = {
+      name: 'vault', opaque: true, busy: false,
+      update: function () {
+        if (scr.busy) return;
+        var n = order.length, was = sel;
+        if (CC.input.pressed.b) { CC.sfx('back'); CC.pop(scr); resolve(-1); return; }
+        if (!n) return;
+        if (CC.repeat('down')) sel = (sel + 1) % n;
+        if (CC.repeat('up')) sel = (sel + n - 1) % n;
+        if (CC.repeat('right')) sel = Math.min(n - 1, sel + ROWS);
+        if (CC.repeat('left')) sel = Math.max(0, sel - ROWS);
+        if (sel !== was) { CC.sfx('blip'); top = CC.clamp(top, Math.max(0, sel - ROWS + 1), Math.min(sel, n - ROWS)); }
+        if (CC.input.pressed.start) { CC.sfx('select'); CC.vaultSort = (CC.vaultSort + 1) % VAULT_SORTS.length; resort(order[sel]); }
+        if (CC.input.pressed.a) {
+          CC.sfx('select'); scr.busy = true;
+          var v = order[sel], m = vault()[v];
+          CC.menu([CC.state.party.length < 4 ? 'Take out' : 'Swap in', 'Summary', 'Back'], { x: 6, y: 60, w: 96 }).then(function (c) {
+            if (c === 1) return CC.summary(m).then(function () { scr.busy = false; });
+            scr.busy = false;
+            if (c === 0) { CC.pop(scr); resolve(v); }
+          });
+        }
+      },
+      draw: function () {
+        var list = vault(), n = order.length;
+        CC.rect(0, 0, 240, 160, '#4a6a90');
+        for (var yy = 0; yy < 160; yy += 8) CC.rect(0, yy, 240, 4, '#466489');
+        CC.text('Cube Vault', 8, 3, '#ffffff', { shadow: '#22344e' });
+        CC.text(n + (n === 1 ? ' creature' : ' creatures'), 232, 4, '#e8f0ff', { size: 9, align: 'right', shadow: '#22344e' });
+        // the list
+        CC.box(4, 16, 126, ROWS * ROW + 12);
+        if (!n) CC.text('The Vault is empty.', 67, 70, '#6a5a50', { size: 9, align: 'center' });
+        for (var r = 0; r < ROWS && top + r < n; r++) {
+          var m = list[order[top + r]], y = 22 + r * ROW, on = top + r === sel;
+          if (on) CC.rect(7, y - 2, 120, ROW, '#fff2c8');
+          var nm = CC.mon.name(m);
+          if (CC.textWidth(nm, 9) > 72) { while (nm.length > 3 && CC.textWidth(nm + '.', 9) > 72) nm = nm.slice(0, -1); nm += '.'; }
+          CC.text(nm, 18, y, '#2a2230', { size: 9 });
+          if (m.shiny) CC.drawParticle('sparkle', 98, y + 4, 3, '#e8b838');
+          CC.num(String(m.lv), 125, y + 2, '#6a5a50', 'right'); CC.text('Lv', 122 - CC.numWidth(String(m.lv)), y, '#6a5a50', { size: 9, align: 'right' });
+          if (on) CC.cursor(9, y + 1);
+        }
+        if (top > 0) CC.scrollArrow(116, 18, -1);
+        if (top + ROWS < n) CC.scrollArrow(116, 16 + ROWS * ROW + 7, 1);
+        // the one you're on
+        CC.box(134, 16, 102, ROWS * ROW + 12, { fill: '#f4ecd8' });
+        if (n) {
+          var cur = list[order[sel]], sp = CC.mon.sp(cur), st = CC.mon.stats(cur);
+          CC.g.fillStyle = 'rgba(90,70,40,0.18)'; CC.g.beginPath(); CC.g.ellipse(185, 78, 22, 4, 0, 0, Math.PI * 2); CC.g.fill();
+          CC.drawSprite(CC.creatureSprite(cur.id, cur.shiny), 185, 80, { scale: 0.85, sy: 1 + Math.sin(CC.time * 3) * 0.03 });
+          CC.text(sp.name, 185, 84, '#2a2230', { align: 'center', size: CC.textWidth(sp.name, 10) > 94 ? 9 : 10 });
+          var bw = sp.types.reduce(function (w, t) { return w + CC.typeBadgeWidth(t) + 2; }, -2), bx = 185 - bw / 2;
+          sp.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 97) + 2; });
+          CC.text('Lv', 140, 111, '#6a5a50', { size: 9 }); CC.num(String(cur.lv), 153, 113, '#2a2230');
+          CC.text('HP', 140, 122, '#6a5a50', { size: 9 });
+          CC.bar(156, 126, 74, cur.hp / st.hp);
+          CC.num(cur.hp + '/' + st.hp, 230, 112, '#2a2230', 'right');
+          CC.text('No.', 140, 20, '#9a8a70', { size: 8 }); CC.num(String(CC.CREATURE_ORDER.indexOf(cur.id) + 1).padStart(3, '0'), 154, 21, '#9a8a70');
+        }
+        CC.text('A: choose   < >: page   MENU: sort (' + VAULT_SORTS[CC.vaultSort].name + ')', 120, 149, '#e8f0ff', { size: 8, align: 'center', shadow: '#22344e' });
+      },
+    };
+    CC.push(scr);
+  });
+};
 CC.vaultScreen = async function () {
   while (true) {
     var c = await CC.menu(['Take out', 'Put away', 'Done'], { title: 'Cube Vault (' + CC.state.vault.length + ')', w: 130, x: 104, y: 20 });
     if (c < 0 || c === 2) return;
     if (c === 0) {
       if (!CC.state.vault.length) { await CC.say('The Vault is empty.'); continue; }
-      var items = CC.state.vault.map(function (m) { return { label: CC.mon.name(m), right: 'Lv ' + m.lv }; });
-      var v = await CC.menu(items, { title: 'Take out which?', w: 150, x: 84, y: 8 });
+      var v = await CC.vaultList();
       if (v < 0) continue;
       var m = CC.state.vault[v];
       if (CC.state.party.length < 4) {
@@ -3850,7 +3973,7 @@ var CC = window.CC || (window.CC = {});
       }
       if (!items.length) { await CC.say('You don\'t have any items you can use in battle.'); continue; }
       var info = function (i) { CC.box(0, 112, 240, 48); CC.wrap(CC.ITEMS[items[i]].info, 222, 10).slice(0, 2).forEach(function (l, j) { CC.text(l, 9, 119 + j * 15, '#2a2230'); }); };
-      var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, under: info });
+      var c = await CC.menu(items.map(function (k) { return { label: CC.ITEMS[k].name, right: 'x' + bag[k], icon: CC.ITEMS[k].icon }; }), { title: 'Use which?', y: 4, w: 150, maxRows: 5, under: info }); // ends above the item's info box
       if (c < 0) continue;
       var k = items[c], i = await CC.partyScreen('pick', { title: 'Use a ' + CC.ITEMS[k].name + ' on...' });
       if (i < 0) continue;
@@ -5526,6 +5649,14 @@ CC.SPAWNS = {
   ruins: { name: 'Night Ruins', levels: [28, 35], common: ['wispkin'], uncommon: ['pebbleton', 'bonecat', 'fangling'], rare: ['moonlynx'] },
 };
 
+// the form a creature has at a level: wild creatures and trainers' creatures at or past a level evolution come
+// already evolved (shard evolutions never happen on their own)
+CC.wildForm = function (id, lv) {
+  var c = CC.CREATURES[id];
+  while (c.evo && typeof c.evo.at === 'number' && lv >= c.evo.at) { id = c.evo.into; c = CC.CREATURES[id]; }
+  return id;
+};
+
 // Catch rarity of each wild creature (Moonlynx spawns as Rare but catches as Very Rare)
 CC.RARITY = {};
 Object.keys(CC.SPAWNS).forEach(function (k) {
@@ -7054,6 +7185,8 @@ var CC = window.CC || (window.CC = {});
 <script>/* 16-log.js */
 // The Creature Log: every creature you've seen or caught, in an old field journal. The left page shows the one
 // you're on (its picture, types and a field note); the right page is the list. A reads its full lore.
+// Before you meet a creature, its shadow is in the book if it's a first form (the guardians stay a secret), or if
+// you've met a creature it grows from: the shadow says where to look, or what it grows from.
 // ui/creature-log-book is the journal art when it's there; otherwise the book is drawn in code.
 var CC = window.CC || (window.CC = {});
 
@@ -7077,10 +7210,33 @@ var CC = window.CC || (window.CC = {});
     CC.rect(120, 0, 8, 152, '#b8302a'); CC.rect(122, 0, 2, 152, '#d8484a'); // ribbon
   }
 
+  // what a shadow's page says: where a first form lives, or what an evolution grows from
+  function shadowNote(id) {
+    var C = CC.CREATURES, c = C[id], F = CC.state.flags;
+    if (c.from) {
+      var e = C[c.from].evo, how = typeof e.at === 'number' ? 'at Lv ' + e.at : 'when it touches a ' + ((CC.ITEMS[e.at] || {}).name || 'shard');
+      if (CC.state.seen[c.from] || CC.state.caught[c.from]) return C[c.from].name + ' grows into this one ' + how + '.';
+      var root = c.from; while (C[root].from) root = C[root].from;
+      return 'It grows from the ' + C[root].name + ' family.';
+    }
+    var z = (CC.ZONES || []).filter(function (z) { return z.key === (CC.ZONE_OF || {})[id]; })[0];
+    if (!z) return 'Its shadow is in the book. Where could it be?';
+    if (z.key === 'village') return 'One of Elder Willow\'s partner creatures.';
+    if (z.after && !F.moonRestored) return 'It lives far away. Keep going on your journey!';
+    var the = { meadow: 1, grassland: 1, forest: 1, water: 1, cave: 1, desert: 1, ruins: 1, archive: 1, spire: 1, temple: 1, hollow: 1 }[z.key];
+    return 'Look for it around ' + (the ? 'the ' : '') + z.name + '.';
+  }
+
   CC.creatureLog = function () {
     return new Promise(function (resolve) {
-      var ids = CC.CREATURE_ORDER, s = CC.state, sel = 0, busy = false;
+      var ids = CC.CREATURE_ORDER, s = CC.state, sel = 0, busy = false, C = CC.CREATURES;
       var seen = function (id) { return s.seen[id] || s.caught[id]; };
+      var shadow = function (id) {
+        if (seen(id) || C[id].kind === 'legend') return false;
+        for (var f = C[id].from; f; f = C[f].from) if (seen(f)) return true;
+        return !C[id].from;
+      };
+      var seenCount = ids.filter(seen).length, caughtCount = ids.filter(function (id) { return s.caught[id]; }).length;
       var scr = {
         name: 'log', opaque: true,
         update: function () {
@@ -7099,41 +7255,46 @@ var CC = window.CC || (window.CC = {});
           }
         },
         draw: function () {
-          var g = CC.g, id = ids[sel], c = CC.CREATURES[id], known = seen(id), got = s.caught[id], ink = '#3a2418', faint = '#9a7a58';
+          var g = CC.g, id = ids[sel], c = C[id], known = seen(id), got = s.caught[id], ink = '#3a2418', faint = '#9a7a58';
           drawBook();
           // the left page: the creature in the picture frame, its name, types and field note
-          CC.text('No. ' + String(sel + 1).padStart(3, '0'), 65, 14, faint, { size: 8, align: 'center' });
           if (known) {
             var sp = CC.creatureSprite(id, s.shinyCaught && s.shinyCaught[id]);
             g.fillStyle = 'rgba(120,90,50,0.15)'; g.beginPath(); g.ellipse(65, 70, 20, 3, 0, 0, Math.PI * 2); g.fill();
-            CC.drawSprite(got ? sp : CC.tinted(sp, '#5a4630', 'logsil'), 65, 72, { scale: 0.62, sy: 1 + Math.sin(CC.time * 2.4) * 0.025, id: id });
+            CC.drawSprite(sp, 65, 72, { scale: 0.62, sy: 1 + Math.sin(CC.time * 2.4) * 0.025, id: id });
             CC.text(c.name, 65, 79, ink, { align: 'center' });
             var bw = c.types.reduce(function (w, t) { return w + CC.textWidth(t.toUpperCase(), 8) + 17; }, 0), bx = 65 - bw / 2;
             c.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 92) + 2; });
             var note = got ? (CC.LORE && CC.LORE[id] ? CC.LORE[id].note : '') : 'Seen in the wild. Catch one to fill in this page.';
             CC.wrap(note, 88, 8).slice(0, 4).forEach(function (l, i) { CC.text(l, 21, 104 + i * ROW, '#5a3a22', { size: 8 }); });
             if (got) CC.text('A: read more', 110, 132, faint, { size: 8, align: 'right' });
+          } else if (shadow(id)) {
+            g.fillStyle = 'rgba(120,90,50,0.15)'; g.beginPath(); g.ellipse(65, 70, 20, 3, 0, 0, Math.PI * 2); g.fill();
+            CC.drawSprite(CC.tinted(CC.creatureSprite(id), '#3a2a1e', 'logshadow-' + id), 65, 72, { scale: 0.62, alpha: 0.85, sy: 1 + Math.sin(CC.time * 2.4) * 0.025 });
+            CC.text('? ? ?', 65, 79, '#6a5038', { align: 'center' });
+            CC.wrap(shadowNote(id), 88, 8).slice(0, 4).forEach(function (l, i) { CC.text(l, 21, 104 + i * ROW, '#5a3a22', { size: 8 }); });
           } else {
             CC.text('?', 65, 30, '#c8b08a', { size: 22, align: 'center' });
             CC.text('Not seen yet', 65, 82, faint, { align: 'center' });
           }
+          CC.textNum('No. ' + String(sel + 1).padStart(3, '0'), 65, 14, faint, { size: 8, align: 'center' }); // after the picture, so a tall one doesn't hide it
           // the right page: the list, one creature to a ruled line
           var top = Math.floor(sel / PER_PAGE) * PER_PAGE;
-          CC.text('Seen ' + Object.keys(s.seen).length + '   Caught ' + Object.keys(s.caught).length, 166, 124, faint, { size: 8, align: 'center' });
+          CC.textNum('Seen ' + seenCount + '   Caught ' + caughtCount, 166, 124, faint, { size: 8, align: 'center' });
           for (var i = 0; i < PER_PAGE && top + i < ids.length; i++) {
             var lid = ids[top + i], y = Math.round(LIST_Y + i * ROW), on = top + i === sel;
             if (on) { g.fillStyle = 'rgba(232,184,56,0.35)'; g.fillRect(131, y - 1, 96, 9); }
-            CC.text(String(top + i + 1).padStart(3, '0'), 141, y, faint, { size: 8 });
-            CC.text(seen(lid) ? CC.CREATURES[lid].name : '- - - - -', 160, y, seen(lid) ? ink : '#c0a880', { size: 8 });
+            CC.num(String(top + i + 1).padStart(3, '0'), 140, y + 1, faint);
+            CC.text(seen(lid) ? C[lid].name : shadow(lid) ? '? ? ?' : '- - - - -', 162, y, seen(lid) ? ink : shadow(lid) ? '#8a6a48' : '#c0a880', { size: 8 });
             if (s.caught[lid]) CC.drawCube(220, y + 6, 3.5);
             if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 212, y + 4, 3, '#e8b838'); g.restore(); }
             if (on) CC.cursor(133, y + 1);
           }
-          CC.text('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });
+          CC.textNum('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });
           var pg = CC.img('items/lost-page'); // the Lost Pages of The Long Dusk found so far
           if (s.flags.anyPage && pg) { // on a patch of plain paper, over the book's paw-print doodle
             CC.rect(202, 127, 22, 11, '#efdcb8');
-            g.drawImage(pg, 204, 128, 9, 9 * pg.height / pg.width); CC.text(String(CC.pageCount()), 215, 129, ink, { size: 8 });
+            g.drawImage(pg, 204, 128, 9, 9 * pg.height / pg.width); CC.num(String(CC.pageCount()), 215, 130, ink);
           }
         },
       };
@@ -7325,9 +7486,7 @@ var CC = window.CC || (window.CC = {});
     var id = CC.pick(tier ? tiers[tier] : sp.common), lv = CC.randi(sp.levels[0], sp.levels[1]);
     // a Moonborn creature (the kids' creatures with lives: 'anywhere') can turn up anywhere
     if (CC.MOONBORN && CC.MOONBORN.length && Math.random() < MOON_CHANCE()) id = CC.pick(CC.MOONBORN);
-    var c = CC.CREATURES[id];
-    while (c.evo && typeof c.evo.at === 'number' && lv >= c.evo.at) { id = c.evo.into; c = CC.CREATURES[id]; }
-    return { id: id, lv: lv };
+    return { id: CC.wildForm(id, lv), lv: lv };
   };
 
 })();

@@ -42,13 +42,6 @@ var CC = window.CC || (window.CC = {});
     return 'Look for it around ' + (the ? 'the ' : '') + z.name + '.';
   }
 
-  // a line of text whose numbers use the pixel digits (the font's small 2 reads as an 8), centered on cx
-  function textNums(str, cx, y, color) {
-    var parts = String(str).split(/(\d+)/), w = function (t, i) { return i % 2 ? CC.numWidth(t) : CC.textWidth(t, 8); };
-    var x = cx - parts.reduce(function (s, t, i) { return s + w(t, i); }, 0) / 2;
-    parts.forEach(function (t, i) { if (i % 2) CC.num(t, x, y + 1, color); else CC.text(t, x, y, color, { size: 8 }); x += w(t, i); });
-  }
-
   CC.creatureLog = function () {
     return new Promise(function (resolve) {
       var ids = CC.CREATURE_ORDER, s = CC.state, sel = 0, busy = false, C = CC.CREATURES;
@@ -99,10 +92,10 @@ var CC = window.CC || (window.CC = {});
             CC.text('?', 65, 30, '#c8b08a', { size: 22, align: 'center' });
             CC.text('Not seen yet', 65, 82, faint, { align: 'center' });
           }
-          textNums('No. ' + String(sel + 1).padStart(3, '0'), 65, 14, faint); // after the picture, so a tall one doesn't hide it
+          CC.textNum('No. ' + String(sel + 1).padStart(3, '0'), 65, 14, faint, { size: 8, align: 'center' }); // after the picture, so a tall one doesn't hide it
           // the right page: the list, one creature to a ruled line
           var top = Math.floor(sel / PER_PAGE) * PER_PAGE;
-          textNums('Seen ' + seenCount + '   Caught ' + caughtCount, 166, 124, faint);
+          CC.textNum('Seen ' + seenCount + '   Caught ' + caughtCount, 166, 124, faint, { size: 8, align: 'center' });
           for (var i = 0; i < PER_PAGE && top + i < ids.length; i++) {
             var lid = ids[top + i], y = Math.round(LIST_Y + i * ROW), on = top + i === sel;
             if (on) { g.fillStyle = 'rgba(232,184,56,0.35)'; g.fillRect(131, y - 1, 96, 9); }
@@ -112,7 +105,7 @@ var CC = window.CC || (window.CC = {});
             if (s.shinyCaught && s.shinyCaught[lid]) { g.save(); CC.drawParticle('sparkle', 212, y + 4, 3, '#e8b838'); g.restore(); }
             if (on) CC.cursor(133, y + 1);
           }
-          textNums('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint);
+          CC.textNum('Page ' + (top / PER_PAGE + 1) + ' of ' + Math.ceil(ids.length / PER_PAGE), 166, 133, faint, { size: 8, align: 'center' });
           var pg = CC.img('items/lost-page'); // the Lost Pages of The Long Dusk found so far
           if (s.flags.anyPage && pg) { // on a patch of plain paper, over the book's paw-print doodle
             CC.rect(202, 127, 22, 11, '#efdcb8');

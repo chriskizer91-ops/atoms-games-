@@ -150,6 +150,21 @@ CC.num = function (str, x, y, color, align) {
     }
   }
 };
+// a line of text whose numbers use the pixel digits; opts: size (of the words, default 10), align (left, center,
+// right), shadow. Only digits, / and spaces go to CC.num; everything else is drawn in the font.
+CC.textNumWidth = function (str, size) {
+  return String(str).split(/(\d[\d\/]*)/).reduce(function (w, t, i) { return w + (i % 2 ? CC.numWidth(t) : CC.textWidth(t, size || 10)); }, 0);
+};
+CC.textNum = function (str, x, y, color, opts) {
+  opts = opts || {};
+  var size = opts.size || 10, parts = String(str).split(/(\d[\d\/]*)/), w = CC.textNumWidth(str, size);
+  if (opts.align === 'center') x -= w / 2; else if (opts.align === 'right') x -= w;
+  parts.forEach(function (t, i) {
+    if (i % 2) { CC.num(t, x, y + Math.round((size - 6) / 2), color); x += CC.numWidth(t); }
+    else if (t) { CC.text(t, x, y, color, { size: size, shadow: opts.shadow }); x += CC.textWidth(t, size); }
+  });
+  return w;
+};
 CC.textWidth = function (str, size) {
   CC.g.font = (size || 10) + 'px ' + CC.FONT + ', monospace';
   return CC.g.measureText(str).width;
