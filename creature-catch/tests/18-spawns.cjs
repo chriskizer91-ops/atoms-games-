@@ -107,9 +107,27 @@ const ORDER_SUM = 2557717106;
     const order = C.CREATURE_ORDER.join(','); let h = 0; for (const ch of order) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     await document.fonts.ready;
     const long = C.CREATURE_ORDER.map((id) => [id, C.wrap((C.LORE[id] || {}).note || '', 88, 8).length]).filter((x) => x[1] > 4);
+    // a note that says "Uncommon in Copperbell's park" (or common, or rare, in or on a place) must match that place's list,
+    // and no note uses the old region names
+    const claims = [], wrong = [], oldNames = [];
+    C.CREATURE_ORDER.forEach((id) => {
+      const note = (C.LORE[id] || {}).note || '';
+      if (/Water region|Snow region|\bthe (Cave|Desert|Swamp)\b/.test(note)) oldNames.push(id);
+      Object.keys(C.SPAWNS).forEach((k) => {
+        const sp = C.SPAWNS[k], names = [sp.name].concat(/ Town$/.test(sp.name) ? [sp.name.replace(/ Town$/, '\'s park')] : []);
+        names.forEach((n) => {
+          const re = new RegExp('\\b(common|uncommon|rare) (?:in|on) (?:the )?' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'); let m;
+          while ((m = re.exec(note))) {
+            const said = m[1].toLowerCase(), real = ['common', 'uncommon', 'rare'].find((t) => sp[t].indexOf(id) >= 0);
+            claims.push(id); if (said !== real) wrong.push(id + ' "' + m[0] + '" (' + (real || 'not listed') + ')');
+          }
+        });
+      });
+    });
     return { missing, rarity: ['moonlynx', 'lunarion', 'solarion', 'gloaming', 'puppop', 'thundarab', 'furnadillo', 'dingdove', 'scarecrowl'].map((id) => id + ' ' + C.RARITY[id]).join(', '),
       first30: C.CREATURE_ORDER.slice(0, 30), n: C.CREATURE_ORDER.length, sum: h, font: document.fonts.check('8px ' + C.FONT), long,
-      kiln: C.LORE.kilnadillo.note, furna: C.LORE.furnadillo.note, moth: C.LORE.mothlight.note, owl: C.LORE.owlcorn.note };
+      claims: claims.length, wrong, oldNames,
+      kiln: C.LORE.kilnadillo.note, furna: C.LORE.furnadillo.note, moth: C.LORE.mothlight.note, owl: C.LORE.owlcorn.note, clover: C.LORE.clovermouse.note };
   });
   console.log('catch rarity: ' + data.rarity);
   check(!data.missing.length, 'every form you can meet wild has a catch rarity' + (data.missing.length ? ': ' + data.missing.join(', ') : ''));
@@ -117,8 +135,10 @@ const ORDER_SUM = 2557717106;
   check(data.n === 175 && JSON.stringify(data.first30) === JSON.stringify(FIRST_30) && data.sum === ORDER_SUM, 'the Creature Log numbering is the same as before (' + data.n + ' creatures, checksum ' + data.sum + ')');
   check(data.font, 'the game font is loaded for measuring the notes');
   check(!data.long.length, 'every field note fits 4 lines on the Log page' + (data.long.length ? ': ' + data.long.map((x) => x[0] + ' ' + x[1]).join(', ') : ''));
-  console.log('notes: ' + [data.kiln, data.furna, data.moth, data.owl].join(' / '));
+  console.log('notes: ' + [data.kiln, data.furna, data.moth, data.owl, data.clover].join(' / '));
   check(!/Dawn Temple/.test(data.kiln) && /Dawn Temple/.test(data.furna) && !/at night\.$/.test(data.moth) && !/dusk/.test(data.owl), 'the notes say where creatures really are (Furnadillo in the Dawn Temple, Mothlight any time in the Forest)');
+  check(data.claims >= 30 && !data.wrong.length && /Uncommon in Copperbell/.test(data.clover), data.claims + ' notes name a tier and a place, and each one matches the spawn lists' + (data.wrong.length ? ': ' + data.wrong.join(', ') : ''));
+  check(!data.oldNames.length, 'no note uses the old region names (Water region, the Cave, the Desert, Snow region, the Swamp)' + (data.oldNames.length ? ': ' + data.oldNames.join(', ') : ''));
 
   console.log(errs.join('\n') || (fails.length ? fails.length + ' checks failed' : 'no errors'));
   await b.close();

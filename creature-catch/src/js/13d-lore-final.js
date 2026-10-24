@@ -47,4 +47,4 @@ Object.assign(CC.LORE, {
 });
 // they're not solo any more
 ['budstag', 'gemlin', 'yetiny', 'lilypadle', 'tidepuff', 'sealamp', 'dunefox', 'stalagbat', 'sleetle', 'cactoad', 'wispeel', 'rumblepede', 'mireling'].forEach(function (id) { CC.LORE[id].note = CC.LORE[id].note.replace(/ Solo\.$/, ''); });
-CC.LORE.moonlynx.note = 'Crescub evolves into it at Lv 30. The rarest in the Night Ruins, very hard to catch.';
+CC.LORE.moonlynx.note = 'Crescub evolves into it at Lv 30. The rarest in the Night Ruins, and very hard to catch.';

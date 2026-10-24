@@ -15,7 +15,7 @@ CC.LORE = {
   infernotoad: { lore: 'Its skin has cooled into charcoal rock, cracked with glowing lava veins. When it slams down, the ground around it bakes hard as brick.', note: 'Cinderfrog evolves into it at Lv 30. Fire and Earth.' },
 
   // ---- Meadow Path ----
-  clovermouse: { lore: 'It wears a four-leaf clover like a hat and is said to bring good luck to anyone who sees it first. It is shy and scurries off at the first footstep.', note: 'Common on the Meadow Path, and in Copperbell\'s park.' },
+  clovermouse: { lore: 'It wears a four-leaf clover like a hat and is said to bring good luck to anyone who sees it first. It is shy and scurries off at the first footstep.', note: 'Common on the Meadow Path. Uncommon in Copperbell\'s park.' },
   hopsprout: { lore: 'The two-leaf sprout on its head turns to follow the sun all day. It can leap ten times its own height to snatch a falling seed.', note: 'Common on the Meadow Path. A Normal type.' },
 
   // ---- Grassland ----
