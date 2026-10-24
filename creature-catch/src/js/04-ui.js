@@ -118,20 +118,24 @@ CC.scrollArrow = function (x, y, dir) {
   CC.g.fillStyle = '#6a3a2a';
   for (var i = 0; i < 3; i++) CC.g.fillRect(x + i, y + bob + (dir > 0 ? i : 2 - i), 7 - i * 2, 1);
 };
+// the dialog box with two lines in it (and who's talking), drawn under a menu so the question stays on screen
+function questionBox(lines, who) {
+  return function () {
+    CC.box(0, 112, 240, 48);
+    lines.forEach(function (l, i) { CC.text(l, 9, 119 + i * 15, '#2a2230'); });
+    if (who) speakerTag(who);
+  };
+}
+// the question types out as usual, then stays up (its last page, as CC.say showed it) while you pick Yes or No
 CC.yesNo = async function (question, who) {
-  var p = CC.say(question, { who: who });
-  await p;
-  return (await CC.menu(['Yes', 'No'], { y: 74 })) === 0;
+  await CC.say(question, { who: who });
+  var lines = CC.wrap(question, 222, 10), last = Math.floor((lines.length - 1) / 2) * 2;
+  return (await CC.menu(['Yes', 'No'], { y: 74, under: questionBox(lines.slice(last, last + 2), who) })) === 0;
 };
 // ask while the question stays on screen
 CC.ask = function (question, options, who) {
   var lines = CC.wrap(question, 222, 10);
-  var under = function () {
-    CC.box(0, 112, 240, 48);
-    lines.slice(0, 2).forEach(function (l, i) { CC.text(l, 9, 119 + i * 15, '#2a2230'); });
-    if (who) speakerTag(who);
-  };
-  return CC.menu(options, { under: under, y: 108 - (options.length * 14 + 10) });
+  return CC.menu(options, { under: questionBox(lines.slice(0, 2), who), y: 108 - (options.length * 14 + 10) });
 };
 
 // ---------- small creature card pieces ----------
