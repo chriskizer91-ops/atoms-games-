@@ -11,7 +11,7 @@ From the `creature-catch` folder, after building:
 ```
 node tools/build.mjs
 node tools/build-companion.mjs
-node tests/run-all.mjs          # every test, about 10 minutes
+node tests/run-all.mjs          # every test, about 12 minutes
 node tests/run-all.mjs 06 10    # just the tests whose names start with 06 and 10
 ```
 
@@ -40,6 +40,8 @@ A single test runs on its own too: `NODE_PATH=$(npm root -g) node tests/10-final
 | `11-final-spawns.cjs` | Who turns up wild where the v11 creatures live: both ice cream forms in Frostpeak Pass, Crescub and Moonlynx, the Spire. |
 | `12-field-guide.cjs` | The Field Guide: place tabs and numbering, "Also found here" links, the spoiler covers, remembering the tab, phone width. |
 | `13-field-guide-spoilers.cjs` | The Field Guide: the hidden Night Ruins guardians, link jumps between tabs, dark mode, the phone's tab row. |
+| `14-vault-log.cjs` | The Cube Vault screen (scrolling, sorting, taking out, remembering where you were, refusing a swap that leaves nobody able to fight), long menus, the Creature Log (shadows, note lines, long names), Yes/No questions staying on screen, Evolve in the party menu, shards kept when an evolution is stopped, the party before the starter, type icons, status tags, play time, a broken screen not freezing the game. |
+| `20-phone.cjs` | Phones and tablets, upright and sideways (iPhone SE, iPhone 13 with and without the notch, Pixel 5, Galaxy S8, a 280 px phone, iPad Mini): the canvas size, the touch pad under or beside it, nothing overlapping, no page scroll, sliding a thumb across the d-pad. |
 
 ## Writing a new one
 
