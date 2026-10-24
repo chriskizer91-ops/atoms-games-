@@ -222,9 +222,10 @@ var CC = window.CC || (window.CC = {});
     await say('Grit and I\'ll wait right here. Go on. We\'ve got the beans.', 'Dusty');
     CC.saveGame();
   };
+  // their 'final' lines start as soon as Gloaming is calmed (the Balance comes later)
   people('mine', [
-    { x: 10, y: 4, art: 'grit', name: 'Grit', h: 26, when: function () { return F().doorOpen; }, lines: { after: ['Go on down. Take it slow. Bring it home.'], final: ['You did it. That cold\'s gone. Feels like a warm afternoon down here now.'] } },
-    { x: 15, y: 4, art: 'dusty', name: 'Dusty', h: 26, dir: 'down', when: function () { return F().doorOpen; }, lines: { after: ['Forty years Grit\'s been worried about that door. Look at him now. Still worried.'], final: ['Grit smiled. I saw it. Don\'t tell anyone.'] } },
+    { x: 10, y: 4, art: 'grit', name: 'Grit', h: 26, when: function () { return F().doorOpen; }, talk: CC.chatOn('gloamingCalm', 'Grit', { after: ['Go on down. Take it slow. Bring it home.'], final: ['You did it. That cold\'s gone. Feels like a warm afternoon down here now.'] }, 'mineGrit') },
+    { x: 15, y: 4, art: 'dusty', name: 'Dusty', h: 26, dir: 'down', when: function () { return F().doorOpen; }, talk: CC.chatOn('gloamingCalm', 'Dusty', { after: ['Forty years Grit\'s been worried about that door. Look at him now. Still worried.'], final: ['Grit smiled. I saw it. Don\'t tell anyone.'] }, 'mineDusty') },
   ]);
 
   // ================= the Hollow Deep =================
@@ -367,7 +368,7 @@ var CC = window.CC || (window.CC = {});
     await say('Elder Willow takes out The Long Dusk and writes on the last page, slowly: "And the world was kept, by the sun, the moon, and the dusk, and by a friend."');
     await CC.showPrize('items/long-dusk-book', 'You are now the Keeper of the Long Dusk!');
     await say('Cubesmith Ada asked for the Dusk Cube recipe from the book. I sent it to her. Go and see her in Copperbell.', 'Elder Willow');
-    await say('And they say that now the moon is full and the guardians are together, the world is dreaming more than ever. New creatures, born of dreams, will turn up more often now.', 'Elder Willow');
+    await say('And they say that now the moon is full and the guardians are together, the world is dreaming more than ever.', 'Elder Willow');
     CC.state.lastHeal = { map: 'hut-in', x: 5, y: 4 };
     CC.saveGame();
   }

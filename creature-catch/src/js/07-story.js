@@ -51,7 +51,7 @@ CC.NPCS = {
       },
     },
     {
-      x: 9, y: 2, look: 'juniper', art: 'juniper', sheet: 'juniper', patrol: [[8, 2], [12, 2], [12, 3], [8, 3]], h: 26, dir: 'down', when: function () { return F().starter && !F().trial1; }, talk: async function () {
+      x: 9, y: 2, look: 'juniper', art: 'juniper', sheet: 'juniper', patrol: [[9, 2], [12, 2], [12, 3], [9, 3]], h: 26, dir: 'down', when: function () { return F().starter && !F().trial1; }, talk: async function () {
         await CC.talk('Juniper', F().juniper1 === 'won'
           ? ['Don\'t get cocky. That was a warm-up!', 'I\'m off to beat Farmer Bramble\'s trial before you. See ya!']
           : ['Still thinking about our battle? Ha!', 'Type advantage matters, but so does training. Catch more creatures!']);

@@ -61,7 +61,7 @@ var CC = window.CC || (window.CC = {});
     piece(3, 2, 'inn-8', 18, { talk: function () { CC.sfx('select'); return say('You plink out a little tune on the piano. Rosa hums along.'); } }),
     piece(10, 2, 'inn-6', 22, { talk: 'Stairs up to the guest rooms. Rosa keeps them spotless.' }),
     onWall(8, 'inn-5', 14, 'The notice board: "Boat to Lantern Isle: ask Fisher Gus." "Copperbell Bakery: Copper Rolls, fresh daily!" "Lost: one Puffmunk\'s stash. Finder keeps it."'),
-    piece(2, 5, 'inn-2', 14), piece(9, 5, 'inn-10', 14), piece(10, 6, 'inn-7', 15), piece(1, 6, 'furn-5', 15),
+    piece(2, 5, 'inn-2', 14), piece(9, 5, 'inn-3', 20, { talk: 'A guest bed, fresh and turned down. Rosa has put a little mint on the pillow.' }), piece(10, 6, 'inn-7', 15), piece(1, 6, 'furn-5', 15),
   ], { rug: [4, 4, 4, 2] });
   CC.DOORS.inn = 'inn-in';
   CC.NPCS.village = CC.NPCS.village.filter(function (n) { return n.look !== 'rosa'; });

@@ -666,7 +666,9 @@ CC.world = {
     if (CC.tileSolid(this.map, t)) return true;
     if (this.buildingAt(x, y)) return true;
     if ((this.map.decor || []).some(function (d) { return d.x === x && d.y === y && d.solid !== false; })) return true;
-    return !!this.npcAt(x, y);
+    if (this.npcAt(x, y)) return true;
+    // a person part-way through a step has the tile they're stepping into too
+    return this.npcs.some(function (n) { return n.mv && (!n.when || n.when()) && n.mv.tx === x && n.mv.ty === y; });
   },
   buildingAt: function (x, y) {
     return this.map.buildings.find(function (b) { return x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h; });
@@ -706,7 +708,8 @@ CC.world = {
       var dx = Math.sign(goal[0] - n.x), dy = dx ? 0 : Math.sign(goal[1] - n.y);
       var nx = n.x + dx, ny = n.y + dy;
       n.dir = dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
-      if ((dx || dy) && !(nx === s.x && ny === s.y) && !self.solidAt(nx, ny)) { n.mv = { fx: n.x, fy: n.y, tx: nx, ty: ny, k: 0 }; n.wait = 0.05 + (n.leg === 0 ? 0 : 0); }
+      var into = self.moving && nx === self.moving.tx && ny === self.moving.ty; // the tile you're stepping into
+      if ((dx || dy) && !(nx === s.x && ny === s.y) && !into && !self.solidAt(nx, ny)) { n.mv = { fx: n.x, fy: n.y, tx: nx, ty: ny, k: 0 }; n.wait = 0.05 + (n.leg === 0 ? 0 : 0); }
     });
     if (this.busy) return;
     if (this.moving) {
@@ -1244,7 +1247,7 @@ CC.fieldMenu = async function () {
     if (c < 0 || pick === 'Close') return;
     start = c;
     if (pick === 'Party') await CC.partyScreen('field');
-    if (pick === 'Bag') await CC.bagScreen();
+    if (pick === 'Bag' && (await CC.bagScreen()) === 'flew') return; // the Wooden Whistle flew you somewhere
     if (pick === 'Log') await CC.creatureLog();
     if (pick === 'Vault') await CC.vaultScreen();
     if (pick === 'Options') await CC.optionsScreen();

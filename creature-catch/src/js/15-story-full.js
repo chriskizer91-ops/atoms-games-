@@ -323,7 +323,7 @@ var CC = window.CC || (window.CC = {});
   // a few region props to dress each map (walk-through unless solid)
   var PROPS = {
     forest: [{ x: 1, y: 4, img: 'props/rocks-and-bushes-12', h: 14 }, { x: 20, y: 9, img: 'props/rocks-and-bushes-11', h: 13 }, { x: 8, y: 22, img: 'props/rocks-and-bushes-13', h: 13 }],
-    water: [{ x: 7, y: 6, img: 'props/water-props-3', h: 11, solid: false, dy: 2 }, { x: 22, y: 14, img: 'props/rocks-and-bushes-6', h: 12 }, { x: 20, y: 24, img: 'props/rocks-and-bushes-7', h: 12 }],
+    water: [{ x: 7, y: 6, img: 'props/water-props-3', h: 11, solid: false, dy: 2 }, { x: 22, y: 14, img: 'props/rocks-and-bushes-6', h: 12 }, { x: 22, y: 24, img: 'props/rocks-and-bushes-7', h: 12 }],
     cave: [{ x: 15, y: 3, img: 'props/cave-and-ruins-props-1', h: 18 }, { x: 4, y: 21, img: 'props/cave-and-ruins-props-3', h: 14 }, { x: 15, y: 16, img: 'props/cave-and-ruins-props-2', h: 18 }],
     desert: [{ x: 19, y: 2, img: 'props/trees-5', h: 24 }, { x: 4, y: 9, img: 'props/rocks-and-bushes-3', h: 12 }, { x: 21, y: 22, img: 'props/rocks-and-bushes-13', h: 12, dx: 0 }],
     snow: [{ x: 21, y: 6, img: 'props/rocks-and-bushes-4', h: 12 }, { x: 2, y: 16, img: 'props/rocks-and-bushes-10', h: 13 }],
@@ -366,9 +366,10 @@ var CC = window.CC || (window.CC = {});
     });
   });
   Object.keys(RIVAL_SPOTS).forEach(function (k) {
-    CC.NPCS[k].push({ id: 'rival', x: 0, y: 0, art: 'juniper', sheet: 'juniper', h: 26, dir: 'down', show: false,
-      when: function () { return this.show; }, talk: function () {} });
     var no = RIVAL_SPOTS[k].no;
+    // while she's still standing there after a battle, she says her goodbye again
+    CC.NPCS[k].push({ id: 'rival', x: 0, y: 0, art: 'juniper', sheet: 'juniper', h: 26, dir: 'down', show: false,
+      when: function () { return this.show; }, talk: function () { var bye = rivalLines(no).bye; return CC.talk('Juniper', bye.slice(-1)); } });
     var prev = CC.TRIGGERS[k];
     CC.TRIGGERS[k] = function (x, y) {
       var t = prev && prev(x, y);
