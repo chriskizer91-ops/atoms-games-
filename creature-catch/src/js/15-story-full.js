@@ -253,8 +253,9 @@ var CC = window.CC || (window.CC = {});
   };
 
   // ---------- Juniper, your rival ----------
-  // her team covers your starter's weaknesses; it grows with each meeting, a step ahead of the guide you just beat
-  // (team() grows each creature into its form at that level, so meeting 6 meets Queenbuzz, Oakenowl and Paladcrab)
+  // her team covers your starter's weaknesses; it grows with each meeting, level with the guide you just beat or a
+  // little above (team() grows each creature into its form at its level: at the Spire, meeting 6, her Bumblazer,
+  // Timberowl and Rampacrab come as Queenbuzz, Oakenowl and Paladcrab)
   var RIVAL_TEAMS = {
     drizzlon: { 2: [['bumblop', 9], ['mossback', 10]], 3: [['bumblop', 17], ['owlcorn', 18], ['thornshell', 20]], 4: [['bumblazer', 24], ['prismole', 24], ['timberowl', 25], ['thornshell', 26]], 5: [['bumblazer', 34], ['prismole', 34], ['timberowl', 35], ['elderoak', 36]], 6: [['bumblazer', 47], ['prismole', 47], ['timberowl', 48], ['elderoak', 50]] },
     mossback: { 2: [['frostoat', 9], ['embroak', 10]], 3: [['frostoat', 17], ['magmite', 18], ['cinderfrog', 20]], 4: [['glacistoat', 24], ['sunmane', 24], ['volcaneetle', 26], ['cinderfrog', 26]], 5: [['glacistoat', 34], ['volcaneetle', 34], ['sunmane', 35], ['infernotoad', 36]], 6: [['glacistoat', 47], ['volcaneetle', 47], ['sunmane', 48], ['infernotoad', 50]] },

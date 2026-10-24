@@ -166,7 +166,14 @@ const { chromium } = require('playwright');
     const barnaby = function (n) { return n.art === 'barnaby'; }, toll = function (n) { return n.art === 'toll'; }, wick = function (n) { return n.art === 'villager-10'; };
     const gritMine = function (n) { return n.art === 'grit'; }, dusty = function (n) { return n.art === 'dusty'; };
     r.before = [await talkTo('cb-hall-in', barnaby), await talkTo('cb-tower-in', toll), await talkTo('copperbell', wick), await talkTo('mine', gritMine), await talkTo('mine', dusty), await talkTo('cb-grit-in', gritMine)];
+    // the notice board, the model bell, the bell rope and Ms. Marlow (twice, for both her lines)
+    const said = async function (fn) { const k = T.said.length; await fn(); return T.said.slice(k).join(' '); };
+    const use = function (map, x, y) { return said(function () { return C.useFurniture(C.MAPS[map].decor.find(function (d) { return d.x === x && d.y === y && d.talk; })); }); };
+    const marlow = C.NPCS.copperbell.find(function (n) { return n.art === 'villager-16'; });
+    const things = async function () { return { board: await use('copperbell', 14, 4), model: await use('cb-hall-in', 9, 2), rope: await use('cb-tower-in', 5, 2), marlow: await said(async function () { await marlow.talk(); await marlow.talk(); }) }; };
+    r.thingsBefore = await things();
     F().gloamingCalm = true; F().bellRings = true;
+    r.thingsAfter = await things();
     r.stage = C.stage();
     r.after = [await talkTo('cb-hall-in', barnaby), await talkTo('cb-tower-in', toll), await talkTo('copperbell', wick), await talkTo('mine', gritMine), await talkTo('mine', dusty), await talkTo('cb-grit-in', gritMine)];
     // Mayor Barnaby and a Normal type whose name starts with a vowel
@@ -185,6 +192,8 @@ const { chromium } = require('playwright');
   check(/It rang!|whole town/.test(lines.after[0]) && /rang by itself|Every dusk/.test(lines.after[1]) && /bell rang/.test(lines.after[2]), 'after the bell rings (before the Balance) Barnaby, Old Toll and Wick say it rang');
   check(/Bring it home/.test(lines.before[3]) && /cold's gone/.test(lines.after[3]) && /Grit smiled/.test(lines.after[4]) && /brought it home/.test(lines.after[5]), 'Grit and Dusty thank you once Gloaming is calmed');
   check(lines.stage === 'after', '(the story stage is still "after" there)');
+  check(/still no idea/.test(lines.thingsBefore.board) && /crack runs right down/.test(lines.thingsBefore.model) && /wouldn't ring anyway/.test(lines.thingsBefore.rope) && /misses the bell/.test(lines.thingsBefore.marlow), 'before the bell rings, the notice board, the model bell, the bell rope and Ms. Marlow say it\'s quiet');
+  check(/rang all by itself/.test(lines.thingsAfter.board) && /crack has healed/.test(lines.thingsAfter.model) && /rings all by itself/.test(lines.thingsAfter.rope) && /howls along with the bell/.test(lines.thingsAfter.marlow) && !/misses the bell/.test(lines.thingsAfter.marlow), 'after it rings, they say it rang');
   check(lines.barnaby.length === 1 && /^What a lovely Inkwing!/.test(lines.barnaby[0]), 'Barnaby: "What a lovely Inkwing!"');
   check(/dreaming more than ever\.'/.test(lines.willow) && !/more often/.test(lines.willow), 'Elder Willow no longer promises dream creatures');
 
@@ -248,6 +257,9 @@ const { chromium } = require('playwright');
     C.world.enter('bayou', 21, 20, 'up');
     const stump = C.MAPS.bayou.decor.find(function (d) { return d.x === 21 && d.y === 19; });
     await stump.talk(stump); r.page9 = C.hasPage(9);
+    // Lamplighter Wick's "Every lamp lit" goes by how it looks: not with Always day, but with Clock at 23:00
+    const wick = C.NPCS.copperbell.find(function (n) { return n.art === 'villager-10'; }), wickSays = async function () { const k = T.said.length; for (let i = 0; i < 3; i++) await wick.talk(); return T.said.slice(k).join(' '); };
+    r.wickDay = await wickSays(); C.opts.daynight = 'clock'; r.wickNight = await wickSays(); C.opts.daynight = 'day';
     C.state.clockShift = ((12 - now) % 24 + 24) % 24; r.noon = C.isNight();
     // the Inn: the welcome first, then "Until night" with Always day
     C.state.coins = 500; C.world.enter('inn-in', 5, 4, 'up');
@@ -270,6 +282,7 @@ const { chromium } = require('playwright');
   check(day.bayou.indexOf('fireflink') >= 0 || day.bayou.indexOf('lotusprite') >= 0, 'night creatures turn up with Always day');
   check(day.page9, 'the firefly stump gives Lost Page 9 at night with Always day');
   check(day.noon === false, 'and at noon it is day');
+  check(!/Every lamp lit/.test(day.wickDay) && /Every lamp lit/.test(day.wickNight), 'Lamplighter Wick only says "Every lamp lit" when the town looks like night');
   check(/^Welcome to the Inn!/.test(day.innNight[0]), 'Rosa says her welcome first');
   check(day.innNightIsNight && day.innNight.some(function (l) { return /night creatures will be out/.test(l); }) && day.innNight.some(function (l) { return /Always day/.test(l); }), '"Until night" with Always day: it is night, and the note says it still looks like day');
   check(!day.innMorningIsNight && !day.innMorning.some(function (l) { return /Always day/.test(l); }), '"Until morning" has no Always day note');

@@ -83,7 +83,7 @@ var CC = window.CC || (window.CC = {});
     'mine-entrance': { door: 0.5 },
   });
   async function noticeBoard() {
-    await say('TOWN NOTICES: "Dusk Bell repairs: still no idea what\'s wrong. - Mayor B." "Lost: one kite. Last seen on the museum roof. - Lark"');
+    await say('TOWN NOTICES: ' + (F().bellRings ? '"Dusk Bell repairs: not needed! It rang all by itself. - Mayor B."' : '"Dusk Bell repairs: still no idea what\'s wrong. - Mayor B."') + ' "Lost: one kite. Last seen on the museum roof. - Lark"');
     await say('"School quiz day, every day! All welcome. Bring your brain. - Ms. Poppy"');
   }
 
@@ -143,7 +143,7 @@ var CC = window.CC || (window.CC = {});
   townRoom('cb-hall', 'Copperbell Town Hall', [
     piece(5, 2, 'town-hall-1', 16, { dx: 8, talk: 'The mayor\'s desk. A copper paperweight holds down a pile of letters about the bell.' }), { x: 6, y: 2 },
     onWall(2, 'town-hall-2', 18, 'A painting of the town\'s founders, holding a little copper bell and grinning.'),
-    piece(9, 2, 'town-hall-4', 15, { talk: 'A model of the Dusk Bell. On the real one, the crack runs right down the side.' }),
+    piece(9, 2, 'town-hall-4', 15, { talk: function () { return say(F().bellRings ? 'A model of the Dusk Bell. The real one\'s crack has healed, and it rings every dusk.' : 'A model of the Dusk Bell. On the real one, the crack runs right down the side.'); } }),
     piece(1, 2, 'town-hall-6', 20), piece(10, 2, 'town-hall-5', 18, { talk: 'A coat rack. The mayor\'s spare top hat hangs on it. And a spare spare.' }),
     onWall(8, 'town-hall-3', 16, 'A red banner with a copper bell stitched on it.'),
   ], { rows: CHECK, rug: [4, 4, 4, 3] });
@@ -253,7 +253,7 @@ var CC = window.CC || (window.CC = {});
   // the Bell Tower: Old Toll at the bottom, the cracked Dusk Bell at the top
   townRoom('cb-tower', 'Bell Tower', [
     piece(8, 2, 'lighthouse-2', 22, { talk: function () { return climb('cb-tower-top', 4, 4); } }),
-    piece(5, 2, 'lighthouse-7', 24, { solid: false, talk: 'The bell rope. Toll says not to pull it. It wouldn\'t ring anyway.' }),
+    piece(5, 2, 'lighthouse-7', 24, { solid: false, talk: function () { return say(F().bellRings ? 'The bell rope. Toll says not to pull it. The bell rings all by itself now.' : 'The bell rope. Toll says not to pull it. It wouldn\'t ring anyway.'); } }),
     piece(1, 2, 'town-hall-4', 15), piece(1, 5, 'lighthouse-8', 13), piece(2, 5, 'lighthouse-4', 14),
   ], { rows: CC.ROOM10 });
   // upstairs rooms have no door: the stairs take you back down
@@ -317,12 +317,15 @@ var CC = window.CC || (window.CC = {});
     { x: 7, y: 11, art: 'villager-9', name: 'Flower Seller Daisy', patrol: [[6, 11], [8, 11]], talk: { early: ['Flowers! Fresh from the park. The Dingdoves keep trying to eat them.', 'Rustcoon come out at night and steal anything shiny. Even my hairpins.'],
       after: ['The flowers grow taller since the moon came back. I don\'t know why. I just sell them.'], night: ['Shh, the Rustcoon are out. Hold onto your coins!'] } },
     { x: 15, y: 9, art: 'villager-10', name: 'Lamplighter Wick', on: 'bellRings', talk: { early: ['I light every lamp in town at dusk. Then I listen for the bell. It hasn\'t rung in months.', 'Old Toll still climbs the tower every evening, just in case.'],
-      final: ['The bell rang! I nearly dropped my pole.'], night: ['Lovely, isn\'t it? Every lamp lit. Except the one in the bell tower. That one\'s Toll\'s.'] } },
+      final: ['The bell rang! I nearly dropped my pole.'],
+      // only when it looks like night too (Options "Always day" draws the town in daylight)
+      night: [function () { return CC.daylight().night >= 0.4 ? 'Lovely, isn\'t it? Every lamp lit. Except the one in the bell tower. That one\'s Toll\'s.' : null; }] } },
     { x: 19, y: 18, art: 'villager-12', name: 'Kite Flyer Lark', talk: { early: ['Dingdoves roost in the bell tower. They coo like tiny bells! You\'ll only see them in the daytime.', 'My kite got stuck on the museum roof. Again.'],
       night: ['Rustcoons! They come out of the park bushes at night. One took my kite string.'] } },
     { x: 17, y: 13, art: 'villager-13', name: 'Market Seller Mo', shop: true, talk: { early: ['Potions, tonics, herbs! The best stall in the square. The only stall in the square.'] } },
     { x: 12, y: 21, art: 'villager-14', name: 'Guard Rusk', talk: { early: ['Welcome to Copperbell! The desert road\'s through the north gate. Bring water.', 'The mine\'s east of the square. Closed, mostly. Grit says so, and nobody argues with Grit.', 'Professor Hollis gives a prize to anyone who reads every plaque in the museum. Nobody ever does.'] } },
-    { x: 4, y: 13, art: 'villager-16', name: 'Ms. Marlow', patrol: [[3, 13], [3, 11], [4, 11], [4, 13]], talk: { early: ['This is Biscuit. He\'s a dog. Not a creature. He\'s very offended when people try to catch him.', 'Biscuit barks at the bell tower every dusk. I think he misses the bell too.'] } },
+    { x: 4, y: 13, art: 'villager-16', name: 'Ms. Marlow', patrol: [[3, 13], [3, 11], [4, 11], [4, 13]], on: 'bellRings', talk: { early: ['This is Biscuit. He\'s a dog. Not a creature. He\'s very offended when people try to catch him.', 'Biscuit barks at the bell tower every dusk. I think he misses the bell too.'],
+      final: ['This is Biscuit. He\'s a dog. Not a creature. He\'s very offended when people try to catch him.', 'Biscuit howls along with the bell every dusk now. He thinks he\'s helping.'] } },
   ];
   CC.NPCS.copperbell = townsfolk.map(function (t) {
     var chat = t.on ? CC.chatOn(t.on, t.name, t.talk, t.name) : CC.chat(t.name, t.talk, t.name);

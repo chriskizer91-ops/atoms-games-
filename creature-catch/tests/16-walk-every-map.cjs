@@ -32,8 +32,8 @@ const LIVE = process.env.WALK_LIVE !== '0';
 
 // issues that are there by design: they're printed, but they don't fail the test
 const KNOWN = [
-  // the main road's gates stay shut until their guide's trial
-  (i) => i.kind === 'exit-unusable' && /^exit top to \w+: every edge tile in its range is blocked \((tile '=', )*tile '='\)$/.test(i.msg),
+  // the main road's gates stay shut until their guide's trial (so only before every trial is done)
+  (i) => i.kind === 'exit-unusable' && i.stages.every((s) => s === 'early' || s === 'mid') && /^exit top to \w+: every edge tile in its range is blocked \((tile '=', )*tile '='\)$/.test(i.msg),
   // the Dawn Temple's halls open one mirror at a time (the post-game): before that its people and chests are out of reach
   (i) => i.map === 'temple' && i.stages.every((s) => s === 'early' || s === 'mid') && /^(person|prop|landmark)-unreachable$/.test(i.kind),
   // only a dev code (GOTO FOREST before Bramble's trial) can come down from the Forest while Bramble still stands on the trail

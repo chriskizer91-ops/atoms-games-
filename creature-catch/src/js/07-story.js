@@ -30,7 +30,7 @@ var REST_PLACE = { 'home-in': 'your house', 'inn-in': 'Rosa\'s Inn', village: 'H
 function restPlace(mapId) {
   var m = CC.MAPS[mapId];
   if (REST_PLACE[mapId]) return REST_PLACE[mapId];
-  return m && m.indoors && /Healing Hut|Outpost|Inn|Bathhouse/.test(m.name) ? 'the ' + m.name : null;
+  return m && m.indoors && /Healing Hut|Outpost|Inn|Bathhouse/.test(m.name) ? 'the ' + m.name.replace(/^The /, '') : null;
 }
 // back to where you last rested, healed
 CC.blackout = async function () {
@@ -436,7 +436,11 @@ CC.filePicker = function (mode) {
           if (face) { CC.rect(16, y + 14, 22, 22, '#3a2a22'); g.drawImage(face, 17, y + 15, 20, 20); }
           if (info.lead) CC.drawSprite(CC.creatureSprite(info.lead), 54, y + 38, { scale: 0.42, sy: 1 + (on ? Math.sin(CC.time * 6) * 0.04 : 0) });
           CC.text(info.place, 72, y + 4, '#2a2230', { size: 9 });
-          CC.textNum('Caught ' + info.caught + '   Time ' + playTime(info.time) + (info.lead ? '   Lv ' + info.leadLv : ''), 72, y + 15, '#6a5a50', { size: 8 });
+          // the numbers in the pixel digits; the time's colon is two dots with room around them (the font's own colon
+          // squeezes in between the digits, so 1:02 reads as 102)
+          var hm = playTime(info.time).split(':'), tx = 72 + CC.textNum('Caught ' + info.caught + '   Time ' + hm[0], 72, y + 15, '#6a5a50', { size: 8 });
+          CC.rect(tx + 1, y + 18, 1, 1, '#6a5a50'); CC.rect(tx + 1, y + 20, 1, 1, '#6a5a50');
+          CC.textNum(hm[1] + (info.lead ? '   Lv ' + info.leadLv : ''), tx + 3, y + 15, '#6a5a50', { size: 8 });
           CHARM_REGIONS.forEach(function (r, j) {
             var icon = CC.img('ui/charm-' + r), cx = 72 + j * 12, cy = y + 26;
             if (j < info.charms && icon) g.drawImage(icon, cx, cy, 10, 10);

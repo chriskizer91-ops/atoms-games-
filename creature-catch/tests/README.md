@@ -27,7 +27,7 @@ A single test runs on its own too: `NODE_PATH=$(npm root -g) node tests/10-final
 
 | Test | What it covers |
 |---|---|
-| `01-core-flows.cjs` | The core loop: the starter, a catch, the first trial, evolving, the Cube Vault, a blackout, saving and Continue. |
+| `01-core-flows.cjs` | The core loop: the starter, a catch, the first trial, evolving, the Cube Vault, losing a wild battle in the tall grass (you wake up healed where you last rested), saving and Continue. |
 | `02-full-game.cjs` | A route trainer spotting you, Juniper in the Crystal Cave, Dusty's trial and the Wooden Whistle, Fly, Tobias, Continue. |
 | `03-battle-bag.cjs` | The Bag in battle: the cube and item pockets, a Potion in battle, throwing a cube. |
 | `04-polish.cjs` | Side-walk frames, the field menu, the Creature Log, the four VS intros, place signs, footprints, guides walking, the Bag. |
