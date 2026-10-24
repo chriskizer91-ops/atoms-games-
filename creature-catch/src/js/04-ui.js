@@ -155,12 +155,15 @@ CC.statusTag = function (st, x, y) {
 // mode 'field' (look, reorder, use items from there), 'battle' (pick who to send out), 'pick' (pick one, any)
 CC.partyScreen = function (mode, opts) {
   opts = opts || {};
+  // before the starter there's nobody to show (the party list and its choices need a creature)
+  if (!CC.state.party.length) return CC.say('You don\'t have any creatures yet!').then(function () { return -1; });
   return new Promise(function (resolve) {
     var sel = 0;
     var scr = {
       name: 'party', opaque: true,
       update: function () {
         var party = CC.state.party;
+        if (!party.length) { CC.pop(scr); resolve(-1); return; }
         if (CC.repeat('down')) { sel = (sel + 1) % party.length; CC.sfx('blip'); }
         if (CC.repeat('up')) { sel = (sel + party.length - 1) % party.length; CC.sfx('blip'); }
         if (CC.input.pressed.b && !opts.mustPick) { CC.sfx('back'); CC.pop(scr); resolve(-1); }
@@ -168,6 +171,7 @@ CC.partyScreen = function (mode, opts) {
       },
       choose: async function (i) {
         var m = CC.state.party[i];
+        if (!m) return false;
         if (mode === 'pick') return true;
         if (mode === 'battle') {
           var c = await CC.menu(['Send out', 'Summary']);
@@ -177,10 +181,12 @@ CC.partyScreen = function (mode, opts) {
           if (i === opts.active) { await CC.say(CC.mon.name(m) + ' is already out!'); return false; }
           return true;
         }
-        var items = ['Summary', 'Move to front'];
+        // Evolve: for one that's ready (a level evolution) but didn't evolve after its battle, or is at Lv 50
+        var evo = CC.mon.canEvolve(m) && m.hp > 0, items = ['Summary', 'Move to front'].concat(evo ? ['Evolve'] : []);
         var c2 = await CC.menu(items);
         if (c2 === 0) await CC.summary(m);
         if (c2 === 1 && i > 0) { CC.state.party.splice(i, 1); CC.state.party.unshift(m); sel = 0; }
+        if (c2 === 2 && evo) { await CC.evolveScene(m); delete m.evoAsk; } // asked now, so the next win doesn't ask again
         return false;
       },
       draw: function () {
