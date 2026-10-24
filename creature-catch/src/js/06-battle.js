@@ -371,8 +371,8 @@ var CC = window.CC || (window.CC = {});
       if (slot) slot.pp = Math.max(0, slot.pp - 1);
     }
     await CC.say(nm(user) + ' used ' + move.name + '!', { auto: 0.35 });
-    // accuracy
-    if (move.acc && !(fx.self || fx.heal)) {
+    // accuracy (a move that only raises its user's stats or heals it can't miss; an attack with a boost can)
+    if (move.acc && !(!move.power && (fx.self || fx.heal))) {
       var acc = move.acc * stageMult(user.st.acc);
       if (Math.random() * 100 >= acc) { pop('MISS', target.home.x, target.home.y - 56, '#d8d0c8'); await CC.say(nm(user) + '\'s attack missed!'); return; }
     }
@@ -438,6 +438,8 @@ var CC = window.CC || (window.CC = {});
 
   // ---------- choosing ----------
   function usableMoves(m) { return m.moves.filter(function (x) { return x.pp > 0; }); }
+  // a stat change that can't happen: the stage is already at +3 (going up) or -3 (going down)
+  function statMaxed(s, stat, n) { return n > 0 ? s.st[stat] >= 3 : s.st[stat] <= -3; }
   function foeChoice() {
     var f = B.foe, m = f.mon, opts = usableMoves(m);
     if (!opts.length) return 'struggle';
@@ -446,7 +448,10 @@ var CC = window.CC || (window.CC = {});
     opts.forEach(function (x) {
       var mv = CC.MOVES[x.id], sc;
       if (mv.power) sc = mv.power * CC.typeMult(mv.type, CC.mon.sp(B.ally.mon).types) * (CC.mon.sp(m).types.indexOf(mv.type) >= 0 ? 1.25 : 1);
-      else sc = (mv.fx.status && !B.ally.mon.status) ? 45 : mv.fx.heal ? (m.hp < CC.mon.maxHp(m) / 2 ? 70 : 0) : 30;
+      else if (mv.fx.status) sc = B.ally.mon.status ? 0 : 45; // it can't work on a creature that already has one
+      else if (mv.fx.heal) sc = m.hp < CC.mon.maxHp(m) / 2 ? 70 : 0;
+      else if (mv.fx.stat) sc = statMaxed(mv.fx.self ? f : B.ally, mv.fx.stat, mv.fx.stages) ? 0 : 30;
+      else sc = 30;
       sc *= CC.rand(0.7, 1.3);
       if (sc > bestScore) { bestScore = sc; best = x.id; }
     });
@@ -582,11 +587,17 @@ var CC = window.CC || (window.CC = {});
 
   // ---------- catching ----------
   var RARITY_BONUS = { common: 25, uncommon: 10, rare: -5, veryrare: -15 };
+  // how rare a creature is to catch: its own entry, or (for a form met already evolved) its earlier form's
+  var rarityOf = CC.rarityOf = function (id) {
+    for (var c = id; c && CC.CREATURES[c]; c = CC.CREATURES[c].from) if (CC.RARITY[c]) return CC.RARITY[c];
+    return null;
+  };
   function catchChance(m) {
-    var it = CC.ITEMS[B.cubeKind || 'cube'], bonus = it.duskCube ? (CC.isNight() ? it.duskCube : it.cube) : it.cube;
+    var it = CC.ITEMS[B.cubeKind || 'cube'], dusk = CC.isNight() || CC.daylight().night > 0; // dusk starts as the light warms
+    var bonus = it.duskCube ? (dusk ? it.duskCube : it.cube) : it.cube;
     if (CC.dev.catchAll || bonus >= 999) return 100;
     var max = CC.mon.maxHp(m), st = m.status;
-    var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[CC.RARITY[m.id]] || 0) + bonus;
+    var c = (1 - m.hp / max) * 70 + (st === 'sleep' || st === 'freeze' ? 15 : st ? 8 : 0) + (RARITY_BONUS[rarityOf(m.id)] || 0) + bonus;
     return CC.clamp(c, 5, 95);
   }
   async function throwCube(kind) {
