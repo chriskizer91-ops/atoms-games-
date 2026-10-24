@@ -8,7 +8,8 @@ const { GAME, OUT } = require('./lib.cjs');
 const { chromium, devices } = require('playwright');
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ ...devices['iPhone 13'] }); const p = await ctx.newPage();
-  const errs = []; p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + e.stack)); p.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
+  const errs = [], onPurpose = []; // (the screen this test breaks on purpose, below, is not an error)
+  p.on('pageerror', e => { if (/broken on purpose/.test(e.message)) onPurpose.push(e.message); else errs.push('PAGEERROR ' + e.message + '\n' + e.stack); }); p.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
   const fails = []; const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (!ok) fails.push(what); };
   const tap = async (k, n = 1) => { for (let i = 0; i < n; i++) { await p.keyboard.down(k); await p.waitForTimeout(50); await p.keyboard.up(k); await p.waitForTimeout(80); } };
   const shot = (name) => p.screenshot({ path: `${OUT}/14-${name}.png` });
@@ -275,12 +276,13 @@ const { chromium, devices } = require('playwright');
   // ---- a screen that breaks can't freeze the game: the loop goes on, and it's reported once
   const broke = await p.evaluate(async () => {
     const C = __cc, logged = [], real = console.error; console.error = function () { logged.push(String(arguments[0])); };
-    const bad = C.push({ name: 'broken', update() { throw new Error('update'); }, draw() { throw new Error('draw'); } });
+    const bad = C.push({ name: 'broken', update() { throw new Error('update broken on purpose'); }, draw() { throw new Error('draw broken on purpose'); } });
     const t0 = C.time; await new Promise((r) => setTimeout(r, 400)); const alive = C.time > t0;
     C.pop(bad); console.error = real; return { alive, logged };
   });
   console.log('a broken screen', JSON.stringify(broke));
   check(broke.alive && broke.logged.length === 1, 'a screen that throws doesn\'t stop the game, and is reported once');
+  check(onPurpose.length === 1, 'the error still reaches the page as an uncaught one, once (' + onPurpose.join(', ') + ')');
 
   console.log(fails.length ? fails.length + ' checks failed' : 'all checks passed');
   if (fails.length) errs.push('FAILED CHECKS: ' + fails.join('; '));

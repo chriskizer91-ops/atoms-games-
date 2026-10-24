@@ -111,8 +111,13 @@ CC.W = 240; CC.H = 160;
   // ---------- loop ----------
   CC.time = 0;
   var last = 0;
-  // a screen that throws is reported once (not every frame), and the game keeps running
-  function oops(s, e) { if (!s.threw) { s.threw = true; console.error('Creature Catch: ' + (s.name || 'a screen') + ' broke:', e); } }
+  // a screen that throws is reported once (not every frame), and the game keeps running. The error is thrown again
+  // outside the loop, so the page still sees it as uncaught (window.onerror, and the tests' page errors)
+  function oops(s, e) {
+    if (s.threw) return;
+    s.threw = true; console.error('Creature Catch: ' + (s.name || 'a screen') + ' broke:', e);
+    setTimeout(function () { throw e; });
+  }
   var loop = { name: 'the main loop' };
   function frame(now) {
     try { step(now); } catch (e) { oops(loop, e); }
@@ -130,7 +135,7 @@ CC.W = 240; CC.H = 160;
     var ws = waiters; waiters = [];
     ws.forEach(function (w) {
       var done = true;
-      try { done = w.pred(); } catch (e) { console.error(e); } // a wait that breaks ends, so its script goes on
+      try { done = w.pred(); } catch (e) { oops({ name: 'a wait' }, e); } // a wait that breaks ends, so its script goes on
       if (done) w.res(); else waiters.push(w);
     });
     // draw
