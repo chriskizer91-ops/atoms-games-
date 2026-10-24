@@ -229,6 +229,7 @@ var CC = window.CC || (window.CC = {});
   }
   // called after every step: does a trainer who hasn't battled you see you?
   CC.trainerSight = function (mapId, x, y) {
+    if (CC.firstHealthy() < 0) return null; // nobody can battle: trainers let you walk by
     var list = CC.NPCS[mapId] || [];
     for (var i = 0; i < list.length; i++) {
       var n = list[i];
@@ -371,7 +372,7 @@ var CC = window.CC || (window.CC = {});
     CC.TRIGGERS[k] = function (x, y) {
       var t = prev && prev(x, y);
       if (t) return t;
-      if (!F()['juniper' + no] && RIVAL_SPOTS[k].step(x, y) && (no !== 5 || F().trialRuins)) return function () { return rivalScene(k); };
+      if (!F()['juniper' + no] && CC.firstHealthy() >= 0 && RIVAL_SPOTS[k].step(x, y) && (no !== 5 || F().trialRuins)) return function () { return rivalScene(k); };
       return null;
     };
   });

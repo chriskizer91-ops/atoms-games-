@@ -21,12 +21,12 @@ var CC = window.CC || (window.CC = {});
       return Object.assign({ h: 25, dir: 'down' }, p, { talk: p.talk || CC.chat(p.name, p.lines, mapId + p.name) });
     }));
   }
-  // a wild battle that starts from something in the world (a fairy ring, a tide pool)
+  // a wild battle that starts from something in the world (a tide pool); losing sends you back to rest
   async function wildFrom(spawn, text) {
     var roll = CC.rollSpawn(spawn);
     await say(text); CC.sfx('encounter');
-    await CC.battleTransition();
-    await CC.startBattle({ wild: CC.mon.make(roll.id, roll.lv) });
+    if (CC.firstHealthy() >= 0) await CC.battleTransition();
+    return CC.fight({ wild: CC.mon.make(roll.id, roll.lv) });
   }
   // the area's landmark: its Keeper if a kid has made one (section 7.3), or its legend line
   function landmark(area, line) { return function () { return CC.keeperAt ? CC.keeperAt(area, line) : say(line); }; }
@@ -189,11 +189,11 @@ var CC = window.CC || (window.CC = {});
   async function fairyRing() {
     var today = new Date().toDateString();
     if (F()['day:ring'] === today) { await say('A ring of red mushrooms. It\'s quiet now. Try again tomorrow.'); return; }
-    F()['day:ring'] = today;
-    var roll = { id: CC.pick(['snoozeloth', 'budstag', 'snoozeloth']), lv: CC.randi(11, 13) };
+    var roll = { id: CC.pick(['snoozeloth', 'budstag', 'snoozeloth']), lv: CC.randi(11, 13) }, ready = CC.firstHealthy() >= 0;
     await say('You step into the fairy ring. The mushrooms glow... and something rustles out of the ferns!'); CC.sfx('encounter');
-    await CC.battleTransition();
-    await CC.startBattle({ wild: CC.mon.make(roll.id, roll.lv) });
+    if (ready) await CC.battleTransition();
+    await CC.fight({ wild: CC.mon.make(CC.wildForm(roll.id, roll.lv), roll.lv) }); // too tired to battle: back to rest
+    if (ready) F()['day:ring'] = today; // used up for today only once its battle has been
   }
   // the Grandmother Oak gives page 3 once Fennick has introduced you
   GROVE.landmarkTalk = async function () {
@@ -295,7 +295,7 @@ var CC = window.CC || (window.CC = {});
   }
   // the tide pools: dip in and something might bite (their creatures are CC.SPAWNS.tidepool, 12b-data-expansion.js)
   async function tidePool() {
-    if (!CC.state.party.length) { await say('A tide pool, full of tiny crabs.'); return; }
+    if (CC.firstHealthy() < 0) { await say('A tide pool, full of tiny crabs.'); return; }
     if (!(await CC.yesNo('A tide pool. Dip your hand in and see what bites?'))) return;
     if (Math.random() < 0.35) { await say('Just seaweed. And a very cold hand.'); return; }
     return wildFrom('tidepool', 'Something grabbed your finger!');

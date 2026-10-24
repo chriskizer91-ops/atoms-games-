@@ -8,19 +8,38 @@ var RIVAL_PICK = { drizzlon: 'mossback', mossback: 'embroak', embroak: 'drizzlon
 
 function F() { return CC.state.flags; }
 
-// a battle that sends you back to the last Healing Hut if you lose (unless losing is part of the story)
+// Every battle goes through here. Losing sends you back to where you last rested, healed (unless losing is part of
+// the story: canLose). With nobody able to fight, no battle starts: you go back to rest and it counts as a loss.
 CC.fight = async function (opts) {
+  if (CC.firstHealthy() < 0) {
+    await CC.say('Your creatures are too tired to battle.');
+    await CC.blackout();
+    return 'lose';
+  }
   if ((opts.trainer || opts.boss) && !opts.noVs && CC.vsIntro) await CC.vsIntro(opts);
   var result = await CC.startBattle(opts);
-  if (result === 'lose' && !opts.canLose) {
-    await CC.fade(0.4, true);
-    CC.healParty();
-    var h = CC.state.lastHeal;
-    CC.world.enter(h.map, h.x, h.y, 'down');
-    CC.unfade();
-    await CC.say('You hurried back to the Healing Hut. Your creatures are rested and ready.');
-  }
+  // a win can still leave everyone fainted (a recoil move): a plain wild or route-trainer battle sends you back
+  // then too; guides, Juniper and the guardians' scenes carry on, and the next battle's check above catches it
+  var plain = !opts.boss && !opts.vs;
+  if (!opts.canLose && (result === 'lose' || (plain && CC.firstHealthy() < 0))) await CC.blackout();
   return result;
+};
+// where a blackout takes you, said the way you'd say it ('the Healing Hut', 'Rosa\'s Inn', 'your house');
+// null for anywhere else
+var REST_PLACE = { 'home-in': 'your house', 'inn-in': 'Rosa\'s Inn', village: 'Home Village', archive: 'the Archive\'s healing stone' };
+function restPlace(mapId) {
+  var m = CC.MAPS[mapId];
+  if (REST_PLACE[mapId]) return REST_PLACE[mapId];
+  return m && m.indoors && /Healing Hut|Outpost|Inn|Bathhouse/.test(m.name) ? 'the ' + m.name : null;
+}
+// back to where you last rested, healed
+CC.blackout = async function () {
+  await CC.fade(0.4, true);
+  CC.healParty();
+  var h = CC.state.lastHeal, place = restPlace(h.map);
+  CC.world.enter(h.map, h.x, h.y, 'down');
+  CC.unfade();
+  await CC.say((place ? 'You hurried back to ' + place + '.' : 'You hurried back to rest.') + ' Your creatures are rested and ready.');
 };
 
 CC.NPCS = {

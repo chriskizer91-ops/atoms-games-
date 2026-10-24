@@ -1205,7 +1205,7 @@ CC.wildEncounter = async function (key) {
   w.hop = null;
   var wild = CC.mon.make(roll.id, roll.lv);
   if (shiny) wild.shiny = true;
-  await CC.startBattle({ wild: wild });
+  await CC.fight({ wild: wild }); // losing sends you back to rest
 };
 
 // bars sweep in from both sides, flashing, then the battle starts
