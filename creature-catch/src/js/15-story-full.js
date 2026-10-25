@@ -253,13 +253,13 @@ var CC = window.CC || (window.CC = {});
   };
 
   // ---------- Juniper, your rival ----------
-  // her team covers your starter's weaknesses; it grows with each meeting, level with the guide you just beat or a
-  // little above (team() grows each creature into its form at its level: at the Spire, meeting 6, her Bumblazer,
+  // her team covers your starter's weaknesses; it grows with each meeting, about level with the guide you just beat
+  // (a little under in the Forest and the Night Ruins, where she's hardest on your starter; v12) (team() grows each creature into its form at its level: at the Spire, meeting 6, her Bumblazer,
   // Timberowl and Rampacrab come as Queenbuzz, Oakenowl and Paladcrab)
   var RIVAL_TEAMS = {
-    drizzlon: { 2: [['bumblop', 9], ['mossback', 10]], 3: [['bumblop', 17], ['owlcorn', 18], ['thornshell', 20]], 4: [['bumblazer', 24], ['prismole', 24], ['timberowl', 25], ['thornshell', 26]], 5: [['bumblazer', 34], ['prismole', 34], ['timberowl', 35], ['elderoak', 36]], 6: [['bumblazer', 47], ['prismole', 47], ['timberowl', 48], ['elderoak', 50]] },
-    mossback: { 2: [['frostoat', 9], ['embroak', 10]], 3: [['frostoat', 17], ['magmite', 18], ['cinderfrog', 20]], 4: [['glacistoat', 24], ['sunmane', 24], ['volcaneetle', 26], ['cinderfrog', 26]], 5: [['glacistoat', 34], ['volcaneetle', 34], ['sunmane', 35], ['infernotoad', 36]], 6: [['glacistoat', 47], ['volcaneetle', 47], ['sunmane', 48], ['infernotoad', 50]] },
-    embroak: { 2: [['crabbit', 9], ['drizzlon', 10]], 3: [['crabbit', 17], ['koiling', 18], ['rapidrake', 20]], 4: [['rampacrab', 24], ['radimoth', 24], ['koidrake', 25], ['rapidrake', 26]], 5: [['rampacrab', 34], ['radimoth', 34], ['koidrake', 35], ['tsunadrake', 36]], 6: [['rampacrab', 47], ['radimoth', 47], ['koidrake', 48], ['tsunadrake', 50]] },
+    drizzlon: { 2: [['bumblop', 7], ['mossback', 8]], 3: [['bumblop', 17], ['owlcorn', 18], ['thornshell', 20]], 4: [['bumblazer', 24], ['prismole', 24], ['timberowl', 25], ['thornshell', 26]], 5: [['bumblazer', 32], ['prismole', 32], ['timberowl', 33], ['elderoak', 34]], 6: [['bumblazer', 47], ['prismole', 47], ['timberowl', 48], ['elderoak', 50]] },
+    mossback: { 2: [['frostoat', 7], ['embroak', 8]], 3: [['frostoat', 17], ['magmite', 18], ['cinderfrog', 20]], 4: [['glacistoat', 24], ['sunmane', 24], ['volcaneetle', 26], ['cinderfrog', 26]], 5: [['glacistoat', 32], ['volcaneetle', 32], ['sunmane', 33], ['infernotoad', 34]], 6: [['glacistoat', 47], ['volcaneetle', 47], ['sunmane', 48], ['infernotoad', 50]] },
+    embroak: { 2: [['crabbit', 7], ['drizzlon', 8]], 3: [['crabbit', 17], ['koiling', 18], ['rapidrake', 20]], 4: [['rampacrab', 24], ['radimoth', 24], ['koidrake', 25], ['rapidrake', 26]], 5: [['rampacrab', 32], ['radimoth', 32], ['koidrake', 33], ['tsunadrake', 34]], 6: [['rampacrab', 47], ['radimoth', 47], ['koidrake', 48], ['tsunadrake', 50]] },
   };
   var WEAK = { drizzlon: 'Plant and Bolt', mossback: 'Fire and Frost', embroak: 'Water and Lumen' };
   function rivalLines(no) {
@@ -534,11 +534,11 @@ var CC = window.CC || (window.CC = {});
   var REMATCH = {
     oakley: ['Ranger Oakley', [['budstag', 44], ['radimoth', 44], ['barkbeetle', 45], ['timberowl', 46]], 3, 4],
     gus: ['Fisher Gus', [['tidepuff', 44], ['rampacrab', 44], ['koidrake', 45], ['surgefin', 46]], 14, 4],
-    dusty: ['Dusty', [['gemlin', 44], ['stalagbat', 44], ['prismole', 45], ['volcaneetle', 46]], 2, 8],
+    dusty: ['Dusty', [['gemlin', 44], ['stalagbat', 44], ['prismole', 45], ['volcaneetle', 46]], 5, 17], // the friendliest rematch stands by the entrance
     safi: ['Safi', [['cactoad', 44], ['dunefox', 44], ['thundarab', 45], ['duneserpent', 46]], 15, 8],
     frida: ['Frida', [['sleetle', 44], ['yetiny', 45], ['pengarch', 45], ['glacistoat', 46]], 3, 13],
     moss: ['Granny Moss', [['lilypadle', 44], ['mireling', 45], ['wispeel', 45], ['mudgatron', 46]], 14, 13],
-    corvin: ['Corvin', [['pebbleton', 45], ['beaconwraith', 46], ['bonepanther', 46], ['rosferatu', 47]], 5, 17],
+    corvin: ['Corvin', [['pebbleton', 45], ['beaconwraith', 46], ['bonepanther', 46], ['rosferatu', 47]], 2, 8],
   };
   CC.NPCS.spire = Object.keys(REMATCH).map(function (id) {
     var r = REMATCH[id];

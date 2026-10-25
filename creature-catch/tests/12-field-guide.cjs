@@ -24,6 +24,9 @@ const { chromium } = require('playwright');
   check(/Clovermouse/.test(copper) && /Clove Tastical/.test(copper) && /Pebblepup/.test(copper) && /Boulderhound/.test(copper), 'Copperbell: Clovermouse, Clove Tastical, Pebblepup and Boulderhound are also found here');
   await p.click('button[data-z=cove]'); await p.waitForTimeout(200);
   console.log('cove', JSON.stringify(await state()), await p.evaluate(() => document.querySelector('.zonehead .also') ? document.querySelector('.zonehead .also').innerText.replace(/\n/g, ' ') : 'no also'));
+  const krak = await p.evaluate(() => { const c = [...document.querySelectorAll('#grid .card')].find((c) => /Krakling/.test(c.querySelector('h3').textContent)); return c ? c.innerText.replace(/\n/g, ' ') : ''; });
+  console.log('krakling', krak);
+  check(/Rare in the tide pools night only · \d+% of bites/.test(krak), 'Krakling lives in the tide pools, not the Cove\'s grass');
   await p.evaluate(() => document.getElementById('creatures').scrollIntoView());
   await p.screenshot({ path: shotPath('12-gt-3-cove.png') });
   // an "Also found here" link goes back to the Lakeshore page

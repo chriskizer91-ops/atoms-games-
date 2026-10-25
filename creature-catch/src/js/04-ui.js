@@ -25,7 +25,7 @@ CC.say = function (text, opts) {
       draw: function () {
         CC.box(0, 112, 240, 48);
         var pageText = lines.slice(page * 2, page * 2 + 2).join('\n').slice(0, Math.floor(shown));
-        pageText.split('\n').forEach(function (l, i) { CC.text(l, 9, 119 + i * 15, '#2a2230'); });
+        pageText.split('\n').forEach(function (l, i) { CC.textNum(l, 9, 119 + i * 15, '#2a2230'); });
         if (opts.who) speakerTag(opts.who);
         var done = Math.floor(shown) >= lines.slice(page * 2, page * 2 + 2).join('\n').length;
         if (done && opts.auto == null && Math.floor(CC.time * 3) % 2) { CC.rect(226, 149, 6, 2, '#6a3a2a'); CC.rect(228, 151, 2, 2, '#6a3a2a'); }
@@ -122,15 +122,16 @@ CC.scrollArrow = function (x, y, dir) {
 function questionBox(lines, who) {
   return function () {
     CC.box(0, 112, 240, 48);
-    lines.forEach(function (l, i) { CC.text(l, 9, 119 + i * 15, '#2a2230'); });
+    lines.forEach(function (l, i) { CC.textNum(l, 9, 119 + i * 15, '#2a2230'); });
     if (who) speakerTag(who);
   };
 }
-// the question types out as usual, then stays up (its last page, as CC.say showed it) while you pick Yes or No
-CC.yesNo = async function (question, who) {
+// the question types out as usual, then stays up (its last page, as CC.say showed it) while you pick Yes or No;
+// opts: anything for the Yes/No menu (its place, when the default would cover something)
+CC.yesNo = async function (question, who, opts) {
   await CC.say(question, { who: who });
   var lines = CC.wrap(question, 222, 10), last = Math.floor((lines.length - 1) / 2) * 2;
-  return (await CC.menu(['Yes', 'No'], { y: 74, under: questionBox(lines.slice(last, last + 2), who) })) === 0;
+  return (await CC.menu(['Yes', 'No'], Object.assign({ y: 74, under: questionBox(lines.slice(last, last + 2), who) }, opts))) === 0;
 };
 // ask while the question stays on screen
 CC.ask = function (question, options, who) {
@@ -356,7 +357,10 @@ CC.bagScreen = async function () {
     var k = keys[c], it = CC.ITEMS[k];
     if (k === 'whistle') {
       if (CC.MAPS[CC.state.map].indoors) { await CC.say('Timberowl can\'t fit in here. Try it outside!'); continue; }
-      CC.sfx('select'); await CC.say('You blew the Wooden Whistle. Timberowl swoops down!'); await CC.flyScreen(); return 'flew';
+      CC.sfx('select'); await CC.say('You blew the Wooden Whistle. Timberowl swoops down!');
+      var was = CC.state.map; await CC.flyScreen();
+      if (CC.state.map !== was) return 'flew'; // you're somewhere else now (B on the map stays here, back in the Bag)
+      continue;
     }
     if (it.use) { if (await it.use()) return; continue; } // key items with their own screen (Lost Pages, the book)
     if (CC.usable(k)) {
@@ -483,7 +487,7 @@ CC.vaultList = function () {
         CC.rect(0, 0, 240, 160, '#4a6a90');
         for (var yy = 0; yy < 160; yy += 8) CC.rect(0, yy, 240, 4, '#466489');
         CC.text('Cube Vault', 8, 3, '#ffffff', { shadow: '#22344e' });
-        CC.text(n + (n === 1 ? ' creature' : ' creatures'), 232, 4, '#e8f0ff', { size: 9, align: 'right', shadow: '#22344e' });
+        CC.textNum(n + (n === 1 ? ' creature' : ' creatures'), 232, 4, '#e8f0ff', { size: 9, align: 'right', shadow: '#22344e' });
         // the list
         CC.box(4, 16, 126, ROWS * ROW + 12);
         if (!n) CC.text('The Vault is empty.', 67, 70, '#6a5a50', { size: 9, align: 'center' });

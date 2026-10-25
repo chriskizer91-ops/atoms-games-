@@ -65,10 +65,10 @@ var CC = window.CC || (window.CC = {});
             var vk = CC.clamp((t - 0.45) / 0.15, 0, 1), size = Math.round(36 - vk * 14);
             outlined('VS', 122, 72 - size / 2, kind === 'boss' ? '#d8b8ff' : '#fff4a0', size);
           }
-          // the name plate
+          // the name plate, top right over the opponent's side (it slides in from the right), so it never reads as your name
           if (t > 0.6 && name) {
             var pk = CC.ease(CC.clamp((t - 0.6) / 0.25, 0, 1)), plate = CC.img('ui/name-plate');
-            var pw = Math.max(96, CC.textWidth(name, 10) + 40), px = 12 - (1 - pk) * 150, py = 132;
+            var pw = Math.max(96, CC.textWidth(name, 10) + 40), px = 228 - pw + (1 - pk) * 150, py = 8;
             if (plate) CC.drawStretched(plate, px, py, pw, 20, 16);
             else {
               CC.rect(px, py, pw, 18, '#e8b838'); CC.rect(px + 1, py + 1, pw - 2, 16, '#1a1a3a'); CC.rect(px + 2, py + 2, pw - 4, 1, '#3a3a6a');

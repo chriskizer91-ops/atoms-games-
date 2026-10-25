@@ -52,7 +52,8 @@ const zoneName = Object.fromEntries(CC.ZONES.map((z) => [z.key, z.name]));
 // where each form turns up in the wild: one { zone, tier, time, pct } per place, from the tables the game rolls from
 // (CC.spawnTable, with each place's own levels; a creature past its evolution level is met evolved). pct: how often
 // it turns up there by day and at night, in percent, once you've met everything there (the game's new-creature
-// bonus left out). A place with two lists (the Cove's grass and tide pools) takes the first list that has the form.
+// bonus left out). A place with two lists (the Cove's grass and tide pools) takes the first list that has the form;
+// pools: it's only in the second list (the tide pools), so its % is of what bites there.
 const appear = {};
 for (const z of CC.ZONES) for (const k of z.spawns) for (const night of [false, true]) {
   const list = CC.spawnTable(k, night), sum = list.reduce((n, e) => n + e.w, 0);
@@ -63,7 +64,7 @@ for (const z of CC.ZONES) for (const k of z.spawns) for (const night of [false, 
     if (x.list === k) x.pct[night ? 1 : 0] += 100 * e.w / sum / (e.levels[1] - e.levels[0] + 1);
   }
 }
-for (const a of Object.values(appear)) for (const x of a) { delete x.list; x.pct = x.pct.map((v) => v ? Math.max(1, Math.round(v)) : 0); }
+for (const a of Object.values(appear)) for (const x of a) { if (x.list !== x.zone) x.pools = true; delete x.list; x.pct = x.pct.map((v) => v ? Math.max(1, Math.round(v)) : 0); }
 
 const creatures = CC.CREATURE_ORDER.map((id, i) => {
   const c = C[id], sig = CC.MOVES[c.sig], first = C[root(id)];
@@ -349,7 +350,7 @@ var D = ${JSON.stringify(data)};
   function meta(c, zk) {
     var lines = [esc(c.stage)], here = c.appear.filter(function (a) { return a.zone === zk; })[0];
     if (c.found) lines.push(esc(c.found));
-    else if (here) lines.push(esc(here.tier) + ' here' + when(here.time) + often(here));
+    else if (here) lines.push(esc(here.tier) + (here.pools ? ' in the tide pools' : ' here') + when(here.time) + often(here) + (here.pools ? ' of bites' : ''));
     else if (c.from) lines.push('Evolves from ' + esc(c.from.name) + ' (' + esc(c.from.how) + ')');
     var others = c.appear.filter(function (a) { return a.zone !== zk; }).map(function (a) { return esc(zoneById[a.zone].name); });
     if (others.length) lines.push('Also in: ' + others.join(', '));

@@ -302,6 +302,13 @@ const { chromium } = require('playwright');
     await C.NPCS.temple.find(function (n) { return n.name === 'Explorer Rafe'; }).talk();
     r.gus = got[0]; r.juniper6 = got[1]; r.lena = got[2]; r.rafe = got[3];
     C.state.flags['tr:snow-1'] = true; await C.NPCS.snow.find(function (n) { return n.name === 'Skier Lena'; }).talk(); r.lenaAfter = T.last();
+    // Juniper in the Forest (meeting 2) and the Night Ruins (meeting 5), through their step triggers
+    var realWalk = C.walkTo; C.walkTo = async function () {}; C.state.flags.juniper2 = C.state.flags.juniper5 = false; // ENDING set them
+    C.world.enter('forest', 12, 22, 'up'); await C.TRIGGERS.forest(12, 22)();
+    C.state.flags.trialRuins = true; C.world.enter('ruins', 12, 7, 'up'); await C.TRIGGERS.ruins(12, 7)();
+    C.walkTo = realWalk;
+    r.juniper2 = got[got.length - 2]; r.juniper5 = got[got.length - 1];
+    r.spots = ['dusty', 'corvin'].map(function (id) { var n = C.NPCS.spire.find(function (n) { return n.art === id; }); return id + ' ' + n.x + ',' + n.y; }).join(', ');
     return r;
   });
   console.log('teams', JSON.stringify(teams));
@@ -309,6 +316,8 @@ const { chromium } = require('playwright');
   check(teams.juniper6 === 'paladcrab 47, radimoth 47, koidrake 48, tsunadrake 50', 'Juniper at the Spire: Lv 47 to 50, her Rampacrab grown into Paladcrab');
   check(teams.lena === 'pengarch 24, sleetle 24' && /Pengarch slides/.test(teams.lenaAfter), 'Skier Lena\'s Pengloo is a Pengarch, and she says so');
   check(teams.rafe === 'mummoth 43, sphinxie 43, sphinxar 46', 'Explorer Rafe\'s Sphinxar is Lv 46');
+  check(teams.juniper2 === 'crabbit 7, drizzlon 8' && teams.juniper5 === 'rampacrab 32, radimoth 32, koidrake 33, tsunadrake 34', 'Juniper in the Forest is Lv 7 and 8, and in the Night Ruins Lv 32 to 34');
+  check(teams.spots === 'dusty 5,17, corvin 2,8', 'at the Spire, Dusty\'s rematch stands by the entrance and Corvin\'s further in');
 
   // ================= 6. save files and the title =================
   const saves = await p.evaluate(async () => {

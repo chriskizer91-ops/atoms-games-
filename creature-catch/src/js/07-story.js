@@ -271,7 +271,8 @@ function starterSelect() {
         if (CC.input.pressed.a) {
           CC.sfx('select'); busy = true;
           var id = STARTERS[sel];
-          CC.yesNo('Choose ' + CC.CREATURES[id].name + ', ' + STARTER_BLURB[id] + '? (' + CC.CREATURES[id].types[0] + ' type)').then(function (yes) {
+          // the Yes/No box goes up by the heading, clear of the three names
+          CC.yesNo('Choose ' + CC.CREATURES[id].name + ', ' + STARTER_BLURB[id] + '? (' + CC.CREATURES[id].types[0] + ' type)', null, { y: 1 }).then(function (yes) {
             busy = false;
             if (yes) { CC.pop(scr); resolve(id); }
           });

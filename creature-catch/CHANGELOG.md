@@ -9,7 +9,7 @@ Everything on the list, plus a sweep of the whole game for bugs.
 - The guides are a real match now. Before, a starter usually showed up 5 to 13 levels above each guide and won in a hit or two. Gus, Dusty, Safi, Frida and Granny Moss have stronger teams (Gus has four creatures), and Corvin's is a little lower, so your team arrives at about their level.
 - **XP depends on who you beat:** more from a stronger creature, less from a much weaker one, so grinding easy battles doesn't run away.
 - **The whole team grows:** creatures that didn't fight get half a share ("The rest of your team gained XP too!"). Switching to a creature with the right type is a real plan now.
-- **Juniper is beatable.** Her fights were nearly walls (won less than 1 time in 4). They're now Lv 10, 20, 26 and 36, and her last fight at the Spire is Lv 47 to 50.
+- **Juniper is beatable.** Her fights were nearly walls (won less than 1 time in 4). They're now Lv 8, 20, 26 and 34, and her last fight at the Spire is Lv 47 to 50.
 - **Trainers' creatures come evolved when they should,** the same as wild ones: the Spire rematches, Juniper's teams, Skier Lena, Sailor Pete, Explorer Indira and others.
 - Trainers no longer waste turns on moves that can't work.
 
@@ -23,7 +23,7 @@ Everything on the list, plus a sweep of the whole game for bugs.
   - Mushling, Lilypadle, Wispkin and Scarabolt join the Grove, the Bayou, the Archive and the Dawn Temple.
 - **No place is one creature over and over.** Before, the Bayou was 70% Mudtusk.
 - **? Pop is met as itself more often in Frostpeak Pass,** and so are Pengloo, Bonecat and Crescub.
-- A creature met already evolved is as easy to catch as the form it came from.
+- A creature met already evolved catches like the creature it's listed as there (a Pup Pop catches like a ? Pop). Before, some had no catch odds of their own and were harder to catch.
 
 **Evolutions**
 - **All 87 evolutions work,** and a new test checks every one through the real game.
@@ -34,7 +34,7 @@ Everything on the list, plus a sweep of the whole game for bugs.
 
 **The Creature Log**
 - **Shadows:** the Log shows the shadow of every first-form creature you haven't met yet, with where to look ("Look for it around the Meadow Path."). Once you meet a creature, its evolutions appear as shadows too ("Tuftail grows into this one at Lv 18."). The legendary guardians stay a secret.
-- A creature you've seen shows its real picture.
+- A creature you've seen shows its real picture. Juniper's starter says it can't be found in the wild.
 - The numbers use clearer digits (the old font's 2 looked like an 8, so 120 read 180). Seen counts only real creatures.
 - Notes fit their page, and use the places' real names (the Lakeshore, Frostpeak Pass).
 
@@ -60,7 +60,10 @@ Everything on the list, plus a sweep of the whole game for bugs.
   - Up on the title screen moves up.
   - File numbers read right.
   - Play time counts all play.
-- **Yes or No questions** stay on screen while you choose.
+- **Yes or No questions** stay on screen while you choose, and the box no longer covers the starter's name.
+- **Numbers in talk boxes** use the clear digits too ("Elder Willow gave you 5 Basic Cubes" used to read "S").
+- **The VS splash** shows the opponent's name over the opponent, not under your explorer.
+- **On a phone, holding L and R and pressing MENU** opens the parents' code box (it used to open the party first).
 - **Type icons show on every type badge.**
 - **People and places:**
   - The Great Geode speaks.
@@ -74,7 +77,7 @@ Everything on the list, plus a sweep of the whole game for bugs.
   - "an Ultra Cube", "What a lovely Inkwing!"
 - **The Field Guide:** draining moves say the right amount, items say what they do, stat totals add up, the menu fits on phones, and each card says how often a creature turns up.
 - **Dev codes** take names with spaces (GIVE CLOVE TASTICAL 12).
-- **Six new browser tests:** every evolution, every map walked, the story fixes, spawns, battle rules and phones.
+- **Seven new browser tests:** the Vault and the Log, every evolution, every map walked, the story fixes, spawns, battle rules and phones.
 
 ## v11: the final creatures
 The creature list is now final at **175**.

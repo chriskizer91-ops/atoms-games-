@@ -82,7 +82,7 @@ Two things stop you from skipping ahead:
 | Swamp | Granny Moss | 34 | Rebuilt boardwalk to the Ruins |
 | Night Ruins | Night Watchman Corvin | 36 | The rune gate to the finale |
 
-Juniper's rival fights are at Lv 5, 10, 20, 26 and 36, and her last battle at the Spire is Lv 47 to 50 (v12; they were 5, 12, 22, 32, 40 and 50). Before v12 the guides' teams were 8, 12, 15, 20, 24, 28, 32 and 37. Section 17 says why.
+Juniper's rival fights are at Lv 5, 8, 20, 26 and 34, and her last battle at the Spire is Lv 47 to 50 (v12; they were 5, 12, 22, 32, 40 and 50). Before v12 the guides' teams were 8, 12, 15, 20, 24, 28, 32 and 37. Section 17 says why.
 
 ## 8. Story and Finale: Three Suggestions (not decided)
 
@@ -175,10 +175,12 @@ The expansion follows `creature-catch-expansion-guide.md`. Where the guide left 
 - **Evolving:** a creature that reaches its evolution level is asked after that battle, or after your next win if it fainted or you lost. If you say No or stop it with B, you can evolve it any time from the party menu (Evolve), as long as it hasn't fainted. That also covers Lv 50 and creatures from older saves whose line gained a form.
 - **Wild creatures are picked by weight,** not by a 60/30/10 tier roll: each creature on a place's list weighs 10 (common), 5 (uncommon) or 2 (rare), so tiers no longer dilute each other. A place can set one creature's weight (the Spire's rares weigh 3) or its levels (`weight` and `lv` in `CC.SPAWNS`). `CC.spawnTable(place, night)` is the one table the game, the Field Guide and the roster all read. Every place has at least three creatures by day and at night, and rares are about 4 to 8%.
 - **New-creature bonus:** a creature you've never met (in any form it can turn up as there) counts double, so a kid meets everything in a place quickly. After that, rares are rare again.
-- **Catch rarity:** a creature met already evolved catches like the list entry it came from (Pup Pop catches like ? Pop). Moonlynx and the guardians stay very rare.
+- **Catch rarity:** a creature met already evolved catches like the list entry it came from (Pup Pop catches like ? Pop), unless it has a list entry of its own: a form listed at the Moonlit Spire keeps its Spire tier everywhere (Pengarch, Glacistoat, Prismole, Bonepanther). Moonlynx and the guardians stay very rare.
+- **Juniper is about level with the guide you just beat,** and a little under in the Forest (Lv 7 and 8) and the Night Ruins (Lv 32 to 34), where her team is hardest on your starter: measured in the real game, a party with its starter in front won almost never at the higher levels. At the Spire, Dusty's rematch (the friendliest) stands by the entrance and Corvin's (the hardest) further in.
 - **Losing:** if every creature faints in any plain battle (tall grass, tide pool, fairy ring, Mimicube, route trainers), you wake up healed where you last rested, and the line says where. No battle starts when nobody can fight. A double knockout with nobody left is a loss. Story battles that may be lost still end their own way.
 - **"Always day"** in Options only changes how the world looks. Night creatures, Lost Page 9, the Dusk Cube and resting "Until night" at the Inn follow the game clock.
 - **The Cube Vault:** Take out opens its own screen (a scrolling list, the creature you're on shown big, sorting with MENU). A swap must leave at least one creature that can fight, the same as Put away. Every long menu scrolls.
 - **The Creature Log shows shadows:** every first form you haven't met (the guardians stay secret), with where to look, and every evolution of a creature you have met, with what it grows from and when. A creature you've seen shows its real picture.
 - **Phones:** upright, the buttons sit under the game; sideways, they split beside it, so the game is about twice as big. Small phones shrink the buttons so they never overlap.
 - **Play time** counts whenever a game is on, in real time.
+- **L and R act when you let go** (L the party, R Fly), so both can be held for the code box with L + R + MENU, which on a phone never lands in the same frame.

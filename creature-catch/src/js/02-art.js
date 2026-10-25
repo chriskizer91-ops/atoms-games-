@@ -444,6 +444,7 @@ CC.playBurst = function (type, x, y, h) {
 
 CC.drawParticle = function (kind, x, y, s, color, rot) {
   var g = CC.g;
+  g.save(); // its own translate, rotate and alpha never leak into what's drawn next
   g.translate(Math.round(x), Math.round(y)); if (rot) g.rotate(rot);
   g.fillStyle = color || '#ffffff';
   s = Math.max(1, s || 2);
@@ -508,6 +509,7 @@ CC.drawParticle = function (kind, x, y, s, color, rot) {
     default:
       g.fillRect(-s / 2, -s / 2, s, s);
   }
+  g.restore();
 };
 // which particle shape a type throws, and its colors
 CC.TYPE_FX = {

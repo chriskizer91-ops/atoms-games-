@@ -35,7 +35,7 @@ var CC = window.CC || (window.CC = {});
       g.save(); g.beginPath(); g.rect(12, 104, 36, 38); g.clip();
       [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (d) { CC.text(l, 21 + d[0], y + d[1], '#efdcb8', { size: 8, shadow: false }); });
       g.restore();
-      CC.text(l, 21, y, '#5a3a22', { size: 8 });
+      CC.textNum(l, 21, y, '#5a3a22', { size: 8 }); // pixel digits, so 'at Lv 22' doesn't read 'at Lv 88'
     });
   }
 
@@ -94,7 +94,8 @@ var CC = window.CC || (window.CC = {});
             CC.text(c.name, 65, 79, ink, { align: 'center' });
             var bw = c.types.reduce(function (w, t) { return w + CC.typeBadgeWidth(t) + 2; }, -2), bx = 65 - bw / 2;
             c.types.forEach(function (t) { bx += CC.typeBadge(t, bx, 92) + 2; });
-            var note = got ? (CC.LORE && CC.LORE[id] ? CC.LORE[id].note : '') : 'Seen in the wild. Catch one to fill in this page.';
+            // seen but not caught: the starters can't be found wild (one of them is Juniper's)
+            var note = got ? (CC.LORE && CC.LORE[id] ? CC.LORE[id].note : '') : /^starter/.test(c.kind) ? 'One of Elder Willow\'s partner creatures. You won\'t find it in the wild.' : 'Seen on your journey. Catch one to fill in this page.';
             noteLines(note);
             if (got) CC.text('A: read more', 110, NOTE_Y + 4 * NOTE_ROW + 1, faint, { size: 8, align: 'right' }); // under the note's 4th line
           } else if (shadow(id)) {

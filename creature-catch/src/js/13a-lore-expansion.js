@@ -7,7 +7,7 @@ Object.assign(CC.LORE, {
   stashmunk: { lore: 'It digs secret pantries under the meadow and guards them fiercely. Lost travelers have made it through whole winters on its forgotten stashes.', note: 'Puffmunk evolves into it at Lv 16.' },
   fleecling: { lore: 'A lamb whose wool is a real little cloud. On hot days it rains a few drops on itself to cool off.', note: 'Meadow Path in the daytime. Rare.' },
   cloudram: { lore: 'Its cloud wool has become a thunderhead. When it charges, thunder rolls across the meadow before it arrives.', note: 'Fleecling evolves into it at Lv 22. Normal and Bolt.' },
-  dewt: { lore: 'A newt made of morning dew. It sparkles on the grass at sunrise and turns to mist if you startle it.', note: 'Grassland in the daytime (uncommon). Best in the morning.' },
+  dewt: { lore: 'A newt made of morning dew. It sparkles on the grass at sunrise and turns to mist if you startle it.', note: 'Grassland in the daytime (uncommon).' },
   monsoonewt: { lore: 'It carries a little raincloud over its head everywhere it goes. Farmers welcome it in dry summers.', note: 'Dewt evolves into it at Lv 20.' },
   burrhog: { lore: 'A hedgehog whose spines are sticky burrs. Seeds catch in them as it rolls, so it plants half the forest without meaning to.', note: 'Forest (uncommon). Plant and Earth.' },
   splotter: { lore: 'A playful otter that floats on its back juggling pebbles. It shows off its best pebble to anyone who stops to watch.', note: 'Lakeshore in the daytime, and Driftwood Cove.' },
@@ -31,7 +31,7 @@ Object.assign(CC.LORE, {
   comette: { lore: 'A tiny comet that fell when the moon shone whole again. It zooms in circles around the Spire and can\'t stop smiling.', note: 'The Moonlit Spire at night. Rare. Lumen and Fire.' },
   // ---- side-area creatures ----
   wormapple: { lore: 'A worm that lives inside a red apple and wears it like a house. It pops out to say hello and pops back in when it\'s shy. Marigold thought it was eating her apples, but it\'s actually chasing the pests away.', note: 'Willowbrook Orchard in the daytime.' },
-  scarecrowl: { lore: 'A crow wearing a tattered scarecrow hat. Marigold put up the scarecrow to keep it away, and it moved right in.', note: 'Willowbrook Orchard at dusk and at night.' },
+  scarecrowl: { lore: 'A crow wearing a tattered scarecrow hat. Marigold put up the scarecrow to keep it away, and it moved right in.', note: 'Willowbrook Orchard once it gets dark.' },
   sprigkin: { lore: 'A tiny forest spirit with a leaf for a hat. Sprigkin sing to the old trees at dawn so they remember to wake up.', note: 'Whispering Grove. Plant and Lumen.' },
   grovekin: { lore: 'Now the grove\'s gardener, as tall as a sapling. Wherever it plants its staff, a glowing flower blooms.', note: 'Sprigkin evolves into it at Lv 24.' },
   snoozeloth: { lore: 'A sloth so sleepy that moss grows on it, and then flowers grow on the moss. It has hung from the same branch since Old Fennick was a boy.', note: 'Whispering Grove. Rare.' },

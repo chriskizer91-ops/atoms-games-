@@ -76,7 +76,7 @@ const { chromium, devices } = require('playwright');
   check(/Embroak grows into this one/.test(log.cinderfrog), 'your starter\'s evolution is a shadow');
   check(/Not seen yet/.test(log.lunarion), 'the guardians stay a secret');
   check(/Not seen yet/.test(log.bumblazer), 'an evolution of a creature you haven\'t met stays hidden');
-  check(/^Tuftail PLANT Seen in the wild/.test(log.tuftail), 'a creature you have seen shows its name and picture');
+  check(/^Tuftail PLANT Seen on your journey/.test(log.tuftail), 'a creature you have seen shows its name and picture');
   check(/Seen 2 Caught 1/.test(log.tuftail), 'the Log counts only real creatures (Seen 2, Caught 1)');
 
   // ---- helpers for the rest: a fresh game in the village, press A until a screen is on top, what one frame draws
@@ -143,7 +143,7 @@ const { chromium, devices } = require('playwright');
   const yn = await mashUntil('menu'); const ynDrawn = await drawn();
   await shot('yesno');
   await tap('KeyX'); await p.waitForTimeout(300);
-  const ynSaid = ynDrawn.join(' | ');
+  const ynSaid = ynDrawn.join(' | ').replace(/ \| (\d+) \| /g, '$1'); // a number is drawn on its own, in the pixel digits
   console.log('Yes/No frame: ' + ynSaid.slice(0, 200));
   check(yn === 'menu' && /Delete File 2\? This can't be undone\./.test(ynSaid) && /Yes/.test(ynSaid) && /Elder Willow/.test(ynSaid), 'the question and who asks stay on screen with Yes and No');
   check(await p.evaluate(() => window.__yes === false), 'B answers No');
@@ -196,9 +196,9 @@ const { chromium, devices } = require('playwright');
   check(shiny.ok && shiny.id === 'radimoth' && shiny.shinyCaught.radimoth === 1, 'a shiny that evolves is shiny in the Log as its new form');
   check(shiny.loaded.radimoth === 1 && shiny.loaded.verdantail === 1, 'an old save marks the shiny forms in the party and the Vault');
 
-  // ---- the Wooden Whistle: the Bag says it flew, so the field menu can close
+  // ---- the Wooden Whistle: the Bag says it flew, so the field menu can close (the stand-in flight lands in the Meadow)
   await fresh('STARTER EMBROAK');
-  await p.evaluate(() => { const C = __cc; C.state.flags.fly = 1; C.state.bag = {}; window.__realFly = C.flyScreen; C.flyScreen = () => Promise.resolve(); window.__bag = null; C.world.run(async () => { window.__bag = await C.bagScreen(); }); });
+  await p.evaluate(() => { const C = __cc; C.state.flags.fly = 1; C.state.bag = {}; window.__realFly = C.flyScreen; C.flyScreen = () => { C.world.enter('meadow', 7, 12, 'down'); return Promise.resolve(); }; window.__bag = null; C.world.run(async () => { window.__bag = await C.bagScreen(); }); });
   await p.waitForTimeout(300); await tap('KeyZ'); await p.waitForTimeout(200);
   for (let i = 0; i < 10 && (await p.evaluate(() => window.__bag === null)); i++) { await tap('KeyZ'); await p.waitForTimeout(100); }
   const flew = await p.evaluate(() => { __cc.flyScreen = window.__realFly; return window.__bag; });
@@ -272,6 +272,61 @@ const { chromium, devices } = require('playwright');
   for (let i = 0; i < 3; i++) { await tap('KeyZ'); await p.waitForTimeout(100); }
   const title = await p.evaluate(async () => { const C = __cc, st = C.state; st.playTime = 0; C.stack.length = 0; C.push({ name: 'title', update() {}, draw() {} }); await C.sleep(0.5); const t = st.playTime; C.stack.length = 0; C.push(C.world); return t; });
   check(title === 0, 'play time doesn\'t count without a game on (the title screen)');
+
+  // ---- the final review's fixes: a shiny in the Vault list leaves the screen alone, L and R act when let go (so
+  //      L + R + MENU opens the code box), B on the Fly map from the Bag goes back to the Bag, talk boxes use the pixel
+  //      digits, Juniper's starter says it isn't wild, and the starter's Yes/No sits by the heading
+  await fresh('STARTER EMBROAK');
+  const shinyVault = await p.evaluate(() => {
+    const C = __cc; for (let i = 0; i < 5; i++) C.state.vault.push(C.mon.make('tuftail', 5 + i)); C.state.vault[1].shiny = true;
+    C.vaultList(); const scr = C.top(), g = C.g, t0 = g.getTransform(), rows = [], real = C.text;
+    C.text = function (s, x, y) { if (s === 'Tuftail' && x < 130) rows.push(Math.round(y)); return real.apply(this, arguments); }; // the list, not the big panel
+    scr.draw(); C.text = real; const t1 = g.getTransform();
+    C.input.pressed.b = true; scr.update(); delete C.input.pressed.b;
+    return { same: t0.e === t1.e && t0.f === t1.f && t0.a === t1.a, rows };
+  });
+  console.log('a shiny in the Vault', JSON.stringify(shinyVault));
+  check(shinyVault.same && shinyVault.rows.join() === '22,34,46,58,70', 'a shiny in the Vault list doesn\'t shift the rest of the screen');
+
+  await fresh('STARTER EMBROAK; FLY');
+  await p.keyboard.down('KeyQ'); await p.waitForTimeout(150); await p.keyboard.down('KeyE'); await p.waitForTimeout(150);
+  await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+  const chordOpen = await p.evaluate(() => document.getElementById('codes').classList.contains('open'));
+  await p.keyboard.up('KeyQ'); await p.keyboard.up('KeyE'); await p.waitForTimeout(150);
+  await p.click('#codeClose'); await p.waitForTimeout(400);
+  const afterChord = await top();
+  await tap('KeyQ'); await p.waitForTimeout(300);
+  const lAlone = await top(); await tap('KeyX'); await p.waitForTimeout(300);
+  console.log('shoulders', JSON.stringify({ chordOpen, afterChord, lAlone }));
+  check(chordOpen && afterChord !== 'party' && afterChord !== 'fly', 'L then R held, then MENU, opens the code box (not the party or Fly)');
+  check(lAlone === 'party', 'L on its own still opens the party, when you let go');
+
+  await fresh('STARTER EMBROAK; FLY');
+  const wi = await p.evaluate(() => { const C = __cc; window.__bagRes = 'open'; C.world.run(async () => { window.__bagRes = await C.bagScreen(); });
+    return Object.keys(C.ITEMS).filter((k) => { const it = C.ITEMS[k]; return it.key ? C.state.flags[it.key] : C.state.bag[k] > 0; }).indexOf('whistle'); });
+  await p.waitForTimeout(300); await tap('ArrowDown', wi); await tap('KeyZ'); await mashUntil('fly', 20);
+  const onFly = await top(); await tap('KeyX'); await p.waitForTimeout(400);
+  const backIn = await p.evaluate(() => ({ top: __cc.top().name, res: window.__bagRes, map: __cc.state.map }));
+  await tap('KeyX'); await p.waitForTimeout(300);
+  const bagRes = await p.evaluate(() => window.__bagRes);
+  console.log('whistle and B', JSON.stringify({ onFly, backIn, bagRes }));
+  check(onFly === 'fly' && backIn.top === 'menu' && backIn.res === 'open' && backIn.map === 'village' && bagRes === undefined, 'B on the Fly map from the Bag goes back to the Bag');
+
+  await fresh('STARTER EMBROAK');
+  await p.evaluate(() => { __cc.world.run(() => __cc.say('Elder Willow gave you 5 Basic Cubes. You got 120 coins.')); });
+  await p.waitForTimeout(900); const talk = await drawn(); await mashUntil(undefined, 4);
+  console.log('talk box', JSON.stringify(talk.slice(0, 12)));
+  check(talk.indexOf('5') >= 0 && talk.indexOf('120') >= 0, 'numbers in a talk box use the pixel digits');
+  const wide = await p.evaluate(() => __cc.wrap('You got 120 coins and 25 Basic Cubes and 12 Potions and 2 Super Potions too!', 222, 10).every((l) => __cc.textNumWidth(l, 10) <= 222));
+  check(wide, 'talk boxes wrap by the pixel digits\' width');
+
+  const junLog = await p.evaluate(() => {
+    const C = __cc; C.markSeen('drizzlon'); C.creatureLog(); const scr = C.top(), said = [], real = C.text;
+    C.text = function (s) { said.push(String(s)); return real.apply(this, arguments); };
+    scr.draw(); C.text = real; C.input.pressed.b = true; scr.update(); delete C.input.pressed.b;
+    return said.join(' ').replace(/\s+/g, ' ');
+  });
+  check(/won't find it in the wild/.test(junLog), 'Juniper\'s starter, seen in her battle, says it can\'t be found in the wild');
 
   // ---- a screen that breaks can't freeze the game: the loop goes on, and it's reported once
   const broke = await p.evaluate(async () => {

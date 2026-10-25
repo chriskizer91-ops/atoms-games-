@@ -199,16 +199,25 @@ CC.num = function (str, x, y, color, align) {
 };
 // a line of text whose numbers use the pixel digits; opts: size (of the words, default 10), align (left, center,
 // right), shadow. Only digits, / and spaces go to CC.num; everything else is drawn in the font.
+// the line in parts, numbers apart; the font's space is narrow beside the pixel digits, so a number after a space,
+// and a word after a number and a space, get 2 px more (pad)
+function numParts(str) {
+  var parts = String(str).split(/(\d[\d\/]*)/);
+  return parts.map(function (t, i) {
+    return { t: t, num: i % 2 === 1, pad: i % 2 ? (/ $/.test(parts[i - 1]) ? 2 : 0) : (i && /^ /.test(t) ? 2 : 0) };
+  });
+}
 CC.textNumWidth = function (str, size) {
-  return String(str).split(/(\d[\d\/]*)/).reduce(function (w, t, i) { return w + (i % 2 ? CC.numWidth(t) : CC.textWidth(t, size || 10)); }, 0);
+  return numParts(str).reduce(function (w, p) { return w + p.pad + (p.num ? CC.numWidth(p.t) : CC.textWidth(p.t, size || 10)); }, 0);
 };
 CC.textNum = function (str, x, y, color, opts) {
   opts = opts || {};
-  var size = opts.size || 10, parts = String(str).split(/(\d[\d\/]*)/), w = CC.textNumWidth(str, size);
+  var size = opts.size || 10, w = CC.textNumWidth(str, size);
   if (opts.align === 'center') x -= w / 2; else if (opts.align === 'right') x -= w;
-  parts.forEach(function (t, i) {
-    if (i % 2) { CC.num(t, x, y + Math.round((size - 6) / 2), color); x += CC.numWidth(t); }
-    else if (t) { CC.text(t, x, y, color, { size: size, shadow: opts.shadow }); x += CC.textWidth(t, size); }
+  numParts(str).forEach(function (p) {
+    x += p.pad;
+    if (p.num) { CC.num(p.t, x, y + Math.round((size - 6) / 2), color); x += CC.numWidth(p.t); }
+    else if (p.t) { CC.text(p.t, x, y, color, { size: size, shadow: opts.shadow }); x += CC.textWidth(p.t, size); }
   });
   return w;
 };
@@ -216,14 +225,14 @@ CC.textWidth = function (str, size) {
   CC.g.font = (size || 10) + 'px ' + CC.FONT + ', monospace';
   return CC.g.measureText(str).width;
 };
-// wraps text to lines no wider than w
+// wraps text to lines no wider than w (measured with the pixel digits, which CC.textNum draws and are a little wider)
 CC.wrap = function (str, w, size) {
   var out = [];
   String(str).split('\n').forEach(function (para) {
     var line = '';
     para.split(' ').forEach(function (word) {
       var t = line ? line + ' ' + word : word;
-      if (CC.textWidth(t, size) > w && line) { out.push(line); line = word; } else line = t;
+      if (CC.textNumWidth(t, size) > w && line) { out.push(line); line = word; } else line = t;
     });
     out.push(line);
   });

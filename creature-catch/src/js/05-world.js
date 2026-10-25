@@ -711,6 +711,14 @@ CC.world = {
       if ((dx || dy) && !(nx === s.x && ny === s.y) && !into && !self.solidAt(nx, ny)) { n.mv = { fx: n.x, fy: n.y, tx: nx, ty: ny, k: 0 }; n.wait = 0.05 + (n.leg === 0 ? 0 : 0); }
     });
     if (this.busy) return;
+    // L and R act when let go, so both can be held for the code box (on a phone two thumbs never land in the same
+    // frame); a press the world didn't see from start to finish doesn't count
+    var sh = this.shoulder || (this.shoulder = {});
+    if (CC.time - (sh.seen || 0) > 0.1) sh.l = sh.r = sh.chord = false;
+    sh.seen = CC.time;
+    if (inp.pressed.l) sh.l = true;
+    if (inp.pressed.r) sh.r = true;
+    if (inp.held.l && inp.held.r) sh.chord = true;
     if (this.moving) {
       var mv = this.moving, speed = inp.held.b ? 8 : 4.4;
       mv.k += dt * speed;
@@ -724,9 +732,13 @@ CC.world = {
     // hold L + R and press MENU: the hidden dev code box
     if (inp.pressed.start && inp.held.l && inp.held.r) { CC.sfx('catch'); this.run(async function () { await CC.openCodes(); await CC.runCodeQueue(); }); return; }
     if (inp.pressed.start) { CC.sfx('select'); this.run(CC.fieldMenu); return; }
-    // R: Fly (once you can), L: your party
-    if (inp.pressed.r && !inp.held.l && CC.state.flags.fly && !this.map.indoors) { CC.sfx('select'); this.run(CC.flyScreen); return; }
-    if (inp.pressed.l && !inp.held.r) { CC.sfx('select'); this.run(function () { return CC.partyScreen('field'); }); return; }
+    // R: Fly (once you can), L: your party, each when let go without the other one held too
+    var letL = sh.l && !inp.held.l, letR = sh.r && !inp.held.r, solo = !sh.chord;
+    if (letL) sh.l = false;
+    if (letR) sh.r = false;
+    if (!inp.held.l && !inp.held.r) sh.chord = false;
+    if (letR && solo && CC.state.flags.fly && !this.map.indoors) { CC.sfx('select'); this.run(CC.flyScreen); return; }
+    if (letL && solo) { CC.sfx('select'); this.run(function () { return CC.partyScreen('field'); }); return; }
     if (inp.pressed.a) { this.interact(); return; }
     var dir = inp.held.up ? 'up' : inp.held.down ? 'down' : inp.held.left ? 'left' : inp.held.right ? 'right' : null;
     if (!dir) { this.stepAnim = 0; return; }
