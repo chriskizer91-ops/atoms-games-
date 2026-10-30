@@ -1,10 +1,16 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { TILE, DECK_Y } from './config.js';
 import { waveHeight } from './ocean.js';
-import { damp, pick, rand } from './util.js';
+import { materials } from './materials.js';
+import { damp, rand } from './util.js';
 
 const BOARDS = 5;
 const BOARD_W = TILE / BOARDS;
+const BOARD_L = TILE * 0.98;
+const BOARD_T = 0.065;
+const LOG_R = 0.15;
 const SIDES = [
   [1, 0],
   [-1, 0],
@@ -12,30 +18,104 @@ const SIDES = [
   [0, -1],
 ];
 
-const geo = {
-  board: new THREE.BoxGeometry(TILE * 0.98, 0.07, BOARD_W - 0.035),
-  log: new THREE.CylinderGeometry(0.15, 0.15, TILE * 0.99, 7).rotateX(Math.PI / 2),
-  rope: new THREE.CylinderGeometry(0.165, 0.165, 0.07, 7).rotateX(Math.PI / 2),
-  hit: new THREE.BoxGeometry(TILE, 0.55, TILE),
-  ghost: new THREE.BoxGeometry(TILE * 0.96, 0.08, TILE * 0.96),
-};
+// A board with one end bitten into a ragged edge. UVs match the full board.
+function chewedBoardGeometry(len, width, thick) {
+  const sh = new THREE.Shape();
+  const x0 = -len / 2, x1 = len / 2;
+  sh.moveTo(x0, -width / 2);
+  const teeth = 7;
+  for (let k = 0; k <= teeth; k++) {
+    const y = -width / 2 + (width * k) / teeth;
+    const x = x1 - (k % 2 ? 0.09 : 0.0) - Math.random() * 0.05 - (k === 0 || k === teeth ? 0.03 : 0);
+    sh.lineTo(x, y);
+  }
+  sh.lineTo(x0, width / 2);
+  sh.lineTo(x0, -width / 2);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: thick, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 1 });
+  g.rotateX(Math.PI / 2);
+  g.translate(0, thick / 2, 0);
+  const pos = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < pos.count; i++) {
+    uv.setXY(i, (pos.getX(i) + BOARD_L / 2) / BOARD_L, (pos.getZ(i) + width / 2) / width);
+  }
+  g.computeVertexNormals();
+  return g;
+}
 
-const mat = {
-  wood: [0x9c7146, 0x8f663e, 0xa97c4f, 0x94693f, 0x86603a].map(
-    (c) => new THREE.MeshLambertMaterial({ color: c, flatShading: true })
-  ),
-  chewed: new THREE.MeshLambertMaterial({ color: 0x5e4129, flatShading: true }),
-  log: new THREE.MeshLambertMaterial({ color: 0x6a4a2d, flatShading: true }),
-  rope: new THREE.MeshLambertMaterial({ color: 0xcdb27c, flatShading: true }),
-  hit: new THREE.MeshBasicMaterial({ visible: false }),
-  ghost: new THREE.MeshBasicMaterial({ color: 0xcfeeff, transparent: true, opacity: 0.22, depthWrite: false }),
-  ghostEdge: new THREE.LineBasicMaterial({ color: 0xeaf8ff, transparent: true, opacity: 0.7 }),
-};
-const ghostEdges = new THREE.EdgesGeometry(geo.ghost);
+// Several turns of rope around both logs at two points along the tile.
+function lashingGeometry() {
+  const parts = [];
+  for (const lx of [-0.3, 0.3]) {
+    for (const rz of [-0.33, 0.33]) {
+      for (let k = -1; k <= 1; k++) {
+        const t = new THREE.TorusGeometry(LOG_R + 0.012, 0.016, 6, 18);
+        t.translate(lx * TILE, DECK_Y - 0.22, rz * TILE + k * 0.034);
+        parts.push(t);
+      }
+    }
+  }
+  const g = mergeGeometries(parts);
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 6, uv.getY(i));
+  return g;
+}
+
+function logGeometry() {
+  const g = new THREE.CylinderGeometry(LOG_R, LOG_R * 0.94, TILE * 0.99, 14, 3);
+  // Slightly irregular trunk.
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i), x = pos.getX(i), z = pos.getZ(i);
+    const k = 1 + Math.sin(y * 7 + Math.atan2(z, x) * 3) * 0.035;
+    pos.setX(i, x * k);
+    pos.setZ(i, z * k);
+  }
+  g.rotateX(Math.PI / 2);
+  // Wet and weedy below the waterline: tint the underside green-dark.
+  const col = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    const w = Math.min(1, Math.max(0, (0.02 - y) / 0.14));
+    col[i * 3] = 1 - w * 0.5;
+    col[i * 3 + 1] = 1 - w * 0.32;
+    col[i * 3 + 2] = 1 - w * 0.48;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i), uv.getY(i) * 2);
+  return g;
+}
+
+let geo = null;
+let mat = null;
+function init() {
+  if (geo) return;
+  geo = {
+    board: new RoundedBoxGeometry(BOARD_L, BOARD_T, BOARD_W - 0.028, 2, 0.012),
+    chewed: chewedBoardGeometry(BOARD_L, BOARD_W - 0.028, BOARD_T),
+    log: logGeometry(),
+    lashing: lashingGeometry(),
+    hit: new THREE.BoxGeometry(TILE, 0.55, TILE),
+    ghost: new THREE.BoxGeometry(TILE * 0.96, 0.08, TILE * 0.96),
+  };
+  geo.ghostEdges = new THREE.EdgesGeometry(geo.ghost);
+  const M = materials();
+  mat = {
+    wood: M.planks,
+    chewed: M.chewed,
+    log: M.bark,
+    rope: M.rope,
+    hit: new THREE.MeshBasicMaterial({ visible: false }),
+    ghost: new THREE.MeshBasicMaterial({ color: 0xcfeeff, transparent: true, opacity: 0.22, depthWrite: false }),
+    ghostEdge: new THREE.LineBasicMaterial({ color: 0xeaf8ff, transparent: true, opacity: 0.7 }),
+  };
+}
 
 const key = (i, j) => `${i},${j}`;
 
 export function createRaft(scene) {
+  init();
   const group = new THREE.Group();
   scene.add(group);
   const tiles = new Map();
@@ -52,25 +132,27 @@ export function createRaft(scene) {
     for (const lx of [-0.3, 0.3]) {
       const log = new THREE.Mesh(geo.log, mat.log);
       log.position.set(lx * TILE, DECK_Y - 0.22, 0);
-      log.rotation.z = rand(0, Math.PI);
+      log.rotation.z = rand(0, Math.PI * 2);
+      log.castShadow = log.receiveShadow = true;
       g.add(log);
       logs.push(log);
-      for (const rz of [-0.33, 0.33]) {
-        const r = new THREE.Mesh(geo.rope, mat.rope);
-        r.position.set(lx * TILE, DECK_Y - 0.22, rz * TILE);
-        g.add(r);
-        logs.push(r);
-      }
     }
+    const lash = new THREE.Mesh(geo.lashing, mat.rope);
+    lash.castShadow = true;
+    g.add(lash);
+    logs.push(lash);
 
     const boards = [];
     for (let b = 0; b < BOARDS; b++) {
-      const m = new THREE.Mesh(geo.board, pick(mat.wood));
+      const variant = Math.floor(Math.random() * mat.wood.length);
+      const m = new THREE.Mesh(geo.board, mat.wood[variant]);
       const z = -TILE / 2 + BOARD_W * (b + 0.5);
       const x = rand(-0.03, 0.03);
-      m.position.set(x, DECK_Y - 0.035 + rand(-0.008, 0.008), z);
-      m.rotation.y = rand(-0.02, 0.02);
-      m.userData.base = { x, z, y: m.position.y, ry: m.rotation.y, mat: m.material };
+      m.position.set(x, DECK_Y - BOARD_T / 2 + rand(-0.006, 0.006), z);
+      m.rotation.y = rand(-0.018, 0.018) + (Math.random() < 0.5 ? Math.PI : 0);
+      m.rotation.x = rand(-0.012, 0.012);
+      m.castShadow = m.receiveShadow = true;
+      m.userData.base = { x, z, y: m.position.y, ry: m.rotation.y, variant };
       g.add(m);
       boards.push(m);
     }
@@ -81,7 +163,7 @@ export function createRaft(scene) {
 
     const ghost = new THREE.Mesh(geo.ghost, mat.ghost);
     ghost.position.y = DECK_Y - 0.04;
-    ghost.add(new THREE.LineSegments(ghostEdges, mat.ghostEdge));
+    ghost.add(new THREE.LineSegments(geo.ghostEdges, mat.ghostEdge));
     ghost.visible = false;
     g.add(ghost);
 
@@ -113,16 +195,27 @@ export function createRaft(scene) {
       .map((b, idx) => ({ b, idx, d: Math.hypot(b.userData.base.x - bx, b.userData.base.z - bz) + idx * 0.001 }))
       .sort((p, q) => p.d - q.d);
 
+    // Chewed boards are shorter with a ragged end facing the bite, and sag.
+    const dir = side[0] !== 0 ? side[0] : (tile.i + tile.j) % 2 ? 1 : -1;
     order.forEach(({ b }, k) => {
       const base = b.userData.base;
       const state = steps >= 2 * k + 2 ? 2 : steps >= 2 * k + 1 ? 1 : 0;
       b.visible = state < 2;
-      b.scale.x = state === 1 ? 0.58 : 1;
-      b.position.x = state === 1 ? base.x - Math.sign(side[0] || 0.3) * TILE * 0.2 : base.x;
-      b.position.y = state === 1 ? base.y - 0.03 : base.y;
-      b.rotation.z = state === 1 ? 0.12 * (side[0] >= 0 ? 1 : -1) : 0;
-      b.rotation.y = state === 1 ? base.ry + 0.15 : base.ry;
-      b.material = state === 1 ? mat.chewed : base.mat;
+      if (state === 1) {
+        b.geometry = geo.chewed;
+        b.material = mat.chewed[base.variant];
+        b.scale.x = 0.64;
+        b.position.x = base.x - dir * TILE * 0.17;
+        b.position.y = base.y - 0.022;
+        b.rotation.set(0, dir > 0 ? 0.06 : Math.PI + 0.06, -0.07 * dir);
+      } else {
+        b.geometry = geo.board;
+        b.material = mat.wood[base.variant];
+        b.scale.x = 1;
+        b.position.x = base.x;
+        b.position.y = base.y;
+        b.rotation.set(0, base.ry, 0);
+      }
     });
   }
 

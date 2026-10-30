@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { CURRENT, CURRENT_SPEED } from './config.js';
 import { waveHeight } from './ocean.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { materials } from './materials.js';
 import { rand, randInt, randn, pick, weightedPick } from './util.js';
 
 const cl = Math.hypot(CURRENT.x, CURRENT.z);
@@ -14,37 +16,89 @@ const TYPES = {
   barrel: { weight: 6 },
 };
 
-const lam = (color, extra = {}) => new THREE.MeshLambertMaterial({ color, flatShading: true, ...extra });
-const M = {
-  wood: [lam(0x9a6f45), lam(0x8b6038), lam(0xa98055)],
-  bottle: [lam(0x7cc4e4), lam(0x9ad6d0), lam(0xd9e7ea)],
-  cap: [lam(0x2f6fb0), lam(0xe1503e), lam(0xf2f2f2)],
-  crate: [lam(0xe7b93c), lam(0x3f8f6d), lam(0xd3553f)],
-  leaf: lam(0x5f9a3c, { side: THREE.DoubleSide }),
-  leafDry: lam(0x9aa64a, { side: THREE.DoubleSide }),
-  stem: lam(0x7a5c34),
-  barrel: [lam(0x8a3b2a), lam(0x2f5d8c), lam(0x55703a)],
-  hoop: lam(0x3a3f44),
-  coconut: lam(0x5b3a22),
-  husk: lam(0x7a5631),
-};
+let G = null;
+let M = null;
 
-const G = {
-  board: new THREE.BoxGeometry(1.1, 0.07, 0.22),
-  bottle: new THREE.CylinderGeometry(0.08, 0.08, 0.3, 8).rotateZ(Math.PI / 2),
-  neck: new THREE.CylinderGeometry(0.03, 0.06, 0.08, 8).rotateZ(Math.PI / 2),
-  cap: new THREE.CylinderGeometry(0.032, 0.032, 0.03, 8).rotateZ(Math.PI / 2),
-  jug: new THREE.BoxGeometry(0.26, 0.22, 0.16),
-  crate: new THREE.BoxGeometry(0.55, 0.06, 0.42),
-  leaf: new THREE.ConeGeometry(0.11, 1.0, 4, 1).rotateX(Math.PI / 2).scale(1, 0.18, 1),
-  stem: new THREE.CylinderGeometry(0.02, 0.025, 0.5, 5).rotateX(Math.PI / 2),
-  barrel: new THREE.CylinderGeometry(0.3, 0.3, 0.82, 12).rotateZ(Math.PI / 2),
-  hoop: new THREE.CylinderGeometry(0.315, 0.315, 0.05, 12).rotateZ(Math.PI / 2),
-  coconut: new THREE.IcosahedronGeometry(0.13, 1),
-  husk: new THREE.ConeGeometry(0.05, 0.06, 5),
-};
+function bottleGeometry() {
+  const pts = [[0, -0.15], [0.07, -0.15], [0.08, -0.13], [0.08, 0.05], [0.07, 0.09], [0.035, 0.13], [0.03, 0.17], [0, 0.17]]
+    .map(([r, y]) => new THREE.Vector2(r, y));
+  return new THREE.LatheGeometry(pts, 14).rotateZ(Math.PI / 2);
+}
+
+function barrelGeometry() {
+  const pts = [];
+  for (let k = 0; k <= 10; k++) {
+    const y = -0.42 + (0.84 * k) / 10;
+    pts.push(new THREE.Vector2(0.27 + 0.045 * Math.cos((y / 0.42) * Math.PI / 2), y));
+  }
+  pts.unshift(new THREE.Vector2(0, -0.42));
+  pts.push(new THREE.Vector2(0, 0.42));
+  return new THREE.LatheGeometry(pts, 18).rotateZ(Math.PI / 2);
+}
+
+// Palm frond: a curved rib with leaflets angled toward the tip, green fading to straw.
+function frondGeometry() {
+  const pos = [], col = [];
+  const len = 1.15, n = 15;
+  const rib = (s) => new THREE.Vector3(0, -0.1 * s * s, s * len - len * 0.45);
+  const g0 = [0.2, 0.42, 0.12], g1 = [0.62, 0.62, 0.28];
+  for (let k = 1; k <= n; k++) {
+    const s = k / (n + 1);
+    const b = rib(s);
+    const L = 0.12 + 0.3 * Math.sin(Math.PI * Math.min(1, s * 1.15));
+    for (const side of [-1, 1]) {
+      const tip = b.clone().add(new THREE.Vector3(side * L * 0.88, -0.05 - L * 0.12, L * 0.45));
+      const w = 0.028;
+      const a = b.clone().add(new THREE.Vector3(0, 0, -w));
+      const c = b.clone().add(new THREE.Vector3(0, 0.004, w));
+      const mid = b.clone().lerp(tip, 0.5).add(new THREE.Vector3(0, 0.02, 0));
+      for (const tri of [[a, mid, c], [mid, tip, c]]) {
+        for (const v of tri) {
+          pos.push(v.x, v.y, v.z);
+          const t = Math.min(1, v.distanceTo(b) / L) * 0.7 + s * 0.3;
+          col.push(g0[0] + (g1[0] - g0[0]) * t, g0[1] + (g1[1] - g0[1]) * t, g0[2] + (g1[2] - g0[2]) * t);
+        }
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  const ribCurve = new THREE.CatmullRomCurve3([0, 0.25, 0.5, 0.75, 1].map(rib));
+  return { leaves: g, rib: new THREE.TubeGeometry(ribCurve, 12, 0.013, 5) };
+}
+
+function init() {
+  if (G) return;
+  M = materials();
+  const frond = frondGeometry();
+  G = {
+    board: new RoundedBoxGeometry(1.1, 0.065, 0.24, 2, 0.012),
+    bottle: bottleGeometry(),
+    cap: new THREE.CylinderGeometry(0.033, 0.033, 0.03, 10).rotateZ(Math.PI / 2),
+    jug: new RoundedBoxGeometry(0.26, 0.24, 0.17, 3, 0.05),
+    handle: new THREE.TorusGeometry(0.05, 0.014, 6, 12, Math.PI),
+    sheet: new RoundedBoxGeometry(0.62, 0.05, 0.44, 2, 0.015),
+    rib: new THREE.BoxGeometry(0.62, 0.03, 0.03),
+    leaves: frond.leaves,
+    stem: frond.rib,
+    coconut: new THREE.IcosahedronGeometry(0.13, 3).scale(1, 0.92, 1.12),
+    eye: new THREE.SphereGeometry(0.014, 6, 4),
+    barrel: barrelGeometry(),
+    hoop: new THREE.TorusGeometry(0.31, 0.014, 6, 24).rotateY(Math.PI / 2),
+    lid: new THREE.CircleGeometry(0.27, 18).rotateY(Math.PI / 2),
+  };
+}
+
+function mesh(geo, mat) {
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = true;
+  return m;
+}
 
 function buildMesh(type) {
+  init();
   const g = new THREE.Group();
   let floatY = 0;
   let radius = 0.5;
@@ -53,73 +107,86 @@ function buildMesh(type) {
   if (type === 'plank') {
     count = Math.random() < 0.35 ? 2 : 1;
     for (let i = 0; i < count; i++) {
-      const b = new THREE.Mesh(G.board, pick(M.wood));
-      b.position.set(i * 0.05, i * 0.07, i * 0.12);
+      const b = mesh(G.board, pick(M.planks));
+      b.position.set(i * 0.05, i * 0.065, i * 0.12);
       b.rotation.y = i ? rand(-0.7, 0.7) : 0;
-      b.scale.x = rand(0.75, 1.1);
+      b.scale.x = rand(0.75, 1.05);
       g.add(b);
     }
-    floatY = 0.02;
+    floatY = 0.0;
     radius = 0.6;
     label = count > 1 ? 'Driftwood planks' : 'Driftwood plank';
   } else if (type === 'plastic') {
     const kind = randInt(0, 2);
     if (kind === 0) {
-      const body = new THREE.Mesh(G.bottle, pick(M.bottle));
-      const neck = new THREE.Mesh(G.neck, body.material);
-      neck.position.x = 0.19;
-      const cap = new THREE.Mesh(G.cap, pick(M.cap));
-      cap.position.x = 0.24;
-      g.add(body, neck, cap);
+      const body = mesh(G.bottle, pick(M.plastic.slice(0, 2)));
+      const cap = mesh(G.cap, pick(M.caps));
+      cap.position.x = -0.18;
+      g.add(body, cap);
       label = 'Plastic bottle';
       radius = 0.35;
+      floatY = 0.02;
     } else if (kind === 1) {
-      const jug = new THREE.Mesh(G.jug, M.bottle[2]);
-      const cap = new THREE.Mesh(G.cap, pick(M.cap));
+      const jug = mesh(G.jug, M.plastic[2]);
+      const handle = mesh(G.handle, M.plastic[2]);
+      handle.position.set(-0.04, 0.12, 0);
+      const cap = mesh(G.cap, pick(M.caps));
       cap.rotation.z = Math.PI / 2;
-      cap.position.set(0.07, 0.125, 0);
-      g.add(jug, cap);
+      cap.position.set(0.07, 0.13, 0);
+      g.add(jug, handle, cap);
       label = 'Plastic jug';
       radius = 0.35;
-      floatY = 0.04;
+      floatY = 0.05;
     } else {
-      const c = new THREE.Mesh(G.crate, pick(M.crate));
-      g.add(c);
+      const m = pick(M.plasticSolid);
+      g.add(mesh(G.sheet, m));
+      for (const z of [-0.12, 0.12]) {
+        const r = mesh(G.rib, m);
+        r.position.set(0, 0.03, z);
+        g.add(r);
+      }
       label = 'Plastic sheet';
       radius = 0.45;
     }
   } else if (type === 'fiber') {
     count = Math.random() < 0.4 ? 2 : 1;
-    const n = 3 + count;
-    for (let i = 0; i < n; i++) {
-      const leaf = new THREE.Mesh(G.leaf, i % 3 === 2 ? M.leafDry : M.leaf);
-      const a = (i / n - 0.5) * 1.6;
-      leaf.position.set(Math.sin(a) * 0.45, 0.01 * i, Math.cos(a) * 0.45 - 0.25);
-      leaf.rotation.y = a;
-      g.add(leaf);
+    for (let i = 0; i < count; i++) {
+      const f = new THREE.Group();
+      f.add(mesh(G.leaves, M.leaf), mesh(G.stem, M.stem));
+      f.rotation.y = i * 0.7;
+      f.position.set(i * 0.12, i * 0.02, 0);
+      g.add(f);
     }
-    const stem = new THREE.Mesh(G.stem, M.stem);
-    stem.position.z = -0.4;
-    g.add(stem);
     radius = 0.6;
+    floatY = 0.04;
     label = 'Palm fronds';
   } else if (type === 'coconut') {
-    const c = new THREE.Mesh(G.coconut, M.coconut);
-    const h = new THREE.Mesh(G.husk, M.husk);
-    h.position.y = 0.13;
-    g.add(c, h);
-    floatY = 0.03;
+    g.add(mesh(G.coconut, M.coconut));
+    for (let k = 0; k < 3; k++) {
+      const e = new THREE.Mesh(G.eye, M.darkMetal);
+      const a = (k / 3) * Math.PI * 2;
+      e.position.set(Math.cos(a) * 0.025, Math.sin(a) * 0.025, 0.14);
+      g.add(e);
+    }
+    g.rotation.x = rand(0, 1);
+    floatY = 0.02;
     radius = 0.3;
     label = 'Coconut';
   } else if (type === 'barrel') {
-    const mat = pick(M.barrel);
-    g.add(new THREE.Mesh(G.barrel, mat));
-    for (const x of [-0.26, 0.26]) {
-      const hoop = new THREE.Mesh(G.hoop, M.hoop);
+    g.add(mesh(G.barrel, M.barrel));
+    for (const x of [-0.3, 0, 0.3]) {
+      const hoop = mesh(G.hoop, M.darkMetal);
       hoop.position.x = x;
+      hoop.scale.setScalar(x === 0 ? 1.05 : 0.97);
       g.add(hoop);
     }
-    floatY = 0.08;
+    for (const x of [-0.42, 0.42]) {
+      const lid = new THREE.Mesh(G.lid, M.barrel);
+      lid.position.x = x;
+      lid.rotation.y = x < 0 ? Math.PI : 0;
+      g.add(lid);
+    }
+    floatY = 0.06;
     radius = 0.6;
     label = 'Barrel';
   }

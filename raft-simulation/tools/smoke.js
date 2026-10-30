@@ -21,8 +21,18 @@ fs.mkdirSync(outDir, { recursive: true });
 
   await page.goto('file://' + path.join(root, 'index.html'));
   await page.waitForFunction(() => window.__game);
-  await page.waitForTimeout(1500);
+  // The test drives frames itself and only renders right before a screenshot.
+  await page.evaluate(() => {
+    const G = window.__game;
+    G.hold = true;
+    const step = G.step.bind(G);
+    G.step = (sec, fn) => step(sec, fn, false);
+    G.draw();
+  });
+  await page.waitForTimeout(500);
   const shot = async (name) => {
+    await page.evaluate(() => window.__game.draw());
+    await page.waitForTimeout(100);
     await page.screenshot({ path: path.join(outDir, `${name}.png`) });
     console.log('shot', name);
   };
@@ -34,7 +44,7 @@ fs.mkdirSync(outDir, { recursive: true });
 
   await shot('01-title');
 
-  await page.click('#play');
+  await page.evaluate(() => { document.getElementById('play').click(); });
   await page.waitForTimeout(300);
   const freeLook = await page.evaluate(() => window.__game.input.state.freeLook);
   console.log('pointer lock refused -> free look:', freeLook);
@@ -85,7 +95,7 @@ fs.mkdirSync(outDir, { recursive: true });
     G.input.state.mouse[0] = false; G.input.state.released[0] = true;
     G.step(0.05);
     const mode1 = G.tools.state.hook.mode;
-    G.step(1.2);
+    G.step(2.0);
     const landed = { mode: G.tools.state.hook.mode, x: G.tools.state.hook.pos.x, z: G.tools.state.hook.pos.z, tz: target.z };
     return { mode1, landed, carried: G.tools.state.hook.carried.length };
   });

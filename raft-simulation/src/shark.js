@@ -1,60 +1,92 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { sharkTexture } from './textures.js';
 import { waveHeight } from './ocean.js';
 import { clamp, damp, rand, turnToward, smoothstep } from './util.js';
 
-// ---------- model, built from a lathe body plus fin prisms ----------
+// ---------- model: smooth lathe body, extruded fins, painted skin ----------
 
-function finPrism(a, b, c, thick) {
-  // Triangular slab: front face, back face, three edge quads.
-  const off = (p, s) => [p[0] + s * thick, p[1], p[2]];
-  const A = off(a, 1), B = off(b, 1), C = off(c, 1);
-  const A2 = off(a, -1), B2 = off(b, -1), C2 = off(c, -1);
-  const tris = [A, B, C, A2, C2, B2, A, A2, B2, A, B2, B, B, B2, C2, B, C2, C, C, C2, A2, C, A2, A];
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(tris.flat(), 3));
-  return g;
+function finGeometry(shape, thick) {
+  const g = new THREE.ExtrudeGeometry(shape, {
+    depth: thick, bevelEnabled: true, bevelThickness: thick * 0.45, bevelSize: thick * 0.6, bevelSegments: 2, curveSegments: 8,
+  });
+  g.translate(0, 0, -thick / 2);
+  g.deleteAttribute('uv');
+  g.deleteAttribute('normal');
+  return mergeVertices(g);
 }
 
-function buildSharkGeometry(L, back, belly) {
-  const profile = [
-    [0.0, -0.5], [0.035, -0.47], [0.06, -0.4], [0.09, -0.3], [0.12, -0.18], [0.135, -0.05],
-    [0.14, 0.05], [0.13, 0.18], [0.11, 0.28], [0.08, 0.37], [0.045, 0.45], [0.0, 0.5],
-  ].map(([r, y]) => new THREE.Vector2(r * L, y * L));
-  const body = new THREE.LatheGeometry(profile, 10).toNonIndexed();
-  body.rotateX(Math.PI / 2);
-  body.scale(0.78, 0.92, 1);
-  body.deleteAttribute('uv');
-  body.deleteAttribute('normal');
-
-  const s = (x, y, z) => [x * L, y * L, z * L];
-  const t = 0.012 * L;
-  const fins = [
-    finPrism(s(0, 0.1, 0.08), s(0, 0.1, -0.12), s(0, 0.31, -0.17), t),           // dorsal
-    finPrism(s(0, 0.055, -0.3), s(0, 0.05, -0.36), s(0, 0.11, -0.38), t * 0.6),  // second dorsal
-    finPrism(s(0, 0.03, -0.43), s(0, -0.03, -0.49), s(0, 0.25, -0.66), t * 0.8), // tail, upper lobe
-    finPrism(s(0, 0.0, -0.45), s(0, -0.03, -0.5), s(0, -0.15, -0.59), t * 0.8),  // tail, lower lobe
-    finPrism(s(0.08, -0.06, 0.18), s(0.08, -0.07, 0.07), s(0.3, -0.17, 0.0), t * 0.7),   // pectorals
-    finPrism(s(-0.08, -0.06, 0.18), s(-0.08, -0.07, 0.07), s(-0.3, -0.17, 0.0), t * 0.7),
-  ];
-
-  const parts = [body, ...fins];
-  const cBack = new THREE.Color(back);
-  const cBelly = new THREE.Color(belly);
-  const tmp = new THREE.Color();
-  for (const g of parts) {
-    const pos = g.attributes.position;
-    const col = new Float32Array(pos.count * 3);
-    for (let i = 0; i < pos.count; i++) {
-      const y = pos.getY(i);
-      // Counter-shading: dark back, pale belly, soft line along the flank.
-      const k = g === body ? smoothstep(-0.05 * L, 0.03 * L, y) : 1;
-      tmp.copy(cBelly).lerp(cBack, k);
-      col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
+function buildFins(L) {
+  const S = (pts) => {
+    // pts: ['m', x, y] / ['q', cx, cy, x, y] in body lengths
+    const sh = new THREE.Shape();
+    for (const p of pts) {
+      if (p[0] === 'm') sh.moveTo(p[1] * L, p[2] * L);
+      else sh.quadraticCurveTo(p[1] * L, p[2] * L, p[3] * L, p[4] * L);
     }
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    return sh;
+  };
+  const sideways = new THREE.Matrix4().makeRotationY(-Math.PI / 2); // shape x -> body z, extrusion -> body x
+  const t = 0.014 * L;
+  const parts = [];
+
+  const dorsal = finGeometry(S([['m', 0.1, -0.03], ['q', 0.04, 0.12, -0.11, 0.21], ['q', -0.075, 0.1, -0.1, 0.0], ['q', 0, -0.04, 0.1, -0.03]]), t);
+  dorsal.applyMatrix4(sideways).translate(0, 0.105 * L, 0);
+  parts.push(dorsal);
+
+  const second = finGeometry(S([['m', -0.29, 0], ['q', -0.31, 0.05, -0.36, 0.08], ['q', -0.35, 0.03, -0.37, 0.0], ['q', -0.33, -0.01, -0.29, 0]]), t * 0.6);
+  second.applyMatrix4(sideways).translate(0, 0.05 * L, 0);
+  parts.push(second);
+
+  const anal = finGeometry(S([['m', -0.27, 0], ['q', -0.3, -0.04, -0.34, -0.06], ['q', -0.33, -0.02, -0.35, 0.0], ['q', -0.31, 0.01, -0.27, 0]]), t * 0.6);
+  anal.applyMatrix4(sideways).translate(0, -0.035 * L, 0);
+  parts.push(anal);
+
+  // Crescent tail, upper lobe longer.
+  const tail = finGeometry(S([
+    ['m', -0.43, 0.03],
+    ['q', -0.5, 0.15, -0.67, 0.27],
+    ['q', -0.6, 0.11, -0.57, 0.0],
+    ['q', -0.58, -0.07, -0.62, -0.15],
+    ['q', -0.51, -0.09, -0.45, -0.03],
+    ['q', -0.44, 0, -0.43, 0.03],
+  ]), t * 0.8);
+  tail.applyMatrix4(sideways);
+  parts.push(tail);
+
+  for (const sgn of [1, -1]) {
+    const pec = finGeometry(S([['m', 0.06, 0], ['q', 0.03, 0.15, -0.09, 0.27], ['q', -0.07, 0.12, -0.06, 0.0], ['q', 0, -0.01, 0.06, 0]]), t * 0.8);
+    pec.applyMatrix4(sideways);
+    pec.rotateZ(-sgn * (Math.PI / 2 + 0.5));
+    pec.translate(sgn * 0.08 * L, -0.07 * L, 0.17 * L);
+    parts.push(pec);
+
+    const pelvic = finGeometry(S([['m', -0.12, 0], ['q', -0.14, 0.05, -0.19, 0.07], ['q', -0.18, 0.02, -0.19, 0.0], ['q', -0.15, -0.01, -0.12, 0]]), t * 0.6);
+    pelvic.applyMatrix4(sideways);
+    pelvic.rotateZ(-sgn * (Math.PI / 2 + 0.9));
+    pelvic.translate(sgn * 0.05 * L, -0.08 * L, 0);
+    parts.push(pelvic);
   }
   return mergeGeometries(parts);
+}
+
+function buildBody(L) {
+  // Radius profile, snout first. After the reverse below, v runs tail (0) to snout (1).
+  const prof = [
+    [0.5, 0.0], [0.493, 0.022], [0.475, 0.044], [0.445, 0.065], [0.4, 0.086], [0.34, 0.106], [0.27, 0.122],
+    [0.18, 0.134], [0.08, 0.138], [-0.02, 0.133], [-0.12, 0.119], [-0.22, 0.098], [-0.3, 0.076], [-0.37, 0.055],
+    [-0.42, 0.041], [-0.46, 0.032], [-0.49, 0.024], [-0.5, 0.0],
+  ].map(([y, r]) => new THREE.Vector2(r * L, y * L)).reverse(); // lathe wants rising y for outward faces
+  const g = new THREE.LatheGeometry(prof, 20);
+  g.rotateX(Math.PI / 2); // snout toward +z, u = 0.5 on top of the back
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    pos.setX(i, pos.getX(i) * 0.8);
+    pos.setY(i, y < 0 ? y * 0.8 : y * 0.95); // flatter belly
+  }
+  g.computeVertexNormals();
+  return g;
 }
 
 function buildShark(tier) {
@@ -62,54 +94,58 @@ function buildShark(tier) {
   const group = new THREE.Group();
   group.rotation.order = 'YXZ';
 
-  const geo = buildSharkGeometry(L, tier.color, tier.belly);
-  const material = new THREE.MeshPhongMaterial({
-    vertexColors: true,
-    flatShading: true,
-    shininess: 40,
-    specular: 0x445566,
-    emissive: 0x000000,
-  });
-  const body = new THREE.Mesh(geo, material);
+  const bodyGeo = buildBody(L);
+  // Wet but not mirror-like: a soft, weak highlight so the low sun doesn't bleach the back.
+  const material = new THREE.MeshPhysicalMaterial({ map: sharkTexture(tier.color, tier.belly), roughness: 0.62, specularIntensity: 0.3, envMapIntensity: 0.6 });
+  const body = new THREE.Mesh(bodyGeo, material);
   body.frustumCulled = false;
   group.add(body);
 
-  const eyeMat = new THREE.MeshPhongMaterial({ color: 0x0b0d10, shininess: 90 });
-  const eyeGeo = new THREE.SphereGeometry(0.0085 * L, 6, 5);
+  const finGeo = buildFins(L);
+  const finMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(tier.color).multiplyScalar(0.92), roughness: 0.62, specularIntensity: 0.3, envMapIntensity: 0.6 });
+  const fins = new THREE.Mesh(finGeo, finMat);
+  fins.frustumCulled = false;
+  group.add(fins);
+
+  const eyeMat = new THREE.MeshStandardMaterial({ color: 0x07090b, roughness: 0.08 });
+  const eyeGeo = new THREE.SphereGeometry(0.0072 * L, 10, 8);
   for (const sx of [-1, 1]) {
     const e = new THREE.Mesh(eyeGeo, eyeMat);
-    e.position.set(sx * 0.057 * L, 0.028 * L, 0.36 * L);
+    e.position.set(sx * 0.064 * L, 0.028 * L, 0.385 * L);
     group.add(e);
   }
 
   // Lower jaw on a hinge under the head, with a dark mouth and a row of teeth.
   const jaw = new THREE.Group();
-  jaw.position.set(0, -0.055 * L, 0.3 * L);
+  jaw.position.set(0, -0.05 * L, 0.33 * L);
   const jawMesh = new THREE.Mesh(
-    new THREE.ConeGeometry(0.06 * L, 0.15 * L, 6).rotateX(Math.PI / 2).scale(1, 0.38, 1),
-    new THREE.MeshPhongMaterial({ color: tier.belly, flatShading: true })
+    new THREE.SphereGeometry(0.06 * L, 12, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2).scale(0.95, 0.4, 1.6),
+    new THREE.MeshStandardMaterial({ color: tier.belly, roughness: 0.45 })
   );
-  jawMesh.position.z = 0.075 * L;
+  jawMesh.position.z = 0.05 * L;
   jaw.add(jawMesh);
   const mouth = new THREE.Mesh(
-    new THREE.BoxGeometry(0.08 * L, 0.012 * L, 0.11 * L),
-    new THREE.MeshBasicMaterial({ color: 0x5a1a1c })
+    new THREE.CircleGeometry(0.05 * L, 14).rotateX(-Math.PI / 2).scale(1, 1, 1.7),
+    new THREE.MeshStandardMaterial({ color: 0x4a1418, roughness: 0.6 })
   );
-  mouth.position.set(0, 0.012 * L, 0.07 * L);
+  mouth.position.set(0, 0.002 * L, 0.05 * L);
   jaw.add(mouth);
   group.add(jaw);
 
-  const toothGeo = new THREE.ConeGeometry(0.006 * L, 0.02 * L, 4).rotateX(Math.PI);
-  const toothMat = new THREE.MeshLambertMaterial({ color: 0xf4f1e6 });
-  for (let i = 0; i < 9; i++) {
-    const a = (i / 8 - 0.5) * 2.2;
+  const toothGeo = new THREE.ConeGeometry(0.0055 * L, 0.02 * L, 4).rotateX(Math.PI);
+  const toothMat = new THREE.MeshStandardMaterial({ color: 0xf4f1e6, roughness: 0.3 });
+  for (let i = 0; i < 13; i++) {
+    const a = (i / 12 - 0.5) * 2.4;
     const tooth = new THREE.Mesh(toothGeo, toothMat);
-    tooth.position.set(Math.sin(a) * 0.045 * L, -0.06 * L, 0.32 * L + Math.cos(a) * 0.08 * L);
+    tooth.position.set(Math.sin(a) * 0.05 * L, -0.055 * L, 0.36 * L + Math.cos(a) * 0.065 * L);
     group.add(tooth);
   }
 
-  const base = Float32Array.from(geo.attributes.position.array);
-  return { group, body, material, jaw, base, L };
+  return {
+    group, body, fins, material, finMat, jaw, L,
+    bodyBase: Float32Array.from(bodyGeo.attributes.position.array),
+    finBase: Float32Array.from(finGeo.attributes.position.array),
+  };
 }
 
 // ---------- behaviour ----------
@@ -315,7 +351,7 @@ export function createShark(scene, tier) {
           } else {
             const d = steer(spot.x, spot.z, 3, dt);
             speedTarget = clamp(d * 1.2, 0.6, tier.swim);
-            depthTarget = -0.45;
+            depthTarget = -0.55;
             if (d < 0.4) {
               setState('bite');
               s.biteTimer = tier.biteInterval * 0.6;
@@ -335,7 +371,8 @@ export function createShark(scene, tier) {
           const want = Math.atan2(-tgt.side[0], -tgt.side[1]);
           s.yaw = turnToward(s.yaw, want + Math.sin(t * 9) * 0.14, 4 * dt);
           speedTarget = 0;
-          depthTarget = -0.32;
+          // Back stays under the surface; the fin and the snout break it.
+          depthTarget = -0.5;
           pitchTarget = -0.28;
           s.biteTimer -= dt;
           const cycle = 1 - clamp(s.biteTimer / tier.biteInterval, 0, 1);
@@ -371,7 +408,7 @@ export function createShark(scene, tier) {
           }
           steer(player.pos.x, player.pos.z, 2.6, dt);
           speedTarget = tier.chase;
-          depthTarget = raft.nearRaft(s.pos.x, s.pos.z, 0.6) ? -1.7 : -0.5;
+          depthTarget = raft.nearRaft(s.pos.x, s.pos.z, 0.6) ? -1.7 : -0.58;
           const hx = head.x - player.pos.x, hz = head.z - player.pos.z;
           if (Math.hypot(hx, hz) < 1.0 && s.biteCooldown <= 0) {
             s.biteCooldown = 2.4;
@@ -426,7 +463,8 @@ export function createShark(scene, tier) {
       m.group.rotation.y = s.yaw + Math.sin(t * 22) * s.thrash * 0.25;
       m.group.rotation.x = s.pitch;
       m.jaw.rotation.x = s.jawOpen * 0.55;
-      m.material.emissive.setRGB(s.hurt * 2.4, 0, 0);
+      m.material.emissive.setRGB(s.hurt * 1.6, 0, 0);
+      m.finMat.emissive.setRGB(s.hurt * 1.6, 0, 0);
 
       // Head and tail in world space, for spear hits and bites.
       const fwd3 = tmpA.set(0, 0, 1).applyEuler(m.group.rotation);
@@ -436,15 +474,17 @@ export function createShark(scene, tier) {
       // Swim: a travelling wave down the body, stronger toward the tail.
       const effort = 0.35 + s.speed / tier.chase + s.thrash * 2;
       s.swimPhase += dt * (3 + s.speed * 1.6 + s.thrash * 10);
-      const pos = m.body.geometry.attributes.position;
-      const arr = pos.array, base = m.base;
       const amp = 0.07 * L * clamp(effort, 0.3, 1.6);
-      for (let i = 0; i < arr.length; i += 3) {
-        const z0 = base[i + 2];
-        const u = (0.5 * L - z0) / L;
-        arr[i] = base[i] + Math.sin(s.swimPhase - u * 4.6) * amp * u * u;
+      for (const [mesh, base] of [[m.body, m.bodyBase], [m.fins, m.finBase]]) {
+        const pos = mesh.geometry.attributes.position;
+        const arr = pos.array;
+        for (let i = 0; i < arr.length; i += 3) {
+          const u = (0.5 * L - base[i + 2]) / L;
+          arr[i] = base[i] + Math.sin(s.swimPhase - u * 4.6) * amp * u * u;
+        }
+        pos.needsUpdate = true;
+        mesh.geometry.computeVertexNormals();
       }
-      pos.needsUpdate = true;
     },
   };
 

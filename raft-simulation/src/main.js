@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { STATS, SHARK_TIERS, ITEMS, TILE } from './config.js';
 import { createOcean } from './ocean.js';
 import { createSky, SKY } from './sky.js';
+import { createPipeline, QUALITY } from './render.js';
+import { setAnisotropy } from './textures.js';
 import { createRaft, startingLayout } from './raft.js';
 import { createDebris } from './debris.js';
 import { createShark } from './shark.js';
@@ -15,22 +17,19 @@ import { clamp, rand, formatTime } from './util.js';
 
 // ---------- renderer and scene ----------
 const canvas = document.getElementById('game');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
-renderer.autoClear = false;
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(SKY.horizon, 0.0105);
+scene.fog = new THREE.FogExp2(SKY.horizon, 0.0085);
 const camera = new THREE.PerspectiveCamera(72, 1, 0.05, 1500);
 scene.add(camera);
 
-scene.add(new THREE.HemisphereLight(0xd7ecff, 0x2b5668, 1.15));
-const sun = new THREE.DirectionalLight(0xfff0d2, 1.9);
-sun.position.copy(SKY.sunDir).multiplyScalar(60);
+scene.add(new THREE.HemisphereLight(0xcfe6ff, 0x1d4a5a, 0.35));
+const sun = new THREE.DirectionalLight(0xfff0dc, 3.2);
 scene.add(sun);
 
-const ocean = createOcean(scene);
-const sky = createSky(scene);
+const sky = createSky(scene, renderer);
+const ocean = createOcean(scene, { sky: SKY, fog: scene.fog });
 const raft = createRaft(scene);
 const debris = createDebris(scene);
 const fx = createFx(scene);
@@ -195,6 +194,45 @@ const events = {
 };
 
 const tools = createTools({ scene, camera, raft, debris, shark, fx, audio, inventory, stats: game.stats, events });
+
+const pipeline = createPipeline({ renderer, scene, camera, vmScene: tools.vmScene, vmCamera: tools.vmCamera, ocean, sun, sky: SKY, aboveWaterOnly: [sky.mesh, fx.sprites] });
+sky.capture(0);
+tools.vmScene.environment = sky.environment;
+setAnisotropy(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+
+// ---------- graphics quality ----------
+const QUALITY_KEY = 'raft-sim-quality';
+function loadQuality() {
+  try { return localStorage.getItem(QUALITY_KEY) || 'medium'; } catch { return 'medium'; }
+}
+function applyQuality(name, remember = true) {
+  pipeline.setQuality(name);
+  resize();
+  document.querySelectorAll('.quality button').forEach((b) => b.classList.toggle('on', b.dataset.q === pipeline.quality));
+  if (remember) {
+    try { localStorage.setItem(QUALITY_KEY, pipeline.quality); } catch { /* storage blocked */ }
+  }
+}
+document.querySelectorAll('.quality button').forEach((b) => b.addEventListener('click', () => applyQuality(b.dataset.q)));
+// Watch the first seconds of play; if frames are slow, step down once.
+const perfWatch = { t: 0, n: 0, sum: 0, done: false };
+function watchPerf(dt) {
+  if (perfWatch.done) return;
+  perfWatch.t += dt;
+  if (perfWatch.t < 3) return;
+  perfWatch.n++;
+  perfWatch.sum += dt;
+  if (perfWatch.t > 8) {
+    perfWatch.done = true;
+    const avg = perfWatch.sum / perfWatch.n;
+    const order = ['high', 'medium', 'low'];
+    const i = order.indexOf(pipeline.quality);
+    if (avg > 1 / 38 && i < order.length - 1) {
+      applyQuality(order[i + 1]);
+      hud.toast(`Graphics set to ${QUALITY[pipeline.quality].label} to keep it smooth. Change it in the pause menu.`, 'warn');
+    }
+  }
+}
 
 // ---------- setup / reset / save state ----------
 function newGame() {
@@ -391,27 +429,33 @@ function updateTitle(dt) {
 
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
-  renderer.setSize(w, h);
+  pipeline.resize(w, h);
+  fx.setViewport(h * renderer.getPixelRatio());
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   tools.resize(w, h);
 }
 window.addEventListener('resize', resize);
-resize();
+applyQuality(loadQuality(), false);
 
-let last = performance.now();
+let last = null;
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
+  // rAF time can be earlier than when the script started; never step backwards.
+  const dt = last === null ? 0 : Math.max(0, Math.min(0.05, (now - last) / 1000));
   last = now;
+  // Automated checks drive frames themselves through __game.step().
+  if (window.__game?.hold) {
+    requestAnimationFrame(frame);
+    return;
+  }
   if (game.mode === 'play') updatePlay(dt);
   else if (game.mode === 'title') updateTitle(dt);
 
   ocean.update(game.time, camera.position);
-  sky.update(dt, camera.position);
+  sky.update(game.time, camera.position);
+  if (game.mode === 'play') watchPerf(dt);
 
-  renderer.clear();
-  renderer.render(scene, camera);
-  if (game.mode === 'play' || game.mode === 'paused') tools.render(renderer);
+  pipeline.render(game.mode === 'play' || game.mode === 'paused', camera.position);
   input.endFrame(dt);
   requestAnimationFrame(frame);
 }
@@ -435,18 +479,20 @@ else start(window.claude?.hot?.data ?? {});
 // Handles for automated checks (tools/smoke.js).
 window.__game = {
   game, raft, shark, debris, player, tools, inventory, input, camera, events,
-  newGame, enterPlay, serialize, restore, TILE,
-  step(sec, fn) {
+  newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline,
+  hold: false,
+  draw() {
+    ocean.update(game.time, camera.position);
+    sky.update(game.time, camera.position);
+    pipeline.render(game.mode === 'play' || game.mode === 'paused', camera.position);
+  },
+  step(sec, fn, draw = true) {
     const n = Math.round(sec / (1 / 60));
     for (let i = 0; i < n; i++) {
       fn?.(i);
       if (game.mode === 'play') updatePlay(1 / 60);
       input.endFrame(1 / 60);
     }
-    ocean.update(game.time, camera.position);
-    sky.update(1 / 60, camera.position);
-    renderer.clear();
-    renderer.render(scene, camera);
-    if (game.mode === 'play' || game.mode === 'paused') tools.render(renderer);
+    if (draw) this.draw();
   },
 };

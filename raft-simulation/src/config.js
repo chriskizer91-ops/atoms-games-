@@ -55,7 +55,7 @@ export const SHARK_TIERS = [
     bitePlayer: 20,
     hitsToRepelRaft: 3, hitsToRepelChase: 2,
     firstAttack: 60, attackGap: [45, 80],
-    color: 0x5f7787, belly: 0xe7ecee,
+    color: 0x56707f, belly: 0xdfe4e3,
   },
 ];
 

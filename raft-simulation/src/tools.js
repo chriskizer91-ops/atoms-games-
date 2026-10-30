@@ -4,6 +4,8 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, PLAYER } from './config.js';
 import { waveHeight } from './ocean.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { materials } from './materials.js';
 import { clamp, damp, lerp } from './util.js';
 
 export const SLOTS = [
@@ -13,22 +15,15 @@ export const SLOTS = [
   { id: 'coconut', name: 'Coconut' },
 ];
 
-const lam = (c, o = {}) => new THREE.MeshLambertMaterial({ color: c, flatShading: true, ...o });
-const MAT = {
-  skin: lam(0xd29a72),
-  sleeve: lam(0xc9bc9a),
-  cuff: lam(0x8f7f62),
-  wood: lam(0x8a6038),
-  woodLight: lam(0xb18456),
-  rope: lam(0xcdb27c),
-  metal: new THREE.MeshPhongMaterial({ color: 0x9aa3a9, flatShading: true, shininess: 90, specular: 0x777777 }),
-  stone: lam(0x7a7e80),
-  coconut: lam(0x5b3a22),
-  husk: lam(0x7a5631),
-};
+let MAT = null;
+function initMaterials() {
+  if (MAT) return;
+  const M = materials();
+  MAT = { skin: M.skin, sleeve: M.cloth, cuff: M.clothDark, handle: M.handle, rope: M.rope, metal: M.metal, stone: M.stone, coconut: M.coconut, float: M.float, floatBand: M.floatBand };
+}
 
 const UP = new THREE.Vector3(0, 1, 0);
-function rod(a, b, r, mat, sides = 6) {
+function rod(a, b, r, mat, sides = 8) {
   const dir = new THREE.Vector3().subVectors(b, a);
   const len = dir.length();
   const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, sides), mat);
@@ -38,11 +33,14 @@ function rod(a, b, r, mat, sides = 6) {
 }
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
+// Every hand-held model has its grip along +Y through the origin, which is
+// where the fingers close.
+
 // Three-pronged throwing hook, used in the hand and out on the water.
 function makeGrapple() {
   const g = new THREE.Group();
   g.add(rod(V(0, 0, 0), V(0, 0.17, 0), 0.011, MAT.metal));
-  const eye = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.007, 5, 10), MAT.metal);
+  const eye = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.007, 6, 14), MAT.metal);
   eye.position.y = 0.19;
   g.add(eye);
   for (let i = 0; i < 3; i++) {
@@ -52,8 +50,8 @@ function makeGrapple() {
     const p2 = V(c * 0.07, 0.04, s * 0.07);
     g.add(rod(V(0, 0, 0), p1, 0.009, MAT.metal));
     g.add(rod(p1, p2, 0.008, MAT.metal));
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.03, 5), MAT.metal);
-    tip.position.copy(p2).add(V(0, 0.012, 0));
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.035, 6), MAT.metal);
+    tip.position.copy(p2).add(V(0, 0.014, 0));
     g.add(tip);
   }
   return g;
@@ -61,67 +59,97 @@ function makeGrapple() {
 
 function makeSpear() {
   const g = new THREE.Group();
-  g.add(rod(V(0, 0, 0.5), V(0, 0, -1.3), 0.017, MAT.woodLight));
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.17, 5), MAT.stone);
-  tip.rotation.x = -Math.PI / 2;
-  tip.position.z = -1.38;
-  g.add(tip);
-  g.add(rod(V(0, 0, -1.24), V(0, 0, -1.32), 0.024, MAT.rope));
-  g.add(rod(V(0, 0, -0.02), V(0, 0, 0.1), 0.021, MAT.rope));
+  g.add(rod(V(0, -0.45, 0), V(0, 1.36, 0), 0.016, MAT.handle));
+  // Knapped stone blade lashed into a split in the shaft.
+  const blade = new THREE.Mesh(new THREE.OctahedronGeometry(0.05, 1).scale(0.62, 2.5, 0.26), MAT.stone);
+  blade.position.y = 1.47;
+  g.add(blade);
+  for (let k = 0; k < 4; k++) g.add(rod(V(0, 1.3 + k * 0.022, 0), V(0, 1.318 + k * 0.022, 0), 0.021, MAT.rope));
+  for (let k = 0; k < 6; k++) g.add(rod(V(0, -0.075 + k * 0.026, 0), V(0, -0.055 + k * 0.026, 0), 0.0185, MAT.rope));
   return g;
 }
 
 function makeHammer() {
   const g = new THREE.Group();
-  g.add(rod(V(0, -0.1, 0), V(0, 0.27, 0), 0.016, MAT.wood));
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.075, 0.18), MAT.stone);
-  head.position.set(0, 0.28, -0.02);
+  g.add(rod(V(0, -0.12, 0), V(0, 0.31, 0), 0.016, MAT.handle));
+  const head = new THREE.Mesh(new RoundedBoxGeometry(0.075, 0.07, 0.19, 1, 0.016), MAT.stone);
+  head.position.set(0, 0.29, -0.015);
   g.add(head);
-  const wrap = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.04, 0.05), MAT.rope);
-  wrap.position.set(0, 0.28, -0.02);
-  g.add(wrap);
+  for (const z of [-0.035, 0.005]) {
+    const wrap = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.009, 6, 14), MAT.rope);
+    wrap.position.set(0, 0.29, z);
+    g.add(wrap);
+  }
   return g;
 }
 
 function makeCoconut() {
   const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.085, 1), MAT.coconut));
-  const h = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.04, 5), MAT.husk);
-  h.position.y = 0.085;
-  g.add(h);
+  g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.085, 3).scale(1, 0.92, 1.1), MAT.coconut));
+  return g;
+}
+
+// A closed right hand: four curled fingers around the grip axis, the back
+// of the hand on +x, thumb over the top.
+function makeHand() {
+  const g = new THREE.Group();
+  const back = new THREE.Mesh(new RoundedBoxGeometry(0.036, 0.094, 0.082, 3, 0.015), MAT.skin);
+  back.position.set(0.033, -0.002, 0.024);
+  g.add(back);
+  const fingers = [[0.032, 0.0235], [0.0105, 0.024], [-0.011, 0.0232], [-0.031, 0.021]];
+  for (const [y, r] of fingers) {
+    const f = new THREE.Mesh(new THREE.TorusGeometry(r, 0.0128, 8, 14, Math.PI * 1.42).rotateX(-Math.PI / 2), MAT.skin);
+    f.position.y = y;
+    g.add(f);
+    const tipA = -Math.PI * 1.42;
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.0128, 8, 6), MAT.skin);
+    tip.position.set(Math.cos(tipA) * r, y, Math.sin(-tipA) * -r);
+    g.add(tip);
+  }
+  const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.0128, 0.046, 4, 10), MAT.skin);
+  thumb.rotation.set(0.25, 0.5, Math.PI / 2);
+  thumb.position.set(0.004, 0.051, -0.01);
+  g.add(thumb);
   return g;
 }
 
 const easeOut = (x) => 1 - (1 - x) * (1 - x);
 const easeInOut = (x) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
 
+// Arm position/rotation in view space, and how the hand turns to hold each tool.
+const POSE = {
+  hook: { arm: [0.25, -0.2, -0.44, 0.1, 0.22, 0], hand: [Math.PI / 2 - 0.35, 0, 0] },
+  spear: { arm: [0.24, -0.215, -0.4, 0.02, 0.12, -0.1], hand: [-Math.PI / 2 + 0.1, 0.13, 0] },
+  hammer: { arm: [0.28, -0.25, -0.5, 0.15, 0.2, 0], hand: [-0.35, 0.1, 0.15] },
+  coconut: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.35, 0, 0] },
+};
+
 export function createTools({ scene, camera, raft, debris, shark, fx, audio, inventory, stats, events }) {
+  initMaterials();
   // ----- first-person view model, drawn in its own pass so it never clips -----
   const vmScene = new THREE.Scene();
   const vmCamera = new THREE.PerspectiveCamera(65, 1, 0.01, 10);
-  vmScene.add(new THREE.HemisphereLight(0xdbefff, 0x34505e, 1.25));
-  const vmSun = new THREE.DirectionalLight(0xfff1d6, 1.5);
+  vmScene.add(new THREE.HemisphereLight(0xdbefff, 0x34505e, 0.3));
+  vmScene.environmentIntensity = 0.55;
+  const vmSun = new THREE.DirectionalLight(0xfff1d6, 1.7);
   vmScene.add(vmSun, vmSun.target);
 
-  // Low-poly forearm reaching in from the lower right; the sleeve is the
-  // part clothing will recolour later.
+  // Forearm reaching in from the lower right, sleeve rolled to the elbow;
+  // the sleeve is what clothing will recolour later.
   const arm = new THREE.Group();
   const along = (g) => g.rotateX(Math.PI / 2);
-  const forearm = new THREE.Mesh(along(new THREE.CylinderGeometry(0.036, 0.046, 0.44, 7)), MAT.skin);
-  forearm.position.z = 0.24;
-  const sleeve = new THREE.Mesh(along(new THREE.CylinderGeometry(0.058, 0.064, 0.26, 7)), MAT.sleeve);
-  sleeve.position.z = 0.44;
-  const cuff = new THREE.Mesh(along(new THREE.CylinderGeometry(0.06, 0.06, 0.035, 7)), MAT.cuff);
-  cuff.position.z = 0.31;
+  const forearm = new THREE.Mesh(along(new THREE.CylinderGeometry(0.033, 0.046, 0.44, 14)), MAT.skin);
+  forearm.position.set(0.022, 0, 0.27);
+  const sleeve = new THREE.Mesh(along(new THREE.CylinderGeometry(0.06, 0.066, 0.24, 14)), MAT.sleeve);
+  sleeve.position.set(0.022, 0, 0.52);
+  const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.017, 8, 18), MAT.cuff);
+  cuff.position.set(0.022, 0, 0.405);
+  const coil = new THREE.Mesh(new THREE.TorusGeometry(0.049, 0.012, 6, 18), MAT.rope);
+  coil.position.set(0.022, 0, 0.13);
+  coil.scale.z = 1.6;
   const hand = new THREE.Group();
-  const fist = new THREE.Mesh(new THREE.IcosahedronGeometry(0.05, 1).scale(1, 0.85, 1.15), MAT.skin);
-  const knuckles = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.03, 0.035), MAT.skin);
-  knuckles.position.set(0, 0.03, -0.035);
-  const thumb = new THREE.Mesh(along(new THREE.CylinderGeometry(0.014, 0.017, 0.055, 5)), MAT.skin);
-  thumb.position.set(-0.046, 0.025, -0.02);
-  thumb.rotation.y = 0.5;
-  hand.add(fist, knuckles, thumb);
-  arm.add(forearm, sleeve, cuff, hand);
+  hand.add(makeHand());
+  arm.add(forearm, sleeve, cuff, coil, hand);
   vmScene.add(arm);
 
   const models = {
@@ -130,21 +158,14 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
     hammer: makeHammer(),
     coconut: makeCoconut(),
   };
-  // Grappling hook gripped by the shank, prongs forward; spare line coiled on the wrist.
-  const coil = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.011, 5, 14), MAT.rope);
-  coil.position.z = 0.1;
-  models.hook.add(coil);
+  // Grappling hook gripped by the shank, prongs forward.
   const heldGrapple = makeGrapple();
-  heldGrapple.rotation.set(Math.PI / 2 - 0.35, 0, 0);
-  heldGrapple.position.set(0, 0.035, 0.05);
+  heldGrapple.position.y = -0.08;
   models.hook.add(heldGrapple);
-  const danglingLine = rod(V(0.0, -0.02, 0.07), V(0.01, -0.06, 0.1), 0.005, MAT.rope);
+  const danglingLine = rod(V(0, 0.115, 0), V(0.0, 0.16, 0.03), 0.005, MAT.rope);
   models.hook.add(danglingLine);
-
-  models.spear.rotation.set(0.1, 0.13, 0);
-  models.hammer.rotation.set(-0.35, 0.1, 0.15);
-  models.hammer.scale.setScalar(0.8);
-  models.coconut.position.set(-0.01, 0.06, -0.06);
+  models.hammer.scale.setScalar(0.85);
+  models.coconut.position.set(-0.005, 0.0, -0.08);
   for (const k in models) hand.add(models[k]);
 
   // ----- the thrown hook and its rope, out in the world -----
@@ -153,8 +174,8 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
   bigGrapple.scale.setScalar(2.2);
   worldHook.add(bigGrapple);
   // Bright float so you can see where the hook landed.
-  const float = new THREE.Mesh(new THREE.IcosahedronGeometry(0.09, 1), lam(0xf06a2a));
-  const floatBand = new THREE.Mesh(new THREE.CylinderGeometry(0.093, 0.093, 0.04, 10), lam(0xf4efe4));
+  const float = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 10), MAT.float);
+  const floatBand = new THREE.Mesh(new THREE.CylinderGeometry(0.093, 0.093, 0.04, 16), MAT.floatBand);
   worldHook.add(float, floatBand);
   worldHook.visible = false;
   scene.add(worldHook);
@@ -327,6 +348,7 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
 
     update(t, dt, input, player, sunDir) {
       const p = player.state;
+      camera.updateMatrixWorld();
       camera.getWorldPosition(camPos);
       camera.getWorldDirection(camDir);
       st.cooldown = Math.max(0, st.cooldown - dt);
@@ -555,17 +577,15 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
       oy += st.sway.y + Math.abs(Math.cos(p.walkPhase)) * 0.016 * walk - (1 - easeOut(st.swap)) * 0.35;
       if (p.inWater) oy -= 0.06 + Math.sin(t * 2) * 0.01;
 
-      const base = {
-        hook: [0.25, -0.2, -0.44, 0.1, 0.22, 0],
-        spear: [0.24, -0.22, -0.4, 0.02, 0.12, -0.1],
-        hammer: [0.28, -0.25, -0.52, 0.15, 0.2, 0],
-        coconut: [0.24, -0.2, -0.44, 0.1, 0.22, 0],
-      }[id];
+      const pose = POSE[id];
+      const base = pose.arm;
+      hand.rotation.set(pose.hand[0], pose.hand[1], pose.hand[2]);
       arm.position.set(base[0] + ox, base[1] + oy, base[2] + oz);
       arm.rotation.set(base[3] + rx, base[4] + ry, base[5] + rz);
       for (const k in models) models[k].visible = k === id;
       heldGrapple.visible = h.mode === 'held' || h.mode === 'charging';
       danglingLine.visible = heldGrapple.visible;
+      coil.visible = id === 'hook';
       models.coconut.visible = id === 'coconut' && inventory.get('coconut') > 0;
 
       // Light the view model from the real sun direction.
@@ -583,10 +603,6 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
       };
     },
 
-    render(renderer) {
-      renderer.clearDepth();
-      renderer.render(vmScene, vmCamera);
-    },
   };
 
   return api;

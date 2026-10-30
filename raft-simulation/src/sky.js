@@ -1,87 +1,127 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { rand } from './util.js';
 
+// Low afternoon sun: long shadows and a glitter path on the water.
 export const SKY = {
-  top: new THREE.Color(0x3d8fd1),
-  horizon: new THREE.Color(0xc4e3ec),
-  below: new THREE.Color(0x0a3346),
-  sunDir: new THREE.Vector3(0.45, 0.55, -0.7).normalize(),
+  sunDir: new THREE.Vector3(0.62, 0.45, -0.64).normalize(),
+  sunColor: new THREE.Color(1.0, 0.86, 0.68),
+  zenith: new THREE.Color(0x2f73c4),
+  horizon: new THREE.Color(0xbcd6e2),
+  ground: new THREE.Color(0x0d3a4c),
 };
 
-export function createSky(scene) {
-  const geo = new THREE.SphereGeometry(900, 32, 16);
-  const mat = new THREE.ShaderMaterial({
+const VERT = /* glsl */ `
+  varying vec3 vDir;
+  void main() {
+    vDir = position;
+    vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_Position = p.xyww; // always on the far plane
+  }`;
+
+const FRAG = /* glsl */ `
+  uniform vec3 uSunDir, uSunColor, uZenith, uHorizon, uGround;
+  uniform float uTime, uSunDisc;
+  varying vec3 vDir;
+
+  float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+  float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+  }
+  float fbm(vec2 p) {
+    float v = 0.0, a = 0.5;
+    mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+    for (int i = 0; i < 6; i++) { v += a * noise(p); p = m * p; a *= 0.5; }
+    return v;
+  }
+
+  void main() {
+    vec3 d = normalize(vDir);
+    float h = d.y;
+    float sd = max(dot(d, uSunDir), 0.0);
+
+    float t = pow(1.0 - clamp(h, 0.0, 1.0), 4.5);
+    vec3 col = mix(uZenith, uHorizon, t);
+    col += uSunColor * (pow(sd, 5.0) * 0.22 * (0.35 + t) + pow(sd, 90.0) * 0.5 + pow(sd, 900.0) * 1.8);
+
+    if (h < 0.0) col = mix(uHorizon, uGround, clamp(-h * 5.0, 0.0, 1.0));
+
+    // Cumulus on a flat layer overhead: perspective squashes them toward the horizon.
+    if (h > 0.0) {
+      vec2 uv = d.xz / (h + 0.06) * 0.9 + vec2(uTime * 0.006, uTime * 0.002);
+      float n = fbm(uv);
+      float cover = smoothstep(0.5, 0.74, n);
+      float towardSun = fbm(uv + uSunDir.xz * 0.12);
+      float lit = clamp(0.62 + (n - towardSun) * 4.0, 0.22, 1.2);
+      vec3 shadowCol = mix(uHorizon, uZenith, 0.35) * 0.82;
+      vec3 cloud = mix(shadowCol, vec3(1.06, 1.03, 0.98), lit);
+      cloud += uSunColor * pow(sd, 10.0) * 0.8 * (1.0 - cover * 0.6); // silver lining
+      float fade = smoothstep(0.0, 0.2, h);
+      cloud = mix(uHorizon, cloud, smoothstep(0.0, 0.35, h));
+      col = mix(col, cloud, cover * fade * 0.96);
+    }
+
+    col += uSunColor * smoothstep(0.99962, 0.99982, sd) * 28.0 * uSunDisc;
+
+    gl_FragColor = vec4(col, 1.0);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }`;
+
+function skyMaterial(sunDisc) {
+  return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     fog: false,
     uniforms: {
-      uTop: { value: SKY.top },
+      uSunDir: { value: SKY.sunDir },
+      uSunColor: { value: SKY.sunColor },
+      uZenith: { value: SKY.zenith },
       uHorizon: { value: SKY.horizon },
-      uBelow: { value: SKY.below },
-      uSun: { value: SKY.sunDir },
+      uGround: { value: SKY.ground },
+      uTime: { value: 0 },
+      uSunDisc: { value: sunDisc },
     },
-    vertexShader: /* glsl */ `
-      varying vec3 vDir;
-      void main() {
-        vDir = normalize(position);
-        vec4 p = modelViewMatrix * vec4(position, 1.0);
-        gl_Position = projectionMatrix * p;
-        gl_Position.z = gl_Position.w; // pin to far plane
-      }`,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uTop, uHorizon, uBelow, uSun;
-      varying vec3 vDir;
-      void main() {
-        vec3 d = normalize(vDir);
-        float h = d.y;
-        vec3 col = h > 0.0
-          ? mix(uHorizon, uTop, pow(clamp(h, 0.0, 1.0), 0.55))
-          : mix(uHorizon, uBelow, pow(clamp(-h * 4.0, 0.0, 1.0), 0.5));
-        float s = max(dot(d, normalize(uSun)), 0.0);
-        col += vec3(1.0, 0.92, 0.75) * (pow(s, 900.0) * 1.6 + pow(s, 24.0) * 0.18);
-        gl_FragColor = vec4(col, 1.0);
-        #include <colorspace_fragment>
-      }`,
+    vertexShader: VERT,
+    fragmentShader: FRAG,
   });
+}
+
+export function createSky(scene, renderer) {
+  const geo = new THREE.SphereGeometry(900, 48, 24);
+  const mat = skyMaterial(1);
   const sky = new THREE.Mesh(geo, mat);
   sky.renderOrder = -1;
   sky.frustumCulled = false;
   scene.add(sky);
 
-  // Low-poly cumulus: a few lumpy icosphere clusters far out.
-  const cloudMat = new THREE.MeshLambertMaterial({
-    color: 0xffffff,
-    emissive: 0x9fb8c8,
-    emissiveIntensity: 0.45,
-    flatShading: true,
-    fog: false,
-  });
-  const clouds = new THREE.Group();
-  for (let c = 0; c < 14; c++) {
-    const parts = [];
-    const n = 4 + Math.floor(Math.random() * 4);
-    for (let i = 0; i < n; i++) {
-      const g = new THREE.IcosahedronGeometry(rand(10, 20), 1);
-      g.scale(1, 0.62, 1);
-      g.translate(i * rand(10, 16) - n * 6, rand(-2, 4), rand(-6, 6));
-      parts.push(g);
-    }
-    const mesh = new THREE.Mesh(mergeGeometries(parts), cloudMat);
-    const a = rand(0, Math.PI * 2);
-    const r = rand(380, 620);
-    mesh.position.set(Math.cos(a) * r, rand(70, 140), Math.sin(a) * r);
-    mesh.rotation.y = rand(0, Math.PI);
-    clouds.add(mesh);
+  // A sharp sky cube for water reflections and a prefiltered copy (no sun
+  // disc; the real sun light handles highlights) for every other material.
+  const skyScene = new THREE.Scene();
+  const envMat = skyMaterial(0);
+  skyScene.add(new THREE.Mesh(geo, envMat));
+  const cubeRT = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+  const cubeCam = new THREE.CubeCamera(1, 1000, cubeRT);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  let envRT = null;
+
+  function capture(time) {
+    envMat.uniforms.uTime.value = time;
+    cubeCam.update(renderer, skyScene);
+    if (envRT) envRT.dispose();
+    envRT = pmrem.fromCubemap(cubeRT.texture);
+    scene.environment = envRT.texture;
+    return envRT.texture;
   }
-  scene.add(clouds);
 
   return {
-    update(dt, camPos) {
+    mesh: sky,
+    reflection: cubeRT.texture,
+    capture,
+    get environment() { return envRT?.texture; },
+    update(time, camPos) {
+      mat.uniforms.uTime.value = time;
       sky.position.copy(camPos);
-      clouds.position.x = camPos.x;
-      clouds.position.z = camPos.z;
-      clouds.rotation.y += dt * 0.0025;
     },
   };
 }
