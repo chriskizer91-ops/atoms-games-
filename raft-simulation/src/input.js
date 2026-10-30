@@ -103,6 +103,11 @@ export function createInput(canvas) {
     unlock() {
       if (document.pointerLockElement) document.exitPointerLock();
     },
+    // Forget held keys and buttons (opening a menu mid-stride).
+    clear() {
+      down.clear();
+      state.mouse = [false, false, false];
+    },
     // Called once per frame after everything has read this frame's input.
     endFrame(dt) {
       pressed.clear();

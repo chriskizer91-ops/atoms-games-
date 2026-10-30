@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, FISH, PLAYER } from './config.js';
+import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, FISH, COOKED, STATIONS, PLAYER } from './config.js';
 import { makeFish } from './nets.js';
 import { waveHeight } from './ocean.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -15,6 +15,15 @@ export const SLOTS = [
   { id: 'hammer', name: 'Hammer' },
   { id: 'coconut', name: 'Coconut' },
   { id: 'fish', name: 'Raw fish' },
+  { id: 'cooked', name: 'Cooked fish' },
+];
+
+// What the hammer can build, in right-click order.
+export const BUILD_MODES = [
+  { id: 'floor', label: 'Floor' },
+  { id: 'net', label: 'Catch net' },
+  { id: 'grill', label: 'Grill' },
+  { id: 'catcher', label: 'Rain catcher' },
 ];
 
 let MAT = null;
@@ -125,14 +134,16 @@ const POSE = {
   hammer: { arm: [0.28, -0.25, -0.5, 0.15, 0.2, 0], hand: [-0.35, 0.1, 0.15] },
   coconut: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.35, 0, 0] },
   fish: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.2, 0.3, 0] },
+  cooked: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.2, 0.3, 0] },
 };
 
-export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx, audio, inventory, stats, events }) {
+export function createTools({ scene, camera, raft, nets, stations, crafting, bait, debris, shark, fx, audio, inventory, stats, events }) {
   initMaterials();
   // ----- first-person view model, drawn in its own pass so it never clips -----
   const vmScene = new THREE.Scene();
   const vmCamera = new THREE.PerspectiveCamera(65, 1, 0.01, 10);
-  vmScene.add(new THREE.HemisphereLight(0xdbefff, 0x34505e, 0.3));
+  const vmHemi = new THREE.HemisphereLight(0xdbefff, 0x34505e, 0.3);
+  vmScene.add(vmHemi);
   vmScene.environmentIntensity = 0.55;
   const vmSun = new THREE.DirectionalLight(0xfff1d6, 1.7);
   vmScene.add(vmSun, vmSun.target);
@@ -143,7 +154,9 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
   const along = (g) => g.rotateX(Math.PI / 2);
   const forearm = new THREE.Mesh(along(new THREE.CylinderGeometry(0.033, 0.046, 0.44, 14)), MAT.skin);
   forearm.position.set(0.022, 0, 0.27);
-  const sleeve = new THREE.Mesh(along(new THREE.CylinderGeometry(0.06, 0.066, 0.24, 14)), MAT.sleeve);
+  const sleeveMat = MAT.sleeve.clone();
+  const sleeveBase = sleeveMat.color.clone();
+  const sleeve = new THREE.Mesh(along(new THREE.CylinderGeometry(0.06, 0.066, 0.24, 14)), sleeveMat);
   sleeve.position.set(0.022, 0, 0.52);
   const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.017, 8, 18), MAT.cuff);
   cuff.position.set(0.022, 0, 0.405);
@@ -161,7 +174,9 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
     hammer: makeHammer(),
     coconut: makeCoconut(),
     fish: makeFish(),
+    cooked: makeFish(),
   };
+  models.cooked.traverse((o) => { if (o.isMesh) o.material = new THREE.MeshStandardMaterial({ color: 0x8a5a2e, roughness: 0.6 }); });
   // Grappling hook gripped by the shank, prongs forward.
   const heldGrapple = makeGrapple();
   heldGrapple.position.y = -0.08;
@@ -173,6 +188,11 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
   models.fish.scale.setScalar(1.25);
   models.fish.position.set(-0.02, 0.0, -0.05);
   models.fish.rotation.set(0.2, 0.4, Math.PI / 2);
+  models.cooked.scale.setScalar(1.25);
+  models.cooked.position.copy(models.fish.position);
+  models.cooked.rotation.copy(models.fish.rotation);
+  // The spear's tip becomes metal once the upgrade is made.
+  const spearBlade = models.spear.children.find((c) => c.geometry?.type === 'OctahedronGeometry');
   for (const k in models) hand.add(models[k]);
 
   // ----- the thrown hook and its rope, out in the world -----
@@ -263,10 +283,17 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
   function hammerTarget() {
     ray.set(camPos, camDir);
     ray.far = HAMMER.reach;
-    const hits = ray.intersectObjects([...raft.hammerTargets(), ...nets.ghostTargets()], false);
+    const hits = ray.intersectObjects([...raft.hammerTargets(), ...nets.ghostTargets(), ...stations.ghostTargets()], false);
     if (!hits.length) return null;
     const u = hits[0].object.userData;
-    return { tile: u.tile || null, build: u.build || null, netSlot: u.netSlot || null, point: hits[0].point };
+    return { tile: u.tile || null, build: u.build || null, netSlot: u.netSlot || null, stationSlot: u.stationSlot || null, point: hits[0].point };
+  }
+
+  function lookStation() {
+    ray.set(camPos, camDir);
+    ray.far = PLAYER.reach + 0.4;
+    const hits = ray.intersectObjects(stations.hitTargets(), false);
+    return hits.length ? hits[0].object.userData.station : null;
   }
 
   function lookNet() {
@@ -281,6 +308,7 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
     if (m) st.hammerMode = m;
     raft.setBuildMode(m);
     nets.setMode(m);
+    stations.setMode(m);
   }
 
   function costText(cost) {
@@ -312,6 +340,16 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
         audio.build();
         fx.dust(point);
         events.onBuildFloor?.(t);
+      }
+      return;
+    }
+    if (tgt.stationSlot) {
+      const { tile: t, kind } = tgt.stationSlot;
+      if (buy(COSTS[kind])) {
+        stations.add(t, kind);
+        audio.build();
+        fx.dust(point);
+        events.onBuildStation?.(kind);
       }
       return;
     }
@@ -355,7 +393,7 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
   function doSpear() {
     const hit = shark.rayHit(camPos, camDir, SPEAR.reach);
     if (hit) {
-      shark.hit(events);
+      shark.hit(events, crafting.hasGear('metalSpear') ? 2 : 1, hit);
       fx.blood(hit);
       fx.splash(hit, 0.5);
       audio.spearHit();
@@ -395,6 +433,18 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
       st.hammerMode = 'floor';
     },
 
+    // First-person arm lighting follows the time of day.
+    setLighting(sunIntensity, sunColor, hemi) {
+      vmSun.intensity = sunIntensity * 0.55;
+      vmSun.color.copy(sunColor);
+      vmHemi.intensity = hemi * 0.9;
+    },
+
+    setSleeve(hex) {
+      if (hex == null) sleeveMat.color.copy(sleeveBase);
+      else sleeveMat.color.setHex(hex);
+    },
+
     resize(w, h) {
       vmCamera.aspect = w / h;
       vmCamera.updateProjectionMatrix();
@@ -430,7 +480,15 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
           st.lookDebris = null;
         }
       } else {
-        const net = lookNet();
+        const station = lookStation();
+        const net = station ? null : lookNet();
+        if (station) {
+          prompt = stations.describe(station, inventory);
+          if (prompt.act && input.wasPressed('KeyE')) {
+            const r = stations.use(station, prompt.act, inventory);
+            if (r) events.onStationUse?.(station, prompt.act, r);
+          }
+        }
         if (net) {
           const n = nets.contentsOf(net);
           prompt = n ? { key: 'E', text: `Empty net (${n} caught)` } : { text: 'Net: nothing caught yet', dim: true };
@@ -555,11 +613,15 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
       st.hammerTile = null;
       if (id === 'hammer') {
         if ((input.state.clicked[2] || input.wasPressed('KeyR')) && !st.anim) {
-          setHammerMode(st.hammerMode === 'floor' ? 'net' : 'floor');
+          const i = BUILD_MODES.findIndex((b) => b.id === st.hammerMode);
+          setHammerMode(BUILD_MODES[(i + 1) % BUILD_MODES.length].id);
           audio.pickup();
         }
         const tgt = hammerTarget();
-        if (tgt?.build) {
+        if (tgt?.stationSlot) {
+          const kind = tgt.stationSlot.kind;
+          prompt = { key: 'Click', text: `Build a ${STATIONS[kind].name.toLowerCase()}`, cost: costText(COSTS[kind]), ok: inventory.has(COSTS[kind]) };
+        } else if (tgt?.build) {
           prompt = { key: 'Click', text: 'Build floor', cost: costText(COSTS.floor), ok: inventory.has(COSTS.floor) };
         } else if (tgt?.netSlot) {
           prompt = { key: 'Click', text: 'Put up a catch net', cost: costText(COSTS.net), ok: inventory.has(COSTS.net) };
@@ -586,7 +648,7 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
         } else if (id === 'hammer') {
           startAnim('swing', 0.42);
           st.cooldown = HAMMER.cooldown;
-        } else if (id === 'coconut' || id === 'fish') {
+        } else if (id === 'coconut' || id === 'fish' || id === 'cooked') {
           if (inventory.get(id) > 0) {
             startAnim('eat', 1.0);
             st.cooldown = 1.1;
@@ -637,8 +699,8 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
           if (f > 0.9) oy += Math.sin(a.t * 30) * 0.008;
           if (!a.fired && k >= 0.6) {
             a.fired = true;
-            const food = id === 'fish' ? FISH : COCONUT;
-            if ((id === 'coconut' || id === 'fish') && inventory.get(id) > 0) {
+            const food = id === 'fish' ? FISH : id === 'cooked' ? COOKED : COCONUT;
+            if ((id === 'coconut' || id === 'fish' || id === 'cooked') && inventory.get(id) > 0) {
               inventory.spend({ [id]: 1 });
               stats.hunger = Math.min(100, stats.hunger + food.hunger);
               stats.thirst = Math.min(100, stats.thirst + food.thirst);
@@ -677,6 +739,8 @@ export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx
       coil.visible = id === 'hook';
       models.coconut.visible = id === 'coconut' && inventory.get('coconut') > 0;
       models.fish.visible = id === 'fish' && inventory.get('fish') > 0;
+      models.cooked.visible = id === 'cooked' && inventory.get('cooked') > 0;
+      if (spearBlade) spearBlade.material = crafting.hasGear('metalSpear') ? MAT.metal : MAT.stone;
 
       // Light the view model from the real sun direction.
       camQuatInv.copy(camera.quaternion).invert();

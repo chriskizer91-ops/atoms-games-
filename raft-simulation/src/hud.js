@@ -14,6 +14,16 @@ const ICONS = {
   plastic: '<path d="M10 3h4v3l2 2.5V20a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V8.5L10 6z" fill="currentColor" fill-opacity=".25"/><path d="M8 12h8"/>',
   fiber: '<path d="M5 19C5 10.5 10.5 5 19 5c0 8.5-5.5 14-14 14z" fill="currentColor" fill-opacity=".25"/><path d="M5 19l9-9"/>',
   scrap: '<path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="currentColor" fill-opacity=".25"/><circle cx="12" cy="12" r="3"/>',
+  warmth: '<path d="M10 4a2 2 0 0 1 4 0v9.3a4 4 0 1 1-4 0z" fill="currentColor" fill-opacity=".25"/><path d="M12 9v7"/>',
+  cooked: '<path d="M2.5 12c3.2-4.3 8.4-5.3 12.5-2.6L20 6v12l-5-3.4C10.9 17.3 5.7 16.3 2.5 12z" fill="currentColor" fill-opacity=".45"/><path d="M8 8.5l1.5 7M11.5 8.5l1.5 7"/>',
+  tooth: '<path d="M7 4h10l-1.5 9-3.5 7-3.5-7z" fill="currentColor" fill-opacity=".25"/>',
+  hide: '<path d="M5 6c3-2 11-2 14 0-1 4-1 8 0 12-3 2-11 2-14 0 1-4 1-8 0-12z" fill="currentColor" fill-opacity=".25"/><path d="M9 10l2 2M13 9l2 2M10 14l2 2"/>',
+  jaw: '<path d="M4 7c0 7 4 11 8 11s8-4 8-11"/><path d="M7 9l1 3 1-3 1 3 1-3 1 3 1-3 1 3 1-3"/>',
+  sun: '<circle cx="12" cy="12" r="4" fill="currentColor" fill-opacity=".3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>',
+  moon: '<path d="M15 4a8 8 0 1 0 5 13A7 7 0 0 1 15 4z" fill="currentColor" fill-opacity=".3"/>',
+  cloud: '<path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 10a4 4 0 0 0 1 8z" fill="currentColor" fill-opacity=".25"/>',
+  rain: '<path d="M7 14h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 6a4 4 0 0 0 1 8z" fill="currentColor" fill-opacity=".25"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>',
+  storm: '<path d="M7 13h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 5a4 4 0 0 0 1 8z" fill="currentColor" fill-opacity=".25"/><path d="M12 14l-2 4h3l-2 4"/>',
   arrow: '<path d="M12 3l7 12h-14z" fill="currentColor" stroke="none"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
 };
@@ -48,12 +58,16 @@ export function createHud() {
     slots: [...document.querySelectorAll('#hotbar .slot')],
     coco: $('coco-count'),
     fishN: $('fish-count'),
+    cookedN: $('cooked-count'),
+    clockIcon: $('clock-icon'),
+    clockText: $('clock-text'),
+    buildbar: $('buildbar'),
     goalTitle: $('goal-title'),
     mats: {},
     vitals: {},
   };
   document.querySelectorAll('#materials .mat').forEach((m) => (el.mats[m.dataset.k] = m.querySelector('.n')));
-  for (const k of ['health', 'hunger', 'thirst']) {
+  for (const k of ['health', 'hunger', 'thirst', 'warmth']) {
     const v = $(`v-${k}`);
     el.vitals[k] = { root: v, fill: v.querySelector('i'), num: v.querySelector('b') };
   }
@@ -70,7 +84,7 @@ export function createHud() {
     },
 
     setVitals(s) {
-      for (const k of ['health', 'hunger', 'thirst']) {
+      for (const k of ['health', 'hunger', 'thirst', 'warmth']) {
         const v = Math.max(0, Math.min(100, s[k]));
         const r = el.vitals[k];
         r.fill.style.transform = `scaleX(${v / 100})`;
@@ -83,6 +97,8 @@ export function createHud() {
       for (const k in el.mats) {
         if (lastInv[k] !== items[k]) {
           el.mats[k].textContent = items[k];
+          const row = el.mats[k].parentElement;
+          if (row.classList.contains('rare')) row.hidden = !items[k];
           if (lastInv[k] !== undefined) {
             const row = el.mats[k].parentElement;
             row.classList.remove('bump');
@@ -96,6 +112,8 @@ export function createHud() {
       el.slots[3].classList.toggle('empty', items.coconut <= 0);
       el.fishN.textContent = items.fish;
       el.slots[4].classList.toggle('empty', items.fish <= 0);
+      el.cookedN.textContent = items.cooked || 0;
+      el.slots[5].classList.toggle('empty', !items.cooked);
     },
 
     setSlot(i, hint) {
@@ -119,6 +137,27 @@ export function createHud() {
       el.promptCost.textContent = p.cost ? (p.ok ? p.cost : `Need ${p.cost}`) : '';
       el.prompt.classList.toggle('missing', p.cost != null && !p.ok);
       el.prompt.classList.toggle('dim', !!p.dim);
+    },
+
+    // "Day 2 · 14:30 · Rain", with an icon for sun, moon or weather.
+    setClock(day, hour, kind, night) {
+      const h = Math.floor(hour), m = Math.floor((hour - h) * 60 / 10) * 10;
+      const names = { clear: night > 0.5 ? 'Clear night' : 'Clear', cloudy: 'Cloudy', rain: 'Rain', storm: 'Storm' };
+      const text = `Day ${day} · ${h}:${String(m).padStart(2, '0')} · ${names[kind]}`;
+      if (el.clockText.textContent !== text) el.clockText.textContent = text;
+      const ic = kind === 'clear' ? (night > 0.5 ? 'moon' : 'sun') : kind === 'cloudy' ? 'cloud' : kind;
+      if (el.clockIcon.dataset.ic !== ic) {
+        el.clockIcon.dataset.ic = ic;
+        el.clockIcon.innerHTML = icon(ic);
+      }
+    },
+
+    // Hammer build modes, the current one highlighted.
+    setBuildBar(modes, current) {
+      el.buildbar.hidden = !modes;
+      if (!modes) return;
+      const html = modes.map((m) => `<span class="${m.id === current ? 'on' : ''}">${m.label}</span>`).join('');
+      if (el.buildbar.innerHTML !== html) el.buildbar.innerHTML = html;
     },
 
     setCharge(c) {

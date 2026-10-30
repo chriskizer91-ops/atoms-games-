@@ -61,6 +61,20 @@ function tone({ type = 'sine', freq = 200, to = null, dur = 0.15, gain = 0.4, pa
   o.stop(t + dur + 0.05);
 }
 
+let rainGain = null;
+function startRain() {
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer();
+  src.loop = true;
+  const f = ctx.createBiquadFilter();
+  f.type = 'highpass';
+  f.frequency.value = 1800;
+  rainGain = ctx.createGain();
+  rainGain.gain.value = 0;
+  src.connect(f).connect(rainGain).connect(master);
+  src.start();
+}
+
 function startAmbience() {
   // Two layers of filtered noise with slow swells: open-ocean wash and close lapping.
   const layers = [
@@ -102,6 +116,7 @@ export const audio = {
     master.gain.value = 0.8;
     master.connect(ctx.destination);
     startAmbience();
+    startRain();
   },
 
   setMuted(m) {
@@ -195,6 +210,23 @@ export const audio = {
     o.connect(f).connect(g).connect(out(pan));
     o.start(t);
     o.stop(t + 0.7);
+  },
+  setRain(level) {
+    if (!rainGain) return;
+    rainGain.gain.setTargetAtTime(level * 0.22, ctx.currentTime, 0.5);
+  },
+  thunder() {
+    if (!ctx) return;
+    noiseHit({ type: 'lowpass', freq: 220, q: 0.7, dur: 2.6, gain: 0.9, attack: 0.08, sweepTo: 60 });
+    setTimeout(() => noiseHit({ type: 'lowpass', freq: 160, q: 0.5, dur: 1.8, gain: 0.6, attack: 0.2, sweepTo: 50 }), 350);
+  },
+  sizzle() {
+    if (!ctx) return;
+    noiseHit({ type: 'highpass', freq: 3000, dur: 0.35, gain: 0.06, attack: 0.05 });
+  },
+  drink() {
+    if (!ctx) return;
+    for (let i = 0; i < 3; i++) setTimeout(() => tone({ type: 'sine', freq: 300 + Math.random() * 80, to: 180, dur: 0.12, gain: 0.18 }), i * 180);
   },
   error() {
     if (!ctx) return;

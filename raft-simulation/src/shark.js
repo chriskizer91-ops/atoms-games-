@@ -17,7 +17,7 @@ function finGeometry(shape, thick) {
   return mergeVertices(g);
 }
 
-function buildFins(L) {
+function buildFins(L, dorsalScale = 1) {
   const S = (pts) => {
     // pts: ['m', x, y] / ['q', cx, cy, x, y] in body lengths
     const sh = new THREE.Shape();
@@ -32,6 +32,7 @@ function buildFins(L) {
   const parts = [];
 
   const dorsal = finGeometry(S([['m', 0.1, -0.03], ['q', 0.04, 0.12, -0.11, 0.21], ['q', -0.075, 0.1, -0.1, 0.0], ['q', 0, -0.04, 0.1, -0.03]]), t);
+  dorsal.scale(1, dorsalScale, 1);
   dorsal.applyMatrix4(sideways).translate(0, 0.105 * L, 0);
   parts.push(dorsal);
 
@@ -102,7 +103,8 @@ function buildShark(tier) {
   body.frustumCulled = false;
   group.add(body);
 
-  const finGeo = buildFins(L);
+  const hammer = tier.kind === 'hammerhead';
+  const finGeo = buildFins(L, hammer ? 1.35 : 1);
   const finMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(tier.color).multiplyScalar(0.92), roughness: 0.62, specularIntensity: 0.3, envMapIntensity: 0.6 });
   const fins = new THREE.Mesh(finGeo, finMat);
   fins.frustumCulled = false;
@@ -110,10 +112,26 @@ function buildShark(tier) {
 
   const eyeMat = new THREE.MeshStandardMaterial({ color: 0x07090b, roughness: 0.08 });
   const eyeGeo = new THREE.SphereGeometry(0.0072 * L, 10, 8);
-  for (const sx of [-1, 1]) {
-    const e = new THREE.Mesh(eyeGeo, eyeMat);
-    e.position.set(sx * 0.064 * L, 0.028 * L, 0.385 * L);
-    group.add(e);
+  if (hammer) {
+    // The flat, wide head, eyes out at the tips.
+    const wing = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.034 * L, 0.5 * L, 4, 14).rotateZ(Math.PI / 2).scale(1, 0.42, 1.7),
+      finMat
+    );
+    wing.position.set(0, 0.005 * L, 0.43 * L);
+    group.add(wing);
+    for (const sx of [-1, 1]) {
+      const e = new THREE.Mesh(eyeGeo, eyeMat);
+      e.scale.setScalar(1.3);
+      e.position.set(sx * 0.285 * L, 0.006 * L, 0.43 * L);
+      group.add(e);
+    }
+  } else {
+    for (const sx of [-1, 1]) {
+      const e = new THREE.Mesh(eyeGeo, eyeMat);
+      e.position.set(sx * 0.064 * L, 0.028 * L, 0.385 * L);
+      group.add(e);
+    }
   }
 
   // Lower jaw on a hinge under the head, with a dark mouth and a row of teeth.
@@ -169,10 +187,12 @@ function segmentRayDistance(p0, p1, o, d, maxT) {
   return { dist: Math.sqrt(px * px + py * py + pz * pz), t };
 }
 
-export function createShark(scene, tier) {
-  const m = buildShark(tier);
+export function createShark(scene, tiers) {
+  let tierIndex = 0;
+  let tier = tiers[0];
+  let m = buildShark(tier);
   scene.add(m.group);
-  const L = m.L;
+  let L = m.L;
 
   const s = {
     tier,
@@ -200,6 +220,8 @@ export function createShark(scene, tier) {
     lure: null,          // bait it is going for
     distractUntil: 0,
     distractAt: { x: 0, z: 0 },
+    gone: false,         // left for good; the next predator is on its way
+    ramming: false,
   };
 
   // Each scar makes it a little meaner.
@@ -207,9 +229,13 @@ export function createShark(scene, tier) {
 
   // Scars are painted straight onto the skin: pale gouges in threes, placed
   // the same way every time so a restored game shows the same marks.
-  const skin = m.material.map;
-  const skinCtx = skin.image.getContext('2d');
-  const cleanSkin = skinCtx.getImageData(0, 0, skin.image.width, skin.image.height);
+  let skin, skinCtx, cleanSkin;
+  function grabSkin() {
+    skin = m.material.map;
+    skinCtx = skin.image.getContext('2d');
+    cleanSkin = skinCtx.getImageData(0, 0, skin.image.width, skin.image.height);
+  }
+  grabSkin();
   function paintScars() {
     skinCtx.putImageData(cleanSkin, 0, 0);
     const W = skin.image.width, H = skin.image.height;
@@ -281,7 +307,33 @@ export function createShark(scene, tier) {
     get scars() { return s.scars; },
     group: m.group,
 
+    get tier() { return tier; },
+    get tierIndex() { return tierIndex; },
+    get gone() { return s.gone; },
+
+    // Swap in a different predator (fresh, unscarred).
+    setTier(i) {
+      tierIndex = Math.min(i, tiers.length - 1);
+      tier = tiers[tierIndex];
+      scene.remove(m.group);
+      m = buildShark(tier);
+      scene.add(m.group);
+      L = m.L;
+      grabSkin();
+      s.gone = false;
+      s.scars = 0;
+      paintScars();
+      s.pos.set(40, -1.5, -30);
+      s.attackTimer = tier.firstAttack;
+      s.courage = tier.hitsToRepelRaft;
+      s.target = null;
+      setState('circle');
+    },
+
     reset() {
+      if (tierIndex !== 0) api.setTier(0);
+      s.gone = false;
+      m.group.visible = true;
       s.pos.set(22, -0.6, 8);
       s.yaw = 0;
       s.attackTimer = tier.firstAttack;
@@ -294,20 +346,25 @@ export function createShark(scene, tier) {
     },
 
     serialize() {
-      return { x: s.pos.x, z: s.pos.z, attackTimer: s.attackTimer, scars: s.scars };
+      return { x: s.pos.x, z: s.pos.z, attackTimer: s.attackTimer, scars: s.scars, tier: tierIndex, gone: s.gone };
     },
 
     restore(d) {
       if (!d) return;
+      if ((d.tier || 0) !== tierIndex) api.setTier(d.tier || 0);
       s.pos.set(d.x, -0.6, d.z);
       s.attackTimer = d.attackTimer;
       s.scars = d.scars || 0;
+      s.gone = !!d.gone;
+      m.group.visible = !s.gone;
       paintScars();
-      setState('circle');
+      setState(s.gone ? 'gone' : 'circle');
     },
 
-    forceAttack() {
+    // ram: make a hammerhead's next attack a charge (for testing).
+    forceAttack(ram = false) {
       s.attackTimer = 0;
+      s.forceRam = ram;
       setState('circle');
     },
 
@@ -326,16 +383,31 @@ export function createShark(scene, tier) {
       return null;
     },
 
-    hit(events) {
+    // power: 2 with the metal spear. point: where the spear went in.
+    hit(events, power = 1, point = null) {
+      if (s.gone || s.state === 'leave') return;
       s.hurt = 0.25;
       s.thrash = 0.6;
-      s.courage -= 1;
+      s.courage -= power;
       if (s.state === 'bite') s.biteTimer += 0.7;
+      // A strip of hide sometimes tears loose and floats up.
+      if (point && Math.random() < 0.35) events.onHideTorn?.(point);
+      // A stab mid-charge makes it veer off.
+      if (s.state === 'approach' && s.phase === 'charge') {
+        s.retreatDir = s.yaw + Math.PI * 0.6 * s.dir;
+        setState('retreat');
+      }
       const committed = s.state === 'bite' || s.state === 'chase' || s.state === 'retreat' || s.state === 'approach';
       if (s.courage <= 0 || !committed) {
-        setState('flee');
         s.target = null;
         s.lure = null;
+        if (s.scars >= GRUDGE.maxScars && tier.leavesAtMaxScars) {
+          // Enough is enough: this one gives up on you for good.
+          setState('leave');
+          events.onLeaving?.(s.pos.clone(), tier);
+          return;
+        }
+        setState('flee');
         if (s.scars < GRUDGE.maxScars) {
           s.scars++;
           paintScars();
@@ -346,6 +418,8 @@ export function createShark(scene, tier) {
 
     update(t, dt, world) {
       const { raft, player, fx, events, nets, bait } = world;
+      if (s.gone) return;
+      const calm = world.calm || 0;
       s.stateTime += dt;
       s.biteCooldown = Math.max(0, s.biteCooldown - dt);
       s.hurt = Math.max(0, s.hurt - dt);
@@ -360,7 +434,7 @@ export function createShark(scene, tier) {
       const turn = 1.5;
 
       // Bait in the water beats anything except running away.
-      if (bait && s.state !== 'flee' && s.state !== 'bait') {
+      if (bait && s.state !== 'flee' && s.state !== 'bait' && s.state !== 'leave') {
         const b = bait.nearest(s.pos.x, s.pos.z, BAIT.lure);
         if (b) {
           s.lure = b;
@@ -370,7 +444,7 @@ export function createShark(scene, tier) {
         }
       }
 
-      const busy = s.state === 'flee' || s.state === 'chase' || s.state === 'retreat';
+      const busy = s.state === 'flee' || s.state === 'chase' || s.state === 'retreat' || s.state === 'leave';
       const fed = (s.state === 'bait' || s.state === 'distracted') && pdist > 5;
       if (player.inWater && pdist < 32 && !busy && !fed) {
         s.notice += dt;
@@ -388,12 +462,14 @@ export function createShark(scene, tier) {
           const R = raft.radius() + 6;
           const ang = Math.atan2(s.pos.x - center.x, s.pos.z - center.z) + s.dir * 0.5;
           steer(center.x + Math.sin(ang) * R, center.z + Math.cos(ang) * R, turn, dt);
-          s.attackTimer -= dt;
+          s.attackTimer -= dt / (1 + calm);
           if (s.attackTimer <= 0) {
             s.target = pickRaftTarget(raft, nets);
             if (s.target) {
               s.courage = tier.hitsToRepelRaft;
               s.phase = 'standoff';
+              s.ramming = !!tier.ram && (s.forceRam || Math.random() < tier.ram.chance);
+              s.forceRam = false;
               setState('approach');
             } else {
               s.attackTimer = 10;
@@ -406,12 +482,41 @@ export function createShark(scene, tier) {
           const tgt = s.target;
           if (!tgt || tgt.tile.broken) { setState('circle'); s.attackTimer = 6; break; }
           biteSpotFor(raft, tgt, spot);
-          standoff.set(spot.x + tgt.side[0] * 3.2, 0, spot.z + tgt.side[1] * 3.2);
+          const back = s.ramming ? 9 : 3.2;
+          standoff.set(spot.x + tgt.side[0] * back, 0, spot.z + tgt.side[1] * back);
           if (s.phase === 'standoff') {
             const d = steer(standoff.x, standoff.z, 2.2, dt);
             speedTarget = tier.swim * 1.2;
             depthTarget = raft.nearRaft(s.pos.x, s.pos.z, 1.2) ? -2.2 : -0.6;
-            if (d < 1.4) s.phase = 'in';
+            if (d < 1.6) {
+              s.phase = s.ramming ? 'charge' : 'in';
+              if (s.ramming) events.onCharge?.(tgt);
+            }
+          } else if (s.phase === 'charge') {
+            // Straight at the edge, flat out, head first.
+            const edge = raft.worldPointOf(tgt.tile, tgt.side, tmpB);
+            steer(edge.x, edge.z, 2.5, dt);
+            speedTarget = tier.ram.speed * anger('speed');
+            depthTarget = -0.45;
+            jawTarget = 0.3;
+            if (Math.hypot(head.x - edge.x, head.z - edge.z) < 0.7) {
+              const p = edge.clone();
+              nets?.breakAt(tgt.tile, tgt.side);
+              const broke = raft.damage(tgt.tile, tier.ram.damage * anger('bite'), tgt.side);
+              // The blow spreads to the floor pieces either side along that edge.
+              for (const off of [-1, 1]) {
+                const n = raft.tileAt(tgt.tile.i + tgt.side[1] * off, tgt.tile.j + tgt.side[0] * off);
+                if (n && !n.broken) raft.damage(n, tier.ram.splash, tgt.side);
+              }
+              fx.splash(p, 1.8);
+              fx.splinters(p);
+              events.onRam?.(p, tgt.side, tier.ram.knockRange, broke);
+              s.target = null;
+              s.speed = 1;
+              s.retreatDir = Math.atan2(tgt.side[0], tgt.side[1]) + rand(-0.5, 0.5);
+              setState('retreat');
+              s.attackTimer = rand(14, 22) / anger('gap');
+            }
           } else {
             const d = steer(spot.x, spot.z, 3, dt);
             speedTarget = clamp(d * 1.2, 0.6, tier.swim);
@@ -454,6 +559,8 @@ export function createShark(scene, tier) {
             const broke = raft.damage(tgt.tile, tier.biteRaft * anger('bite'), tgt.side);
             fx.splinters(p);
             events.onRaftBitten?.(tgt.tile, broke, p);
+            // Now and then a tooth snaps off and stays stuck in the plank.
+            if (!broke && Math.random() < 0.22) events.onToothLost?.(tgt.tile, tgt.side);
             if (broke) {
               s.target = null;
               setState('circle');
@@ -496,6 +603,20 @@ export function createShark(scene, tier) {
           speedTarget = tier.chase * 0.9;
           depthTarget = -0.9;
           if (s.stateTime > 1.8) setState(player.inWater ? 'chase' : 'circle');
+          break;
+        }
+
+        case 'leave': {
+          const away = Math.atan2(s.pos.x - center.x, s.pos.z - center.z);
+          s.yaw = turnToward(s.yaw, away, 2 * dt);
+          speedTarget = tier.flee;
+          depthTarget = -3.5;
+          if (s.stateTime > 9) {
+            s.gone = true;
+            m.group.visible = false;
+            events.onGone?.(tier);
+            return;
+          }
           break;
         }
 

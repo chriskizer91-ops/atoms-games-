@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STATS, SHARK_TIERS, ITEMS, TILE, COSTS, GRUDGE } from './config.js';
+import { STATS, SHARK_TIERS, ITEMS, TILE, COSTS, GRUDGE, CLOTHING, GEAR, STATIONS, WARMTH, HEAT_THIRST, CATCHER, NEXT_PREDATOR_DELAY } from './config.js';
 import { createOcean } from './ocean.js';
 import { createSky, SKY } from './sky.js';
 import { createPipeline, QUALITY } from './render.js';
@@ -9,8 +9,11 @@ import { createDebris } from './debris.js';
 import { createShark } from './shark.js';
 import { createNets } from './nets.js';
 import { createBait } from './bait.js';
+import { createWeather } from './weather.js';
+import { createCrafting } from './crafting.js';
+import { createStations } from './stations.js';
 import { createPlayer } from './player.js';
-import { createTools, SLOTS } from './tools.js';
+import { createTools, SLOTS, BUILD_MODES } from './tools.js';
 import { createInput } from './input.js';
 import { createHud, icon } from './hud.js';
 import { createFx } from './fx.js';
@@ -26,7 +29,8 @@ scene.fog = new THREE.FogExp2(SKY.horizon, 0.0085);
 const camera = new THREE.PerspectiveCamera(72, 1, 0.05, 1500);
 scene.add(camera);
 
-scene.add(new THREE.HemisphereLight(0xcfe6ff, 0x1d4a5a, 0.35));
+const hemi = new THREE.HemisphereLight(0xcfe6ff, 0x1d4a5a, 0.35);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff0dc, 3.2);
 scene.add(sun);
 
@@ -35,9 +39,15 @@ const ocean = createOcean(scene, { sky: SKY, fog: scene.fog });
 const raft = createRaft(scene);
 const debris = createDebris(scene);
 const fx = createFx(scene);
-const shark = createShark(scene, SHARK_TIERS[0]);
+const shark = createShark(scene, SHARK_TIERS);
 const nets = createNets(raft, debris, fx, audio);
 const bait = createBait(scene, fx, audio);
+const stations = createStations(raft, fx, audio);
+let tools = null;
+const weather = createWeather({
+  scene, sun, hemi, ocean, fx, audio, sky,
+  onEnvironment: (env) => { if (tools) tools.vmScene.environment = env; },
+});
 const player = createPlayer(camera);
 const input = createInput(canvas);
 const hud = createHud();
@@ -63,6 +73,15 @@ const GOAL_GROUPS = [
       { id: 'bait', text: 'Keep the shark busy with bait', target: 1 },
     ],
   },
+  {
+    title: 'Goals: weathering it',
+    goals: [
+      { id: 'wear', text: 'Make something to wear (press C)', target: 1 },
+      { id: 'cook', text: 'Cook a fish on a grill', target: 1 },
+      { id: 'rainDrink', text: 'Drink from a rain catcher', target: 1 },
+      { id: 'night', text: 'Make it through a night', target: 1 },
+    ],
+  },
 ];
 
 const HINTS = {
@@ -70,19 +89,23 @@ const HINTS = {
   spear: 'Click to stab. A few good hits send the shark away.',
   coconut: 'Click to crack it open: food and water.',
   fish: 'Click to eat it raw. Right-click to throw it as bait for the shark.',
+  cooked: 'Click to eat. Far more filling than raw.',
+};
+const HAMMER_HINTS = {
+  floor: 'Click an outline to add floor, or a bitten piece to fix it. Right-click for the next thing to build.',
+  net: 'Click an outline on an outer edge to hang a catch net. Right-click for the next thing to build.',
+  grill: 'Click a floor piece to build a firepit grill on it. Right-click for the next thing to build.',
+  catcher: 'Click a floor piece to put a rain catcher on it. Right-click for the next thing to build.',
 };
 function hintFor(id, ui) {
-  if (id !== 'hammer') return HINTS[id];
-  return ui.hammerMode === 'net'
-    ? 'Building nets: click an outline on an outer edge. Right-click to build floor instead.'
-    : 'Building floor: click an outline to add a piece, or a bitten piece to fix it. Right-click for nets.';
+  return id === 'hammer' ? HAMMER_HINTS[ui.hammerMode] : HINTS[id];
 }
 
 const game = {
   mode: 'title',
   time: 0,
   alive: 0,
-  stats: { health: 100, hunger: 100, thirst: 100 },
+  stats: { health: 100, hunger: 100, thirst: 100, warmth: 100 },
   lastHurt: -99,
   lastDamage: null,
   progress: {},
@@ -90,10 +113,14 @@ const game = {
   goalStage: 0,
   creak: 6,
   shake: 0,
+  menu: false,
+  nextPredatorIn: 0,
+  lastHour: 8,
+  glowT: 0,
 };
 
 const inventory = (() => {
-  const items = { wood: 0, plastic: 0, fiber: 0, scrap: 0, coconut: 0, fish: 0 };
+  const items = { wood: 0, plastic: 0, fiber: 0, scrap: 0, coconut: 0, fish: 0, cooked: 0, tooth: 0, hide: 0, jaw: 0 };
   return {
     items,
     get: (k) => items[k] || 0,
@@ -112,6 +139,16 @@ const inventory = (() => {
   };
 })();
 
+const crafting = createCrafting({ inventory, stats: game.stats, audio, events: {
+  onCraft: (id) => {
+    const def = CLOTHING[id] || GEAR[id];
+    hud.toast(id === 'bandage' ? 'Bandaged up: +30 health' : `Made: ${def.name}`, 'gain');
+    if (CLOTHING[id]) progress('wear');
+    tools?.setSleeve(crafting.sleeveColor());
+  },
+  onWear: () => tools?.setSleeve(crafting.sleeveColor()),
+} });
+
 function showGoals() {
   const g = GOAL_GROUPS[Math.min(game.goalStage, GOAL_GROUPS.length - 1)];
   hud.setGoals(g.goals, game.progress, g.title);
@@ -124,8 +161,9 @@ function progress(id, n = 1) {
     game.goalStage++;
     const next = GOAL_GROUPS[game.goalStage];
     const text = next
-      ? 'Goals done. New goals: grow the raft.'
+      ? `Goals done. Next: ${next.title.replace('Goals: ', '')}.`
       : 'All goals done. Keep the raft afloat as long as you can.';
+    if (next && game.goalStage === 2) hud.toast('New: press C to craft clothing and gear', 'gain');
     setTimeout(() => { hud.alert(text, { kind: 'good', duration: 6 }); showGoals(); }, 1200);
   }
   showGoals();
@@ -190,6 +228,7 @@ const events = {
     });
   },
   onPlayerBitten(dmg, pos) {
+    dmg *= 1 - crafting.buffs().biteGuard;
     game.stats.health -= dmg;
     game.lastHurt = game.time;
     game.lastDamage = 'shark';
@@ -233,6 +272,57 @@ const events = {
   onBuildNet() {
     progress('net');
   },
+  onBuildStation(kind) {
+    hud.toast(`Built: ${STATIONS[kind].name}`, 'gain');
+  },
+  onStationUse(station, act, r) {
+    if (r.drank) {
+      game.stats.thirst = Math.min(100, game.stats.thirst + CATCHER.drink);
+      hud.toast('Fresh rain water', 'gain');
+      progress('rainDrink');
+    }
+    if (r.took) {
+      hud.toast(`<span class="ti">${icon('cooked')}</span>+1 Cooked fish`, 'gain');
+      progress('cook');
+    }
+    if (r.fueled) hud.toast('The fire is going', 'gain');
+  },
+  onToothLost(tile, side) {
+    const x = tile.i * TILE + side[0] * (TILE / 2 - 0.25) + rand(-0.4, 0.4) * Math.abs(side[1]);
+    const z = tile.j * TILE + side[1] * (TILE / 2 - 0.25) + rand(-0.4, 0.4) * Math.abs(side[0]);
+    debris.stick('tooth', x, z, tile, raft);
+    hud.toast('A tooth broke off in your floor. Grab it with E', 'gain');
+  },
+  onHideTorn(p) {
+    debris.spawn('hide', p.x + rand(-0.4, 0.4), p.z + rand(-0.4, 0.4), { x: rand(-0.4, 0.4), z: rand(-0.4, 0.4) });
+  },
+  onLeaving(p, tier) {
+    hud.alert(`The ${tier.name.toLowerCase()} has had enough of you. It's leaving for good, and it lost its jaw in the fight.`, { kind: 'good', duration: 6 });
+    debris.spawn('jaw', p.x, p.z, { x: 0, z: 0 });
+  },
+  onGone() {
+    game.nextPredatorIn = NEXT_PREDATOR_DELAY;
+  },
+  onCharge() {
+    audio.warn();
+    hud.alert(`The ${shark.tier.name.toLowerCase()} is charging the raft!`, {
+      kind: 'danger', follow: () => shark.pos, duration: 1,
+      until: () => shark.state !== 'approach',
+    });
+  },
+  onRam(p, side, range, broke) {
+    const s = placeSound(p);
+    audio.crack(s.pan);
+    audio.bite(s.pan, 1);
+    game.shake = Math.max(game.shake, 0.6 * s.near + 0.2);
+    const ps = player.state;
+    if (!ps.inWater && Math.hypot(ps.pos.x - p.x, ps.pos.z - p.z) < range) {
+      // The raft jerks away under you: you stumble toward the side that was hit.
+      player.knock(side[0] * 0.9 + rand(-0.25, 0.25), side[1] * 0.9 + rand(-0.25, 0.25));
+      hud.alert('The hit threw you off your feet!', { kind: 'danger', duration: 2.5 });
+    }
+    if (broke) game.counters.lost++;
+  },
   onRepair() {
     game.counters.repairs++;
     progress('repair');
@@ -258,7 +348,9 @@ const events = {
   },
 };
 
-const tools = createTools({ scene, camera, raft, nets, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
+tools = createTools({ scene, camera, raft, nets, stations, crafting, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
+
+stations.onLost((st) => hud.toast(`The ${STATIONS[st.kind].name.toLowerCase()} went overboard with its floor piece`, 'warn'));
 
 nets.onLost((net, reason) => {
   if (reason === 'built-over') {
@@ -273,7 +365,7 @@ bait.onReturn(() => {
   hud.toast('Bait needs to land in the water', 'warn');
 });
 
-const pipeline = createPipeline({ renderer, scene, camera, vmScene: tools.vmScene, vmCamera: tools.vmCamera, ocean, sun, sky: SKY, aboveWaterOnly: [sky.mesh, fx.sprites] });
+const pipeline = createPipeline({ renderer, scene, camera, vmScene: tools.vmScene, vmCamera: tools.vmCamera, ocean, sun, sky: SKY, aboveWaterOnly: [sky.mesh, fx.sprites, weather.mesh] });
 sky.capture(0);
 tools.vmScene.environment = sky.environment;
 setAnisotropy(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
@@ -318,10 +410,16 @@ function newGame() {
   debris.reset(0, 0);
   bait.clear();
   shark.reset();
+  weather.reset();
+  crafting.reset();
   player.reset();
   tools.reset();
+  tools.setSleeve(null);
   inventory.set({ coconut: 1 });
-  Object.assign(game.stats, { health: 100, hunger: 100, thirst: 100 });
+  Object.assign(game.stats, { health: 100, hunger: 100, thirst: 100, warmth: 100 });
+  game.nextPredatorIn = 0;
+  game.lastHour = 8;
+  game.menu = false;
   game.time = 0;
   game.alive = 0;
   game.lastHurt = -99;
@@ -345,6 +443,10 @@ function serialize() {
     inventory: { ...inventory.items },
     raft: raft.serialize(),
     nets: nets.serialize(),
+    stations: stations.serialize(),
+    weather: weather.serialize(),
+    crafting: crafting.serialize(),
+    nextPredatorIn: game.nextPredatorIn,
     player: player.serialize(),
     shark: shark.serialize(),
   };
@@ -355,6 +457,10 @@ function restore(d) {
   newGame();
   raft.reset(d.raft);
   nets.restore(d.nets);
+  stations.restore(d.stations);
+  weather.restore(d.weather);
+  crafting.restore(d.crafting);
+  game.nextPredatorIn = d.nextPredatorIn || 0;
   inventory.set(d.inventory);
   Object.assign(game.stats, d.stats);
   game.alive = d.alive;
@@ -364,6 +470,8 @@ function restore(d) {
   game.goalStage = d.goalStage || 0;
   player.restore(d.player);
   shark.restore(d.shark);
+  tools.setSleeve(crafting.sleeveColor());
+  game.stats.warmth = d.stats.warmth ?? 100;
   showGoals();
   return true;
 }
@@ -404,10 +512,12 @@ function die() {
     shark: 'The shark got you while you were in the water.',
     thirst: 'You ran out of water. Coconuts help, and later you will be able to make fresh water.',
     hunger: 'You starved. Keep coconuts on hand.',
+    cold: 'You got too cold. Warm clothes and a fire keep you going through nights and storms.',
   }[game.lastDamage] || 'The sea won this time.';
   document.getElementById('dead-reason').textContent = reason;
   document.getElementById('dead-stats').innerHTML = [
     ['Time afloat', formatTime(game.alive)],
+    ['Days', weather.state.day],
     ['Wood hooked', game.counters.wood],
     ['Times you drove the shark off', game.counters.repels],
     ['Repairs', game.counters.repairs],
@@ -432,11 +542,45 @@ document.getElementById('quit').addEventListener('click', () => {
   game.mode = 'title';
   showScreen('title');
 });
+// Crafting panel: the world keeps going, but you stop to work on it.
+function openMenu() {
+  if (game.mode !== 'play' || game.menu) return;
+  game.menu = true;
+  input.clear();
+  input.state.enabled = false;
+  crafting.open();
+  document.body.classList.remove('playing');
+  input.unlock();
+}
+function closeMenu(relock = true) {
+  if (!game.menu) return;
+  game.menu = false;
+  crafting.close();
+  if (relock) {
+    input.state.enabled = true;
+    document.body.classList.add('playing');
+    input.lock();
+  }
+}
+document.getElementById('craft-close').addEventListener('click', () => closeMenu());
+
 input.onLockChange((locked) => {
-  if (!locked && game.mode === 'play' && !input.state.freeLook) pause();
+  if (!locked && game.mode === 'play' && !input.state.freeLook && !game.menu) pause();
 });
 window.addEventListener('keydown', (e) => {
-  if (game.mode === 'play' && (e.code === 'KeyP' || (e.code === 'Escape' && input.state.freeLook))) pause();
+  if (game.mode !== 'play') return;
+  if (e.code === 'KeyC' || e.code === 'Tab') {
+    e.preventDefault();
+    if (game.menu) closeMenu();
+    else openMenu();
+    return;
+  }
+  if (e.code === 'Escape' && game.menu) {
+    closeMenu(false);
+    pause();
+    return;
+  }
+  if (e.code === 'KeyP' || (e.code === 'Escape' && input.state.freeLook)) pause();
 });
 // If pointer lock dropped without a pause (free-look mode), a click re-captures.
 canvas.addEventListener('click', () => {
@@ -444,23 +588,36 @@ canvas.addEventListener('click', () => {
 });
 
 // ---------- per-frame ----------
-function survival(dt) {
+function survival(dt, wx, buffs) {
   const s = game.stats;
-  s.thirst = Math.max(0, s.thirst - STATS.thirstPerSec * dt);
+  const ps = player.state;
+  // Midday sun dries you out faster unless you wear a hat.
+  const heat = ps.inWater ? 0 : wx.heat * (1 - buffs.heatShield);
+  s.thirst = Math.max(0, s.thirst - STATS.thirstPerSec * (1 + HEAT_THIRST * heat) * dt);
   s.hunger = Math.max(0, s.hunger - STATS.hungerPerSec * dt);
+
+  // Warmth: water, rain, storms and night take it; sun and fire give it back.
+  const loss = (ps.inWater ? WARMTH.water : 0) + WARMTH.rain * wx.rain + WARMTH.storm * wx.storm + WARMTH.night * wx.night;
+  const nearFire = !ps.inWater && stations.warmthAt(ps.pos.x, ps.pos.z, WARMTH.fireRange);
+  const gain = (ps.inWater ? 0 : WARMTH.sun * wx.daylight * (1 - SKY.cover)) + (nearFire ? WARMTH.fire : 0);
+  s.warmth = clamp(s.warmth + (gain - loss * (1 - buffs.insulation)) * dt, 0, 100);
+  game.nearFire = nearFire;
+
   if (s.thirst <= 0) { s.health -= STATS.starveDamage * dt; game.lastDamage = 'thirst'; }
   if (s.hunger <= 0) { s.health -= STATS.starveDamage * dt; game.lastDamage = game.lastDamage === 'thirst' ? 'thirst' : 'hunger'; }
+  if (s.warmth <= 0) { s.health -= WARMTH.freezeDamage * dt; game.lastDamage = 'cold'; }
   if (s.health <= 0) {
     s.health = 0;
     die();
     return;
   }
-  if (s.thirst > 40 && s.hunger > 40 && game.time - game.lastHurt > STATS.regenDelay) {
+  if (s.thirst > 40 && s.hunger > 40 && s.warmth > 25 && game.time - game.lastHurt > STATS.regenDelay) {
     s.health = Math.min(100, s.health + STATS.regen * dt);
   }
 }
 
 function updateWorld(dt) {
+  weather.update(dt, game.time, camera.position, false);
   raft.update(game.time, dt);
   debris.update(game.time, dt, raft.center());
   fx.update(dt);
@@ -472,15 +629,45 @@ function updatePlay(dt) {
   raft.update(game.time, dt);
   // Hammer and net rays this frame need the raft's current pose, not last frame's.
   raft.group.updateMatrixWorld(true);
-  player.update(game.time, dt, input, raft, events);
+  const buffs = crafting.buffs();
+  const wx = weather.update(dt, game.time, camera.position, true);
+  player.update(game.time, dt, input, raft, events, buffs.swim);
   const ui = tools.update(game.time, dt, input, player, SKY.sunDir);
+  tools.setLighting(sun.intensity, sun.color, hemi.intensity);
   const ps = player.state;
   bait.update(game.time, dt, raft, debris.flow);
-  shark.update(game.time, dt, { raft, nets, bait, player: { pos: ps.pos, inWater: ps.inWater }, fx, events });
+  shark.update(game.time, dt, { raft, nets, bait, calm: buffs.calm, player: { pos: ps.pos, inWater: ps.inWater }, fx, events });
   nets.update(game.time, dt);
+  stations.update(game.time, dt, wx.kind, ps.pos);
   debris.update(game.time, dt, raft.center());
   fx.update(dt);
-  survival(dt);
+  crafting.tick(dt);
+  survival(dt, wx, buffs);
+  if (game.mode !== 'play') return;
+
+  // A night that ends at dawn counts as survived.
+  if (game.lastHour < 6 && wx.hour >= 6) {
+    progress('night');
+    hud.alert(`Dawn of day ${wx.day}.`, { kind: 'good', duration: 3 });
+  }
+  game.lastHour = wx.hour;
+
+  // At night the shark leaves a glowing wake when it swims near the surface.
+  game.glowT -= dt;
+  if (wx.night > 0.3 && !shark.gone && shark.pos.y > -1.6 && game.glowT <= 0) {
+    game.glowT = 0.07;
+    fx.glowTrail(tmpV.set(shark.pos.x, 0.02, shark.pos.z));
+  }
+
+  // The next, bigger predator turns up a while after the last one left.
+  if (shark.gone) {
+    game.nextPredatorIn -= dt;
+    if (game.nextPredatorIn <= 0) {
+      shark.setTier(shark.tierIndex + 1);
+      audio.warn();
+      hud.alert(`Something bigger is circling the raft: a ${shark.tier.name.toLowerCase()}.`, { kind: 'danger', duration: 6 });
+    }
+  }
 
   if (game.shake > 0) {
     game.shake = Math.max(0, game.shake - dt);
@@ -500,6 +687,8 @@ function updatePlay(dt) {
   hud.setPrompt(ui.prompt);
   hud.setCharge(ui.charge);
   hud.setSwimming(ps.inWater);
+  hud.setClock(wx.day, wx.hour, wx.kind, wx.night);
+  hud.setBuildBar(SLOTS[ui.slot].id === 'hammer' ? BUILD_MODES : null, ui.hammerMode);
   hud.update(dt, camera);
 }
 
@@ -508,7 +697,7 @@ function updateTitle(dt) {
   game.time += dt;
   titleAngle += dt * 0.05;
   updateWorld(dt);
-  shark.update(game.time, dt, { raft, player: { pos: new THREE.Vector3(0, 0.4, 0), inWater: false }, fx, events: {} });
+  shark.update(game.time, dt, { raft, nets, player: { pos: new THREE.Vector3(0, 0.4, 0), inWater: false }, fx, events: {} });
   shark.holdOff(30);
   const c = raft.center();
   camera.position.set(c.x + Math.sin(titleAngle) * 7.5, 3.1, c.z + Math.cos(titleAngle) * 7.5);
@@ -566,7 +755,8 @@ else start(window.claude?.hot?.data ?? {});
 
 // Handles for automated checks (tools/smoke.js).
 window.__game = {
-  game, raft, shark, debris, nets, bait, player, tools, inventory, input, camera, events,
+  game, raft, shark, debris, nets, bait, stations, weather, crafting, player, tools, inventory, input, camera, events,
+  openMenu, closeMenu,
   newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline,
   hold: false,
   draw() {

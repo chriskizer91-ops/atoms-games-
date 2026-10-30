@@ -25,7 +25,13 @@
     <div class="mat" data-k="plastic" data-icon="plastic"><span class="n">0</span><span class="name">Plastic</span></div>
     <div class="mat" data-k="fiber" data-icon="fiber"><span class="n">0</span><span class="name">Palm fiber</span></div>
     <div class="mat" data-k="scrap" data-icon="scrap"><span class="n">0</span><span class="name">Scrap metal</span></div>
+    <div class="mat rare" data-k="tooth" data-icon="tooth" hidden><span class="n">0</span><span class="name">Shark teeth</span></div>
+    <div class="mat rare" data-k="hide" data-icon="hide" hidden><span class="n">0</span><span class="name">Sharkskin</span></div>
+    <div class="mat rare" data-k="jaw" data-icon="jaw" hidden><span class="n">0</span><span class="name">Old shark's jaw</span></div>
   </section>
+
+  <div id="clock"><span id="clock-icon"></span><span id="clock-text">Day 1 · 8:00</span></div>
+  <div id="buildbar" hidden></div>
 
   <div id="alert" hidden>
     <span id="alert-arrow" data-icon="arrow"></span>
@@ -44,6 +50,7 @@
     <div class="vital" id="v-health" data-icon="health"><div class="bar"><i></i></div><b>100</b></div>
     <div class="vital" id="v-hunger" data-icon="hunger"><div class="bar"><i></i></div><b>100</b></div>
     <div class="vital" id="v-thirst" data-icon="thirst"><div class="bar"><i></i></div><b>100</b></div>
+    <div class="vital" id="v-warmth" data-icon="warmth"><div class="bar"><i></i></div><b>100</b></div>
   </section>
 
   <div id="bottom">
@@ -53,7 +60,8 @@
       <div class="slot" data-icon="spear"><kbd>2</kbd><span class="sname">Spear</span></div>
       <div class="slot" data-icon="hammer"><kbd>3</kbd><span class="sname">Hammer</span></div>
       <div class="slot" data-icon="coconut"><kbd>4</kbd><span class="sname">Coconut</span><em id="coco-count">0</em></div>
-      <div class="slot" data-icon="fish"><kbd>5</kbd><span class="sname">Fish</span><em id="fish-count">0</em></div>
+      <div class="slot" data-icon="fish"><kbd>5</kbd><span class="sname">Raw fish</span><em id="fish-count">0</em></div>
+      <div class="slot" data-icon="cooked"><kbd>6</kbd><span class="sname">Cooked</span><em id="cooked-count">0</em></div>
     </div>
   </div>
 
@@ -63,7 +71,7 @@
 
 <section id="title" class="screen">
   <div class="title-block">
-    <p class="tag">Working title · Stage 2</p>
+    <p class="tag">Working title · Stage 3</p>
     <h1>Raft<br>Simulation</h1>
     <p class="pitch">You wake up on a few planks lashed together in the middle of the ocean. Hook what drifts past, grow the raft, keep the shark off your floor, and stay alive.</p>
     <button id="play" type="button">Set out</button>
@@ -76,8 +84,9 @@
       <div><dt>Mouse</dt><dd>Look and aim</dd></div>
       <div><dt>Left click</dt><dd>Use tool (hold to wind up the hook)</dd></div>
       <div><dt>Right click</dt><dd>Let go of the hook line, switch what the hammer builds, or throw a fish as bait</dd></div>
-      <div><dt><kbd>1</kbd>–<kbd>5</kbd> or scroll</dt><dd>Switch tool</dd></div>
-      <div><dt><kbd>E</kbd></dt><dd>Grab something close, or empty a net</dd></div>
+      <div><dt><kbd>1</kbd>–<kbd>6</kbd> or scroll</dt><dd>Switch tool</dd></div>
+      <div><dt><kbd>E</kbd></dt><dd>Grab, empty a net, use the grill or rain catcher</dd></div>
+      <div><dt><kbd>C</kbd> or <kbd>Tab</kbd></dt><dd>Crafting and clothing</dd></div>
       <div><dt><kbd>Space</kbd></dt><dd>Jump, or climb aboard from the water</dd></div>
       <div><dt><kbd>Shift</kbd></dt><dd>Run or swim faster</dd></div>
       <div><dt><kbd>Esc</kbd></dt><dd>Pause</dd></div>
@@ -85,6 +94,21 @@
     <div class="quality" role="group" aria-label="Graphics quality">
       <span class="label">Graphics</span>
       <button type="button" data-q="low">Low</button><button type="button" data-q="medium">Medium</button><button type="button" data-q="high">High</button>
+    </div>
+  </div>
+</section>
+
+<section id="craft" class="screen" hidden>
+  <div class="craft-panel panel">
+    <header class="craft-head">
+      <h2>Crafting</h2>
+      <span class="craft-hint"><kbd>C</kbd> or <kbd>Tab</kbd> to close</span>
+      <button type="button" id="craft-close" class="ghost">Close</button>
+    </header>
+    <div class="craft-body">
+      <nav id="craft-list" aria-label="Recipes"></nav>
+      <div id="craft-detail"></div>
+      <aside id="craft-outfit"></aside>
     </div>
   </div>
 </section>

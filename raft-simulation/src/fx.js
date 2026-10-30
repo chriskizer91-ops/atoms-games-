@@ -18,7 +18,7 @@ function spriteSystem(scene) {
   geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1).setUsage(THREE.DynamicDrawUsage));
   geo.setAttribute('aAlpha', new THREE.BufferAttribute(alpha, 1).setUsage(THREE.DynamicDrawUsage));
   geo.setAttribute('aColor', new THREE.BufferAttribute(color, 3).setUsage(THREE.DynamicDrawUsage));
-  const uniforms = { uViewportH: { value: 800 }, tDot: { value: softDotTexture() } };
+  const uniforms = { uViewportH: { value: 800 }, tDot: { value: softDotTexture() }, uBoost: { value: 1 } };
   const mat = new THREE.ShaderMaterial({
     uniforms,
     transparent: true,
@@ -35,11 +35,12 @@ function spriteSystem(scene) {
       }`,
     fragmentShader: /* glsl */ `
       uniform sampler2D tDot;
+      uniform float uBoost;
       varying float vAlpha; varying vec3 vColor;
       void main() {
         float a = texture2D(tDot, gl_PointCoord).a * vAlpha;
         if (a < 0.01) discard;
-        gl_FragColor = vec4(vColor, a);
+        gl_FragColor = vec4(vColor * uBoost, a);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,
@@ -152,9 +153,27 @@ function chunkSystem(scene) {
 export function createFx(scene) {
   const sprites = spriteSystem(scene);
   const chunks = chunkSystem(scene);
-  const WHITE = [0xf4fbff, 0xe2f2f6, 0xcfe8ee];
+  const DAY_SPRAY = [0xf4fbff, 0xe2f2f6, 0xcfe8ee];
+  const NIGHT_SPRAY = [0x7ff6ff, 0x4fd8ef, 0xa8fff4]; // bioluminescent
+  let WHITE = DAY_SPRAY;
+  let glow = 0;
   return {
     sprites: sprites.points,
+    // At night spray glows: brighter sprites and a sea-green palette.
+    setGlow(k) {
+      glow = k;
+      WHITE = k > 0.5 ? NIGHT_SPRAY : DAY_SPRAY;
+      sprites.uniforms.uBoost.value = 1 + k * 2.2;
+    },
+    flame(pos) {
+      sprites.emit(pos, { count: 1, color: [0xffd27a, 0xff9a3a, 0xff7424], speed: [0.1, 0.35], up: [0.6, 1.2], outward: 0.4, spread: 0.06, size: [0.1, 0.18], grow: 0.4, alpha: 0.9, gravity: -1.2, drag: 1.2, life: [0.35, 0.6] });
+      if (Math.random() < 0.15) sprites.emit(pos.clone().setY(pos.y + 0.3), { count: 1, color: [0x6f6a66, 0x8a8580], speed: [0.1, 0.25], up: [0.6, 1], outward: 0.3, spread: 0.05, size: [0.12, 0.2], grow: 4, alpha: 0.18, gravity: -0.6, drag: 0.6, life: [1.6, 2.6] });
+    },
+    // A faint glowing wake, for things moving through the water at night.
+    glowTrail(pos) {
+      if (glow < 0.3) return;
+      sprites.emit(pos, { count: 2, color: NIGHT_SPRAY, speed: [0.05, 0.3], up: [0, 0.1], outward: 1, spread: 0.25, size: [0.18, 0.32], grow: 1.8, alpha: 0.5 * glow, gravity: 0, drag: 2, life: [1.2, 2.2] });
+    },
     setViewport(h) {
       sprites.uniforms.uViewportH.value = h;
     },

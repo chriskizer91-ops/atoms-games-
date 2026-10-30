@@ -72,6 +72,8 @@ function frondGeometry() {
 function init() {
   if (G) return;
   M = materials();
+  M.bone = new THREE.MeshStandardMaterial({ color: 0xeee6d2, roughness: 0.45 });
+  M.hide = new THREE.MeshStandardMaterial({ color: 0x55707f, roughness: 0.55, side: THREE.DoubleSide });
   const frond = frondGeometry();
   G = {
     board: new RoundedBoxGeometry(1.1, 0.065, 0.24, 2, 0.012),
@@ -85,6 +87,20 @@ function init() {
     stem: frond.rib,
     coconut: new THREE.IcosahedronGeometry(0.13, 3).scale(1, 0.92, 1.12),
     eye: new THREE.SphereGeometry(0.014, 6, 4),
+    tooth: new THREE.ConeGeometry(0.03, 0.1, 6),
+    hide: (() => {
+      const sh = new THREE.Shape();
+      const n = 9;
+      for (let k = 0; k <= n; k++) {
+        const a = (k / n) * Math.PI * 2;
+        const r = 0.2 + Math.sin(a * 3) * 0.04 + Math.cos(a * 5) * 0.03;
+        if (k === 0) sh.moveTo(Math.cos(a) * r * 1.3, Math.sin(a) * r);
+        else sh.lineTo(Math.cos(a) * r * 1.3, Math.sin(a) * r);
+      }
+      return new THREE.ShapeGeometry(sh).rotateX(-Math.PI / 2);
+    })(),
+    jaw: new THREE.TorusGeometry(0.26, 0.035, 8, 22, Math.PI * 1.1).rotateX(-Math.PI / 2),
+    jawTooth: new THREE.ConeGeometry(0.014, 0.05, 4),
     barrel: barrelGeometry(),
     hoop: new THREE.TorusGeometry(0.31, 0.014, 6, 24).rotateY(Math.PI / 2),
     lid: new THREE.CircleGeometry(0.27, 18).rotateY(Math.PI / 2),
@@ -172,6 +188,29 @@ function buildMesh(type) {
     floatY = 0.02;
     radius = 0.3;
     label = 'Coconut';
+  } else if (type === 'tooth') {
+    const t = mesh(G.tooth, M.bone);
+    t.rotation.z = 0.25;
+    t.position.y = 0.03;
+    g.add(t);
+    radius = 0.28;
+    label = 'Shark tooth';
+  } else if (type === 'hide') {
+    g.add(mesh(G.hide, M.hide));
+    floatY = 0.015;
+    radius = 0.45;
+    label = 'Sharkskin';
+  } else if (type === 'jaw') {
+    g.add(mesh(G.jaw, M.bone));
+    for (let k = 0; k < 11; k++) {
+      const a = (k / 10) * Math.PI * 1.1;
+      const t = mesh(G.jawTooth, M.bone);
+      t.position.set(Math.cos(a) * 0.26, 0.04, -Math.sin(a) * 0.26);
+      g.add(t);
+    }
+    floatY = 0.04;
+    radius = 0.6;
+    label = "Old shark's jaw";
   } else if (type === 'barrel') {
     g.add(mesh(G.barrel, M.barrel));
     for (const x of [-0.3, 0, 0.3]) {
@@ -199,6 +238,9 @@ function rollLoot(type, count) {
     case 'plastic': return { plastic: 1 };
     case 'fiber': return { fiber: count };
     case 'coconut': return { coconut: 1 };
+    case 'tooth': return { tooth: 1 };
+    case 'hide': return { hide: 1 };
+    case 'jaw': return { jaw: 1 };
     case 'barrel': {
       const loot = { wood: randInt(1, 3), plastic: randInt(1, 2) };
       if (Math.random() < 0.7) loot.fiber = randInt(1, 2);
@@ -259,6 +301,15 @@ export function createDebris(scene) {
 
     spawn,
 
+    // Something stuck in the deck at a raft point (a shark tooth).
+    stick(type, x, z, tile, raft) {
+      const d = spawn(type, x, z);
+      d.hooked = true;
+      d.stuck = { tile, raft };
+      d.mesh.rotation.set(0.2, Math.random() * 6, 0.35);
+      return d;
+    },
+
     remove(d) {
       const i = items.indexOf(d);
       if (i >= 0) items.splice(i, 1);
@@ -269,7 +320,7 @@ export function createDebris(scene) {
     lookTarget(origin, dir, maxDist) {
       let best = null, bestT = Infinity;
       for (const d of items) {
-        if (d.hooked) continue;
+        if (d.hooked && !d.stuck) continue;
         v.set(d.x - origin.x, d.mesh.position.y - origin.y, d.z - origin.z);
         const t = v.dot(dir);
         if (t < 0 || t > maxDist + d.radius) continue;
@@ -291,6 +342,16 @@ export function createDebris(scene) {
       }
       for (let i = items.length - 1; i >= 0; i--) {
         const d = items[i];
+        if (d.stuck) {
+          // Lodged in a plank: rides the raft until picked up or the plank goes.
+          if (d.stuck.tile.broken) {
+            d.stuck = null;
+            d.hooked = false;
+          } else {
+            d.mesh.position.set(d.x, d.stuck.raft.deckHeightAt(d.x, d.z) + 0.01, d.z);
+            continue;
+          }
+        }
         if (!d.hooked) {
           d.vx *= Math.max(0, 1 - dt * 0.4);
           d.vz *= Math.max(0, 1 - dt * 0.4);

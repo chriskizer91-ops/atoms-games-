@@ -15,13 +15,19 @@ const WAVES = [
   return { dx: w.dir[0] / l, dz: w.dir[1] / l, k, w: Math.sqrt(G * k), amp: w.amp, phase: w.phase };
 });
 
+// Storms raise the swell; the shader gets the same factor as a uniform.
+let swell = 1;
+export function setSwell(k) {
+  swell = k;
+}
+
 export function waveHeight(x, z, t) {
   let h = 0;
   for (let i = 0; i < WAVES.length; i++) {
     const w = WAVES[i];
     h += w.amp * Math.sin(w.k * (w.dx * x + w.dz * z) - w.w * t + w.phase);
   }
-  return h;
+  return h * swell;
 }
 
 const f = (n) => n.toFixed(5);
@@ -36,7 +42,7 @@ const glslWaves = WAVES.map(
 ).join('\n');
 
 const VERT = /* glsl */ `
-  uniform float uTime;
+  uniform float uTime, uSwell;
   varying vec3 vWorld;
   varying vec3 vNormalW;
   varying float vH;
@@ -51,6 +57,7 @@ const VERT = /* glsl */ `
     vec4 wp = modelMatrix * vec4(position, 1.0);
     float h, dx, dz;
     waves(wp.xz, uTime, h, dx, dz);
+    h *= uSwell; dx *= uSwell; dz *= uSwell;
     // Far away the swell flattens out under the haze; saves aliasing.
     float fade = 1.0 - smoothstep(120.0, 400.0, length(wp.xz - cameraPosition.xz));
     wp.y += h * fade;
@@ -64,7 +71,7 @@ const VERT = /* glsl */ `
 
 const FRAG = /* glsl */ `
   #include <packing>
-  uniform float uTime, uNear, uFar, uFogDensity, uRefract;
+  uniform float uTime, uNear, uFar, uFogDensity, uRefract, uGlow, uDay;
   uniform vec2 uScreen;
   uniform vec3 uSunDir, uSunColor, uDeep, uShallow, uFogColor, uAbsorb;
   uniform sampler2D tDetail, tScene, tDepth;
@@ -113,10 +120,12 @@ const FRAG = /* glsl */ `
     vec3 absorb = exp(-uAbsorb * thick);
 
     float sunUp = clamp(uSunDir.y * 2.0, 0.2, 1.0);
-    vec3 body = uDeep * sunUp;
+    // Daylight under cloud and at night: the water's own colour fades with the light.
+    float lightLvl = mix(0.1, 1.0, uDay);
+    vec3 body = uDeep * sunUp * lightLvl;
     // Light scattering up through thin crests on the far side of a wave.
     float back = pow(max(dot(-V, uSunDir) * 0.5 + 0.5, 0.0), 3.0);
-    body += uShallow * clamp(vH * 3.0 + 0.25, 0.0, 1.2) * (0.35 + back * 0.8);
+    body += uShallow * clamp(vH * 3.0 + 0.25, 0.0, 1.2) * (0.35 + back * 0.8) * lightLvl * lightLvl;
     vec3 under = behind * absorb + body * (1.0 - absorb);
 
     vec3 col = mix(under, refl, fresnel);
@@ -133,6 +142,10 @@ const FRAG = /* glsl */ `
     float crest = smoothstep(0.22, 0.36, vH + (fn - 0.5) * 0.12) * smoothstep(0.58, 0.82, fn);
     float foam = clamp(edge + crest * 0.45, 0.0, 1.0);
     vec3 foamCol = vec3(0.95, 0.98, 1.0) * (0.55 + 0.45 * sunUp) + uSunColor * 0.08;
+    // At night anything that disturbs the water lights it up.
+    foamCol = mix(foamCol, vec3(0.2, 1.5, 1.7), uGlow);
+    // Glowing foam stays close: far crests would light up the whole horizon.
+    foam *= mix(1.0, 1.0 - smoothstep(20.0, 70.0, dist), uGlow);
     col = mix(col, foamCol, foam * 0.92);
 
     float fog = 1.0 - exp(-uFogDensity * uFogDensity * dist * dist);
@@ -161,6 +174,9 @@ export function createOcean(scene, { sky, fog }) {
   const { geo, step } = oceanGrid(220, 36, 900);
   const uniforms = {
     uTime: { value: 0 },
+    uSwell: { value: 1 },
+    uGlow: { value: 0 },
+    uDay: { value: 1 },
     uNear: { value: 0.05 },
     uFar: { value: 1500 },
     uScreen: { value: new THREE.Vector2(1, 1) },
@@ -199,6 +215,7 @@ export function createOcean(scene, { sky, fog }) {
     },
     update(t, focus) {
       uniforms.uTime.value = t;
+      uniforms.uSwell.value = swell;
       // Follow the player in whole grid steps so the surface doesn't swim.
       water.position.set(Math.round(focus.x / step) * step, 0, Math.round(focus.z / step) * step);
     },

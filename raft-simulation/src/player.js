@@ -18,6 +18,7 @@ export function createPlayer(camera) {
     moveAmount: 0,
     canClimb: false,
     eyeBob: 0,
+    shove: { x: 0, z: 0, t: 0 },
   };
   const fwd = new THREE.Vector3();
   const right = new THREE.Vector3();
@@ -35,6 +36,16 @@ export function createPlayer(camera) {
       p.grounded = true;
     },
 
+    // Thrown sideways (a hammerhead hitting the raft). Usually ends in the water.
+    knock(dx, dz) {
+      if (p.inWater) return;
+      p.shove.x = dx * 4.2;
+      p.shove.z = dz * 4.2;
+      p.shove.t = 0.4;
+      p.grounded = false;
+      p.velY = 3.4;
+    },
+
     serialize() {
       return { x: p.pos.x, y: p.pos.y, z: p.pos.z, yaw: p.yaw, pitch: p.pitch, inWater: p.inWater };
     },
@@ -49,7 +60,7 @@ export function createPlayer(camera) {
       p.velY = 0;
     },
 
-    update(t, dt, input, raft, events) {
+    update(t, dt, input, raft, events, swimBoost = 0) {
       // Look
       p.yaw -= input.state.lookX * SENS;
       p.pitch = clamp(p.pitch - input.state.lookY * SENS, -1.5, 1.5);
@@ -72,6 +83,11 @@ export function createPlayer(camera) {
         const speed = sprint ? PLAYER.sprint : PLAYER.walk;
         p.pos.x += wish.x * speed * dt;
         p.pos.z += wish.z * speed * dt;
+        if (p.shove.t > 0) {
+          p.shove.t -= dt;
+          p.pos.x += p.shove.x * dt;
+          p.pos.z += p.shove.z * dt;
+        }
         const supported = raft.isSupported(p.pos.x, p.pos.z);
         const ground = raft.deckHeightAt(p.pos.x, p.pos.z);
         if (p.grounded && supported) {
@@ -103,7 +119,7 @@ export function createPlayer(camera) {
         if (p.grounded && moving) p.walkPhase += dt * speed * 2.1;
         p.canClimb = false;
       } else {
-        const speed = sprint ? PLAYER.swimSprint : PLAYER.swim;
+        const speed = (sprint ? PLAYER.swimSprint : PLAYER.swim) * (1 + swimBoost);
         p.pos.x += wish.x * speed * dt;
         p.pos.z += wish.z * speed * dt;
         raft.pushOut(p.pos, PLAYER.radius);

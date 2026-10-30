@@ -12,6 +12,8 @@
   --hunger: #e6a03a;
   --thirst: #4bb9d2;
   --good: #8fd18b;
+  --warm: #ffb36b;
+  --cold: #7fc4ff;
   --danger: #ef5b4c;
   --font-display: "Saira Stencil One", Impact, "Arial Narrow Bold", sans-serif;
   --font-ui: "Barlow Semi Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
@@ -126,6 +128,26 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 #alert-arrow svg { width: 26px; height: 26px; }
 @keyframes alert-in { from { opacity: 0; transform: translate(-50%, -8px); } }
 
+#clock {
+  position: absolute; top: var(--gap); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 5px;
+  background: var(--panel); border: 1px solid var(--edge);
+  font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+#clock-icon { display: inline-flex; color: var(--rope); }
+#clock-icon svg { width: 18px; height: 18px; }
+#alert { top: calc(var(--gap) + 52px); }
+
+#buildbar {
+  position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%);
+  display: flex; gap: 6px;
+}
+#buildbar span {
+  padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;
+  background: var(--panel); border: 1px solid var(--edge); color: var(--sail-dim);
+}
+#buildbar span.on { color: var(--ink); background: var(--rope); border-color: var(--rope); }
+
 #crosshair {
   position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
   border-radius: 50%; background: var(--sail);
@@ -174,6 +196,8 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 #v-health { color: var(--health); } #v-health i { background: var(--health); }
 #v-hunger { color: var(--hunger); } #v-hunger i { background: var(--hunger); }
 #v-thirst { color: var(--thirst); } #v-thirst i { background: var(--thirst); }
+#v-warmth { color: var(--warm); } #v-warmth i { background: linear-gradient(90deg, var(--cold), var(--warm)); }
+#v-warmth.low { color: var(--cold); }
 .vital b { color: var(--sail); }
 .vital.low svg { animation: pulse 0.8s infinite; }
 @keyframes pulse { 50% { transform: scale(1.25); } }
@@ -246,6 +270,49 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 .controls dd { margin: 0; }
 
 #pause, #dead { display: grid; place-items: center; background: rgba(6, 18, 26, 0.55); }
+
+/* ---------- crafting ---------- */
+#craft { display: grid; place-items: center; background: rgba(6, 18, 26, 0.45); }
+.craft-panel { width: min(1040px, 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--panel-solid); }
+.craft-head { display: flex; align-items: center; gap: 16px; padding: 16px 22px; border-bottom: 1px solid var(--edge); }
+.craft-head h2 { margin: 0; font: 400 32px/1 var(--font-display); text-transform: uppercase; }
+.craft-hint { color: var(--sail-dim); font-size: 14px; margin-left: auto; }
+.craft-head button { padding: 8px 14px; font-size: 14px; }
+.craft-body { display: grid; grid-template-columns: 260px minmax(0, 1fr) 250px; min-height: 0; overflow: hidden; }
+#craft-list { padding: 12px; overflow-y: auto; border-right: 1px solid var(--edge); max-height: 70vh; }
+#craft-list h4 { margin: 12px 6px 6px; font: 700 12px/1 var(--font-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--rope); }
+#craft-list h4:first-child { margin-top: 2px; }
+.craft-item {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 8px 10px; margin: 0 0 3px; border-radius: 4px; box-shadow: none;
+  background: transparent; color: var(--sail); font: 600 15px/1.2 var(--font-ui); text-transform: none; letter-spacing: 0; text-align: left;
+}
+.craft-item:hover { background: rgba(241, 232, 212, 0.07); }
+.craft-item.sel { background: rgba(217, 169, 95, 0.18); box-shadow: inset 2px 0 0 var(--rope); }
+.craft-item em { font-style: normal; font-size: 12px; color: var(--sail-dim); }
+.craft-item.ready em { color: var(--good); }
+.craft-item.wearing em { color: var(--rope); }
+#craft-detail { padding: 20px 24px; overflow-y: auto; max-height: 70vh; }
+#craft-detail h3 { margin: 0 0 10px; font: 400 30px/1.05 var(--font-display); text-transform: uppercase; }
+#craft-detail .desc { margin: 0 0 14px; font-size: 17px; line-height: 1.45; max-width: 44ch; }
+.buffs { margin: 0 0 14px; padding: 0; list-style: none; display: grid; gap: 5px; }
+.buffs li { padding-left: 16px; position: relative; font-size: 15px; color: var(--good); }
+.buffs li::before { content: ""; position: absolute; left: 2px; top: 0.5em; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.buffs li.none { color: var(--sail-dim); }
+.buffs li.none::before { display: none; }
+.cost { margin: 0 0 18px; padding: 0; list-style: none; display: grid; gap: 6px; max-width: 320px; }
+.cost li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.cost li b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.cost li.short b { color: var(--danger); }
+.cost .ci { color: var(--rope); display: inline-flex; }
+.cost .ci svg { width: 18px; height: 18px; }
+.acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.acts button:disabled { opacity: 0.4; cursor: default; transform: none; }
+.acts .done { margin: 0; color: var(--sail-dim); font-size: 15px; max-width: 42ch; }
+#craft-outfit { padding: 18px; border-left: 1px solid var(--edge); }
+.slotrow { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--edge); font-size: 14px; }
+.slotrow span { color: var(--sail-dim); }
+.slotrow b { text-align: right; }
 .card { padding: 28px 32px; width: min(460px, 100%); background: var(--panel-solid); }
 .card h2 { margin: 0 0 8px; font: 400 44px/1 var(--font-display); text-transform: uppercase; }
 .card p { margin: 0 0 20px; font-size: 18px; line-height: 1.4; color: var(--sail); }
