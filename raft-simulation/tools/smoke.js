@@ -317,7 +317,12 @@ fs.mkdirSync(outDir, { recursive: true });
   // 12. Switch to nets and hang one off the upstream edge
   const net = await page.evaluate(() => {
     const G = window.__game; const T = G.TILE; const p = G.player.state;
-    G.input.state.mouse[2] = true; G.input.state.clicked[2] = true; G.step(1 / 60); G.input.state.mouse[2] = false;
+    // Q with the hammer out opens the build menu; pick the net there.
+    G.key('KeyQ');
+    const menuOpen = G.game.menu && !document.getElementById('craft').hidden;
+    document.querySelector('#craft-list [data-id="net"]').click();
+    document.querySelector('#craft-detail [data-act="pick"]').click();
+    G.game.menu = false; G.input.state.enabled = true;
     G.step(0.1);
     const mode = G.tools.state.hammerMode;
     p.pos.set(0, p.pos.y, -1 * T);
@@ -327,9 +332,10 @@ fs.mkdirSync(outDir, { recursive: true });
     const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
     G.click(0, 1);
     G.step(0.6);
-    return { mode, prompt, nets: G.nets.count() };
+    return { menuOpen, mode, prompt, nets: G.nets.count() };
   });
-  check('hammer puts up a catch net', net.mode === 'net' && net.nets === 1, JSON.stringify(net));
+  check('Q opens the build menu and picking a net works', net.menuOpen && net.mode === 'net', JSON.stringify(net));
+  check('hammer puts up a catch net', net.nets === 1, JSON.stringify(net));
 
   // 13. Something drifting into the net gets caught; a fish swims in too
   const catchRes = await page.evaluate(() => {
@@ -423,143 +429,219 @@ fs.mkdirSync(outDir, { recursive: true });
     const G = window.__game;
     G.newGame(); G.game.mode = 'play';
     G.shark.holdOff(999);
-    Object.assign(G.inventory.items, { wood: 40, plastic: 20, fiber: 30, scrap: 10, fish: 3 });
-    G.step(0.2);
+    Object.assign(G.inventory.items, { wood: 60, plastic: 30, fiber: 40, scrap: 20, fish: 3 });
+    G.step(0.6);
   });
 
-  // 19. Night falls: the sky darkens and the water starts to glow
-  const night = await page.evaluate(() => {
-    const G = window.__game;
-    G.weather.setTime(23);
-    G.step(0.3);
-    return { night: +G.weather.state.hour.toFixed(1), glow: G.oceanGlow ? 1 : 0, sunUp: +window.__game.camera.position.y.toFixed(1) };
-  });
+  // 19. Night falls (and nothing about it is deadly any more)
   const nightInfo = await page.evaluate(() => {
     const G = window.__game; const p = G.player.state;
-    p.pos.set(0, p.pos.y, 1.2); p.yaw = 0; p.pitch = -0.05; G.step(0.1);
-    // a shark swimming past near the surface leaves a glowing wake
-    G.shark.holdOff(999);
-    G.step(1.5);
-    return { hour: Math.round(G.weather.state.hour) };
+    G.weather.setTime(23);
+    p.pos.set(0, p.pos.y, 1.2); p.yaw = 0; p.pitch = -0.05;
+    const hp = G.game.stats.health;
+    G.step(4);
+    return { hour: Math.round(G.weather.state.hour), health: Math.round(G.game.stats.health), hp: Math.round(hp), bars: document.querySelectorAll('#vitals .vital').length };
   });
-  check('time passes into night', nightInfo.hour >= 23 || nightInfo.hour <= 1, JSON.stringify(nightInfo));
+  check('night passes without a cold meter', nightInfo.hour >= 23 && nightInfo.health >= nightInfo.hp && nightInfo.bars === 3, JSON.stringify(nightInfo));
   await shot('13-night');
 
-  // 20. A storm: rain, darker sky, bigger swell; warmth drops without clothes
-  const storm = await page.evaluate(() => {
-    const G = window.__game;
-    G.weather.setWeather('storm', true);
-    G.game.stats.warmth = 80;
-    G.step(5);
-    const bare = G.game.stats.warmth;
-    return { bare: Math.round(bare), kind: G.weather.state.kind };
-  });
-  check('cold and storm drain warmth', storm.bare < 80, JSON.stringify(storm));
-  await page.evaluate(() => { const G = window.__game; G.weather.setTime(15); G.step(0.5); G.player.state.pitch = 0.05; G.step(0.1); });
+  // 20. A storm
+  await page.evaluate(() => { const G = window.__game; G.weather.setWeather('storm', true); G.weather.setTime(15); G.step(1); G.player.state.pitch = 0.05; G.step(0.1); });
   await shot('14-storm');
 
-  // 21. Crafting: open the panel, make a hat and a poncho, wear them
+  // 21. Recipes stay locked until you have held their materials
+  const locks = await page.evaluate(() => {
+    const G = window.__game;
+    return { oven: G.crafting.isUnlocked('oven'), boneSpear: G.crafting.lockReason('boneSpear'), poncho: G.crafting.isUnlocked('tarpPoncho') };
+  });
+  check('recipes unlock by materials found', !locks.oven && locks.boneSpear.includes('shark tooth') && locks.poncho, JSON.stringify(locks));
+
+  // 22. Clothing is for looks: make a poncho, the sleeve changes colour, nothing else
   const craft = await page.evaluate(() => {
     const G = window.__game;
+    G.weather.setWeather('clear', true);
     G.openMenu();
     const open = !document.getElementById('craft').hidden;
+    const doll = !!document.querySelector('#craft-outfit .doll');
     G.crafting.make('palmHat');
     G.crafting.make('tarpPoncho');
-    G.step(0.1);
-    const b = G.crafting.buffs();
-    return { open, head: G.crafting.worn('head'), body: G.crafting.worn('body'), heatShield: b.heatShield, insulation: b.insulation, fiber: G.inventory.items.fiber };
-  });
-  await shot('15-crafting');
-  check('crafting panel makes and wears clothing', craft.open && craft.head === 'palmHat' && craft.body === 'tarpPoncho' && craft.insulation > 0.4, JSON.stringify(craft));
-  const warmer = await page.evaluate(() => {
-    const G = window.__game;
     G.closeMenu(false); G.game.menu = false; G.input.state.enabled = true;
-    G.game.stats.warmth = 80;
-    G.step(5);
-    return { dressed: Math.round(G.game.stats.warmth) };
+    G.step(0.1);
+    return { open, doll, head: G.crafting.worn('head'), body: G.crafting.worn('body'), buffs: typeof G.crafting.buffs };
   });
-  check('a poncho keeps more warmth in the storm', warmer.dressed > storm.bare, JSON.stringify({ bare: storm.bare, dressed: warmer.dressed }));
+  await shot('15-crafting-closed');
+  check('wardrobe: clothing is made and worn, looks only', craft.open && craft.doll && craft.head === 'palmHat' && craft.body === 'tarpPoncho' && craft.buffs === 'undefined', JSON.stringify(craft));
 
-  // 22. Gear: metal spear and a bandage
+  // 23. Crafting table: build it, then E at it opens the bench recipes
+  const table = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    G.tools.pickBuild('table', G.player); G.step(0.4);
+    p.pos.set(0, p.pos.y, 0.8); G.step(0.1);
+    G.aimAt(-T, 0.6, -T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.click(0, 1); G.step(0.6);
+    G.tools.setSlot(0, G.player); G.step(0.3);
+    p.pos.set(-T * 0.4, p.pos.y, -T * 0.3); G.step(0.1);
+    G.aimAt(-T, 1.2, -T); G.step(0.05);
+    const p2 = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.key('KeyE');
+    const where = document.getElementById('craft-where').textContent;
+    G.closeMenu(false); G.game.menu = false; G.input.state.enabled = true;
+    return { prompt, built: G.stations.count('table'), p2, where };
+  });
+  check('crafting table is built and opens bench crafting', table.built === 1 && table.where.includes('At the crafting table'), JSON.stringify(table));
+
+  // 24. Gear and weapon upgrades
   const gear = await page.evaluate(() => {
     const G = window.__game;
+    G.inventory.items.tooth = 3;
+    G.step(0.6);
     G.game.stats.health = 50;
     G.crafting.make('bandage');
+    G.crafting.make('boneSpear');
+    const bone = G.crafting.spearLevel();
     G.crafting.make('metalSpear');
-    return { health: Math.round(G.game.stats.health), metal: G.crafting.hasGear('metalSpear') };
+    G.crafting.make('metalHook');
+    return { health: Math.round(G.game.stats.health), bone, spear: G.crafting.spearLevel(), hook: G.crafting.hookLevel() };
   });
-  check('bandage heals, metal spear is made', gear.health === 80 && gear.metal, JSON.stringify(gear));
+  check('weapon upgrades: bone then metal spear, metal hook', gear.health === 80 && gear.bone === 2 && gear.spear === 3 && gear.hook === 2, JSON.stringify(gear));
 
-  // 23. Build a grill, light it, cook a fish, get warm by it
+  // 25. Grill: build, light, cook, then upgrade it to a stone oven once you have stone
   const grill = await page.evaluate(() => {
     const G = window.__game; const T = G.TILE; const p = G.player.state;
-    G.weather.setWeather('clear', true);
-    G.tools.setSlot(2, G.player); G.step(0.3);
-    const rc = () => { G.input.state.mouse[2] = true; G.input.state.clicked[2] = true; G.step(1 / 60); G.input.state.mouse[2] = false; G.step(0.05); };
-    while (G.tools.state.hammerMode !== 'grill') rc();
+    G.tools.pickBuild('grill', G.player); G.step(0.4);
     p.pos.set(0, p.pos.y, 0.8); G.step(0.1);
     G.aimAt(T, 0.6, -T); G.step(0.05);
-    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
     G.click(0, 1); G.step(0.6);
     const built = G.stations.count('grill');
     G.tools.setSlot(0, G.player); G.step(0.3);
     p.pos.set(T * 0.4, p.pos.y, -T * 0.4); G.step(0.1);
     G.aimAt(T, 0.62, -T); G.step(0.05);
-    const p1 = G.tools.state.prompt && G.tools.state.prompt.text;
     G.key('KeyE'); G.step(0.1);
-    const p2 = G.tools.state.prompt && G.tools.state.prompt.text;
     G.key('KeyE'); G.step(11);
-    const p3 = G.tools.state.prompt && G.tools.state.prompt.text;
     G.key('KeyE'); G.step(0.1);
-    G.weather.setTime(23); G.game.stats.warmth = 40; G.step(4);
-    return { prompt, built, p1, p2, p3, cooked: G.inventory.items.cooked, warmth: Math.round(G.game.stats.warmth) };
+    const cooked = G.inventory.items.cooked;
+    G.inventory.items.stone = 8; G.step(0.6);
+    G.tools.pickBuild('floor', G.player); G.step(0.4);
+    G.aimAt(T, 0.7, -T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.click(0, 1); G.step(0.6);
+    const st = [...G.stations.list.values()].find((s) => s.kind === 'grill');
+    return { built, cooked, prompt, level: st.level };
   });
-  check('grill: build, light, cook a fish', grill.built === 1 && grill.cooked === 1, JSON.stringify(grill));
-  check('a lit fire warms you at night', grill.warmth > 40, JSON.stringify({ warmth: grill.warmth }));
-  await page.evaluate(() => { const G = window.__game; const T = G.TILE; G.aimAt(T, 0.5, -T); G.player.state.pitch -= 0.1; G.step(0.3); });
-  await shot('16-grill-night');
+  check('grill cooks a fish', grill.built === 1 && grill.cooked === 1, JSON.stringify(grill));
+  check('hammer upgrades the grill to a stone oven', grill.level === 2, JSON.stringify(grill));
+  await page.evaluate(() => { const G = window.__game; const T = G.TILE; G.weather.setTime(22.5); G.tools.setSlot(0, G.player); G.step(0.4); G.aimAt(T, 0.5, -T); G.player.state.pitch -= 0.1; G.step(0.3); });
+  await shot('16-oven-night');
 
-  // 24. Rain catcher fills in the rain; drink from it
-  const catcher = await page.evaluate(() => {
+  // 26. Reinforce a floor piece; rain catcher (needs the table) fills in rain
+  const build2 = await page.evaluate(() => {
     const G = window.__game; const T = G.TILE; const p = G.player.state;
     G.weather.setTime(11);
-    G.tools.setSlot(2, G.player); G.step(0.3);
-    const rc = () => { G.input.state.mouse[2] = true; G.input.state.clicked[2] = true; G.step(1 / 60); G.input.state.mouse[2] = false; G.step(0.05); };
-    while (G.tools.state.hammerMode !== 'catcher') rc();
+    G.tools.pickBuild('floor', G.player); G.step(0.4);
+    p.pos.set(0, p.pos.y, 0); G.step(0.1);
+    G.aimAt(0, 0.4, T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.click(0, 1); G.step(0.6);
+    const tile = G.raft.tileAt(0, 1);
+    G.tools.pickBuild('catcher', G.player); G.step(0.4);
     p.pos.set(-T * 0.3, p.pos.y, T * 0.3); G.step(0.1);
     G.aimAt(-T, 0.6, T); G.step(0.05);
     G.click(0, 1); G.step(0.6);
     G.weather.setWeather('rain', true);
     G.step(16);
     const st = [...G.stations.list.values()].find((s) => s.kind === 'catcher');
-    const cups = st ? st.cups : -1;
     G.tools.setSlot(0, G.player); G.step(0.3);
     G.game.stats.thirst = 40;
     G.aimAt(-T, 0.9, T); G.step(0.05);
-    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
     G.key('KeyE'); G.step(0.1);
-    return { cups, prompt, thirst: Math.round(G.game.stats.thirst), built: G.stations.count('catcher') };
+    return { prompt, reinforced: tile.reinforced, maxHp: tile.maxHp, cups: st ? st.cups : -1, thirst: Math.round(G.game.stats.thirst) };
   });
-  check('rain catcher fills in rain and you can drink', catcher.built === 1 && catcher.cups >= 1 && catcher.thirst > 60, JSON.stringify(catcher));
+  check('hammer reinforces a floor piece', build2.reinforced && build2.maxHp === 200, JSON.stringify(build2));
+  check('rain catcher fills in rain and you can drink', build2.cups >= 0 && build2.thirst > 60, JSON.stringify(build2));
 
-  // 25. A tooth left in the floor can be picked up
-  const tooth = await page.evaluate(() => {
-    const G = window.__game; const T = G.TILE; const p = G.player.state;
+  // 27. An island drifts in and stops; wade ashore, gather stone, the island waits
+  const island = await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
     G.weather.setWeather('clear', true);
-    const tile = G.raft.tileAt(0, -1);
-    G.events.onToothLost(tile, [0, -1]);
-    const d = G.debris.items.find((x) => x.type === 'tooth');
-    p.pos.set(d.x, p.pos.y, d.z + 1.0); G.step(0.1);
-    G.aimAt(d.x, d.mesh.position.y, d.z); G.step(0.05);
+    G.islands.summon(G.raft.center(), G.raft.radius());
+    let t = 0;
+    while (G.islands.island.phase === 'approach' && t < 200) { G.step(1); t += 1; }
+    const isl = G.islands.island;
+    const c = G.islands.center();
+    // swim from the raft toward the island until the sea floor comes up
+    p.pos.set(Math.sign(c.x) * 6, -1, 0); p.inWater = true; p.grounded = false;
+    p.yaw = Math.atan2(-(c.x - p.pos.x), -(c.z - p.pos.z)); p.pitch = 0;
+    G.shark.holdOff(999);
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' }));
+    let s = 0;
+    while (!p.onLand && s < 40) { G.step(0.25); s += 0.25; }
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
+    const ashore = p.onLand;
+    // walk to a rock and gather
+    const rock = isl.built.resources.find((r) => r.kind === 'rock');
+    const wp = new THREE_V(rock.mesh.position.x + isl.x, 0, rock.mesh.position.z + isl.z);
+    p.pos.set(wp.x + 1.5, G.islands.heightAt(wp.x + 1.5, wp.z) , wp.z); p.grounded = true; p.inWater = false;
+    G.step(0.2);
+    G.aimAt(wp.x, G.islands.heightAt(wp.x, wp.z) + 0.3, wp.z); G.step(0.05);
     const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    const stone0 = G.inventory.items.stone;
     G.key('KeyE'); G.step(0.1);
-    return { prompt, teeth: G.inventory.items.tooth };
+    // the visit timer runs out while ashore: the island waits
+    isl.visitLeft = 0.5; G.step(2);
+    return { t, phase: G.islands.island && G.islands.island.phase, ashore, prompt, stone: G.inventory.items.stone - stone0, landH: +G.islands.heightAt(p.pos.x, p.pos.z).toFixed(2) };
+    function THREE_V(x, y, z) { return { x, y, z }; }
   });
-  check('shark teeth stuck in the floor can be picked up', tooth.teeth === 1, JSON.stringify(tooth));
+  check('an island drifts in and stops alongside', island.t < 200, JSON.stringify(island));
+  check('you can wade ashore and gather stone', island.ashore && island.stone === 2, JSON.stringify(island));
+  check('the island waits while you are ashore', island.phase === 'visit', JSON.stringify(island));
+  await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state; const c = G.islands.center();
+    p.yaw = Math.atan2(-(c.x - p.pos.x), -(c.z - p.pos.z)) + 0.6; p.pitch = -0.05; G.tools.setSlot(0, G.player); G.step(0.3);
+  });
+  await shot('17-island');
+  await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    p.pos.set(0, 0.42, 0); p.inWater = false; p.grounded = true; p.onLand = false;
+    p.yaw = Math.atan2(-(G.islands.center().x), 0); p.pitch = -0.02; G.step(0.3);
+  });
+  await shot('18-island-from-raft');
 
-  // 26. The reef shark, at max scars, leaves for good and drops its jaw; a hammerhead follows
+  // 28. Anchor: with it down the island stays even when you are aboard and time is up
+  const anchor = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    // Back aboard, the island started drifting on; put it back alongside for this check.
+    const isl = G.islands.island;
+    isl.phase = 'visit'; isl.visitLeft = 60; isl.z = isl.targetZ; isl.held = false;
+    G.tools.pickBuild('anchor', G.player); G.step(0.4);
+    p.pos.set(T * 0.3, p.pos.y, T * 0.3); G.step(0.1);
+    G.aimAt(T, 0.6, T); G.step(0.05);
+    G.click(0, 1); G.step(0.6);
+    G.tools.setSlot(0, G.player); G.step(0.3);
+    G.aimAt(T, 0.9, T); G.step(0.05);
+    G.key('KeyE'); G.step(0.1);
+    const down = G.stations.anchored();
+    G.islands.island.visitLeft = 0; G.step(3);
+    const stays = G.islands.island && G.islands.island.phase === 'visit';
+    G.key('KeyE'); G.step(3);
+    return { down, stays, after: G.islands.island && G.islands.island.phase };
+  });
+  check('anchor holds the island; raising it lets it drift on', anchor.down && anchor.stays && anchor.after === 'leave', JSON.stringify(anchor));
+
+  // 29. Difficulty: easy drains hunger and thirst slower than hard
+  const diff = await page.evaluate(() => {
+    const G = window.__game;
+    const run = (d) => { G.applyDifficulty(d, false); G.game.stats.hunger = 90; G.game.stats.thirst = 90; G.step(10); return 90 - G.game.stats.thirst; };
+    const easy = run('easy'), hard = run('hard');
+    G.applyDifficulty('normal', false);
+    return { easy: +easy.toFixed(2), hard: +hard.toFixed(2) };
+  });
+  check('easy drains slower than hard', diff.easy < diff.hard, JSON.stringify(diff));
+
+  // 30. The reef shark at max scars leaves for good and drops its jaw; a hammerhead follows and rams
   const leave = await page.evaluate(() => {
     const G = window.__game; const T = G.TILE; const p = G.player.state;
+    p.pos.set(0, 0.42, 0); p.inWater = false; p.grounded = true;
     G.shark.restore({ x: 20, z: 5, attackTimer: 0, scars: 6 });
     G.shark.forceAttack();
     let t = 0;
@@ -583,22 +665,20 @@ fs.mkdirSync(outDir, { recursive: true });
   check('the scarred reef shark leaves for good and drops its jaw', leave.state === 'leave' && leave.gone && leave.jaw, JSON.stringify(leave));
   check('a hammerhead arrives after it', leave.tier === 'Hammerhead', JSON.stringify(leave));
 
-  // 27. The hammerhead rams the raft and throws you off your feet
   const ram = await page.evaluate(() => {
     const G = window.__game; const T = G.TILE; const p = G.player.state;
     let rams = 0;
     const orig = G.events.onRam;
     G.events.onRam = (...a) => { rams++; orig(...a); };
     G.shark.forceAttack(true);
-    let t = 0, charging = false;
+    let t = 0, placed = false;
     while (rams === 0 && t < 60) {
       G.step(0.25); t += 0.25;
       const tgt = G.shark.target;
-      if (tgt && !charging && G.shark.state === 'approach') {
-        // stand near the edge it is heading for
+      if (tgt && !placed && G.shark.state === 'approach') {
         p.pos.set(tgt.tile.i * T + tgt.side[0] * T * 0.35, p.pos.y, tgt.tile.j * T + tgt.side[1] * T * 0.35);
         p.inWater = false; p.grounded = true;
-        charging = true;
+        placed = true;
       }
     }
     G.step(1.5);
@@ -606,21 +686,19 @@ fs.mkdirSync(outDir, { recursive: true });
     return { rams, t, inWater: p.inWater };
   });
   check('the hammerhead rams the raft and can knock you in', ram.rams === 1 && ram.inWater, JSON.stringify(ram));
-  await page.evaluate(() => {
-    const G = window.__game; const p = G.player.state;
-    G.shark.holdOff(999);
-    const s = G.shark.pos; p.yaw = Math.atan2(-(s.x - p.pos.x), -(s.z - p.pos.z)); p.pitch = -0.15; G.step(0.2);
-  });
-  await shot('17-hammerhead');
 
-  // 28. Stage 3 state survives save/restore
+  // 31. Everything survives save/restore
   const snap3 = await page.evaluate(() => {
     const G = window.__game;
     const s = JSON.parse(JSON.stringify(G.serialize()));
     G.restore(s); G.step(0.1);
-    return { tier: G.shark.tier.name, stations: G.stations.count(), body: G.crafting.worn('body'), day: G.weather.state.day, metal: G.crafting.hasGear('metalSpear') };
+    return {
+      tier: G.shark.tier.name, stations: G.stations.count(), body: G.crafting.worn('body'),
+      spear: G.crafting.spearLevel(), island: !!G.islands.island, oven: [...G.stations.list.values()].some((s) => s.kind === 'grill' && s.level === 2),
+      reinforced: [...G.raft.tiles.values()].some((t) => t.reinforced),
+    };
   });
-  check('stage 3 state survives save/restore', snap3.tier === 'Hammerhead' && snap3.stations === 2 && snap3.body === 'tarpPoncho' && snap3.metal, JSON.stringify(snap3));
+  check('state survives save/restore', snap3.tier === 'Hammerhead' && snap3.stations === 4 && snap3.body === 'tarpPoncho' && snap3.spear === 3 && snap3.oven && snap3.reinforced, JSON.stringify(snap3));
 
   // 10. A wider look for the README
   await page.evaluate(() => {

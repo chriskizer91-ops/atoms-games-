@@ -14,7 +14,8 @@ const ICONS = {
   plastic: '<path d="M10 3h4v3l2 2.5V20a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V8.5L10 6z" fill="currentColor" fill-opacity=".25"/><path d="M8 12h8"/>',
   fiber: '<path d="M5 19C5 10.5 10.5 5 19 5c0 8.5-5.5 14-14 14z" fill="currentColor" fill-opacity=".25"/><path d="M5 19l9-9"/>',
   scrap: '<path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="currentColor" fill-opacity=".25"/><circle cx="12" cy="12" r="3"/>',
-  warmth: '<path d="M10 4a2 2 0 0 1 4 0v9.3a4 4 0 1 1-4 0z" fill="currentColor" fill-opacity=".25"/><path d="M12 9v7"/>',
+  stone: '<path d="M5 15l2-6 6-3 6 3 1 7-5 3H9z" fill="currentColor" fill-opacity=".25"/><path d="M9 10l3 3"/>',
+  anchor: '<circle cx="12" cy="5" r="2"/><path d="M12 7v13M8 10h8M5 14c1 4 4 6 7 6s6-2 7-6"/>',
   cooked: '<path d="M2.5 12c3.2-4.3 8.4-5.3 12.5-2.6L20 6v12l-5-3.4C10.9 17.3 5.7 16.3 2.5 12z" fill="currentColor" fill-opacity=".45"/><path d="M8 8.5l1.5 7M11.5 8.5l1.5 7"/>',
   tooth: '<path d="M7 4h10l-1.5 9-3.5 7-3.5-7z" fill="currentColor" fill-opacity=".25"/>',
   hide: '<path d="M5 6c3-2 11-2 14 0-1 4-1 8 0 12-3 2-11 2-14 0 1-4 1-8 0-12z" fill="currentColor" fill-opacity=".25"/><path d="M9 10l2 2M13 9l2 2M10 14l2 2"/>',
@@ -67,7 +68,7 @@ export function createHud() {
     vitals: {},
   };
   document.querySelectorAll('#materials .mat').forEach((m) => (el.mats[m.dataset.k] = m.querySelector('.n')));
-  for (const k of ['health', 'hunger', 'thirst', 'warmth']) {
+  for (const k of ['health', 'hunger', 'thirst']) {
     const v = $(`v-${k}`);
     el.vitals[k] = { root: v, fill: v.querySelector('i'), num: v.querySelector('b') };
   }
@@ -84,7 +85,7 @@ export function createHud() {
     },
 
     setVitals(s) {
-      for (const k of ['health', 'hunger', 'thirst', 'warmth']) {
+      for (const k of ['health', 'hunger', 'thirst']) {
         const v = Math.max(0, Math.min(100, s[k]));
         const r = el.vitals[k];
         r.fill.style.transform = `scaleX(${v / 100})`;
@@ -140,10 +141,10 @@ export function createHud() {
     },
 
     // "Day 2 · 14:30 · Rain", with an icon for sun, moon or weather.
-    setClock(day, hour, kind, night) {
+    setClock(day, hour, kind, night, extra = '') {
       const h = Math.floor(hour), m = Math.floor((hour - h) * 60 / 10) * 10;
       const names = { clear: night > 0.5 ? 'Clear night' : 'Clear', cloudy: 'Cloudy', rain: 'Rain', storm: 'Storm' };
-      const text = `Day ${day} · ${h}:${String(m).padStart(2, '0')} · ${names[kind]}`;
+      const text = `Day ${day} · ${h}:${String(m).padStart(2, '0')} · ${names[kind]}${extra ? ` · ${extra}` : ''}`;
       if (el.clockText.textContent !== text) el.clockText.textContent = text;
       const ic = kind === 'clear' ? (night > 0.5 ? 'moon' : 'sun') : kind === 'cloudy' ? 'cloud' : kind;
       if (el.clockIcon.dataset.ic !== ic) {

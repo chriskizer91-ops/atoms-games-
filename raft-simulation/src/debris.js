@@ -37,7 +37,7 @@ function barrelGeometry() {
 }
 
 // Palm frond: a curved rib with leaflets angled toward the tip, green fading to straw.
-function frondGeometry() {
+export function frondGeometry() {
   const pos = [], col = [];
   const len = 1.15, n = 15;
   const rib = (s) => new THREE.Vector3(0, -0.1 * s * s, s * len - len * 0.45);

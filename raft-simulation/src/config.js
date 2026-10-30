@@ -43,10 +43,6 @@ export const HAMMER = { reach: 4.2, cooldown: 0.5, repairPerHit: 25 };
 export const COSTS = {
   repair: { wood: 1 },
   rebuild: { wood: 3, fiber: 2 },
-  floor: { wood: 4, fiber: 2 },
-  net: { wood: 2, plastic: 3, fiber: 2 },
-  grill: { wood: 5, scrap: 2 },
-  catcher: { plastic: 5, wood: 3, fiber: 2 },
 };
 
 export const RAFT_LIMIT = 7;          // floor pieces can go up to 7 cells out from the start
@@ -111,79 +107,86 @@ export const ITEMS = {
   tooth: { name: 'Shark tooth' },
   hide: { name: 'Sharkskin' },
   jaw: { name: "Old shark's jaw" },
+  stone: { name: 'Stone' },
 };
 
 export const COOKED = { hunger: 32, thirst: 6 };
 
-// Clothing: one piece per slot. Buffs add up across slots.
-//   insulation  cuts warmth lost to water, rain, storms and night
-//   heatShield  no extra thirst in the midday sun
-//   calm        the shark waits this much longer between attacks
-//   biteGuard   shark bites on you hurt this much less
-//   swim        swim this much faster
+// ---------- recipes ----------
+// Every recipe stays hidden until you have held each material it uses at
+// least once ("unlocks as you find materials"). bench: needs a crafting
+// table on the raft.
+
+// Clothing is for looks only. colors drive the wardrobe preview and your sleeve.
 export const CLOTHING = {
-  palmHat: {
-    slot: 'head', name: 'Palm sun hat', cost: { fiber: 5 },
-    buffs: { heatShield: 1 },
-    text: 'Wide brim of woven fronds. The midday sun no longer dries you out faster.',
-  },
-  toothBand: {
-    slot: 'head', name: 'Shark-tooth headband', cost: { tooth: 3, fiber: 2 },
-    buffs: { calm: 0.25 },
-    text: 'Teeth the shark left in your floor. It seems to think twice: 25% longer between attacks.',
-  },
-  jawCrown: {
-    slot: 'head', name: 'Jawbone crown', cost: { jaw: 1, fiber: 2 },
-    buffs: { calm: 0.4, biteGuard: 0.15 },
-    text: 'The old shark\'s jaw, worn as a crown. Predators keep away longer (40%) and bite you 15% softer.',
-  },
-  tarpPoncho: {
-    slot: 'body', name: 'Tarp poncho', cost: { plastic: 6, fiber: 2 }, color: 0x3f74a8,
-    buffs: { insulation: 0.45 },
-    text: 'Plastic sheeting with a hole for your head. You lose warmth 45% slower in rain, wind and at night.',
-  },
-  hideVest: {
-    slot: 'body', name: 'Sharkskin vest', cost: { hide: 3, fiber: 2 }, color: 0x4d6370,
-    buffs: { biteGuard: 0.35, insulation: 0.2 },
-    text: 'Tough as the animal it came from. Shark bites on you hurt 35% less, and it keeps some warmth in.',
-  },
-  swimShorts: {
-    slot: 'legs', name: 'Woven swim shorts', cost: { fiber: 4, plastic: 2 },
-    buffs: { swim: 0.3 },
-    text: 'Light and tight. Swim 30% faster.',
-  },
-  hideLeggings: {
-    slot: 'legs', name: 'Sharkskin leggings', cost: { hide: 2, fiber: 2 },
-    buffs: { swim: 0.15, biteGuard: 0.15, insulation: 0.2 },
-    text: 'Swim 15% faster, shark bites hurt 15% less, and they hold in a little warmth.',
-  },
+  palmHat: { slot: 'head', name: 'Palm sun hat', cost: { fiber: 5 }, color: 0xd9b45f, text: 'Wide brim of woven fronds.' },
+  bandana: { slot: 'head', name: 'Bandana', cost: { plastic: 2, fiber: 1 }, color: 0xc9483b, text: 'A strip of red tarp tied round your head.' },
+  toothBand: { slot: 'head', name: 'Shark-tooth headband', cost: { tooth: 3, fiber: 2 }, color: 0xeee6d2, text: 'Teeth the shark left in your floor, strung on a cord.' },
+  jawCrown: { slot: 'head', name: 'Jawbone crown', cost: { jaw: 1, fiber: 2 }, bench: true, color: 0xf1ead8, text: "The old shark's jaw, worn like a crown." },
+  palmVest: { slot: 'body', name: 'Woven palm vest', cost: { fiber: 6 }, color: 0x6f8f3e, text: 'Fronds woven tight into a sleeveless vest.' },
+  tarpPoncho: { slot: 'body', name: 'Tarp poncho', cost: { plastic: 6, fiber: 2 }, color: 0x3f74a8, text: 'Plastic sheeting with a hole for your head.' },
+  hideVest: { slot: 'body', name: 'Sharkskin vest', cost: { hide: 3, fiber: 2 }, bench: true, color: 0x4d6370, text: 'Grey-blue and rough as sandpaper.' },
+  swimShorts: { slot: 'legs', name: 'Woven swim shorts', cost: { fiber: 4, plastic: 2 }, color: 0x2f9a93, text: 'Light shorts woven from fiber and plastic strips.' },
+  hideLeggings: { slot: 'legs', name: 'Sharkskin leggings', cost: { hide: 2, fiber: 2 }, bench: true, color: 0x51646e, text: 'Long and tough, stitched from sharkskin.' },
 };
 
-// Other things made in the crafting menu.
+// Made in the crafting panel. spear/hook entries replace the tool in your hand.
 export const GEAR = {
-  metalSpear: {
-    name: 'Scrap-metal spear', cost: { scrap: 3, wood: 2, fiber: 1 }, once: true,
-    text: 'A sharpened metal tip. Every hit counts double toward driving a shark off.',
+  bandage: { name: 'Palm-fiber bandage', cost: { fiber: 3 }, text: 'Wrap a wound: heals 30 health straight away.' },
+  boneSpear: {
+    name: 'Bone spear', cost: { tooth: 3, wood: 2, fiber: 2 }, bench: true, once: true, upgrade: 'spear', level: 2,
+    text: 'A row of shark teeth bound to the tip. Hits count 1.5 times toward driving a shark off.',
   },
-  bandage: {
-    name: 'Palm-fiber bandage', cost: { fiber: 3 },
-    text: 'Wrap a wound: heals 30 health straight away.',
+  metalSpear: {
+    name: 'Scrap-metal spear', cost: { scrap: 4, wood: 2, fiber: 2 }, bench: true, once: true, upgrade: 'spear', level: 3,
+    text: 'A hammered metal blade. Hits count 2.5 times toward driving a shark off.',
+  },
+  metalHook: {
+    name: 'Metal hook', cost: { scrap: 3, fiber: 3 }, bench: true, once: true, upgrade: 'hook', level: 2,
+    text: 'Heavier prongs and a longer line: reels in faster, grabs from further away, carries 6 things.',
   },
 };
 
-// Things built on the raft with the hammer.
+// Built on the raft with the hammer.
 export const STATIONS = {
-  grill: {
-    name: 'Firepit grill', cost: { wood: 5, scrap: 2 },
-    text: 'Burns 1 wood for 90 seconds. Cooks raw fish in 10 seconds and keeps you warm nearby.',
-  },
-  catcher: {
-    name: 'Rain catcher', cost: { plastic: 5, wood: 3, fiber: 2 },
-    text: 'Collects fresh water, slowly in fair weather and fast in rain. Holds 3 drinks.',
-  },
+  floor: { name: 'Floor piece', cost: { wood: 4, fiber: 2 }, text: 'Make the raft bigger. Click an outline next to the raft.' },
+  net: { name: 'Catch net', cost: { wood: 2, plastic: 3, fiber: 2 }, text: 'Hangs off an outer edge and catches anything that drifts into it.' },
+  table: { name: 'Crafting table', cost: { wood: 6, fiber: 3 }, text: 'Unlocks the bigger recipes and every upgrade. Press E at it to craft.' },
+  grill: { name: 'Firepit grill', cost: { wood: 5, scrap: 1 }, text: 'Burn wood to cook raw fish. Lights the raft at night.' },
+  catcher: { name: 'Rain catcher', cost: { plastic: 5, wood: 3, fiber: 2 }, bench: true, text: 'Collects fresh water to drink, fastest in rain.' },
+  anchor: { name: 'Anchor', cost: { scrap: 4, fiber: 4, wood: 2 }, bench: true, text: 'Drop it when an island is close and the raft stays there as long as you like.' },
 };
-export const GRILL = { burn: 90, cook: 10 };
-export const CATCHER = { cups: 3, drink: 28, fillEvery: { clear: 70, cloudy: 50, rain: 14, storm: 9 } };
+
+// Upgrades applied with the hammer to something already built. All need a crafting table.
+export const UPGRADES = {
+  reinforce: { name: 'Reinforced floor', on: 'floor', bench: true, cost: { scrap: 2, wood: 1 }, text: 'Metal brackets: the floor piece takes twice the punishment.' },
+  wideNet: { name: 'Wide net', on: 'net', bench: true, cost: { plastic: 3, fiber: 2 }, text: 'A deeper basket that holds 8 things instead of 5.' },
+  oven: { name: 'Stone oven', on: 'grill', bench: true, cost: { stone: 6, scrap: 1 }, text: 'Cooks in 5 seconds and a piece of wood burns almost twice as long.' },
+  bigCatcher: { name: 'Big rain catcher', on: 'catcher', bench: true, cost: { plastic: 4, wood: 2 }, text: 'A wider funnel and barrel: holds 6 drinks and fills faster.' },
+};
+
+export const SPEAR_POWER = { 1: 1, 2: 1.5, 3: 2.5 };
+export const HOOK_LEVELS = { 1: { reel: 1, grab: 1, carry: 4 }, 2: { reel: 1.6, grab: 1.4, carry: 6 } };
+
+export const GRILL = { burn: 90, cook: 10, ovenBurn: 160, ovenCook: 5 };
+export const CATCHER = { cups: 3, bigCups: 6, bigRate: 1.6, drink: 28, fillEvery: { clear: 70, cloudy: 50, rain: 14, storm: 9 } };
+export const FLOOR_HP = { basic: 100, reinforced: 200 };
+
+// ---------- islands ----------
+export const ISLAND = {
+  firstIn: 150,          // seconds into a new game before the first one shows up
+  every: [260, 380],     // seconds between islands
+  visit: 240,            // seconds it stays before drifting on (without an anchor)
+  approachSpeed: 3,      // m/s while it is still far away
+  radius: [15, 22],
+};
+
+// ---------- difficulty ----------
+export const DIFFICULTY = {
+  easy: { label: 'Easy', drain: 0.6, sharkDamage: 0.6, attackGap: 1.5, hits: -1 },
+  normal: { label: 'Normal', drain: 1, sharkDamage: 1, attackGap: 1, hits: 0 },
+  hard: { label: 'Hard', drain: 1.35, sharkDamage: 1.4, attackGap: 0.7, hits: 1 },
+};
 
 export const COCONUT = { hunger: 12, thirst: 18 };
 
@@ -199,10 +202,4 @@ export const WEATHER = {
   },
 };
 
-// Warmth, per second. Losses are cut by clothing insulation.
-export const WARMTH = {
-  water: 1.6, rain: 0.35, storm: 0.45, night: 0.3,  // losses
-  sun: 0.6, fire: 3, fireRange: 3.2,                // gains
-  freezeDamage: 1.0,
-};
-export const HEAT_THIRST = 0.5; // extra thirst drain in full midday sun, before a hat
+

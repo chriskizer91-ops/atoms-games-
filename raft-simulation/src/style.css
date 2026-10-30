@@ -176,7 +176,7 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 }
 .toast {
   display: flex; align-items: center; gap: 8px;
-  padding: 6px 12px; border-radius: 5px; background: var(--panel-solid);
+  padding: 6px 12px; border-radius: 5px; background: var(--panel-solid); max-width: 380px;
   font-size: 16px; font-weight: 600; animation: toast-in 0.2s ease-out; transition: opacity 0.5s, transform 0.5s;
 }
 .toast .ti { color: var(--rope); display: inline-flex; }
@@ -196,8 +196,6 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 #v-health { color: var(--health); } #v-health i { background: var(--health); }
 #v-hunger { color: var(--hunger); } #v-hunger i { background: var(--hunger); }
 #v-thirst { color: var(--thirst); } #v-thirst i { background: var(--thirst); }
-#v-warmth { color: var(--warm); } #v-warmth i { background: linear-gradient(90deg, var(--cold), var(--warm)); }
-#v-warmth.low { color: var(--cold); }
 .vital b { color: var(--sail); }
 .vital.low svg { animation: pulse 0.8s infinite; }
 @keyframes pulse { 50% { transform: scale(1.25); } }
@@ -276,7 +274,13 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 .craft-panel { width: min(1040px, 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--panel-solid); }
 .craft-head { display: flex; align-items: center; gap: 16px; padding: 16px 22px; border-bottom: 1px solid var(--edge); }
 .craft-head h2 { margin: 0; font: 400 32px/1 var(--font-display); text-transform: uppercase; }
-.craft-hint { color: var(--sail-dim); font-size: 14px; margin-left: auto; }
+.craft-hint { color: var(--sail-dim); font-size: 14px; margin-left: auto; text-align: right; }
+.craft-tabs { display: flex; gap: 4px; }
+.craft-tabs button { font-size: 14px; padding: 8px 16px; box-shadow: none; background: transparent; color: var(--sail-dim); box-shadow: inset 0 0 0 1px var(--edge); }
+.craft-tabs button.on { background: var(--rope); color: var(--ink); box-shadow: none; }
+.craft-item.locked span { color: var(--sail-dim); }
+.craft-item.locked em { color: var(--sail-dim); opacity: 0.7; }
+#craft-outfit svg.doll { width: 130px; height: 184px; display: block; margin: 4px auto 12px; }
 .craft-head button { padding: 8px 14px; font-size: 14px; }
 .craft-body { display: grid; grid-template-columns: 260px minmax(0, 1fr) 250px; min-height: 0; overflow: hidden; }
 #craft-list { padding: 12px; overflow-y: auto; border-right: 1px solid var(--edge); max-height: 70vh; }
@@ -323,14 +327,15 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 #dead-stats dt { color: var(--sail-dim); }
 #dead-stats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.quality { display: flex; align-items: center; gap: 4px; margin-top: 18px; flex-wrap: wrap; }
-.quality .label { margin: 0 10px 0 0; }
-.quality button {
+.quality, .difficulty { display: flex; align-items: center; gap: 4px; margin-top: 18px; flex-wrap: wrap; }
+.difficulty + .quality { margin-top: 10px; }
+.quality .label, .difficulty .label { margin: 0 10px 0 0; min-width: 6.5em; }
+.quality button, .difficulty button {
   font-size: 13px; padding: 7px 12px; box-shadow: none; border-radius: 3px;
   background: transparent; color: var(--sail-dim); box-shadow: inset 0 0 0 1px var(--edge);
 }
-.quality button:hover { background: rgba(241, 232, 212, 0.08); color: var(--sail); }
-.quality button.on { background: var(--rope); color: var(--ink); box-shadow: none; }
+.quality button:hover, .difficulty button:hover { background: rgba(241, 232, 212, 0.08); color: var(--sail); }
+.quality button.on, .difficulty button.on { background: var(--rope); color: var(--ink); box-shadow: none; }
 
 @media (max-width: 860px) {
   #title { grid-template-columns: minmax(0, 1fr); align-items: start; }

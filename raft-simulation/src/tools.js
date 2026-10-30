@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, FISH, COOKED, STATIONS, PLAYER } from './config.js';
+import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, FISH, COOKED, STATIONS, UPGRADES, SPEAR_POWER, HOOK_LEVELS, PLAYER } from './config.js';
 import { makeFish } from './nets.js';
 import { waveHeight } from './ocean.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -18,19 +18,21 @@ export const SLOTS = [
   { id: 'cooked', name: 'Cooked fish' },
 ];
 
-// What the hammer can build, in right-click order.
+// What the hammer can build (picked in the build menu; R steps through them).
 export const BUILD_MODES = [
   { id: 'floor', label: 'Floor' },
   { id: 'net', label: 'Catch net' },
+  { id: 'table', label: 'Crafting table' },
   { id: 'grill', label: 'Grill' },
   { id: 'catcher', label: 'Rain catcher' },
+  { id: 'anchor', label: 'Anchor' },
 ];
 
 let MAT = null;
 function initMaterials() {
   if (MAT) return;
   const M = materials();
-  MAT = { skin: M.skin, sleeve: M.cloth, cuff: M.clothDark, handle: M.handle, rope: M.rope, metal: M.metal, stone: M.stone, coconut: M.coconut, float: M.float, floatBand: M.floatBand };
+  MAT = { bone: new THREE.MeshStandardMaterial({ color: 0xeee6d2, roughness: 0.4 }), skin: M.skin, sleeve: M.cloth, cuff: M.clothDark, handle: M.handle, rope: M.rope, metal: M.metal, stone: M.stone, coconut: M.coconut, float: M.float, floatBand: M.floatBand };
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -137,7 +139,7 @@ const POSE = {
   cooked: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.2, 0.3, 0] },
 };
 
-export function createTools({ scene, camera, raft, nets, stations, crafting, bait, debris, shark, fx, audio, inventory, stats, events }) {
+export function createTools({ scene, camera, raft, nets, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats, events }) {
   initMaterials();
   // ----- first-person view model, drawn in its own pass so it never clips -----
   const vmScene = new THREE.Scene();
@@ -283,10 +285,28 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
   function hammerTarget() {
     ray.set(camPos, camDir);
     ray.far = HAMMER.reach;
-    const hits = ray.intersectObjects([...raft.hammerTargets(), ...nets.ghostTargets(), ...stations.ghostTargets()], false);
+    const hits = ray.intersectObjects([
+      ...raft.hammerTargets(), ...nets.ghostTargets(), ...stations.ghostTargets(),
+      ...stations.hitTargets(), ...nets.hitTargets(),
+    ], false);
     if (!hits.length) return null;
     const u = hits[0].object.userData;
-    return { tile: u.tile || null, build: u.build || null, netSlot: u.netSlot || null, stationSlot: u.stationSlot || null, point: hits[0].point };
+    return {
+      tile: u.tile || null, build: u.build || null, netSlot: u.netSlot || null, stationSlot: u.stationSlot || null,
+      station: u.station || null, net: u.net || null, point: hits[0].point,
+    };
+  }
+
+  // The upgrade the hammer can apply to what it's aimed at, if any.
+  function upgradeFor(tgt) {
+    if (tgt.station) return stations.upgradeOf(tgt.station);
+    if (tgt.net) return nets.upgradeOf(tgt.net);
+    if (tgt.tile && !tgt.tile.broken && !tgt.tile.reinforced && tgt.tile.hp >= tgt.tile.maxHp) return 'reinforce';
+    return null;
+  }
+
+  function lockedPrompt(id, text) {
+    return { text: `${text}: ${crafting.lockReason(id)}`, dim: true };
   }
 
   function lookStation() {
@@ -294,6 +314,13 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
     ray.far = PLAYER.reach + 0.4;
     const hits = ray.intersectObjects(stations.hitTargets(), false);
     return hits.length ? hits[0].object.userData.station : null;
+  }
+
+  function lookIsland() {
+    ray.set(camPos, camDir);
+    ray.far = PLAYER.reach + 0.8;
+    const hits = ray.intersectObjects(islands.hitTargets(), false);
+    return hits.length ? hits[0].object.userData.res : null;
   }
 
   function lookNet() {
@@ -334,8 +361,22 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
       return;
     }
     const { tile, point } = tgt;
+    const locked = (id) => !crafting.isUnlocked(id) && (audio.error(), true);
+    const up = upgradeFor(tgt);
+    if (tgt.station || tgt.net || (up === 'reinforce' && crafting.isUnlocked('reinforce'))) {
+      if (!up) { audio.hammer(); fx.dust(point); return; }
+      if (locked(up) || !buy(UPGRADES[up].cost)) return;
+      if (tgt.station) stations.upgrade(tgt.station);
+      else if (tgt.net) nets.upgrade(tgt.net);
+      else raft.reinforce(tile);
+      audio.build();
+      fx.dust(point);
+      events.onUpgrade?.(up);
+      return;
+    }
     if (tgt.build) {
-      if (buy(COSTS.floor)) {
+      if (locked('floor')) return;
+      if (buy(STATIONS.floor.cost)) {
         const t = raft.build(tgt.build.i, tgt.build.j);
         audio.build();
         fx.dust(point);
@@ -345,7 +386,8 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
     }
     if (tgt.stationSlot) {
       const { tile: t, kind } = tgt.stationSlot;
-      if (buy(COSTS[kind])) {
+      if (locked(kind)) return;
+      if (buy(STATIONS[kind].cost)) {
         stations.add(t, kind);
         audio.build();
         fx.dust(point);
@@ -354,7 +396,8 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
       return;
     }
     if (tgt.netSlot) {
-      if (buy(COSTS.net)) {
+      if (locked('net')) return;
+      if (buy(STATIONS.net.cost)) {
         nets.add(tgt.netSlot.tile, tgt.netSlot.side);
         audio.build();
         fx.dust(point);
@@ -373,7 +416,7 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
         audio.error();
         events.onMissing?.(COSTS.rebuild);
       }
-    } else if (tile.hp < 100) {
+    } else if (tile.hp < tile.maxHp) {
       if (inventory.has(COSTS.repair)) {
         inventory.spend(COSTS.repair);
         raft.repair(tile, HAMMER.repairPerHit);
@@ -393,7 +436,7 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
   function doSpear() {
     const hit = shark.rayHit(camPos, camDir, SPEAR.reach);
     if (hit) {
-      shark.hit(events, crafting.hasGear('metalSpear') ? 2 : 1, hit);
+      shark.hit(events, SPEAR_POWER[crafting.spearLevel()], hit);
       fx.blood(hit);
       fx.splash(hit, 0.5);
       audio.spearHit();
@@ -432,6 +475,13 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
       setHammerMode(null);
       st.hammerMode = 'floor';
     },
+
+    // Hammer out, set to build this (from the build menu).
+    pickBuild(mode, player) {
+      api.setSlot(2, player);
+      setHammerMode(mode);
+    },
+    get hammerMode() { return st.hammerMode; },
 
     // First-person arm lighting follows the time of day.
     setLighting(sunIntensity, sunColor, hemi) {
@@ -482,6 +532,17 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
       } else {
         const station = lookStation();
         const net = station ? null : lookNet();
+        const res = station || net ? null : lookIsland();
+        if (res) {
+          prompt = islands.describe(res);
+          if (prompt.act && input.wasPressed('KeyE')) {
+            const loot = islands.gather(res);
+            if (loot) {
+              inventory.add(loot);
+              events.onCollect?.(loot, 'island');
+            }
+          }
+        }
         if (station) {
           prompt = stations.describe(station, inventory);
           if (prompt.act && input.wasPressed('KeyE')) {
@@ -503,6 +564,7 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
 
       // ----- hook -----
       const h = st.hook;
+      const hookLvl = HOOK_LEVELS[crafting.hookLevel()];
       if (id === 'hook') {
         if (h.mode === 'held' && click && st.swap >= 1) {
           h.mode = 'charging';
@@ -541,7 +603,7 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
           if (reeling) {
             tmp.set(p.pos.x - h.pos.x, 0, p.pos.z - h.pos.z);
             const d = tmp.length();
-            if (d > 0.01) h.pos.addScaledVector(tmp.normalize(), Math.min(d, HOOK.reelSpeed * dt));
+            if (d > 0.01) h.pos.addScaledVector(tmp.normalize(), Math.min(d, HOOK.reelSpeed * hookLvl.reel * dt));
             h.tick -= dt;
             if (h.tick <= 0) { h.tick = 0.09; audio.reel(); }
           } else {
@@ -549,9 +611,9 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
             h.pos.z += debris.flow.z * 0.5 * dt;
           }
           // Snag anything close.
-          if (h.carried.length < HOOK.maxCarry) {
-            for (const d of debris.near(h.pos.x, h.pos.z, HOOK.grabRadius)) {
-              if (h.carried.length >= HOOK.maxCarry) break;
+          if (h.carried.length < hookLvl.carry) {
+            for (const d of debris.near(h.pos.x, h.pos.z, HOOK.grabRadius * hookLvl.grab)) {
+              if (h.carried.length >= hookLvl.carry) break;
               d.hooked = true;
               h.carried.push(d);
             }
@@ -612,30 +674,42 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
       // ----- spear, hammer, coconut -----
       st.hammerTile = null;
       if (id === 'hammer') {
-        if ((input.state.clicked[2] || input.wasPressed('KeyR')) && !st.anim) {
+        // Right-click or Q opens the build menu; R steps to the next thing.
+        if ((input.state.clicked[2] || input.wasPressed('KeyQ')) && !st.anim) events.onOpenBuild?.();
+        if (input.wasPressed('KeyR') && !st.anim) {
           const i = BUILD_MODES.findIndex((b) => b.id === st.hammerMode);
           setHammerMode(BUILD_MODES[(i + 1) % BUILD_MODES.length].id);
           audio.pickup();
         }
         const tgt = hammerTarget();
-        if (tgt?.stationSlot) {
+        const up = tgt ? upgradeFor(tgt) : null;
+        const offer = (id, text, cost) => (crafting.isUnlocked(id)
+          ? { key: 'Click', text, cost: costText(cost), ok: inventory.has(cost) }
+          : lockedPrompt(id, text));
+        if (tgt?.station || tgt?.net) {
+          const name = tgt.station ? STATIONS[tgt.station.kind].name : 'Catch net';
+          prompt = up ? offer(up, `Upgrade to ${UPGRADES[up].name.toLowerCase()}`, UPGRADES[up].cost) : { text: `${name}: fully upgraded`, dim: true };
+        } else if (tgt?.stationSlot) {
           const kind = tgt.stationSlot.kind;
-          prompt = { key: 'Click', text: `Build a ${STATIONS[kind].name.toLowerCase()}`, cost: costText(COSTS[kind]), ok: inventory.has(COSTS[kind]) };
+          prompt = offer(kind, `Build a ${STATIONS[kind].name.toLowerCase()}`, STATIONS[kind].cost);
         } else if (tgt?.build) {
-          prompt = { key: 'Click', text: 'Build floor', cost: costText(COSTS.floor), ok: inventory.has(COSTS.floor) };
+          prompt = offer('floor', 'Build floor', STATIONS.floor.cost);
         } else if (tgt?.netSlot) {
-          prompt = { key: 'Click', text: 'Put up a catch net', cost: costText(COSTS.net), ok: inventory.has(COSTS.net) };
+          prompt = offer('net', 'Put up a catch net', STATIONS.net.cost);
+        } else if (tgt && up === 'reinforce') {
+          st.hammerTile = tgt.tile;
+          prompt = crafting.isUnlocked('reinforce') ? offer('reinforce', 'Reinforce this floor piece', UPGRADES.reinforce.cost) : { text: 'Floor is solid', dim: true };
         } else if (tgt) {
           st.hammerTile = tgt.tile;
           const tl = tgt.tile;
           if (tl.broken) {
             const ok = inventory.has(COSTS.rebuild);
             prompt = { key: 'Click', text: 'Rebuild floor', cost: costText(COSTS.rebuild), ok };
-          } else if (tl.hp < 100) {
+          } else if (tl.hp < tl.maxHp) {
             const ok = inventory.has(COSTS.repair);
-            prompt = { key: 'Click', text: `Repair floor (${Math.round(tl.hp)}%)`, cost: costText(COSTS.repair), ok };
+            prompt = { key: 'Click', text: `Repair floor (${raft.pct(tl)}%)`, cost: costText(COSTS.repair), ok };
           } else if (!prompt) {
-            prompt = { text: 'Floor is solid', dim: true };
+            prompt = { text: tl.reinforced ? 'Reinforced floor: solid' : 'Floor is solid', dim: true };
           }
         }
       }
@@ -740,7 +814,7 @@ export function createTools({ scene, camera, raft, nets, stations, crafting, bai
       models.coconut.visible = id === 'coconut' && inventory.get('coconut') > 0;
       models.fish.visible = id === 'fish' && inventory.get('fish') > 0;
       models.cooked.visible = id === 'cooked' && inventory.get('cooked') > 0;
-      if (spearBlade) spearBlade.material = crafting.hasGear('metalSpear') ? MAT.metal : MAT.stone;
+      if (spearBlade) spearBlade.material = [null, MAT.stone, MAT.bone, MAT.metal][crafting.spearLevel()];
 
       // Light the view model from the real sun direction.
       camQuatInv.copy(camera.quaternion).invert();

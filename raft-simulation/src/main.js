@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STATS, SHARK_TIERS, ITEMS, TILE, COSTS, GRUDGE, CLOTHING, GEAR, STATIONS, WARMTH, HEAT_THIRST, CATCHER, NEXT_PREDATOR_DELAY } from './config.js';
+import { STATS, SHARK_TIERS, ITEMS, TILE, COSTS, GRUDGE, CLOTHING, GEAR, STATIONS, UPGRADES, CATCHER, NEXT_PREDATOR_DELAY, DIFFICULTY } from './config.js';
 import { createOcean } from './ocean.js';
 import { createSky, SKY } from './sky.js';
 import { createPipeline, QUALITY } from './render.js';
@@ -12,6 +12,7 @@ import { createBait } from './bait.js';
 import { createWeather } from './weather.js';
 import { createCrafting } from './crafting.js';
 import { createStations } from './stations.js';
+import { createIslands } from './islands.js';
 import { createPlayer } from './player.js';
 import { createTools, SLOTS, BUILD_MODES } from './tools.js';
 import { createInput } from './input.js';
@@ -43,6 +44,7 @@ const shark = createShark(scene, SHARK_TIERS);
 const nets = createNets(raft, debris, fx, audio);
 const bait = createBait(scene, fx, audio);
 const stations = createStations(raft, fx, audio);
+const islands = createIslands(scene, { fx, audio });
 let tools = null;
 const weather = createWeather({
   scene, sun, hemi, ocean, fx, audio, sky,
@@ -74,12 +76,21 @@ const GOAL_GROUPS = [
     ],
   },
   {
-    title: 'Goals: weathering it',
+    title: 'Goals: settling in',
     goals: [
+      { id: 'table', text: 'Build a crafting table (hammer, then Q)', target: 1 },
       { id: 'wear', text: 'Make something to wear (press C)', target: 1 },
       { id: 'cook', text: 'Cook a fish on a grill', target: 1 },
-      { id: 'rainDrink', text: 'Drink from a rain catcher', target: 1 },
       { id: 'night', text: 'Make it through a night', target: 1 },
+    ],
+  },
+  {
+    title: 'Goals: land ho',
+    goals: [
+      { id: 'island', text: 'Set foot on an island', target: 1 },
+      { id: 'stone', text: 'Gather stone from an island', target: 1 },
+      { id: 'upgrade', text: 'Upgrade something with the hammer', target: 1 },
+      { id: 'rainDrink', text: 'Drink from a rain catcher', target: 1 },
     ],
   },
 ];
@@ -92,10 +103,12 @@ const HINTS = {
   cooked: 'Click to eat. Far more filling than raw.',
 };
 const HAMMER_HINTS = {
-  floor: 'Click an outline to add floor, or a bitten piece to fix it. Right-click for the next thing to build.',
-  net: 'Click an outline on an outer edge to hang a catch net. Right-click for the next thing to build.',
-  grill: 'Click a floor piece to build a firepit grill on it. Right-click for the next thing to build.',
-  catcher: 'Click a floor piece to put a rain catcher on it. Right-click for the next thing to build.',
+  floor: 'Building floor: click an outline. Q or right-click: choose something else to build.',
+  net: 'Building a catch net: click an outline on an outer edge. Q or right-click: choose something else.',
+  table: 'Building a crafting table: click a floor piece. Q or right-click: choose something else.',
+  grill: 'Building a grill: click a floor piece. Q or right-click: choose something else.',
+  catcher: 'Building a rain catcher: click a floor piece. Q or right-click: choose something else.',
+  anchor: 'Building an anchor: click a floor piece. Q or right-click: choose something else.',
 };
 function hintFor(id, ui) {
   return id === 'hammer' ? HAMMER_HINTS[ui.hammerMode] : HINTS[id];
@@ -105,7 +118,8 @@ const game = {
   mode: 'title',
   time: 0,
   alive: 0,
-  stats: { health: 100, hunger: 100, thirst: 100, warmth: 100 },
+  stats: { health: 100, hunger: 100, thirst: 100 },
+  difficulty: 'normal',
   lastHurt: -99,
   lastDamage: null,
   progress: {},
@@ -139,15 +153,28 @@ const inventory = (() => {
   };
 })();
 
-const crafting = createCrafting({ inventory, stats: game.stats, audio, events: {
-  onCraft: (id) => {
-    const def = CLOTHING[id] || GEAR[id];
-    hud.toast(id === 'bandage' ? 'Bandaged up: +30 health' : `Made: ${def.name}`, 'gain');
-    if (CLOTHING[id]) progress('wear');
-    tools?.setSleeve(crafting.sleeveColor());
+const crafting = createCrafting({
+  inventory, stats: game.stats, audio,
+  hasTable: () => stations.count('table') > 0,
+  events: {
+    onCraft: (id) => {
+      const def = CLOTHING[id] || GEAR[id];
+      hud.toast(id === 'bandage' ? 'Bandaged up: +30 health' : `Made: ${def.name}`, 'gain');
+      if (CLOTHING[id]) progress('wear');
+      tools?.setSleeve(crafting.sleeveColor());
+    },
+    onWear: () => tools?.setSleeve(crafting.sleeveColor()),
+    onUnlock: (names) => {
+      const list = names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', ');
+      hud.toast(`New recipe${names.length > 1 ? 's' : ''}: ${list}`, 'gain');
+    },
+    onPickBuild: (id) => {
+      closeMenu();
+      tools.pickBuild(id, player);
+      hud.toast(`Hammer set to build: ${STATIONS[id].name}`, 'gain');
+    },
   },
-  onWear: () => tools?.setSleeve(crafting.sleeveColor()),
-} });
+});
 
 function showGoals() {
   const g = GOAL_GROUPS[Math.min(game.goalStage, GOAL_GROUPS.length - 1)];
@@ -189,6 +216,7 @@ const events = {
       progress('wood', gained.wood);
     }
     if (how === 'net') progress('netHaul');
+    if (how === 'island' && gained.stone) progress('stone');
   },
   onMissing(cost) {
     const parts = Object.entries(cost).map(([k, n]) => `${n} ${ITEMS[k].name.toLowerCase()}`);
@@ -228,7 +256,7 @@ const events = {
     });
   },
   onPlayerBitten(dmg, pos) {
-    dmg *= 1 - crafting.buffs().biteGuard;
+    dmg *= DIFFICULTY[game.difficulty].sharkDamage;
     game.stats.health -= dmg;
     game.lastHurt = game.time;
     game.lastDamage = 'shark';
@@ -274,8 +302,21 @@ const events = {
   },
   onBuildStation(kind) {
     hud.toast(`Built: ${STATIONS[kind].name}`, 'gain');
+    if (kind === 'table') {
+      progress('table');
+      hud.toast('Press E at the crafting table for the bigger recipes', 'gain');
+    }
+  },
+  onUpgrade(id) {
+    hud.toast(`Upgraded: ${UPGRADES[id].name}`, 'gain');
+    progress('upgrade');
+  },
+  onOpenBuild() {
+    openMenu('build');
   },
   onStationUse(station, act, r) {
+    if (r.craft) openMenu('craft', true);
+    if (r.anchor !== undefined) hud.toast(r.anchor ? 'Anchor down: the raft stays put' : 'Anchor up', 'gain');
     if (r.drank) {
       game.stats.thirst = Math.min(100, game.stats.thirst + CATCHER.drink);
       hud.toast('Fresh rain water', 'gain');
@@ -348,13 +389,33 @@ const events = {
   },
 };
 
-tools = createTools({ scene, camera, raft, nets, stations, crafting, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
+tools = createTools({ scene, camera, raft, nets, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
+
+islands.on({
+  onSighted() {
+    hud.alert('Land on the horizon! An island is drifting this way.', {
+      kind: 'good', duration: 6, follow: () => { const c = islands.center(); return c ? tmpV.set(c.x, 2, c.z) : null; },
+    });
+  },
+  onArrive(sec) {
+    hud.alert(`The island has drifted alongside. It moves on in ${Math.round(sec / 60)} minutes unless you drop an anchor.`, { kind: 'good', duration: 6 });
+  },
+  onLeavingSoon() {
+    hud.alert('The current is picking up: the island moves on in 30 seconds.', { kind: 'danger', duration: 4 });
+  },
+  onWaiting() {
+    hud.alert('The island will drift on once you are back aboard.', { kind: 'good', duration: 4 });
+  },
+  onDepart() {
+    hud.alert('The island is drifting away.', { kind: 'good', duration: 3 });
+  },
+});
 
 stations.onLost((st) => hud.toast(`The ${STATIONS[st.kind].name.toLowerCase()} went overboard with its floor piece`, 'warn'));
 
 nets.onLost((net, reason) => {
   if (reason === 'built-over') {
-    inventory.add(COSTS.net);
+    inventory.add(STATIONS.net.cost);
     hud.toast('Took the net down to build there and kept its materials', 'gain');
   } else if (reason === 'tile-broke') {
     hud.toast('A net went down with its floor piece', 'warn');
@@ -369,6 +430,18 @@ const pipeline = createPipeline({ renderer, scene, camera, vmScene: tools.vmScen
 sky.capture(0);
 tools.vmScene.environment = sky.environment;
 setAnisotropy(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+
+// ---------- difficulty ----------
+const DIFF_KEY = 'raft-sim-difficulty';
+function applyDifficulty(name, remember = true) {
+  game.difficulty = DIFFICULTY[name] ? name : 'normal';
+  document.querySelectorAll('.difficulty button').forEach((b) => b.classList.toggle('on', b.dataset.d === game.difficulty));
+  if (remember) {
+    try { localStorage.setItem(DIFF_KEY, game.difficulty); } catch { /* storage blocked */ }
+  }
+}
+document.querySelectorAll('.difficulty button').forEach((b) => b.addEventListener('click', () => applyDifficulty(b.dataset.d)));
+try { applyDifficulty(localStorage.getItem(DIFF_KEY) || 'normal', false); } catch { applyDifficulty('normal', false); }
 
 // ---------- graphics quality ----------
 const QUALITY_KEY = 'raft-sim-quality';
@@ -412,11 +485,13 @@ function newGame() {
   shark.reset();
   weather.reset();
   crafting.reset();
+  islands.reset();
   player.reset();
   tools.reset();
   tools.setSleeve(null);
   inventory.set({ coconut: 1 });
-  Object.assign(game.stats, { health: 100, hunger: 100, thirst: 100, warmth: 100 });
+  Object.assign(game.stats, { health: 100, hunger: 100, thirst: 100 });
+  game.landed = false;
   game.nextPredatorIn = 0;
   game.lastHour = 8;
   game.menu = false;
@@ -446,6 +521,8 @@ function serialize() {
     stations: stations.serialize(),
     weather: weather.serialize(),
     crafting: crafting.serialize(),
+    islands: islands.serialize(),
+    difficulty: game.difficulty,
     nextPredatorIn: game.nextPredatorIn,
     player: player.serialize(),
     shark: shark.serialize(),
@@ -460,6 +537,8 @@ function restore(d) {
   stations.restore(d.stations);
   weather.restore(d.weather);
   crafting.restore(d.crafting);
+  islands.restore(d.islands);
+  if (d.difficulty) applyDifficulty(d.difficulty, false);
   game.nextPredatorIn = d.nextPredatorIn || 0;
   inventory.set(d.inventory);
   Object.assign(game.stats, d.stats);
@@ -471,7 +550,6 @@ function restore(d) {
   player.restore(d.player);
   shark.restore(d.shark);
   tools.setSleeve(crafting.sleeveColor());
-  game.stats.warmth = d.stats.warmth ?? 100;
   showGoals();
   return true;
 }
@@ -512,7 +590,6 @@ function die() {
     shark: 'The shark got you while you were in the water.',
     thirst: 'You ran out of water. Coconuts help, and later you will be able to make fresh water.',
     hunger: 'You starved. Keep coconuts on hand.',
-    cold: 'You got too cold. Warm clothes and a fire keep you going through nights and storms.',
   }[game.lastDamage] || 'The sea won this time.';
   document.getElementById('dead-reason').textContent = reason;
   document.getElementById('dead-stats').innerHTML = [
@@ -543,18 +620,19 @@ document.getElementById('quit').addEventListener('click', () => {
   showScreen('title');
 });
 // Crafting panel: the world keeps going, but you stop to work on it.
-function openMenu() {
+function openMenu(tab = 'craft', bench = false) {
   if (game.mode !== 'play' || game.menu) return;
   game.menu = true;
   input.clear();
   input.state.enabled = false;
-  crafting.open();
+  crafting.open(tab, bench);
   document.body.classList.remove('playing');
   input.unlock();
 }
 function closeMenu(relock = true) {
   if (!game.menu) return;
   game.menu = false;
+  game.menuClosedAt = performance.now();
   crafting.close();
   if (relock) {
     input.state.enabled = true;
@@ -565,11 +643,13 @@ function closeMenu(relock = true) {
 document.getElementById('craft-close').addEventListener('click', () => closeMenu());
 
 input.onLockChange((locked) => {
-  if (!locked && game.mode === 'play' && !input.state.freeLook && !game.menu) pause();
+  // The unlock from opening a menu can arrive after a quick close; ignore it.
+  const justClosed = performance.now() - (game.menuClosedAt || 0) < 400;
+  if (!locked && game.mode === 'play' && !input.state.freeLook && !game.menu && !justClosed) pause();
 });
 window.addEventListener('keydown', (e) => {
   if (game.mode !== 'play') return;
-  if (e.code === 'KeyC' || e.code === 'Tab') {
+  if (e.code === 'KeyC' || e.code === 'Tab' || (e.code === 'KeyQ' && game.menu)) {
     e.preventDefault();
     if (game.menu) closeMenu();
     else openMenu();
@@ -588,31 +668,40 @@ canvas.addEventListener('click', () => {
 });
 
 // ---------- per-frame ----------
-function survival(dt, wx, buffs) {
+function survival(dt) {
   const s = game.stats;
-  const ps = player.state;
-  // Midday sun dries you out faster unless you wear a hat.
-  const heat = ps.inWater ? 0 : wx.heat * (1 - buffs.heatShield);
-  s.thirst = Math.max(0, s.thirst - STATS.thirstPerSec * (1 + HEAT_THIRST * heat) * dt);
-  s.hunger = Math.max(0, s.hunger - STATS.hungerPerSec * dt);
-
-  // Warmth: water, rain, storms and night take it; sun and fire give it back.
-  const loss = (ps.inWater ? WARMTH.water : 0) + WARMTH.rain * wx.rain + WARMTH.storm * wx.storm + WARMTH.night * wx.night;
-  const nearFire = !ps.inWater && stations.warmthAt(ps.pos.x, ps.pos.z, WARMTH.fireRange);
-  const gain = (ps.inWater ? 0 : WARMTH.sun * wx.daylight * (1 - SKY.cover)) + (nearFire ? WARMTH.fire : 0);
-  s.warmth = clamp(s.warmth + (gain - loss * (1 - buffs.insulation)) * dt, 0, 100);
-  game.nearFire = nearFire;
-
+  const drain = DIFFICULTY[game.difficulty].drain;
+  s.thirst = Math.max(0, s.thirst - STATS.thirstPerSec * drain * dt);
+  s.hunger = Math.max(0, s.hunger - STATS.hungerPerSec * drain * dt);
   if (s.thirst <= 0) { s.health -= STATS.starveDamage * dt; game.lastDamage = 'thirst'; }
   if (s.hunger <= 0) { s.health -= STATS.starveDamage * dt; game.lastDamage = game.lastDamage === 'thirst' ? 'thirst' : 'hunger'; }
-  if (s.warmth <= 0) { s.health -= WARMTH.freezeDamage * dt; game.lastDamage = 'cold'; }
   if (s.health <= 0) {
     s.health = 0;
     die();
     return;
   }
-  if (s.thirst > 40 && s.hunger > 40 && s.warmth > 25 && game.time - game.lastHurt > STATS.regenDelay) {
+  if (s.thirst > 40 && s.hunger > 40 && game.time - game.lastHurt > STATS.regenDelay) {
     s.health = Math.min(100, s.health + STATS.regen * dt);
+  }
+}
+
+// Keep floating things and the shark out of an island's shallows.
+function keepOffIsland(dt) {
+  const c = islands.center();
+  if (!c) return;
+  for (const d of debris.items) {
+    if (d.hooked) continue;
+    if (islands.heightAt(d.x, d.z) > -0.6) {
+      const dx = d.x - c.x, dz = d.z - c.z, l = Math.hypot(dx, dz) || 1;
+      d.x += (dx / l) * 2 * dt;
+      d.z += (dz / l) * 2 * dt;
+    }
+  }
+  const sp = shark.pos;
+  if (!shark.gone && islands.heightAt(sp.x, sp.z) > sp.y - 0.6) {
+    const dx = sp.x - c.x, dz = sp.z - c.z, l = Math.hypot(dx, dz) || 1;
+    sp.x += (dx / l) * 4 * dt;
+    sp.z += (dz / l) * 4 * dt;
   }
 }
 
@@ -629,20 +718,28 @@ function updatePlay(dt) {
   raft.update(game.time, dt);
   // Hammer and net rays this frame need the raft's current pose, not last frame's.
   raft.group.updateMatrixWorld(true);
-  const buffs = crafting.buffs();
   const wx = weather.update(dt, game.time, camera.position, true);
-  player.update(game.time, dt, input, raft, events, buffs.swim);
+  player.update(game.time, dt, input, raft, events, 0, islands);
   const ui = tools.update(game.time, dt, input, player, SKY.sunDir);
   tools.setLighting(sun.intensity, sun.color, hemi.intensity);
   const ps = player.state;
   bait.update(game.time, dt, raft, debris.flow);
-  shark.update(game.time, dt, { raft, nets, bait, calm: buffs.calm, player: { pos: ps.pos, inWater: ps.inWater }, fx, events });
+  // Wading in an island's shallows is safe; the shark won't come in that far.
+  const exposed = ps.inWater && islands.heightAt(ps.pos.x, ps.pos.z) < -1.2;
+  shark.update(game.time, dt, { raft, nets, bait, diff: DIFFICULTY[game.difficulty], player: { pos: ps.pos, inWater: exposed }, fx, events });
+  const isl = islands.update(dt, { raftCenter: raft.center(), raftRadius: raft.radius(), aboard: !ps.inWater && !ps.onLand, anchored: stations.anchored() });
+  keepOffIsland(dt);
+  if (ps.onLand && !game.landed) {
+    game.landed = true;
+    progress('island');
+  }
+  if (!isl) game.landed = false;
   nets.update(game.time, dt);
   stations.update(game.time, dt, wx.kind, ps.pos);
   debris.update(game.time, dt, raft.center());
   fx.update(dt);
   crafting.tick(dt);
-  survival(dt, wx, buffs);
+  survival(dt);
   if (game.mode !== 'play') return;
 
   // A night that ends at dawn counts as survived.
@@ -687,7 +784,10 @@ function updatePlay(dt) {
   hud.setPrompt(ui.prompt);
   hud.setCharge(ui.charge);
   hud.setSwimming(ps.inWater);
-  hud.setClock(wx.day, wx.hour, wx.kind, wx.night);
+  const islandNote = isl && isl.phase === 'visit'
+    ? (stations.anchored() ? 'Island: anchored' : `Island: ${formatTime(isl.visitLeft)}`)
+    : isl && isl.phase === 'approach' ? 'Land ahead' : '';
+  hud.setClock(wx.day, wx.hour, wx.kind, wx.night, islandNote);
   hud.setBuildBar(SLOTS[ui.slot].id === 'hammer' ? BUILD_MODES : null, ui.hammerMode);
   hud.update(dt, camera);
 }
@@ -755,7 +855,8 @@ else start(window.claude?.hot?.data ?? {});
 
 // Handles for automated checks (tools/smoke.js).
 window.__game = {
-  game, raft, shark, debris, nets, bait, stations, weather, crafting, player, tools, inventory, input, camera, events,
+  game, raft, shark, debris, nets, bait, stations, weather, crafting, islands, player, tools, inventory, input, camera, events,
+  applyDifficulty,
   openMenu, closeMenu,
   newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline,
   hold: false,

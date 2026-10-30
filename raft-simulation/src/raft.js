@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { TILE, DECK_Y, RAFT_LIMIT } from './config.js';
+import { TILE, DECK_Y, RAFT_LIMIT, FLOOR_HP } from './config.js';
 import { waveHeight } from './ocean.js';
 import { materials } from './materials.js';
 import { damp, rand } from './util.js';
@@ -97,6 +97,8 @@ function init() {
     log: logGeometry(),
     lashing: lashingGeometry(),
     hit: new THREE.BoxGeometry(TILE, 0.55, TILE),
+    bracket: new THREE.BoxGeometry(0.22, 0.012, 0.22),
+    strap: new THREE.BoxGeometry(TILE * 0.96, 0.01, 0.06),
     ghost: new THREE.BoxGeometry(TILE * 0.96, 0.08, TILE * 0.96),
   };
   geo.ghostEdges = new THREE.EdgesGeometry(geo.ghost);
@@ -106,6 +108,7 @@ function init() {
     chewed: M.chewed,
     log: M.bark,
     rope: M.rope,
+    metal: M.darkMetal,
     hit: new THREE.MeshBasicMaterial({ visible: false }),
     ghost: new THREE.MeshBasicMaterial({ color: 0xcfeeff, transparent: true, opacity: 0.22, depthWrite: false }),
     ghostEdge: new THREE.LineBasicMaterial({ color: 0xeaf8ff, transparent: true, opacity: 0.7 }),
@@ -169,6 +172,22 @@ export function createRaft(scene) {
     hit.position.y = DECK_Y - 0.25;
     g.add(hit);
 
+    // Metal corner plates and straps, shown once the piece is reinforced.
+    const brackets = new THREE.Group();
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const b = new THREE.Mesh(geo.bracket, mat.metal);
+      b.position.set(sx * (TILE / 2 - 0.12), DECK_Y + 0.006, sz * (TILE / 2 - 0.12));
+      brackets.add(b);
+    }
+    for (const sz of [-0.25, 0.25]) {
+      const st = new THREE.Mesh(geo.strap, mat.metal);
+      st.position.set(0, DECK_Y + 0.005, sz * TILE);
+      brackets.add(st);
+    }
+    brackets.traverse((o) => { if (o.isMesh) o.receiveShadow = true; });
+    brackets.visible = false;
+    g.add(brackets);
+
     const ghost = new THREE.Mesh(geo.ghost, mat.ghost);
     ghost.position.y = DECK_Y - 0.04;
     ghost.add(new THREE.LineSegments(geo.ghostEdges, mat.ghostEdge));
@@ -176,7 +195,7 @@ export function createRaft(scene) {
     g.add(ghost);
 
     group.add(g);
-    const tile = { i, j, hp: 100, broken: false, group: g, boards, logs, hit, ghost, biteSide: null, shake: 0 };
+    const tile = { i, j, hp: FLOOR_HP.basic, maxHp: FLOOR_HP.basic, reinforced: false, brackets, broken: false, group: g, boards, logs, hit, ghost, biteSide: null, shake: 0 };
     hit.userData.tile = tile;
     ghost.userData.tile = tile;
     return tile;
@@ -187,6 +206,7 @@ export function createRaft(scene) {
     if (tile.broken) {
       boards.forEach((b) => (b.visible = false));
       logs.forEach((l) => (l.visible = false));
+      tile.brackets.visible = false;
       ghost.visible = !!buildMode;
       hit.visible = false;
       return;
@@ -195,7 +215,8 @@ export function createRaft(scene) {
     ghost.visible = false;
     hit.visible = true;
 
-    const steps = Math.min(9, Math.floor((100 - tile.hp) / 10.5));
+    tile.brackets.visible = tile.reinforced;
+    const steps = Math.min(9, Math.floor((100 - (tile.hp / tile.maxHp) * 100) / 10.5));
     const side = tile.biteSide || [0, -1];
     const bx = side[0] * TILE * 0.5;
     const bz = side[1] * TILE * 0.5;
@@ -358,6 +379,7 @@ export function createRaft(scene) {
         if (s.hp != null) t.hp = s.hp;
         if (s.broken) t.broken = true;
         if (s.biteSide) t.biteSide = s.biteSide;
+        if (s.reinforced && !t.broken) { t.reinforced = true; t.maxHp = FLOOR_HP.reinforced; if (s.hp == null) t.hp = t.maxHp; }
         refreshTile(t);
       }
       outsideDirty = true;
@@ -365,7 +387,7 @@ export function createRaft(scene) {
     },
 
     serialize() {
-      return [...tiles.values()].map((t) => ({ i: t.i, j: t.j, hp: Math.round(t.hp), broken: t.broken, biteSide: t.biteSide }));
+      return [...tiles.values()].map((t) => ({ i: t.i, j: t.j, hp: Math.round(t.hp), broken: t.broken, biteSide: t.biteSide, reinforced: t.reinforced }));
     },
 
     setBuildMode(mode) {
@@ -479,7 +501,7 @@ export function createRaft(scene) {
 
     damage(tile, amount, side) {
       if (tile.broken) return false;
-      if (!tile.biteSide || tile.hp >= 100) tile.biteSide = side;
+      if (!tile.biteSide || tile.hp >= tile.maxHp) tile.biteSide = side;
       tile.hp = Math.max(0, tile.hp - amount);
       tile.shake = 0.35;
       if (tile.hp <= 0) {
@@ -492,16 +514,34 @@ export function createRaft(scene) {
       return tile.broken;
     },
 
+    // Health as a percentage, for prompts.
+    pct(tile) {
+      return Math.round((tile.hp / tile.maxHp) * 100);
+    },
+
+    reinforce(tile) {
+      if (tile.broken || tile.reinforced) return false;
+      tile.reinforced = true;
+      tile.maxHp = FLOOR_HP.reinforced;
+      tile.hp = tile.maxHp;
+      tile.biteSide = null;
+      tile.shake = 0.15;
+      refreshTile(tile);
+      return true;
+    },
+
     repair(tile, amount) {
-      tile.hp = Math.min(100, tile.hp + amount);
-      if (tile.hp >= 100) tile.biteSide = null;
+      tile.hp = Math.min(tile.maxHp, tile.hp + amount * (tile.maxHp / FLOOR_HP.basic));
+      if (tile.hp >= tile.maxHp) tile.biteSide = null;
       tile.shake = 0.12;
       refreshTile(tile);
     },
 
     rebuild(tile) {
       tile.broken = false;
-      tile.hp = 100;
+      tile.reinforced = false;
+      tile.maxHp = FLOOR_HP.basic;
+      tile.hp = tile.maxHp;
       tile.biteSide = null;
       tile.shake = 0.15;
       outsideDirty = true;

@@ -60,7 +60,8 @@ export function createPlayer(camera) {
       p.velY = 0;
     },
 
-    update(t, dt, input, raft, events, swimBoost = 0) {
+    // land: optional { heightAt(x, z) } for islands (-Infinity where there is none).
+    update(t, dt, input, raft, events, swimBoost = 0, land = null) {
       // Look
       p.yaw -= input.state.lookX * SENS;
       p.pitch = clamp(p.pitch - input.state.lookY * SENS, -1.5, 1.5);
@@ -88,8 +89,13 @@ export function createPlayer(camera) {
           p.pos.x += p.shove.x * dt;
           p.pos.z += p.shove.z * dt;
         }
-        const supported = raft.isSupported(p.pos.x, p.pos.z);
-        const ground = raft.deckHeightAt(p.pos.x, p.pos.z);
+        // Standing on the raft deck, or on island ground above the waterline.
+        const onDeck = raft.isSupported(p.pos.x, p.pos.z);
+        const landH = land ? land.heightAt(p.pos.x, p.pos.z) : -Infinity;
+        const onLand = landH > waveHeight(p.pos.x, p.pos.z, t) - 0.2;
+        const supported = onDeck || onLand;
+        const ground = Math.max(onDeck ? raft.deckHeightAt(p.pos.x, p.pos.z) : -Infinity, onLand ? landH : -Infinity);
+        p.onLand = onLand && !onDeck;
         if (p.grounded && supported) {
           p.pos.y = ground;
           if (input.movePressed('jump')) {
@@ -103,7 +109,7 @@ export function createPlayer(camera) {
           }
           p.velY -= PLAYER.gravity * dt;
           p.pos.y += p.velY * dt;
-          if (supported && p.velY <= 0 && p.pos.y <= ground && p.pos.y > ground - 0.35) {
+          if (supported && p.velY <= 0 && p.pos.y <= ground && p.pos.y > ground - (onLand ? 1.2 : 0.35)) {
             p.pos.y = ground;
             p.velY = 0;
             p.grounded = true;
@@ -119,6 +125,7 @@ export function createPlayer(camera) {
         if (p.grounded && moving) p.walkPhase += dt * speed * 2.1;
         p.canClimb = false;
       } else {
+        p.onLand = false;
         const speed = (sprint ? PLAYER.swimSprint : PLAYER.swim) * (1 + swimBoost);
         p.pos.x += wish.x * speed * dt;
         p.pos.z += wish.z * speed * dt;
@@ -126,6 +133,16 @@ export function createPlayer(camera) {
         const water = waveHeight(p.pos.x, p.pos.z, t);
         p.pos.y = damp(p.pos.y, water + SWIM_EYE - EYE, 8, dt);
         if (moving) p.walkPhase += dt * speed * 1.4;
+
+        // Wade ashore where the island floor comes up near the surface.
+        const landH = land ? land.heightAt(p.pos.x, p.pos.z) : -Infinity;
+        if (landH > water - 0.2) {
+          p.inWater = false;
+          p.grounded = true;
+          p.velY = 0;
+          p.pos.y = landH;
+          events.onWadeAshore?.();
+        }
 
         // Soft limit so you can't swim off forever.
         const c = raft.center();

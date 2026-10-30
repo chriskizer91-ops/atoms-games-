@@ -28,6 +28,7 @@
     <div class="mat rare" data-k="tooth" data-icon="tooth" hidden><span class="n">0</span><span class="name">Shark teeth</span></div>
     <div class="mat rare" data-k="hide" data-icon="hide" hidden><span class="n">0</span><span class="name">Sharkskin</span></div>
     <div class="mat rare" data-k="jaw" data-icon="jaw" hidden><span class="n">0</span><span class="name">Old shark's jaw</span></div>
+    <div class="mat rare" data-k="stone" data-icon="stone" hidden><span class="n">0</span><span class="name">Stone</span></div>
   </section>
 
   <div id="clock"><span id="clock-icon"></span><span id="clock-text">Day 1 · 8:00</span></div>
@@ -50,7 +51,6 @@
     <div class="vital" id="v-health" data-icon="health"><div class="bar"><i></i></div><b>100</b></div>
     <div class="vital" id="v-hunger" data-icon="hunger"><div class="bar"><i></i></div><b>100</b></div>
     <div class="vital" id="v-thirst" data-icon="thirst"><div class="bar"><i></i></div><b>100</b></div>
-    <div class="vital" id="v-warmth" data-icon="warmth"><div class="bar"><i></i></div><b>100</b></div>
   </section>
 
   <div id="bottom">
@@ -71,7 +71,7 @@
 
 <section id="title" class="screen">
   <div class="title-block">
-    <p class="tag">Working title · Stage 3</p>
+    <p class="tag">Working title · Stage 3.5</p>
     <h1>Raft<br>Simulation</h1>
     <p class="pitch">You wake up on a few planks lashed together in the middle of the ocean. Hook what drifts past, grow the raft, keep the shark off your floor, and stay alive.</p>
     <button id="play" type="button">Set out</button>
@@ -83,14 +83,19 @@
       <div><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows</dt><dd>Move</dd></div>
       <div><dt>Mouse</dt><dd>Look and aim</dd></div>
       <div><dt>Left click</dt><dd>Use tool (hold to wind up the hook)</dd></div>
-      <div><dt>Right click</dt><dd>Let go of the hook line, switch what the hammer builds, or throw a fish as bait</dd></div>
+      <div><dt>Right click</dt><dd>Let go of the hook line, choose what the hammer builds, or throw a fish as bait</dd></div>
       <div><dt><kbd>1</kbd>–<kbd>6</kbd> or scroll</dt><dd>Switch tool</dd></div>
       <div><dt><kbd>E</kbd></dt><dd>Grab, empty a net, use the grill or rain catcher</dd></div>
-      <div><dt><kbd>C</kbd> or <kbd>Tab</kbd></dt><dd>Crafting and clothing</dd></div>
+      <div><dt><kbd>C</kbd> or <kbd>Tab</kbd></dt><dd>Crafting and wardrobe</dd></div>
+      <div><dt><kbd>Q</kbd> (hammer out)</dt><dd>Choose what to build</dd></div>
       <div><dt><kbd>Space</kbd></dt><dd>Jump, or climb aboard from the water</dd></div>
       <div><dt><kbd>Shift</kbd></dt><dd>Run or swim faster</dd></div>
       <div><dt><kbd>Esc</kbd></dt><dd>Pause</dd></div>
     </dl>
+    <div class="difficulty" role="group" aria-label="Difficulty">
+      <span class="label">Difficulty</span>
+      <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button>
+    </div>
     <div class="quality" role="group" aria-label="Graphics quality">
       <span class="label">Graphics</span>
       <button type="button" data-q="low">Low</button><button type="button" data-q="medium">Medium</button><button type="button" data-q="high">High</button>
@@ -102,7 +107,10 @@
   <div class="craft-panel panel">
     <header class="craft-head">
       <h2>Crafting</h2>
-      <span class="craft-hint"><kbd>C</kbd> or <kbd>Tab</kbd> to close</span>
+      <div class="craft-tabs" role="tablist">
+        <button type="button" data-tab="craft">Craft</button><button type="button" data-tab="build">Build</button>
+      </div>
+      <span class="craft-hint" id="craft-where"></span>
       <button type="button" id="craft-close" class="ghost">Close</button>
     </header>
     <div class="craft-body">
@@ -120,6 +128,10 @@
     <div class="row">
       <button id="resume" type="button">Back to the raft</button>
       <button id="quit" type="button" class="ghost">Title screen</button>
+    </div>
+    <div class="difficulty" role="group" aria-label="Difficulty">
+      <span class="label">Difficulty</span>
+      <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button>
     </div>
     <div class="quality" role="group" aria-label="Graphics quality">
       <span class="label">Graphics</span>

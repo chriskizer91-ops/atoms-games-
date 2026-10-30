@@ -25,6 +25,7 @@ function init() {
     pole: base.bark,
     rope: base.rope,
     net: new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.9 }),
+    netWide: new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.7, color: 0x8fd0b8 }),
     hit: new THREE.MeshBasicMaterial({ visible: false }),
     ghost: new THREE.MeshBasicMaterial({ color: 0xcfeeff, transparent: true, opacity: 0.22, depthWrite: false }),
     ghostEdge: new THREE.LineBasicMaterial({ color: 0xeaf8ff, transparent: true, opacity: 0.7 }),
@@ -94,7 +95,7 @@ function buildNet() {
   g.add(basket);
   const hit = new THREE.Mesh(G.hit, M.hit);
   g.add(hit);
-  return { group: g, hit };
+  return { group: g, hit, basket };
 }
 
 export function createNets(raft, debris, fx, audio) {
@@ -113,10 +114,13 @@ export function createNets(raft, debris, fx, audio) {
     return { ox: net.tile.i * TILE + sx * TILE / 2, oz: net.tile.j * TILE + sz * TILE / 2, nx: sx, nz: sz, tx: -sz, tz: sx };
   }
 
+  const capacityOf = (net) => (net.level > 1 ? 8 : NET.capacity);
+
   function placeItem(net, d, k) {
     const f = frameOf(net);
-    const u = (k % 3 - 1) * 0.42;
-    const w = 0.3 + Math.floor(k / 3) * 0.42;
+    const perRow = net.level > 1 ? 4 : 3;
+    const u = (k % perRow - (perRow - 1) / 2) * (net.level > 1 ? 0.34 : 0.42);
+    const w = 0.3 + Math.floor(k / perRow) * 0.36;
     d.x = f.ox + f.nx * w + f.tx * u;
     d.z = f.oz + f.nz * w + f.tz * u;
   }
@@ -158,7 +162,8 @@ export function createNets(raft, debris, fx, audio) {
     built.group.position.set(side[0] * TILE / 2, 0, side[1] * TILE / 2);
     built.group.rotation.y = Math.atan2(side[0], side[1]);
     tile.group.add(built.group);
-    const net = { tile, side, group: built.group, hit: built.hit, items: [], fish: [], fishTimer: rand(...NET.fishEvery) };
+    const net = { tile, side, group: built.group, hit: built.hit, basket: built.basket, level: 1, items: [], fish: [], fishTimer: rand(...NET.fishEvery) };
+    if (contents?.level > 1) widen(net);
     built.hit.userData.net = net;
     nets.set(k, net);
     ghostsDirty = true;
@@ -174,6 +179,12 @@ export function createNets(raft, debris, fx, audio) {
       for (let f = 0; f < (contents.fish || 0); f++) addFishMesh(net);
     }
     return net;
+  }
+
+  function widen(net) {
+    net.level = 2;
+    net.basket.material = M.netWide;
+    net.basket.scale.y = 1.25;
   }
 
   function slots() {
@@ -267,6 +278,15 @@ export function createNets(raft, debris, fx, audio) {
     contentsOf(net) {
       return net.items.length + net.fish.length;
     },
+    capacityOf,
+    upgradeOf(net) {
+      return net.level < 2 ? 'wideNet' : null;
+    },
+    upgrade(net) {
+      if (net.level >= 2) return false;
+      widen(net);
+      return true;
+    },
 
     // Take everything out of a net. Returns the materials gained.
     empty(net) {
@@ -284,7 +304,7 @@ export function createNets(raft, debris, fx, audio) {
 
     serialize() {
       return [...nets.values()].map((n) => ({
-        i: n.tile.i, j: n.tile.j, side: n.side,
+        i: n.tile.i, j: n.tile.j, side: n.side, level: n.level,
         items: n.items.map((d) => ({ type: d.type, loot: d.loot })),
         fish: n.fish.length,
       }));
@@ -305,7 +325,7 @@ export function createNets(raft, debris, fx, audio) {
       for (const d of debris.items) {
         if (d.hooked) continue;
         for (const net of list) {
-          if (net.items.length + net.fish.length >= NET.capacity) continue;
+          if (net.items.length + net.fish.length >= capacityOf(net)) continue;
           const f = frameOf(net);
           const rx = d.x - f.ox, rz = d.z - f.oz;
           const w = rx * f.nx + rz * f.nz;
@@ -323,7 +343,7 @@ export function createNets(raft, debris, fx, audio) {
         net.fishTimer -= dt;
         if (net.fishTimer <= 0) {
           net.fishTimer = rand(...NET.fishEvery);
-          if (net.items.length + net.fish.length < NET.capacity) {
+          if (net.items.length + net.fish.length < capacityOf(net)) {
             addFishMesh(net);
             const f = frameOf(net);
             fx.splash(tmp.set(f.ox + f.nx * 0.5, 0.05, f.oz + f.nz * 0.5), 0.35);

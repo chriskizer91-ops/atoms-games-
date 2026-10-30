@@ -224,6 +224,8 @@ export function createShark(scene, tiers) {
     ramming: false,
   };
 
+  let diff = { attackGap: 1, hits: 0, sharkDamage: 1 }; // set from the difficulty each update
+
   // Each scar makes it a little meaner.
   const anger = (k) => 1 + s.scars * GRUDGE.perScar[k];
 
@@ -419,7 +421,7 @@ export function createShark(scene, tiers) {
     update(t, dt, world) {
       const { raft, player, fx, events, nets, bait } = world;
       if (s.gone) return;
-      const calm = world.calm || 0;
+      diff = world.diff || diff;
       s.stateTime += dt;
       s.biteCooldown = Math.max(0, s.biteCooldown - dt);
       s.hurt = Math.max(0, s.hurt - dt);
@@ -449,7 +451,7 @@ export function createShark(scene, tiers) {
       if (player.inWater && pdist < 32 && !busy && !fed) {
         s.notice += dt;
         if (s.notice > 1.2) {
-          s.courage = tier.hitsToRepelChase;
+          s.courage = Math.max(1, tier.hitsToRepelChase + diff.hits);
           setState('chase');
           events.onHunt?.();
         }
@@ -462,11 +464,11 @@ export function createShark(scene, tiers) {
           const R = raft.radius() + 6;
           const ang = Math.atan2(s.pos.x - center.x, s.pos.z - center.z) + s.dir * 0.5;
           steer(center.x + Math.sin(ang) * R, center.z + Math.cos(ang) * R, turn, dt);
-          s.attackTimer -= dt / (1 + calm);
+          s.attackTimer -= dt / diff.attackGap;
           if (s.attackTimer <= 0) {
             s.target = pickRaftTarget(raft, nets);
             if (s.target) {
-              s.courage = tier.hitsToRepelRaft;
+              s.courage = Math.max(1, tier.hitsToRepelRaft + diff.hits);
               s.phase = 'standoff';
               s.ramming = !!tier.ram && (s.forceRam || Math.random() < tier.ram.chance);
               s.forceRam = false;
@@ -502,7 +504,7 @@ export function createShark(scene, tiers) {
             if (Math.hypot(head.x - edge.x, head.z - edge.z) < 0.7) {
               const p = edge.clone();
               nets?.breakAt(tgt.tile, tgt.side);
-              const broke = raft.damage(tgt.tile, tier.ram.damage * anger('bite'), tgt.side);
+              const broke = raft.damage(tgt.tile, tier.ram.damage * anger('bite') * diff.sharkDamage, tgt.side);
               // The blow spreads to the floor pieces either side along that edge.
               for (const off of [-1, 1]) {
                 const n = raft.tileAt(tgt.tile.i + tgt.side[1] * off, tgt.tile.j + tgt.side[0] * off);
@@ -556,7 +558,7 @@ export function createShark(scene, tiers) {
               events.onNetTorn?.(p.clone());
               break;
             }
-            const broke = raft.damage(tgt.tile, tier.biteRaft * anger('bite'), tgt.side);
+            const broke = raft.damage(tgt.tile, tier.biteRaft * anger('bite') * diff.sharkDamage, tgt.side);
             fx.splinters(p);
             events.onRaftBitten?.(tgt.tile, broke, p);
             // Now and then a tooth snaps off and stays stuck in the plank.
@@ -568,7 +570,7 @@ export function createShark(scene, tiers) {
             }
           }
           if (player.inWater && pdist < 12) {
-            s.courage = tier.hitsToRepelChase;
+            s.courage = Math.max(1, tier.hitsToRepelChase + diff.hits);
             setState('chase');
             events.onHunt?.();
           }
