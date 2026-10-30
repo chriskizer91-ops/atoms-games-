@@ -160,9 +160,10 @@ fs.mkdirSync(outDir, { recursive: true });
       G.step(0.6);
       log.push(G.shark.state);
     }
-    return { state: G.shark.state, log, repels: G.game.counters.repels };
+    return { state: G.shark.state, log, repels: G.game.counters.repels, scars: G.shark.scars };
   });
   check('spear drives the shark off', spear.state === 'flee' && spear.repels === 1, JSON.stringify(spear));
+  check('driving it off leaves a scar', spear.scars === 1, JSON.stringify(spear));
   await shot('05-shark-fleeing');
 
   // 5. Hammer repair on the bitten tile
@@ -286,6 +287,134 @@ fs.mkdirSync(outDir, { recursive: true });
     return { tiles: G.raft.tiles.size, wood: G.inventory.items.wood };
   });
   check('state serialises and restores', snap.tiles === 9, JSON.stringify(snap));
+
+  // ---------- Stage 2 ----------
+  await page.evaluate(() => {
+    const G = window.__game;
+    G.newGame(); G.game.mode = 'play';
+    G.shark.holdOff(999);
+    Object.assign(G.inventory.items, { wood: 30, plastic: 10, fiber: 12, fish: 0 });
+    G.step(0.2);
+  });
+
+  // 11. Build a floor piece east of the raft
+  const floor = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    p.pos.set(1 * T, p.pos.y, 0);
+    G.tools.setSlot(2, G.player);
+    G.step(0.4);
+    G.aimAt(2 * T, 0.35, 0);
+    G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.click(0, 1);
+    G.step(0.6);
+    return { prompt, tiles: G.raft.tiles.size, built: !!G.raft.tileAt(2, 0), wood: G.inventory.items.wood };
+  });
+  check('hammer builds a new floor piece', floor.built && floor.tiles === 10 && floor.prompt === 'Build floor', JSON.stringify(floor));
+
+  // 12. Switch to nets and hang one off the upstream edge
+  const net = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    G.input.state.mouse[2] = true; G.input.state.clicked[2] = true; G.step(1 / 60); G.input.state.mouse[2] = false;
+    G.step(0.1);
+    const mode = G.tools.state.hammerMode;
+    p.pos.set(0, p.pos.y, -1 * T);
+    G.step(0.1);
+    G.aimAt(0, 0.25, -1.5 * T - 0.55);
+    G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.click(0, 1);
+    G.step(0.6);
+    return { mode, prompt, nets: G.nets.count() };
+  });
+  check('hammer puts up a catch net', net.mode === 'net' && net.nets === 1, JSON.stringify(net));
+
+  // 13. Something drifting into the net gets caught; a fish swims in too
+  const catchRes = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE;
+    const n = [...G.nets.nets.values()][0];
+    const d = G.debris.spawn('plank', 0.1, -1.5 * T - 5);
+    let t = 0;
+    while (!d.caught && t < 12) { G.step(0.25); t += 0.25; }
+    n.fishTimer = 0;
+    G.step(0.1);
+    return { caught: !!d.caught, t, contents: G.nets.contentsOf(n), fish: n.fish.length };
+  });
+  check('a net catches drifting material and fish', catchRes.caught && catchRes.fish === 1 && catchRes.contents === 2, JSON.stringify(catchRes));
+  await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    G.tools.setSlot(0, G.player);
+    p.pos.set(0.5, p.pos.y, -0.6 * T); G.step(0.2);
+    G.aimAt(-0.2, 0.0, -1.5 * T - 0.6); G.step(0.05);
+  });
+  await shot('11-net-catch');
+
+  // 14. Empty it with E
+  const haul = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    const before = { ...G.inventory.items };
+    p.pos.set(0, p.pos.y, -1 * T); G.step(0.1);
+    G.aimAt(0, 0.1, -1.5 * T - 0.5); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.key('KeyE');
+    G.step(0.1);
+    const n = [...G.nets.nets.values()][0];
+    return { prompt, wood: G.inventory.items.wood - before.wood, fish: G.inventory.items.fish - before.fish, left: G.nets.contentsOf(n) };
+  });
+  check('E empties a net into your pack', haul.wood > 0 && haul.fish === 1 && haul.left === 0, JSON.stringify(haul));
+
+  // 15. Eat a raw fish
+  const eat = await page.evaluate(() => {
+    const G = window.__game;
+    G.inventory.items.fish = 2; G.game.stats.hunger = 40;
+    G.tools.setSlot(4, G.player); G.step(0.4);
+    G.click(0, 1); G.step(1.2);
+    return { fish: G.inventory.items.fish, hunger: Math.round(G.game.stats.hunger) };
+  });
+  check('raw fish can be eaten', eat.fish === 1 && eat.hunger > 50, JSON.stringify(eat));
+
+  // 16. Throw the other as bait; the shark goes for it instead of the raft
+  const lure = await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    p.pos.set(0, p.pos.y, 0); p.yaw = Math.PI / 2; p.pitch = 0.15; G.step(0.1);
+    G.input.state.mouse[2] = true; G.input.state.clicked[2] = true; G.step(1 / 60); G.input.state.mouse[2] = false;
+    G.step(1.6);
+    const floating = G.bait.items.filter((b) => b.mode === 'water').length;
+    G.shark.forceAttack();
+    const states = [];
+    let t = 0;
+    while (G.shark.state !== 'distracted' && t < 40) { G.step(0.5); t += 0.5; if (states[states.length - 1] !== G.shark.state) states.push(G.shark.state); }
+    return { floating, states, t, baited: G.game.counters.baited, fish: G.inventory.items.fish };
+  });
+  check('bait lures the shark away and keeps it busy', lure.floating === 1 && lure.states.includes('bait') && lure.baited === 1, JSON.stringify(lure));
+  await page.evaluate(() => {
+    const G = window.__game; const s = G.shark.pos; G.tools.setSlot(1, G.player);
+    G.step(0.3); G.aimAt(s.x, s.y, s.z); G.step(0.05);
+  });
+  await shot('12-shark-distracted');
+
+  // 17. A shark biting a netted edge tears the net first
+  const torn = await page.evaluate(() => {
+    const G = window.__game;
+    const n = [...G.nets.nets.values()][0];
+    const before = G.nets.count();
+    const ok = G.nets.breakAt(n.tile, n.side);
+    return { ok, before, after: G.nets.count() };
+  });
+  check('a net can be torn off', torn.ok && torn.after === torn.before - 1, JSON.stringify(torn));
+
+  // 18. Nets, new floor and scars survive save/restore
+  const snap2 = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE;
+    const tile = G.raft.tileAt(1, -1);
+    G.nets.add(tile, [0, -1]);
+    G.shark.restore({ x: 20, z: 5, attackTimer: 60, scars: 2 });
+    const s = JSON.parse(JSON.stringify(G.serialize()));
+    G.restore(s);
+    G.step(0.1);
+    return { tiles: G.raft.tiles.size, nets: G.nets.count(), scars: G.shark.scars };
+  });
+  check('stage 2 state survives save/restore', snap2.tiles === 10 && snap2.nets === 1 && snap2.scars === 2, JSON.stringify(snap2));
 
   // 10. A wider look for the README
   await page.evaluate(() => {

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { TILE, DECK_Y } from './config.js';
+import { TILE, DECK_Y, RAFT_LIMIT } from './config.js';
 import { waveHeight } from './ocean.js';
 import { materials } from './materials.js';
 import { damp, rand } from './util.js';
@@ -121,8 +121,16 @@ export function createRaft(scene) {
   const tiles = new Map();
   let outside = new Set();
   let outsideDirty = true;
-  let buildMode = false;
+  let buildMode = null; // null, 'floor' or 'net' while the hammer is out
   const tilt = { y: 0, rx: 0, rz: 0 };
+  const listeners = { added: [], broken: [], reset: [] };
+  const emit = (name, arg) => listeners[name].forEach((f) => f(arg));
+
+  // Outlines on open water next to the raft, where a new floor piece can go.
+  const buildLayer = new THREE.Group();
+  group.add(buildLayer);
+  const buildPool = [];
+  let buildDirty = true;
 
   function makeTile(i, j) {
     const g = new THREE.Group();
@@ -179,7 +187,7 @@ export function createRaft(scene) {
     if (tile.broken) {
       boards.forEach((b) => (b.visible = false));
       logs.forEach((l) => (l.visible = false));
-      ghost.visible = buildMode;
+      ghost.visible = !!buildMode;
       hit.visible = false;
       return;
     }
@@ -223,7 +231,47 @@ export function createRaft(scene) {
     const t = makeTile(i, j);
     tiles.set(key(i, j), t);
     outsideDirty = true;
+    buildDirty = true;
     return t;
+  }
+
+  function canBuildAt(i, j) {
+    if (tiles.has(key(i, j))) return false;
+    if (Math.abs(i) > RAFT_LIMIT || Math.abs(j) > RAFT_LIMIT) return false;
+    return SIDES.some(([di, dj]) => {
+      const n = tiles.get(key(i + di, j + dj));
+      return n && !n.broken;
+    });
+  }
+
+  function refreshBuildGhosts() {
+    buildDirty = false;
+    const cells = [];
+    if (buildMode === 'floor') {
+      const seen = new Set();
+      for (const t of tiles.values()) {
+        if (t.broken) continue;
+        for (const [di, dj] of SIDES) {
+          const i = t.i + di, j = t.j + dj, k = key(i, j);
+          if (!seen.has(k) && canBuildAt(i, j)) { seen.add(k); cells.push([i, j]); }
+        }
+      }
+    }
+    while (buildPool.length < cells.length) {
+      const m = new THREE.Mesh(geo.ghost, mat.ghost);
+      m.add(new THREE.LineSegments(geo.ghostEdges, mat.ghostEdge));
+      m.userData.build = { i: 0, j: 0 };
+      buildLayer.add(m);
+      buildPool.push(m);
+    }
+    buildPool.forEach((m, n) => {
+      const c = cells[n];
+      m.visible = !!c;
+      if (!c) return;
+      m.userData.build.i = c[0];
+      m.userData.build.j = c[1];
+      m.position.set(c[0] * TILE, DECK_Y - 0.04, c[1] * TILE);
+    });
   }
 
   function computeOutside() {
@@ -279,7 +327,30 @@ export function createRaft(scene) {
     group,
     tiles,
 
+    on(name, fn) {
+      listeners[name].push(fn);
+    },
+
+    tileAt(i, j) {
+      return tiles.get(key(i, j)) || null;
+    },
+
+    get buildMode() { return buildMode; },
+
+    canBuildAt,
+
+    // A new floor piece on open water next to the raft.
+    build(i, j) {
+      if (!canBuildAt(i, j)) return null;
+      const t = addTile(i, j);
+      t.shake = 0.15;
+      refreshTile(t);
+      emit('added', t);
+      return t;
+    },
+
     reset(layout) {
+      emit('reset');
       for (const t of tiles.values()) group.remove(t.group);
       tiles.clear();
       for (const s of layout) {
@@ -290,22 +361,27 @@ export function createRaft(scene) {
         refreshTile(t);
       }
       outsideDirty = true;
+      buildDirty = true;
     },
 
     serialize() {
       return [...tiles.values()].map((t) => ({ i: t.i, j: t.j, hp: Math.round(t.hp), broken: t.broken, biteSide: t.biteSide }));
     },
 
-    setBuildMode(on) {
-      if (buildMode === on) return;
-      buildMode = on;
-      for (const t of tiles.values()) if (t.broken) t.ghost.visible = on;
+    setBuildMode(mode) {
+      if (buildMode === mode) return;
+      buildMode = mode;
+      for (const t of tiles.values()) if (t.broken) t.ghost.visible = !!mode;
+      refreshBuildGhosts();
     },
 
-    // Targets for the hammer ray: intact floor hitboxes plus broken-floor ghosts.
+    // Targets for the hammer ray: floor hitboxes, broken-floor ghosts, and in
+    // floor mode the open spots where a new piece can go.
     hammerTargets() {
+      if (buildDirty) refreshBuildGhosts();
       const out = [];
       for (const t of tiles.values()) out.push(t.broken ? t.ghost : t.hit);
+      if (buildMode === 'floor') for (const m of buildPool) if (m.visible) out.push(m);
       return out;
     },
 
@@ -409,8 +485,10 @@ export function createRaft(scene) {
       if (tile.hp <= 0) {
         tile.broken = true;
         outsideDirty = true;
+        buildDirty = true;
       }
       refreshTile(tile);
+      if (tile.broken) emit('broken', tile);
       return tile.broken;
     },
 
@@ -427,6 +505,7 @@ export function createRaft(scene) {
       tile.biteSide = null;
       tile.shake = 0.15;
       outsideDirty = true;
+      buildDirty = true;
       refreshTile(tile);
     },
 
@@ -437,6 +516,7 @@ export function createRaft(scene) {
     },
 
     update(t, dt) {
+      if (buildDirty && buildMode) refreshBuildGhosts();
       // Ride the swell: average a few samples across the raft, tilt gently.
       let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
       for (const tl of tiles.values()) {

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { sharkTexture } from './textures.js';
+import { BAIT, GRUDGE } from './config.js';
 import { waveHeight } from './ocean.js';
 import { clamp, damp, rand, turnToward, smoothstep } from './util.js';
 
@@ -195,7 +196,44 @@ export function createShark(scene, tier) {
     thrash: 0,
     jawOpen: 0,
     swimPhase: 0,
+    scars: 0,
+    lure: null,          // bait it is going for
+    distractUntil: 0,
+    distractAt: { x: 0, z: 0 },
   };
+
+  // Each scar makes it a little meaner.
+  const anger = (k) => 1 + s.scars * GRUDGE.perScar[k];
+
+  // Scars are painted straight onto the skin: pale gouges in threes, placed
+  // the same way every time so a restored game shows the same marks.
+  const skin = m.material.map;
+  const skinCtx = skin.image.getContext('2d');
+  const cleanSkin = skinCtx.getImageData(0, 0, skin.image.width, skin.image.height);
+  function paintScars() {
+    skinCtx.putImageData(cleanSkin, 0, 0);
+    const W = skin.image.width, H = skin.image.height;
+    for (let n = 0; n < s.scars; n++) {
+      let seed = (n + 1) * 7919;
+      const r = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+      // Alternate flanks so both sides collect marks.
+      const u = (n % 2 ? 0.56 : 0.26) + r() * 0.18, v = 0.22 + r() * 0.5;
+      const ang = (r() - 0.5) * 1.4;
+      const len = 30 + r() * 22;
+      for (let k = -1; k <= 1; k++) {
+        const cx = u * W + Math.cos(ang + Math.PI / 2) * k * 5 + k * k * 3, cy = v * H + Math.sin(ang + Math.PI / 2) * k * 5;
+        const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
+        skinCtx.lineCap = 'round';
+        skinCtx.strokeStyle = 'rgba(60, 30, 32, 0.35)';
+        skinCtx.lineWidth = 4;
+        skinCtx.beginPath(); skinCtx.moveTo(cx - dx, cy - dy + 1); skinCtx.lineTo(cx + dx, cy + dy + 1); skinCtx.stroke();
+        skinCtx.strokeStyle = 'rgba(196, 172, 168, 0.75)';
+        skinCtx.lineWidth = 2.2;
+        skinCtx.beginPath(); skinCtx.moveTo(cx - dx, cy - dy); skinCtx.lineTo(cx + dx, cy + dy); skinCtx.stroke();
+      }
+    }
+    skin.needsUpdate = true;
+  }
 
   const forward = new THREE.Vector3();
   const head = new THREE.Vector3();
@@ -213,14 +251,15 @@ export function createShark(scene, tier) {
     return out;
   }
 
-  function pickRaftTarget(raft, player) {
+  function pickRaftTarget(raft, nets) {
     const list = raft.attackable();
     if (!list.length) return null;
-    // Prefer pieces on the shark's side of the raft, with some randomness.
+    // Prefer pieces on the shark's side of the raft, with some randomness;
+    // edges with a net hanging off them put it off a little.
     let best = null, bestScore = Infinity;
     for (const c of list) {
       const p = raft.worldPointOf(c.tile, c.side, tmpA);
-      const score = Math.hypot(p.x - s.pos.x, p.z - s.pos.z) + rand(0, 6);
+      const score = Math.hypot(p.x - s.pos.x, p.z - s.pos.z) + rand(0, 6) + (nets?.has(c.tile, c.side) ? 9 : 0);
       if (score < bestScore) { bestScore = score; best = c; }
     }
     return best;
@@ -239,6 +278,7 @@ export function createShark(scene, tier) {
     get state() { return s.state; },
     get pos() { return s.pos; },
     get target() { return s.target; },
+    get scars() { return s.scars; },
     group: m.group,
 
     reset() {
@@ -246,18 +286,23 @@ export function createShark(scene, tier) {
       s.yaw = 0;
       s.attackTimer = tier.firstAttack;
       s.target = null;
+      s.lure = null;
       s.courage = tier.hitsToRepelRaft;
+      s.scars = 0;
+      paintScars();
       setState('circle');
     },
 
     serialize() {
-      return { x: s.pos.x, z: s.pos.z, attackTimer: s.attackTimer };
+      return { x: s.pos.x, z: s.pos.z, attackTimer: s.attackTimer, scars: s.scars };
     },
 
     restore(d) {
       if (!d) return;
       s.pos.set(d.x, -0.6, d.z);
       s.attackTimer = d.attackTimer;
+      s.scars = d.scars || 0;
+      paintScars();
       setState('circle');
     },
 
@@ -286,15 +331,21 @@ export function createShark(scene, tier) {
       s.thrash = 0.6;
       s.courage -= 1;
       if (s.state === 'bite') s.biteTimer += 0.7;
-      if (s.courage <= 0 || s.state === 'circle') {
+      const committed = s.state === 'bite' || s.state === 'chase' || s.state === 'retreat' || s.state === 'approach';
+      if (s.courage <= 0 || !committed) {
         setState('flee');
         s.target = null;
-        events.onRepelled?.();
+        s.lure = null;
+        if (s.scars < GRUDGE.maxScars) {
+          s.scars++;
+          paintScars();
+        }
+        events.onRepelled?.(s.scars);
       }
     },
 
     update(t, dt, world) {
-      const { raft, player, fx, events } = world;
+      const { raft, player, fx, events, nets, bait } = world;
       s.stateTime += dt;
       s.biteCooldown = Math.max(0, s.biteCooldown - dt);
       s.hurt = Math.max(0, s.hurt - dt);
@@ -308,7 +359,20 @@ export function createShark(scene, tier) {
       let jawTarget = 0;
       const turn = 1.5;
 
-      if (player.inWater && pdist < 32 && s.state !== 'flee' && s.state !== 'chase' && s.state !== 'retreat') {
+      // Bait in the water beats anything except running away.
+      if (bait && s.state !== 'flee' && s.state !== 'bait') {
+        const b = bait.nearest(s.pos.x, s.pos.z, BAIT.lure);
+        if (b) {
+          s.lure = b;
+          s.target = null;
+          setState('bait');
+          events.onBaitTaken?.();
+        }
+      }
+
+      const busy = s.state === 'flee' || s.state === 'chase' || s.state === 'retreat';
+      const fed = (s.state === 'bait' || s.state === 'distracted') && pdist > 5;
+      if (player.inWater && pdist < 32 && !busy && !fed) {
         s.notice += dt;
         if (s.notice > 1.2) {
           s.courage = tier.hitsToRepelChase;
@@ -326,7 +390,7 @@ export function createShark(scene, tier) {
           steer(center.x + Math.sin(ang) * R, center.z + Math.cos(ang) * R, turn, dt);
           s.attackTimer -= dt;
           if (s.attackTimer <= 0) {
-            s.target = pickRaftTarget(raft, player);
+            s.target = pickRaftTarget(raft, nets);
             if (s.target) {
               s.courage = tier.hitsToRepelRaft;
               s.phase = 'standoff';
@@ -378,17 +442,22 @@ export function createShark(scene, tier) {
           const cycle = 1 - clamp(s.biteTimer / tier.biteInterval, 0, 1);
           jawTarget = Math.sin(cycle * Math.PI) ** 2;
           if (s.biteTimer <= 0) {
-            s.biteTimer = tier.biteInterval;
+            s.biteTimer = tier.biteInterval / anger('speed');
             s.thrash = 0.35;
-            const broke = raft.damage(tgt.tile, tier.biteRaft, tgt.side);
             const p = raft.worldPointOf(tgt.tile, tgt.side, tmpA);
-            fx.splinters(p);
             fx.splash(p, 0.8);
+            // A net on this edge goes first.
+            if (nets?.breakAt(tgt.tile, tgt.side)) {
+              events.onNetTorn?.(p.clone());
+              break;
+            }
+            const broke = raft.damage(tgt.tile, tier.biteRaft * anger('bite'), tgt.side);
+            fx.splinters(p);
             events.onRaftBitten?.(tgt.tile, broke, p);
             if (broke) {
               s.target = null;
               setState('circle');
-              s.attackTimer = rand(...tier.attackGap);
+              s.attackTimer = rand(...tier.attackGap) / anger('gap');
             }
           }
           if (player.inWater && pdist < 12) {
@@ -407,14 +476,14 @@ export function createShark(scene, tier) {
             break;
           }
           steer(player.pos.x, player.pos.z, 2.6, dt);
-          speedTarget = tier.chase;
+          speedTarget = tier.chase * anger('speed');
           depthTarget = raft.nearRaft(s.pos.x, s.pos.z, 0.6) ? -1.7 : -0.58;
           const hx = head.x - player.pos.x, hz = head.z - player.pos.z;
           if (Math.hypot(hx, hz) < 1.0 && s.biteCooldown <= 0) {
             s.biteCooldown = 2.4;
             s.thrash = 0.5;
             jawTarget = 1;
-            events.onPlayerBitten?.(tier.bitePlayer, head.clone());
+            events.onPlayerBitten?.(tier.bitePlayer * anger('bite'), head.clone());
             s.retreatDir = Math.atan2(s.pos.x - player.pos.x, s.pos.z - player.pos.z) + rand(-0.6, 0.6);
             setState('retreat');
           }
@@ -430,6 +499,40 @@ export function createShark(scene, tier) {
           break;
         }
 
+        case 'bait': {
+          const b = s.lure;
+          if (!b || !bait.alive(b)) { s.lure = null; setState('circle'); break; }
+          const d = steer(b.pos.x, b.pos.z, 2.8, dt);
+          speedTarget = d > 4 ? tier.chase : tier.swim;
+          depthTarget = -0.55;
+          if (d < 3) jawTarget = 0.7;
+          if (Math.hypot(head.x - b.pos.x, head.z - b.pos.z) < 0.9 || s.stateTime > 25) {
+            bait.consume(b);
+            s.lure = null;
+            s.thrash = 0.5;
+            jawTarget = 1;
+            fx.splash(head, 0.7);
+            s.distractAt = { x: b.pos.x, z: b.pos.z };
+            s.distractUntil = rand(...BAIT.distract);
+            setState('distracted');
+            events.onBaitEaten?.(s.distractUntil);
+          }
+          break;
+        }
+
+        case 'distracted': {
+          // Nosing around where the bait was, looking for more.
+          const a = Math.atan2(s.pos.x - s.distractAt.x, s.pos.z - s.distractAt.z) + s.dir * 0.6;
+          steer(s.distractAt.x + Math.sin(a) * 4, s.distractAt.z + Math.cos(a) * 4, 1.8, dt);
+          speedTarget = tier.swim * 0.75;
+          depthTarget = -0.7;
+          if (s.stateTime > s.distractUntil) {
+            setState('circle');
+            s.attackTimer = Math.max(s.attackTimer, 12);
+          }
+          break;
+        }
+
         case 'flee': {
           const away = Math.atan2(s.pos.x - center.x, s.pos.z - center.z);
           s.yaw = turnToward(s.yaw, away, 3 * dt);
@@ -437,7 +540,7 @@ export function createShark(scene, tier) {
           depthTarget = -2.6;
           if (s.stateTime > 6) {
             setState('circle');
-            s.attackTimer = rand(...tier.attackGap) + 15;
+            s.attackTimer = (rand(...tier.attackGap) + 15) / anger('gap');
             s.notice = -6; // gives the player time to get out of the water
           }
           break;

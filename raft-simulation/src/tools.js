@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, PLAYER } from './config.js';
+import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, FISH, PLAYER } from './config.js';
+import { makeFish } from './nets.js';
 import { waveHeight } from './ocean.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { materials } from './materials.js';
@@ -13,6 +14,7 @@ export const SLOTS = [
   { id: 'spear', name: 'Spear' },
   { id: 'hammer', name: 'Hammer' },
   { id: 'coconut', name: 'Coconut' },
+  { id: 'fish', name: 'Raw fish' },
 ];
 
 let MAT = null;
@@ -122,9 +124,10 @@ const POSE = {
   spear: { arm: [0.24, -0.215, -0.4, 0.02, 0.12, -0.1], hand: [-Math.PI / 2 + 0.1, 0.13, 0] },
   hammer: { arm: [0.28, -0.25, -0.5, 0.15, 0.2, 0], hand: [-0.35, 0.1, 0.15] },
   coconut: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.35, 0, 0] },
+  fish: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.2, 0.3, 0] },
 };
 
-export function createTools({ scene, camera, raft, debris, shark, fx, audio, inventory, stats, events }) {
+export function createTools({ scene, camera, raft, nets, bait, debris, shark, fx, audio, inventory, stats, events }) {
   initMaterials();
   // ----- first-person view model, drawn in its own pass so it never clips -----
   const vmScene = new THREE.Scene();
@@ -157,6 +160,7 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
     spear: makeSpear(),
     hammer: makeHammer(),
     coconut: makeCoconut(),
+    fish: makeFish(),
   };
   // Grappling hook gripped by the shank, prongs forward.
   const heldGrapple = makeGrapple();
@@ -166,6 +170,9 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
   models.hook.add(danglingLine);
   models.hammer.scale.setScalar(0.85);
   models.coconut.position.set(-0.005, 0.0, -0.08);
+  models.fish.scale.setScalar(1.25);
+  models.fish.position.set(-0.02, 0.0, -0.05);
+  models.fish.rotation.set(0.2, 0.4, Math.PI / 2);
   for (const k in models) hand.add(models[k]);
 
   // ----- the thrown hook and its rope, out in the world -----
@@ -199,6 +206,7 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
     prompt: null,
     lookDebris: null,
     hammerTile: null,
+    hammerMode: 'floor',   // what the hammer builds: 'floor' or 'net'
   };
 
   const camPos = new THREE.Vector3();
@@ -250,17 +258,45 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
     st.anim = { type, t: 0, dur, fired: false };
   }
 
+  // What the hammer is pointed at: a floor piece, an open spot for a new
+  // one, or a spot for a net.
   function hammerTarget() {
     ray.set(camPos, camDir);
     ray.far = HAMMER.reach;
-    const hits = ray.intersectObjects(raft.hammerTargets(), false);
-    return hits.length ? { tile: hits[0].object.userData.tile, point: hits[0].point } : null;
+    const hits = ray.intersectObjects([...raft.hammerTargets(), ...nets.ghostTargets()], false);
+    if (!hits.length) return null;
+    const u = hits[0].object.userData;
+    return { tile: u.tile || null, build: u.build || null, netSlot: u.netSlot || null, point: hits[0].point };
+  }
+
+  function lookNet() {
+    ray.set(camPos, camDir);
+    ray.far = PLAYER.reach + 0.6;
+    const hits = ray.intersectObjects(nets.hitTargets(), false);
+    return hits.length ? hits[0].object.userData.net : null;
+  }
+
+  // null hides the build outlines but remembers the last mode.
+  function setHammerMode(m) {
+    if (m) st.hammerMode = m;
+    raft.setBuildMode(m);
+    nets.setMode(m);
   }
 
   function costText(cost) {
     return Object.entries(cost)
       .map(([k, n]) => `${n} ${k === 'fiber' ? 'palm fiber' : k}`)
       .join(' · ');
+  }
+
+  function buy(cost) {
+    if (inventory.has(cost)) {
+      inventory.spend(cost);
+      return true;
+    }
+    audio.error();
+    events.onMissing?.(cost);
+    return false;
   }
 
   function doHammer() {
@@ -270,6 +306,24 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
       return;
     }
     const { tile, point } = tgt;
+    if (tgt.build) {
+      if (buy(COSTS.floor)) {
+        const t = raft.build(tgt.build.i, tgt.build.j);
+        audio.build();
+        fx.dust(point);
+        events.onBuildFloor?.(t);
+      }
+      return;
+    }
+    if (tgt.netSlot) {
+      if (buy(COSTS.net)) {
+        nets.add(tgt.netSlot.tile, tgt.netSlot.side);
+        audio.build();
+        fx.dust(point);
+        events.onBuildNet?.();
+      }
+      return;
+    }
     if (tile.broken) {
       if (inventory.has(COSTS.rebuild)) {
         inventory.spend(COSTS.rebuild);
@@ -329,7 +383,7 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
       st.slot = (i + SLOTS.length) % SLOTS.length;
       st.swap = 0;
       st.anim = null;
-      raft.setBuildMode(slotId() === 'hammer');
+      setHammerMode(slotId() === 'hammer' ? st.hammerMode : null);
     },
 
     reset() {
@@ -337,7 +391,8 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
       st.slot = 0;
       st.swap = 1;
       st.anim = null;
-      raft.setBuildMode(false);
+      setHammerMode(null);
+      st.hammerMode = 'floor';
     },
 
     resize(w, h) {
@@ -373,6 +428,18 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
         if (input.wasPressed('KeyE')) {
           pickUp(st.lookDebris);
           st.lookDebris = null;
+        }
+      } else {
+        const net = lookNet();
+        if (net) {
+          const n = nets.contentsOf(net);
+          prompt = n ? { key: 'E', text: `Empty net (${n} caught)` } : { text: 'Net: nothing caught yet', dim: true };
+          if (n && input.wasPressed('KeyE')) {
+            const gained = nets.empty(net);
+            inventory.add(gained);
+            audio.pickup();
+            events.onCollect?.(gained, 'net');
+          }
         }
       }
 
@@ -487,8 +554,16 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
       // ----- spear, hammer, coconut -----
       st.hammerTile = null;
       if (id === 'hammer') {
+        if ((input.state.clicked[2] || input.wasPressed('KeyR')) && !st.anim) {
+          setHammerMode(st.hammerMode === 'floor' ? 'net' : 'floor');
+          audio.pickup();
+        }
         const tgt = hammerTarget();
-        if (tgt) {
+        if (tgt?.build) {
+          prompt = { key: 'Click', text: 'Build floor', cost: costText(COSTS.floor), ok: inventory.has(COSTS.floor) };
+        } else if (tgt?.netSlot) {
+          prompt = { key: 'Click', text: 'Put up a catch net', cost: costText(COSTS.net), ok: inventory.has(COSTS.net) };
+        } else if (tgt) {
           st.hammerTile = tgt.tile;
           const tl = tgt.tile;
           if (tl.broken) {
@@ -511,14 +586,27 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
         } else if (id === 'hammer') {
           startAnim('swing', 0.42);
           st.cooldown = HAMMER.cooldown;
-        } else if (id === 'coconut') {
-          if (inventory.get('coconut') > 0) {
+        } else if (id === 'coconut' || id === 'fish') {
+          if (inventory.get(id) > 0) {
             startAnim('eat', 1.0);
             st.cooldown = 1.1;
           } else {
             audio.error();
-            events.onMissing?.({ coconut: 1 });
+            events.onMissing?.({ [id]: 1 });
           }
+        }
+      }
+      // Right-click with a fish: throw it as bait.
+      if (id === 'fish' && input.state.clicked[2] && st.swap >= 1 && !st.anim) {
+        if (inventory.get('fish') > 0) {
+          inventory.spend({ fish: 1 });
+          startAnim('throw', 0.3);
+          st.cooldown = 0.5;
+          bait.throw(handWorld(tmp2).addScaledVector(camDir, 0.3).clone(), camDir);
+          events.onBaitThrown?.();
+        } else {
+          audio.error();
+          events.onMissing?.({ fish: 1 });
         }
       }
 
@@ -549,12 +637,13 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
           if (f > 0.9) oy += Math.sin(a.t * 30) * 0.008;
           if (!a.fired && k >= 0.6) {
             a.fired = true;
-            if (inventory.get('coconut') > 0) {
-              inventory.spend({ coconut: 1 });
-              stats.hunger = Math.min(100, stats.hunger + COCONUT.hunger);
-              stats.thirst = Math.min(100, stats.thirst + COCONUT.thirst);
+            const food = id === 'fish' ? FISH : COCONUT;
+            if ((id === 'coconut' || id === 'fish') && inventory.get(id) > 0) {
+              inventory.spend({ [id]: 1 });
+              stats.hunger = Math.min(100, stats.hunger + food.hunger);
+              stats.thirst = Math.min(100, stats.thirst + food.thirst);
               audio.eat();
-              events.onEat?.();
+              events.onEat?.(id);
             }
           }
         }
@@ -587,6 +676,7 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
       danglingLine.visible = heldGrapple.visible;
       coil.visible = id === 'hook';
       models.coconut.visible = id === 'coconut' && inventory.get('coconut') > 0;
+      models.fish.visible = id === 'fish' && inventory.get('fish') > 0;
 
       // Light the view model from the real sun direction.
       camQuatInv.copy(camera.quaternion).invert();
@@ -599,6 +689,7 @@ export function createTools({ scene, camera, raft, debris, shark, fx, audio, inv
         prompt,
         charge: h.mode === 'charging' ? h.charge : 0,
         slot: st.slot,
+        hammerMode: st.hammerMode,
         hookOut: h.mode !== 'held' && h.mode !== 'charging',
       };
     },

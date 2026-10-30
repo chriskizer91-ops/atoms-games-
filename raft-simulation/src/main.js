@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STATS, SHARK_TIERS, ITEMS, TILE } from './config.js';
+import { STATS, SHARK_TIERS, ITEMS, TILE, COSTS, GRUDGE } from './config.js';
 import { createOcean } from './ocean.js';
 import { createSky, SKY } from './sky.js';
 import { createPipeline, QUALITY } from './render.js';
@@ -7,6 +7,8 @@ import { setAnisotropy } from './textures.js';
 import { createRaft, startingLayout } from './raft.js';
 import { createDebris } from './debris.js';
 import { createShark } from './shark.js';
+import { createNets } from './nets.js';
+import { createBait } from './bait.js';
 import { createPlayer } from './player.js';
 import { createTools, SLOTS } from './tools.js';
 import { createInput } from './input.js';
@@ -34,24 +36,47 @@ const raft = createRaft(scene);
 const debris = createDebris(scene);
 const fx = createFx(scene);
 const shark = createShark(scene, SHARK_TIERS[0]);
+const nets = createNets(raft, debris, fx, audio);
+const bait = createBait(scene, fx, audio);
 const player = createPlayer(camera);
 const input = createInput(canvas);
 const hud = createHud();
 
 // ---------- game state ----------
-const GOALS = [
-  { id: 'wood', text: 'Hook 5 wood out of the water', target: 5 },
-  { id: 'coconut', text: 'Crack open a coconut', target: 1 },
-  { id: 'repel', text: 'Drive the shark off with your spear', target: 1 },
-  { id: 'repair', text: 'Fix a bitten floor with your hammer', target: 1 },
+// Goals come in groups; the next group shows once the current one is done.
+const GOAL_GROUPS = [
+  {
+    title: 'Goals: staying afloat',
+    goals: [
+      { id: 'wood', text: 'Hook 5 wood out of the water', target: 5 },
+      { id: 'coconut', text: 'Crack open a coconut', target: 1 },
+      { id: 'repel', text: 'Drive the shark off with your spear', target: 1 },
+      { id: 'repair', text: 'Fix a bitten floor with your hammer', target: 1 },
+    ],
+  },
+  {
+    title: 'Goals: growing the raft',
+    goals: [
+      { id: 'floor', text: 'Build a new floor piece', target: 1 },
+      { id: 'net', text: 'Put up a catch net', target: 1 },
+      { id: 'netHaul', text: 'Empty a net with something in it', target: 1 },
+      { id: 'bait', text: 'Keep the shark busy with bait', target: 1 },
+    ],
+  },
 ];
 
 const HINTS = {
   hook: 'Hold left mouse to wind up, let go to throw. Hold again to reel in.',
   spear: 'Click to stab. A few good hits send the shark away.',
-  hammer: 'Aim at a floor piece and click to fix it.',
   coconut: 'Click to crack it open: food and water.',
+  fish: 'Click to eat it raw. Right-click to throw it as bait for the shark.',
 };
+function hintFor(id, ui) {
+  if (id !== 'hammer') return HINTS[id];
+  return ui.hammerMode === 'net'
+    ? 'Building nets: click an outline on an outer edge. Right-click to build floor instead.'
+    : 'Building floor: click an outline to add a piece, or a bitten piece to fix it. Right-click for nets.';
+}
 
 const game = {
   mode: 'title',
@@ -61,14 +86,14 @@ const game = {
   lastHurt: -99,
   lastDamage: null,
   progress: {},
-  counters: { wood: 0, repels: 0, repairs: 0, lost: 0 },
-  goalsDone: false,
+  counters: { wood: 0, repels: 0, repairs: 0, lost: 0, built: 0, baited: 0 },
+  goalStage: 0,
   creak: 6,
   shake: 0,
 };
 
 const inventory = (() => {
-  const items = { wood: 0, plastic: 0, fiber: 0, scrap: 0, coconut: 0 };
+  const items = { wood: 0, plastic: 0, fiber: 0, scrap: 0, coconut: 0, fish: 0 };
   return {
     items,
     get: (k) => items[k] || 0,
@@ -87,13 +112,23 @@ const inventory = (() => {
   };
 })();
 
+function showGoals() {
+  const g = GOAL_GROUPS[Math.min(game.goalStage, GOAL_GROUPS.length - 1)];
+  hud.setGoals(g.goals, game.progress, g.title);
+}
+
 function progress(id, n = 1) {
   game.progress[id] = (game.progress[id] || 0) + n;
-  hud.setGoals(GOALS, game.progress);
-  if (!game.goalsDone && GOALS.every((g) => (game.progress[g.id] || 0) >= g.target)) {
-    game.goalsDone = true;
-    setTimeout(() => hud.alert('Stage 1 goals complete. Keep the raft afloat as long as you can.', { kind: 'good', duration: 6 }), 1200);
+  const group = GOAL_GROUPS[game.goalStage];
+  if (group && group.goals.every((g) => (game.progress[g.id] || 0) >= g.target)) {
+    game.goalStage++;
+    const next = GOAL_GROUPS[game.goalStage];
+    const text = next
+      ? 'Goals done. New goals: grow the raft.'
+      : 'All goals done. Keep the raft afloat as long as you can.';
+    setTimeout(() => { hud.alert(text, { kind: 'good', duration: 6 }); showGoals(); }, 1200);
   }
+  showGoals();
 }
 
 // Stereo position and loudness of a world point relative to the camera.
@@ -115,6 +150,7 @@ const events = {
       game.counters.wood += gained.wood;
       progress('wood', gained.wood);
     }
+    if (how === 'net') progress('netHaul');
   },
   onMissing(cost) {
     const parts = Object.entries(cost).map(([k, n]) => `${n} ${ITEMS[k].name.toLowerCase()}`);
@@ -122,7 +158,7 @@ const events = {
   },
   onRaftAttack() {
     audio.warn();
-    hud.alert('The shark is biting your raft!', {
+    hud.alert(shark.scars ? 'The scarred shark is biting your raft!' : 'The shark is biting your raft!', {
       kind: 'danger',
       follow: () => shark.headPosition(),
       duration: 1,
@@ -167,10 +203,35 @@ const events = {
   onSpearHit() {
     game.shake = Math.max(game.shake, 0.08);
   },
-  onRepelled() {
+  onRepelled(scars) {
     game.counters.repels++;
     progress('repel');
-    hud.alert('The shark swam off. It will be back.', { kind: 'good', duration: 3.5 });
+    const text = scars >= GRUDGE.maxScars
+      ? 'The shark swam off. It is as scarred and angry as it gets.'
+      : scars === 1
+        ? 'The shark swam off with a scar. It will be back a little angrier.'
+        : `The shark swam off with scar number ${scars}. Each one makes it meaner.`;
+    hud.alert(text, { kind: 'good', duration: 4 });
+  },
+  onNetTorn(p) {
+    const s = placeSound(p);
+    audio.crack(s.pan);
+    hud.alert('The shark tore up a net!', { kind: 'danger', duration: 3.5 });
+  },
+  onBaitTaken() {
+    hud.alert('The shark smells the bait.', { kind: 'good', follow: () => shark.pos, duration: 1, until: () => shark.state !== 'bait' });
+  },
+  onBaitEaten() {
+    game.counters.baited++;
+    progress('bait');
+    hud.alert('The shark took the bait. It will nose around there for a while.', { kind: 'good', duration: 4 });
+  },
+  onBuildFloor() {
+    game.counters.built++;
+    progress('floor');
+  },
+  onBuildNet() {
+    progress('net');
   },
   onRepair() {
     game.counters.repairs++;
@@ -180,7 +241,11 @@ const events = {
     game.counters.repairs++;
     progress('repair');
   },
-  onEat() {
+  onEat(id) {
+    if (id === 'fish') {
+      hud.toast('Raw fish: filling, if not tasty', 'gain');
+      return;
+    }
     progress('coconut');
     hud.toast('Coconut: food and water', 'gain');
   },
@@ -193,7 +258,20 @@ const events = {
   },
 };
 
-const tools = createTools({ scene, camera, raft, debris, shark, fx, audio, inventory, stats: game.stats, events });
+const tools = createTools({ scene, camera, raft, nets, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
+
+nets.onLost((net, reason) => {
+  if (reason === 'built-over') {
+    inventory.add(COSTS.net);
+    hud.toast('Took the net down to build there and kept its materials', 'gain');
+  } else if (reason === 'tile-broke') {
+    hud.toast('A net went down with its floor piece', 'warn');
+  }
+});
+bait.onReturn(() => {
+  inventory.add({ fish: 1 });
+  hud.toast('Bait needs to land in the water', 'warn');
+});
 
 const pipeline = createPipeline({ renderer, scene, camera, vmScene: tools.vmScene, vmCamera: tools.vmCamera, ocean, sun, sky: SKY, aboveWaterOnly: [sky.mesh, fx.sprites] });
 sky.capture(0);
@@ -238,6 +316,7 @@ function watchPerf(dt) {
 function newGame() {
   raft.reset(startingLayout());
   debris.reset(0, 0);
+  bait.clear();
   shark.reset();
   player.reset();
   tools.reset();
@@ -248,9 +327,9 @@ function newGame() {
   game.lastHurt = -99;
   game.lastDamage = null;
   game.progress = {};
-  game.counters = { wood: 0, repels: 0, repairs: 0, lost: 0 };
-  game.goalsDone = false;
-  hud.setGoals(GOALS, game.progress);
+  game.counters = { wood: 0, repels: 0, repairs: 0, lost: 0, built: 0, baited: 0 };
+  game.goalStage = 0;
+  showGoals();
   hud.clearAlert();
 }
 
@@ -262,9 +341,10 @@ function serialize() {
     stats: { ...game.stats },
     progress: { ...game.progress },
     counters: { ...game.counters },
-    goalsDone: game.goalsDone,
+    goalStage: game.goalStage,
     inventory: { ...inventory.items },
     raft: raft.serialize(),
+    nets: nets.serialize(),
     player: player.serialize(),
     shark: shark.serialize(),
   };
@@ -274,16 +354,17 @@ function restore(d) {
   if (!d || d.v !== 1) return false;
   newGame();
   raft.reset(d.raft);
+  nets.restore(d.nets);
   inventory.set(d.inventory);
   Object.assign(game.stats, d.stats);
   game.alive = d.alive;
   game.time = d.time;
   game.progress = d.progress || {};
   game.counters = d.counters || game.counters;
-  game.goalsDone = !!d.goalsDone;
+  game.goalStage = d.goalStage || 0;
   player.restore(d.player);
   shark.restore(d.shark);
-  hud.setGoals(GOALS, game.progress);
+  showGoals();
   return true;
 }
 
@@ -331,6 +412,9 @@ function die() {
     ['Times you drove the shark off', game.counters.repels],
     ['Repairs', game.counters.repairs],
     ['Floor pieces lost', game.counters.lost],
+    ['Floor pieces built', game.counters.built],
+    ['Times the shark took bait', game.counters.baited],
+    ['Scars you left on the shark', shark.scars],
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   showScreen('dead');
 }
@@ -386,10 +470,14 @@ function updatePlay(dt) {
   game.time += dt;
   game.alive += dt;
   raft.update(game.time, dt);
+  // Hammer and net rays this frame need the raft's current pose, not last frame's.
+  raft.group.updateMatrixWorld(true);
   player.update(game.time, dt, input, raft, events);
   const ui = tools.update(game.time, dt, input, player, SKY.sunDir);
   const ps = player.state;
-  shark.update(game.time, dt, { raft, player: { pos: ps.pos, inWater: ps.inWater }, fx, events });
+  bait.update(game.time, dt, raft, debris.flow);
+  shark.update(game.time, dt, { raft, nets, bait, player: { pos: ps.pos, inWater: ps.inWater }, fx, events });
+  nets.update(game.time, dt);
   debris.update(game.time, dt, raft.center());
   fx.update(dt);
   survival(dt);
@@ -408,7 +496,7 @@ function updatePlay(dt) {
 
   hud.setVitals(game.stats);
   hud.setInventory(inventory.items);
-  hud.setSlot(ui.slot, HINTS[SLOTS[ui.slot].id]);
+  hud.setSlot(ui.slot, hintFor(SLOTS[ui.slot].id, ui));
   hud.setPrompt(ui.prompt);
   hud.setCharge(ui.charge);
   hud.setSwimming(ps.inWater);
@@ -478,7 +566,7 @@ else start(window.claude?.hot?.data ?? {});
 
 // Handles for automated checks (tools/smoke.js).
 window.__game = {
-  game, raft, shark, debris, player, tools, inventory, input, camera, events,
+  game, raft, shark, debris, nets, bait, player, tools, inventory, input, camera, events,
   newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline,
   hold: false,
   draw() {

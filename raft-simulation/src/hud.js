@@ -7,6 +7,7 @@ const ICONS = {
   hammer: '<path d="M5 20l8-8"/><path d="M10.5 6.5l4-4 7 7-4 4z" fill="currentColor" fill-opacity=".25"/><path d="M12 8l4 4"/>',
   coconut: '<circle cx="12" cy="13" r="7"/><circle cx="10" cy="11" r=".9" fill="currentColor"/><circle cx="14" cy="11" r=".9" fill="currentColor"/><circle cx="12" cy="14.5" r=".9" fill="currentColor"/><path d="M12 6c0-2 1-3 3-3"/>',
   health: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" fill="currentColor" fill-opacity=".3"/>',
+  fish: '<path d="M2.5 12c3.2-4.3 8.4-5.3 12.5-2.6L20 6v12l-5-3.4C10.9 17.3 5.7 16.3 2.5 12z" fill="currentColor" fill-opacity=".25"/><circle cx="7.5" cy="11" r=".8" fill="currentColor"/><path d="M11 9.5c.8 1.6.8 3.4 0 5"/>',
   hunger: '<path d="M2.5 12c3.2-4.3 8.4-5.3 12.5-2.6L20 6v12l-5-3.4C10.9 17.3 5.7 16.3 2.5 12z" fill="currentColor" fill-opacity=".3"/><circle cx="7.5" cy="11" r=".8" fill="currentColor"/>',
   thirst: '<path d="M12 3.5s6 6.3 6 10.8a6 6 0 0 1-12 0C6 9.8 12 3.5 12 3.5z" fill="currentColor" fill-opacity=".3"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.6"/>',
   wood: '<path d="M3 8.5l15-3 1 3.5-15 3z" fill="currentColor" fill-opacity=".25"/><path d="M5 15l15-3 1 3.5-15 3z" fill="currentColor" fill-opacity=".25"/>',
@@ -46,6 +47,8 @@ export function createHud() {
     hint: $('tool-hint'),
     slots: [...document.querySelectorAll('#hotbar .slot')],
     coco: $('coco-count'),
+    fishN: $('fish-count'),
+    goalTitle: $('goal-title'),
     mats: {},
     vitals: {},
   };
@@ -91,6 +94,8 @@ export function createHud() {
       }
       el.coco.textContent = items.coconut;
       el.slots[3].classList.toggle('empty', items.coconut <= 0);
+      el.fishN.textContent = items.fish;
+      el.slots[4].classList.toggle('empty', items.fish <= 0);
     },
 
     setSlot(i, hint) {
@@ -125,7 +130,8 @@ export function createHud() {
       el.waterline.classList.toggle('on', on);
     },
 
-    setGoals(goals, progress) {
+    setGoals(goals, progress, title) {
+      if (title && el.goalTitle.textContent !== title) el.goalTitle.textContent = title;
       el.goals.innerHTML = goals
         .map((g) => {
           const n = Math.min(progress[g.id] || 0, g.target);

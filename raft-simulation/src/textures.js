@@ -314,3 +314,19 @@ export function setAnisotropy(n) {
     t.needsUpdate = true;
   }
 }
+
+// Knotted rope netting on a transparent background, tileable.
+export function netTexture() {
+  const N = 64;
+  return canvasTex(N, N, (d) => {
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const fx = Math.abs(((x + 0.5) / N) - 0.5) * 2; // 1 at the tile edge
+      const fy = Math.abs(((y + 0.5) / N) - 0.5) * 2;
+      const line = Math.max(smooth(0.8, 0.92, fx), smooth(0.8, 0.92, fy));
+      const knot = smooth(0.72, 0.9, Math.min(fx, fy)) * 1.0;
+      const a = Math.max(line, knot);
+      const shade = 0.75 + 0.25 * Math.max(fx, fy);
+      put(d, (y * N + x) * 4, 206 * shade, 186 * shade, 140 * shade, a * 255);
+    }
+  });
+}

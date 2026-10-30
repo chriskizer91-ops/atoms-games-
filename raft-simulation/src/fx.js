@@ -169,6 +169,10 @@ export function createFx(scene) {
     blood(pos) {
       sprites.emit(pos, { count: 10, color: [0x6e1410, 0x82201a, 0x5a0f0c], speed: [0.2, 0.7], up: [-0.1, 0.25], outward: 1, spread: 0.3, size: [0.3, 0.6], grow: 2.4, alpha: 0.42, gravity: 0, drag: 2.2, life: [1.4, 2.6] });
     },
+    // Faint reddish cloud spreading on the surface, for bait.
+    scent(pos) {
+      sprites.emit(pos, { count: 2, color: [0x7a3524, 0x8a4630], speed: [0.05, 0.25], up: [0, 0.05], outward: 1, spread: 0.15, size: [0.3, 0.5], grow: 3, alpha: 0.28, gravity: 0, drag: 1.5, life: [2, 3] });
+    },
     dust(pos) {
       chunks.emit(pos, { count: 5, color: [0xb89a70, 0x8d6c48], speed: 1.0, size: [0.4, 0.8], gravity: 6, life: [0.4, 0.7] });
       sprites.emit(pos, { count: 5, color: [0xd8c7a6], speed: [0.2, 0.6], up: [0.4, 1], outward: 1, spread: 0.05, size: [0.08, 0.14], grow: 2, alpha: 0.5, gravity: 0, drag: 3, life: [0.4, 0.8] });

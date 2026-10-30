@@ -43,7 +43,30 @@ export const HAMMER = { reach: 4.2, cooldown: 0.5, repairPerHit: 25 };
 export const COSTS = {
   repair: { wood: 1 },
   rebuild: { wood: 3, fiber: 2 },
+  floor: { wood: 4, fiber: 2 },
+  net: { wood: 2, plastic: 3, fiber: 2 },
 };
+
+export const RAFT_LIMIT = 7;          // floor pieces can go up to 7 cells out from the start
+
+export const NET = {
+  reach: 1.05,        // how far the basket sticks out from the floor edge
+  capacity: 5,
+  fishEvery: [28, 50], // seconds between fish swimming into a net
+};
+
+export const FISH = { hunger: 14, thirst: 2 };
+
+export const BAIT = {
+  throwSpeed: 11,
+  life: 45,           // seconds before it sinks
+  lure: 40,           // the shark smells it this far away
+  distract: [25, 35], // seconds the shark hangs around after eating it
+};
+
+// Every time you drive the shark off it carries a new scar and comes back
+// angrier, up to this many.
+export const GRUDGE = { maxScars: 6, perScar: { bite: 0.12, speed: 0.04, gap: 0.08 } };
 
 // Stage 1 has one predator. Later tiers reuse the same AI with bigger numbers.
 export const SHARK_TIERS = [
@@ -65,6 +88,7 @@ export const ITEMS = {
   fiber:   { name: 'Palm fiber' },
   scrap:   { name: 'Scrap metal' },
   coconut: { name: 'Coconut' },
+  fish: { name: 'Raw fish' },
 };
 
 export const COCONUT = { hunger: 12, thirst: 18 };

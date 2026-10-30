@@ -16,7 +16,7 @@
 
 <div id="hud" hidden>
   <section id="objectives" class="panel" aria-label="Goals">
-    <h3 class="label">Stage 1 goals</h3>
+    <h3 class="label" id="goal-title">Goals</h3>
     <ul id="goal-list"></ul>
   </section>
 
@@ -53,6 +53,7 @@
       <div class="slot" data-icon="spear"><kbd>2</kbd><span class="sname">Spear</span></div>
       <div class="slot" data-icon="hammer"><kbd>3</kbd><span class="sname">Hammer</span></div>
       <div class="slot" data-icon="coconut"><kbd>4</kbd><span class="sname">Coconut</span><em id="coco-count">0</em></div>
+      <div class="slot" data-icon="fish"><kbd>5</kbd><span class="sname">Fish</span><em id="fish-count">0</em></div>
     </div>
   </div>
 
@@ -62,9 +63,9 @@
 
 <section id="title" class="screen">
   <div class="title-block">
-    <p class="tag">Working title · Stage 1</p>
+    <p class="tag">Working title · Stage 2</p>
     <h1>Raft<br>Simulation</h1>
-    <p class="pitch">You wake up on a few planks lashed together in the middle of the ocean. Hook what drifts past, keep the shark off your floor, and stay alive.</p>
+    <p class="pitch">You wake up on a few planks lashed together in the middle of the ocean. Hook what drifts past, grow the raft, keep the shark off your floor, and stay alive.</p>
     <button id="play" type="button">Set out</button>
     <p class="note">Made for laptops: keyboard with a mouse or touchpad.</p>
   </div>
@@ -74,9 +75,9 @@
       <div><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows</dt><dd>Move</dd></div>
       <div><dt>Mouse</dt><dd>Look and aim</dd></div>
       <div><dt>Left click</dt><dd>Use tool (hold to wind up the hook)</dd></div>
-      <div><dt>Right click</dt><dd>Let go of the hook line</dd></div>
-      <div><dt><kbd>1</kbd>–<kbd>4</kbd> or scroll</dt><dd>Switch tool</dd></div>
-      <div><dt><kbd>E</kbd></dt><dd>Grab something close</dd></div>
+      <div><dt>Right click</dt><dd>Let go of the hook line, switch what the hammer builds, or throw a fish as bait</dd></div>
+      <div><dt><kbd>1</kbd>–<kbd>5</kbd> or scroll</dt><dd>Switch tool</dd></div>
+      <div><dt><kbd>E</kbd></dt><dd>Grab something close, or empty a net</dd></div>
       <div><dt><kbd>Space</kbd></dt><dd>Jump, or climb aboard from the water</dd></div>
       <div><dt><kbd>Shift</kbd></dt><dd>Run or swim faster</dd></div>
       <div><dt><kbd>Esc</kbd></dt><dd>Pause</dd></div>

@@ -11,9 +11,9 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 | `W` `A` `S` `D` or arrow keys | Move |
 | Mouse / touchpad | Look and aim |
 | Left click | Use the tool in your hand (hold to wind up the hook, hold again to reel in) |
-| Right click | Let go of the hook line |
-| `1`–`4` or scroll | Switch tool: hook, spear, hammer, coconut |
-| `E` | Grab something within reach |
+| Right click | Hook: let go of the line. Hammer: switch between building floor and nets (`R` works too). Fish: throw it as bait |
+| `1`–`5` or scroll | Switch tool: hook, spear, hammer, coconut, fish |
+| `E` | Grab something within reach, or empty a net you're looking at |
 | `Space` | Jump, or climb back aboard from the water |
 | `Shift` | Run or swim faster |
 | `Esc` | Pause |
@@ -29,7 +29,17 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 
 **Graphics quality:** choose Low, Medium (the default) or High on the title screen or in the pause menu. If the first few seconds of play run slowly, the game drops one level on its own and tells you. Your choice is remembered in this browser.
 
-## Stage 1 (this build)
+## Stage 2 (this build)
+
+- **Growing the raft:** with the hammer out, outlines show on open water next to the raft. Click one to build a floor piece for 4 wood and 2 palm fiber. The raft can grow up to 7 pieces out from where it started in each direction.
+- **Catch nets:** right-click with the hammer to switch to nets, then click an outline on an outer edge. A net costs 2 wood, 3 plastic and 2 palm fiber. It's a pole frame with a rope basket that sticks out over the water. Anything that drifts into it stays there (up to 5 things), and now and then a fish swims in. Look at the net and press `E` to empty it. Nets on the upstream side, where things drift in from, catch the most.
+- **Nets can be lost:** a net goes down with its floor piece if the shark breaks that piece. If the shark attacks an edge with a net on it, it tears the net off first. If you build a floor piece where a net was pointing, the net comes down and you get its materials back.
+- **Fish:** slot 5. Click to eat it raw (food, not much water). Right-click to throw it as bait.
+- **Bait:** the shark smells bait in the water from about 40 m away. It leaves whatever it was doing (biting the raft or chasing you) to eat it, then noses around that spot for 25–35 seconds. Bait sinks after 45 seconds if nothing eats it.
+- **The shark remembers:** every time you drive it off, it swims away with a new scar painted on its skin, up to 6. Each scar makes it bite harder, swim and bite faster, and come back sooner.
+- **New goals:** once the first four are done, a second set walks you through building, nets and bait.
+
+## Stage 1
 
 - **Ocean and raft:** rolling waves. The 3×3 raft rides the swell, and things drift past on the current.
 - **Rope hook:** wind it up, throw it, and reel it in. It snags up to 4 floating things: driftwood, plastic, palm fronds, coconuts and barrels (barrels give a mix, including scrap metal). You can also grab anything within reach with `E`.
@@ -42,12 +52,12 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 
 ## Stage plan
 
-1. **Raft, hook, shark, spear, hammer** ← this build
-2. **Building:** make the raft bigger with the hammer, plus nets that catch things floating by
-3. **Crafting menu and clothing:** several outfits, each with its own buffs
-4. **Saving, sound and polish**
+1. **Raft, hook, shark, spear, hammer** (done)
+2. **Building, nets, fish and bait, a shark that remembers you** ← this build
+3. **Crafting menu and clothing:** several outfits, each with its own buffs. Clothes made from what you beat (teeth, hide, fins), weather that makes clothing matter, bigger predators with their own tactics, and glowing water at night
+4. **Saving, sound and polish**, plus a story told through messages in bottles
 
-Bigger shark types as you progress are planned on top of these. The shark code already reads its numbers from a tier table in `src/config.js`.
+The shark code already reads its numbers from a tier table in `src/config.js`, ready for bigger species.
 
 ## Working on it
 
@@ -58,7 +68,7 @@ node tools/build.js --dev   # same, unminified
 NODE_PATH=/opt/node-tools/node_modules node tools/smoke.js   # headless playthrough + screenshots in tools/out/
 ```
 
-`tools/smoke.js` simulates input to play through the Stage 1 loop: hook, shark bite, spear, repair, rebuild, swim, shark chase, climb, coconut and the save round-trip. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
+`tools/smoke.js` simulates input to play through both stages: hook, shark bite, spear and scar, repair, rebuild, swim, shark chase, climb, coconut, building a floor piece, putting up a net, a net catching material and a fish, emptying it, eating fish, bait luring the shark, a net torn off, and save/restore. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
 
 | File | What it does |
 |---|---|
@@ -69,7 +79,9 @@ NODE_PATH=/opt/node-tools/node_modules node tools/smoke.js   # headless playthro
 | `src/textures.js`, `src/materials.js` | Every texture, painted from noise at startup, and the shared materials built from them |
 | `src/raft.js` | Floor pieces, damage stages, repair/rebuild, how the raft rides the waves, collision |
 | `src/debris.js` | Floating materials: models, drift and loot |
-| `src/shark.js` | Shark model (body bends as it swims) and behaviour: circle, approach, bite, chase, flee |
+| `src/nets.js` | Catch nets: model, placement outlines, catching, fish, emptying, loss |
+| `src/bait.js` | Thrown fish bait: flight, floating, scent trail |
+| `src/shark.js` | Shark model (body bends as it swims), scars, and behaviour: circle, approach, bite, chase, flee, follow bait, distracted |
 | `src/player.js` | First-person movement: walking, jumping, falling in, swimming, climbing |
 | `src/tools.js` | Hook, spear, hammer and coconut: first-person view model, animations, actions |
 | `src/hud.js`, `src/style.css`, `src/index.html` | On-screen display and screens |
