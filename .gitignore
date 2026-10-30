@@ -3,3 +3,4 @@ node_modules/
 .DS_Store
 fresh-grad/tools/out/
 .claude/
+raft-simulation/tools/out/

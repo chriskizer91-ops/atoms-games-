@@ -1,0 +1,14 @@
+{
+  "name": "raft-simulation",
+  "private": true,
+  "version": "0.1.0",
+  "description": "First-person ocean survival game (working title). Stage 1: raft, hook, shark, spear, hammer.",
+  "scripts": {
+    "build": "node tools/build.js",
+    "smoke": "node tools/smoke.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "three": "0.186.1"
+  }
+}

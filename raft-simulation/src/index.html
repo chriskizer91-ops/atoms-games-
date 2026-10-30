@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Raft Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Saira+Stencil+One&display=swap">
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Game view"></canvas>
+
+<div id="hud" hidden>
+  <section id="objectives" class="panel" aria-label="Goals">
+    <h3 class="label">Stage 1 goals</h3>
+    <ul id="goal-list"></ul>
+  </section>
+
+  <section id="materials" class="panel" aria-label="Materials">
+    <div class="mat" data-k="wood" data-icon="wood"><span class="n">0</span><span class="name">Wood</span></div>
+    <div class="mat" data-k="plastic" data-icon="plastic"><span class="n">0</span><span class="name">Plastic</span></div>
+    <div class="mat" data-k="fiber" data-icon="fiber"><span class="n">0</span><span class="name">Palm fiber</span></div>
+    <div class="mat" data-k="scrap" data-icon="scrap"><span class="n">0</span><span class="name">Scrap metal</span></div>
+  </section>
+
+  <div id="alert" hidden>
+    <span id="alert-arrow" data-icon="arrow"></span>
+    <span id="alert-text"></span>
+  </div>
+
+  <div id="crosshair"></div>
+  <div id="charge"><div id="charge-fill"></div></div>
+  <div id="prompt" hidden>
+    <kbd id="prompt-key"></kbd><span id="prompt-text"></span><span id="prompt-cost"></span>
+  </div>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <section id="vitals" class="panel" aria-label="Health, food and water">
+    <div class="vital" id="v-health" data-icon="health"><div class="bar"><i></i></div><b>100</b></div>
+    <div class="vital" id="v-hunger" data-icon="hunger"><div class="bar"><i></i></div><b>100</b></div>
+    <div class="vital" id="v-thirst" data-icon="thirst"><div class="bar"><i></i></div><b>100</b></div>
+  </section>
+
+  <div id="bottom">
+    <div id="tool-hint"></div>
+    <div id="hotbar">
+      <div class="slot" data-icon="hook"><kbd>1</kbd><span class="sname">Hook</span></div>
+      <div class="slot" data-icon="spear"><kbd>2</kbd><span class="sname">Spear</span></div>
+      <div class="slot" data-icon="hammer"><kbd>3</kbd><span class="sname">Hammer</span></div>
+      <div class="slot" data-icon="coconut"><kbd>4</kbd><span class="sname">Coconut</span><em id="coco-count">0</em></div>
+    </div>
+  </div>
+
+  <div id="waterline"></div>
+  <div id="vignette"></div>
+</div>
+
+<section id="title" class="screen">
+  <div class="title-block">
+    <p class="tag">Working title · Stage 1</p>
+    <h1>Raft<br>Simulation</h1>
+    <p class="pitch">You wake up on a few planks lashed together in the middle of the ocean. Hook what drifts past, keep the shark off your floor, and stay alive.</p>
+    <button id="play" type="button">Set out</button>
+    <p class="note">Made for laptops: keyboard with a mouse or touchpad.</p>
+  </div>
+  <div class="controls panel">
+    <h2 class="label">Controls</h2>
+    <dl>
+      <div><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows</dt><dd>Move</dd></div>
+      <div><dt>Mouse</dt><dd>Look and aim</dd></div>
+      <div><dt>Left click</dt><dd>Use tool (hold to wind up the hook)</dd></div>
+      <div><dt>Right click</dt><dd>Let go of the hook line</dd></div>
+      <div><dt><kbd>1</kbd>–<kbd>4</kbd> or scroll</dt><dd>Switch tool</dd></div>
+      <div><dt><kbd>E</kbd></dt><dd>Grab something close</dd></div>
+      <div><dt><kbd>Space</kbd></dt><dd>Jump, or climb aboard from the water</dd></div>
+      <div><dt><kbd>Shift</kbd></dt><dd>Run or swim faster</dd></div>
+      <div><dt><kbd>Esc</kbd></dt><dd>Pause</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section id="pause" class="screen" hidden>
+  <div class="card panel">
+    <h2>Paused</h2>
+    <p>The sea waits for you.</p>
+    <div class="row">
+      <button id="resume" type="button">Back to the raft</button>
+      <button id="quit" type="button" class="ghost">Title screen</button>
+    </div>
+  </div>
+</section>
+
+<section id="dead" class="screen" hidden>
+  <div class="card panel">
+    <h2>Lost at sea</h2>
+    <p id="dead-reason"></p>
+    <dl id="dead-stats"></dl>
+    <button id="restart" type="button">Start over</button>
+  </div>
+</section>
+
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>
