@@ -88,6 +88,7 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 - **The ending.** Reach the lighthouse island, go to the door and press `E` to light the lamp. A ship's horn answers and you get an ending screen with your stats. Then you can **keep sailing** (the lamp stays lit at night) or go back to the title.
 - **Sound:** footsteps (hollow on the deck, soft on sand), swimming strokes, gulls near land, wind that howls in storms, paper when you unroll a note, a ladder when you climb, and a click on menu buttons.
 - **New goals:** "putting down roots" (plant, smelt, a sail, 3 notes) and "the far horizon" (chart 6 islands, climb the tower, harvest, light the lamp).
+- **Build tab fixes:** clicking a recipe in the crafting panel always selects it now. Before, the list redrew itself twice a second and could swallow a click. Double-click something in the Build tab to take the hammer out set to it. Opening the build menu from the hammer (`Q` or right-click) shows what the hammer is set to. With the hammer out, `R` still steps through everything you can build.
 
 ## Stage 3.5: your changes after playing Stage 3
 

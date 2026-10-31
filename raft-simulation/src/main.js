@@ -364,7 +364,7 @@ const events = {
     progress('upgrade');
   },
   onOpenBuild() {
-    openMenu('build');
+    openMenu('build', false, tools.hammerMode);
   },
   onStationUse(station, act, r) {
     if (r.craft) openMenu('craft', true);
@@ -791,8 +791,8 @@ function holdInput(kind) {
   input.unlock();
   return true;
 }
-function openMenu(tab = 'craft', bench = false) {
-  if (holdInput('craft')) crafting.open(tab, bench);
+function openMenu(tab = 'craft', bench = false, pick = null) {
+  if (holdInput('craft')) crafting.open(tab, bench, pick);
 }
 function openMap() {
   if (holdInput('map')) map.open();

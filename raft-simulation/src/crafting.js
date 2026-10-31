@@ -104,12 +104,22 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
     }).join('');
   }
 
+  // Only touch the list when it actually changes: replacing it under the
+  // mouse in the middle of a click would swallow the click.
+  let listHtml = '';
+  let sideHtml = '';
   function renderList() {
+    let html;
     if (tab === 'craft') {
       const bySlot = (slot) => Object.keys(CLOTHING).filter((id) => CLOTHING[id].slot === slot);
-      el.list.innerHTML = group('Head', bySlot('head')) + group('Body', bySlot('body')) + group('Legs', bySlot('legs')) + group('Gear', Object.keys(GEAR));
+      html = group('Head', bySlot('head')) + group('Body', bySlot('body')) + group('Legs', bySlot('legs')) + group('Gear', Object.keys(GEAR));
     } else {
-      el.list.innerHTML = group('Build with the hammer', Object.keys(STATIONS)) + group('Upgrades', Object.keys(UPGRADES));
+      html = '<p class="craft-tip">Click one, then <b>Build this</b> (or double-click it). With the hammer out, <kbd>R</kbd> also steps through them.</p>'
+        + group('Build with the hammer', Object.keys(STATIONS)) + group('Upgrades', Object.keys(UPGRADES));
+    }
+    if (html !== listHtml) {
+      listHtml = html;
+      el.list.innerHTML = html;
     }
   }
 
@@ -150,7 +160,11 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
 
   function renderSide() {
     const slots = Object.keys(SLOT_NAMES).map((slot) => `<div class="slotrow"><span>${SLOT_NAMES[slot]}</span><b>${st.worn[slot] ? CLOTHING[st.worn[slot]].name : '—'}</b></div>`).join('');
-    el.side.innerHTML = `<p class="label">Wardrobe</p>${dollSVG(st.worn)}${slots}`;
+    const html = `<p class="label">Wardrobe</p>${dollSVG(st.worn)}${slots}`;
+    if (html !== sideHtml) {
+      sideHtml = html;
+      el.side.innerHTML = html;
+    }
   }
 
   function render() {
@@ -195,11 +209,22 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
     render();
   }
 
-  el.list.addEventListener('click', (e) => {
+  // Select on press (not on release), so a slow touchpad click always counts.
+  const choose = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
     const b = e.target.closest('.craft-item');
-    if (!b) return;
+    if (!b || b.dataset.id === selected) return;
     selected = b.dataset.id;
     render();
+  };
+  el.list.addEventListener('pointerdown', choose);
+  el.list.addEventListener('click', choose);
+  // Double-click something buildable to take the hammer out set to it.
+  el.list.addEventListener('dblclick', (e) => {
+    const b = e.target.closest('.craft-item');
+    if (!b) return;
+    const id = b.dataset.id;
+    if (STATIONS[id] && unlocked(id) && benchOk(id)) { selected = id; act('pick'); }
   });
   el.detail.addEventListener('click', (e) => {
     const b = e.target.closest('button[data-act]');
@@ -225,11 +250,13 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
 
   const api = {
     get isOpen() { return open; },
-    open(which = 'craft', bench = false) {
+    // pick: what to have selected (the build tab opens on what the hammer is set to).
+    open(which = 'craft', bench = false, pick = null) {
       discover();
       open = true;
       tab = which;
       atBench = bench;
+      if (pick && (STATIONS[pick] || UPGRADES[pick] || CLOTHING[pick] || GEAR[pick])) selected = pick;
       if (which === 'build' && !STATIONS[selected] && !UPGRADES[selected]) selected = 'floor';
       if (which === 'craft' && !CLOTHING[selected] && !GEAR[selected]) selected = 'palmHat';
       el.root.hidden = false;
