@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creature Catch Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* a print proof: the cards sit on a desk-colored page, each design a row of front and back at the same scale */
+  --page: #ece5d8; --panel: #fbf7ef; --ink: #2a2230; --muted: #6a5e57; --line: #d6ccbb; --accent: #6e46a0;
+  --display: 'Pixelify Sans', ui-monospace, monospace; --body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #17131f; --panel: #221c2d; --ink: #f0eaf6; --muted: #b3a8c2; --line: #3a3248; --accent: #c4a6ec; color-scheme: dark; } }
+:root[data-theme="dark"] { --page: #17131f; --panel: #221c2d; --ink: #f0eaf6; --muted: #b3a8c2; --line: #3a3248; --accent: #c4a6ec; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.5 var(--body); }
+main { max-width: 1120px; margin: 0 auto; padding: 32px 16px 56px; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(28px, 5vw, 40px); letter-spacing: 0.01em; }
+h2 { font-size: 22px; }
+p { margin: 0; max-width: 68ch; }
+.lead { color: var(--muted); }
+.design { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 12px; }
+.design header { display: flex; gap: 10px 16px; align-items: baseline; flex-wrap: wrap; }
+.tag { font-family: var(--body); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; }
+.faces { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+figure { margin: 0; display: grid; gap: 6px; }
+figure img { width: 100%; height: auto; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.18), 0 6px 18px rgba(0,0,0,0.14); }
+figcaption { font-size: 14px; color: var(--muted); }
+.files { font-size: 14px; color: var(--muted); }
+code { font-family: ui-monospace, monospace; font-size: 0.92em; }
+.notes { display: grid; gap: 10px; }
+.notes ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 75ch; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header style="display:grid;gap:8px">
+    <h1>Creature Catch cards</h1>
+    <p class="lead">Business cards for Atom's game: the game and the Field Guide, each with its web address and a QR code, and the three starters' shadows. Every card is 3.5 by 2 inches, the standard size. All six fronts share one back.</p>
+  </header>
+  <section class="design" id="all-nine-journal">
+    <header><h2>All nine, journal</h2><span class="tag">1 of 6</span></header>
+    <p>All three starters. First forms on the left, second forms between the codes, final forms on the right; each row is one family. Ink shadows on Creature Log paper.</p>
+    <div class="faces">
+      <figure><img src="all-nine-journal-front.png" alt="All nine, journal card, front" width="672" height="384" loading="lazy"><figcaption>Front</figcaption></figure>
+      <figure><img src="back.png" alt="Card back: the title art, 'A game by Atom' and 'Scan the other side to play!'" width="672" height="384" loading="lazy"><figcaption>Back</figcaption></figure>
+    </div>
+    <p class="files">Print files: <code>all-nine-journal.pdf</code> (10 a sheet) or <code>print/all-nine-journal-front.png</code> with <code>print/back.png</code> (print shop).</p>
+  </section>
+  <section class="design" id="all-nine-night">
+    <header><h2>All nine, night sky</h2><span class="tag">2 of 6</span></header>
+    <p>The same nine on a night sky, each shadow in its type color: Water blue, Plant green, Fire orange.</p>
+    <div class="faces">
+      <figure><img src="all-nine-night-front.png" alt="All nine, night sky card, front" width="672" height="384" loading="lazy"><figcaption>Front</figcaption></figure>
+      <figure><img src="back.png" alt="Card back: the title art, 'A game by Atom' and 'Scan the other side to play!'" width="672" height="384" loading="lazy"><figcaption>Back</figcaption></figure>
+    </div>
+    <p class="files">Print files: <code>all-nine-night.pdf</code> (10 a sheet) or <code>print/all-nine-night-front.png</code> with <code>print/back.png</code> (print shop).</p>
+  </section>
+  <section class="design" id="water-family">
+    <header><h2>Water family</h2><span class="tag">3 of 6</span></header>
+    <p>Drizzlon, Rapidrake and Tsunadrake, one big shadow each.</p>
+    <div class="faces">
+      <figure><img src="water-family-front.png" alt="Water family card, front" width="672" height="384" loading="lazy"><figcaption>Front</figcaption></figure>
+      <figure><img src="back.png" alt="Card back: the title art, 'A game by Atom' and 'Scan the other side to play!'" width="672" height="384" loading="lazy"><figcaption>Back</figcaption></figure>
+    </div>
+    <p class="files">Print files: <code>water-family.pdf</code> (10 a sheet) or <code>print/water-family-front.png</code> with <code>print/back.png</code> (print shop).</p>
+  </section>
+  <section class="design" id="plant-family">
+    <header><h2>Plant family</h2><span class="tag">4 of 6</span></header>
+    <p>Mossback, Thornshell and Elderoak, one big shadow each.</p>
+    <div class="faces">
+      <figure><img src="plant-family-front.png" alt="Plant family card, front" width="672" height="384" loading="lazy"><figcaption>Front</figcaption></figure>
+      <figure><img src="back.png" alt="Card back: the title art, 'A game by Atom' and 'Scan the other side to play!'" width="672" height="384" loading="lazy"><figcaption>Back</figcaption></figure>
+    </div>
+    <p class="files">Print files: <code>plant-family.pdf</code> (10 a sheet) or <code>print/plant-family-front.png</code> with <code>print/back.png</code> (print shop).</p>
+  </section>
+  <section class="design" id="fire-family">
+    <header><h2>Fire family</h2><span class="tag">5 of 6</span></header>
+    <p>Embroak, Cinderfrog and Infernotoad, one big shadow each.</p>
+    <div class="faces">
+      <figure><img src="fire-family-front.png" alt="Fire family card, front" width="672" height="384" loading="lazy"><figcaption>Front</figcaption></figure>
+      <figure><img src="back.png" alt="Card back: the title art, 'A game by Atom' and 'Scan the other side to play!'" width="672" height="384" loading="lazy"><figcaption>Back</figcaption></figure>
+    </div>
+    <p class="files">Print files: <code>fire-family.pdf</code> (10 a sheet) or <code>print/fire-family-front.png</code> with <code>print/back.png</code> (print shop).</p>
+  </section>
+  <section class="design" id="one-of-each">
+    <header><h2>One of each</h2><span class="tag">6 of 6</span></header>
+    <p>A first form, a second form and a final form, each from a different family: Drizzlon, Thornshell and Infernotoad.</p>
+    <div class="faces">
+      <figure><img src="one-of-each-front.png" alt="One of each card, front" width="672" height="384" loading="lazy"><figcaption>Front</figcaption></figure>
+      <figure><img src="back.png" alt="Card back: the title art, 'A game by Atom' and 'Scan the other side to play!'" width="672" height="384" loading="lazy"><figcaption>Back</figcaption></figure>
+    </div>
+    <p class="files">Print files: <code>one-of-each.pdf</code> (10 a sheet) or <code>print/one-of-each-front.png</code> with <code>print/back.png</code> (print shop).</p>
+  </section>
+  <section class="notes">
+    <h2>What the codes open</h2>
+    <ul>
+      <li>Left code, Creature Catch: <a href="https://chriskizer91-ops.github.io/atoms-games-/creature-catch/">https://chriskizer91-ops.github.io/atoms-games-/creature-catch/</a></li>
+      <li>Right code, Field Guide: <a href="https://chriskizer91-ops.github.io/atoms-games-/creature-catch/field-guide.html">https://chriskizer91-ops.github.io/atoms-games-/creature-catch/field-guide.html</a></li>
+    </ul>
+    <h2>Printing</h2>
+    <ul>
+      <li>At home: the PDF matches the usual 10-to-a-sheet business card paper (2 across, 5 down, like Avery 5371 or 8371). Print at 100% ("Actual size"), two-sided, flipping on the long edge. Page 1 is the fronts, page 2 the backs.</li>
+      <li>At a print shop: upload the front and back pictures. They're 300 dpi with 1/8 inch extra on every side to be trimmed off.</li>
+      <li>Every QR code was read back from the 300 dpi picture, at full size and shrunk down like a phone photo, before these files were kept.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

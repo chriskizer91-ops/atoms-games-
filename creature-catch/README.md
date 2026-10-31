@@ -69,6 +69,8 @@ node tests/run-all.mjs     # the browser tests (tests/README.md)
 node tools/publish-pages.mjs   # puts the built game and Field Guide on the gh-pages branch (then: git push origin gh-pages)
 ```
 
+**Business cards:** `cards/` has cards with the game's and the Field Guide's QR codes and the starters' shadows: six front designs and one back, as 10-a-sheet PDFs (US Letter, 2 across, 5 down), 300 dpi pictures with bleed for a print shop (`cards/print/`), the two codes on their own (`cards/qr/`), and `cards/preview/index.html` to compare them. `node tools/make-cards.mjs` remakes them (it needs the `qrcode` and `jsqr` npm packages on `NODE_PATH`, see the tool's top comment) and reads every code back before writing anything.
+
 **GitHub Pages:** `tools/publish-pages.mjs` writes `creature-catch/index.html` (the game) and `creature-catch/field-guide.html` to the `gh-pages` branch, replacing only that folder, without touching your checkout. Turn Pages on once: on GitHub, the repo's **Settings > Pages > Build and deployment**: Source **Deploy from a branch**, branch **gh-pages**, folder **/ (root)**, Save. After that, each release only needs the tool and a push.
 
 ## Layout
