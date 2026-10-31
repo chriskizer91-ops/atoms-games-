@@ -6,6 +6,8 @@ A Game Boy Advance–style monster-catching JRPG. Walk through tall grass, battl
 
 Open **`creature-catch.html`** in any browser. It's one file and works offline. On a phone, an on-screen pad appears.
 
+**Online:** the game is also a GitHub Pages site, at **https://chriskizer91-ops.github.io/atoms-games-/creature-catch/** (the Field Guide is `.../creature-catch/field-guide.html`), once Pages is turned on (see Building). Saves stay in the browser they were made in, so the website and a downloaded copy keep their own save files.
+
 | Keys | Pad | Does |
 |---|---|---|
 | Arrows / WASD | D-pad | Walk, move the cursor |
@@ -64,7 +66,10 @@ node tools/build.mjs        # writes creature-catch.html from src/ and art/
 node tools/roster-doc.mjs   # writes docs/creature-catch-roster.md from the game data
 node tools/build-companion.mjs  # writes companion/creature-catch-field-guide.html
 node tests/run-all.mjs     # the browser tests (tests/README.md)
+node tools/publish-pages.mjs   # puts the built game and Field Guide on the gh-pages branch (then: git push origin gh-pages)
 ```
+
+**GitHub Pages:** `tools/publish-pages.mjs` writes `creature-catch/index.html` (the game) and `creature-catch/field-guide.html` to the `gh-pages` branch, replacing only that folder, without touching your checkout. Turn Pages on once: on GitHub, the repo's **Settings > Pages > Build and deployment**: Source **Deploy from a branch**, branch **gh-pages**, folder **/ (root)**, Save. After that, each release only needs the tool and a push.
 
 ## Layout
 

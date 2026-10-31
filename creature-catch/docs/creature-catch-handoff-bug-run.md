@@ -34,7 +34,8 @@ touching anything.
   files: `creature-catch-v12.html` (copy of `creature-catch.html`), `creature-catch-v12-source.zip`
   (`git archive --format=zip --prefix=creature-catch/ -o <zip> HEAD:creature-catch`, run from the repo root after
   committing) and `creature-catch-field-guide-v12.html` (copy of `companion/creature-catch-field-guide.html`).
-  Send them to the user as files.
+  Send them to the user as files. Then update the website: `node tools/publish-pages.mjs` and `git push origin gh-pages`
+  (the game is on GitHub Pages at https://chriskizer91-ops.github.io/atoms-games-/creature-catch/; README, Building).
 - **Git:** commit and push to the working branch. Don't open a pull request unless asked. Tags can't be pushed (403).
 - **Keep the docs true.** If a fix changes behavior, update `CHANGELOG.md`, and `docs/creature-catch-decisions-2.md`
   when it changes a rule. Regenerate what's generated (section 2).
@@ -69,6 +70,7 @@ node tools/build.mjs              # the game   -> creature-catch.html
 node tools/build-companion.mjs    # Field Guide -> companion/creature-catch-field-guide.html
 node tools/roster-doc.mjs         # docs/creature-catch-roster.md
 node tests/run-all.mjs            # the browser tests (about 10 minutes)
+node tools/publish-pages.mjs      # the built game and Field Guide -> the gh-pages branch (GitHub Pages)
 ```
 
 Rebuild the game after any change in `src/` or `art/`, the Field Guide after any data or art change, and the roster
