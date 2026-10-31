@@ -62,6 +62,28 @@ function tone({ type = 'sine', freq = 200, to = null, dur = 0.15, gain = 0.4, pa
 }
 
 let rainGain = null;
+let windGain = null;
+let windFilter = null;
+function startWind() {
+  // Low howl for storms: band-passed noise whose pitch drifts.
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer();
+  src.loop = true;
+  windFilter = ctx.createBiquadFilter();
+  windFilter.type = 'bandpass';
+  windFilter.frequency.value = 380;
+  windFilter.Q.value = 3;
+  windGain = ctx.createGain();
+  windGain.gain.value = 0;
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 0.13;
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.value = 140;
+  lfo.connect(lfoGain).connect(windFilter.frequency);
+  src.connect(windFilter).connect(windGain).connect(master);
+  src.start();
+  lfo.start();
+}
 function startRain() {
   const src = ctx.createBufferSource();
   src.buffer = noiseBuffer();
@@ -117,6 +139,7 @@ export const audio = {
     master.connect(ctx.destination);
     startAmbience();
     startRain();
+    startWind();
   },
 
   setMuted(m) {
@@ -231,5 +254,64 @@ export const audio = {
   error() {
     if (!ctx) return;
     tone({ type: 'square', freq: 160, dur: 0.12, gain: 0.08 });
+  },
+  // Footsteps: hollow knock on planks, soft crunch on sand.
+  step(surface = 'deck') {
+    if (!ctx) return;
+    if (surface === 'sand') {
+      noiseHit({ type: 'bandpass', freq: 1800 + Math.random() * 600, q: 0.8, dur: 0.09, gain: 0.07 });
+    } else {
+      tone({ type: 'triangle', freq: 120 + Math.random() * 30, to: 80, dur: 0.07, gain: 0.12 });
+      noiseHit({ type: 'lowpass', freq: 700, dur: 0.05, gain: 0.05 });
+    }
+  },
+  stroke() {
+    if (!ctx) return;
+    noiseHit({ type: 'bandpass', freq: 650 + Math.random() * 250, q: 1, dur: 0.32, gain: 0.08, sweepTo: 320, attack: 0.06 });
+  },
+  // A gull, now and then, when land is near.
+  bird(pan = 0) {
+    if (!ctx) return;
+    const f = 1500 + Math.random() * 500;
+    tone({ type: 'sine', freq: f, to: f * 0.7, dur: 0.22, gain: 0.05, pan });
+    tone({ type: 'sine', freq: f * 1.05, to: f * 0.72, dur: 0.18, gain: 0.04, pan, delay: 0.26 });
+  },
+  setWind(level) {
+    if (!windGain) return;
+    windGain.gain.setTargetAtTime(level * 0.12, ctx.currentTime, 1.2);
+  },
+  paper() {
+    if (!ctx) return;
+    noiseHit({ type: 'highpass', freq: 2200, dur: 0.18, gain: 0.08, attack: 0.02 });
+    setTimeout(() => noiseHit({ type: 'highpass', freq: 2600, dur: 0.14, gain: 0.06, attack: 0.02 }), 160);
+  },
+  climb() {
+    if (!ctx) return;
+    for (let i = 0; i < 4; i++) setTimeout(() => tone({ type: 'triangle', freq: 150 + i * 12, to: 100, dur: 0.06, gain: 0.12 }), i * 110);
+  },
+  horn() {
+    if (!ctx) return;
+    // A ship's horn, far off: two low notes.
+    const t = ctx.currentTime;
+    for (const [f, d] of [[92, 0], [69, 0.02]]) {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = f;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 420;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t + d);
+      g.gain.exponentialRampToValueAtTime(0.22, t + d + 0.4);
+      g.gain.setValueAtTime(0.22, t + d + 2.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d + 3.6);
+      o.connect(lp).connect(g).connect(master);
+      o.start(t + d);
+      o.stop(t + d + 3.8);
+    }
+  },
+  click() {
+    if (!ctx) return;
+    tone({ type: 'triangle', freq: 900, dur: 0.04, gain: 0.08 });
   },
 };

@@ -19,7 +19,10 @@ export function createPlayer(camera) {
     canClimb: false,
     eyeBob: 0,
     shove: { x: 0, z: 0, t: 0 },
+    tower: null,          // { x, z, h } while standing on a lookout tower
+    onLand: false,
   };
+  let rails = null;
   const fwd = new THREE.Vector3();
   const right = new THREE.Vector3();
   const wish = new THREE.Vector3();
@@ -27,7 +30,26 @@ export function createPlayer(camera) {
   return {
     state: p,
 
+    setRails(r) { rails = r; },
+
+    // Up onto a lookout tower's platform (h: height above the deck), or back down.
+    climbTower(tw) {
+      if (tw) {
+        p.tower = tw;
+        p.pos.set(tw.x, p.pos.y + tw.h, tw.z);
+        p.grounded = true;
+        p.velY = 0;
+      } else if (p.tower) {
+        const tw0 = p.tower;
+        p.tower = null;
+        p.pos.set(tw0.x, p.pos.y - tw0.h, tw0.z + 0.7);
+        p.grounded = true;
+      }
+    },
+
     reset() {
+      p.tower = null;
+      p.onLand = false;
       p.pos.set(0, DECK_Y, 0.4);
       p.velY = 0;
       p.yaw = 0;
@@ -47,7 +69,8 @@ export function createPlayer(camera) {
     },
 
     serialize() {
-      return { x: p.pos.x, y: p.pos.y, z: p.pos.z, yaw: p.yaw, pitch: p.pitch, inWater: p.inWater };
+      const tw = p.tower;
+      return { x: tw ? tw.x : p.pos.x, y: tw ? p.pos.y - tw.h : p.pos.y, z: tw ? tw.z + 0.7 : p.pos.z, yaw: p.yaw, pitch: p.pitch, inWater: p.inWater };
     },
 
     restore(d) {
@@ -57,6 +80,7 @@ export function createPlayer(camera) {
       p.pitch = d.pitch;
       p.inWater = !!d.inWater;
       p.grounded = !p.inWater;
+      p.tower = null;
       p.velY = 0;
     },
 
@@ -80,14 +104,33 @@ export function createPlayer(camera) {
       const sprint = input.move('sprint');
       p.moveAmount = damp(p.moveAmount, moving ? 1 : 0, 8, dt);
 
-      if (!p.inWater) {
+      if (p.tower) {
+        // On the lookout platform: walk about inside its railing.
+        const tw = p.tower;
+        p.pos.x = clamp(p.pos.x + wish.x * PLAYER.walk * 0.6 * dt, tw.x - 0.48, tw.x + 0.48);
+        p.pos.z = clamp(p.pos.z + wish.z * PLAYER.walk * 0.6 * dt, tw.z - 0.48, tw.z + 0.48);
+        p.pos.y = raft.deckHeightAt(tw.x, tw.z) + tw.h;
+        p.grounded = true;
+        p.onLand = false;
+        p.canClimb = false;
+        p.shove.t = 0;
+        if (moving) p.walkPhase += dt * PLAYER.walk * 1.2;
+      } else if (!p.inWater) {
         const speed = sprint ? PLAYER.sprint : PLAYER.walk;
+        const x0 = p.pos.x, z0 = p.pos.z;
         p.pos.x += wish.x * speed * dt;
         p.pos.z += wish.z * speed * dt;
         if (p.shove.t > 0) {
           p.shove.t -= dt;
           p.pos.x += p.shove.x * dt;
           p.pos.z += p.shove.z * dt;
+        }
+        // Railings stop you (and a shove) at the edge.
+        if (rails && p.pos.y > -0.5) {
+          let stopped = false;
+          if (rails.blocks(x0, z0, p.pos.x, z0)) { p.pos.x = x0; stopped = true; }
+          if (rails.blocks(x0, z0, p.pos.x, p.pos.z)) { p.pos.z = z0; stopped = true; }
+          if (stopped && p.shove.t > 0) { p.shove.t = 0; events.onRailCatch?.(); }
         }
         // Standing on the raft deck, or on island ground above the waterline.
         const onDeck = raft.isSupported(p.pos.x, p.pos.z);

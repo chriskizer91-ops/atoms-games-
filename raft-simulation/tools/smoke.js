@@ -26,7 +26,14 @@ fs.mkdirSync(outDir, { recursive: true });
     const G = window.__game;
     G.hold = true;
     const step = G.step.bind(G);
-    G.step = (sec, fn) => step(sec, fn, false);
+    // With G.fed on, long waits can't starve you (hunger and thirst stay above 30,
+    // health above 50), so later checks don't run against a dead player.
+    const feed = () => {
+      if (!G.fed) return;
+      const s = G.game.stats;
+      s.hunger = Math.max(s.hunger, 30); s.thirst = Math.max(s.thirst, 30); s.health = Math.max(s.health, 50);
+    };
+    G.step = (sec, fn) => step(sec, (i) => { feed(); fn?.(i); }, false);
     // Software rendering: refresh the sky lighting less often than the game does.
     G.weather.envInterval = 20;
     G.draw();
@@ -68,6 +75,12 @@ fs.mkdirSync(outDir, { recursive: true });
       G.input.state.mouse[button] = false;
       G.input.state.released[button] = true;
     };
+    // Random bottles would steal E presses; the bottle checks spawn their own.
+    G.story.state.nextBottle = 1e9;
+    const newGame = G.newGame;
+    G.newGame = () => { newGame(); G.story.state.nextBottle = 1e9; };
+    // Clear anything floating near a spot before pressing E at it.
+    G.clearNear = (x, z, r = 2.5) => { for (const d of [...G.debris.items]) if (Math.hypot(d.x - x, d.z - z) < r) G.debris.remove(d); };
     G.key = (code) => {
       // one-frame press
       const ev = new KeyboardEvent('keydown', { code });
@@ -553,6 +566,7 @@ fs.mkdirSync(outDir, { recursive: true });
     const st = [...G.stations.list.values()].find((s) => s.kind === 'catcher');
     G.tools.setSlot(0, G.player); G.step(0.3);
     G.game.stats.thirst = 40;
+    G.clearNear(-T, T);
     G.aimAt(-T, 0.9, T); G.step(0.05);
     G.key('KeyE'); G.step(0.1);
     return { prompt, reinforced: tile.reinforced, maxHp: tile.maxHp, cups: st ? st.cups : -1, thirst: Math.round(G.game.stats.thirst) };
@@ -560,73 +574,79 @@ fs.mkdirSync(outDir, { recursive: true });
   check('hammer reinforces a floor piece', build2.reinforced && build2.maxHp === 200, JSON.stringify(build2));
   check('rain catcher fills in rain and you can drink', build2.cups >= 0 && build2.thirst > 60, JSON.stringify(build2));
 
-  // 27. An island drifts in and stops; wade ashore, gather stone, the island waits
+  // 27. The raft drifts up to an island and rests; wade ashore, gather stone, the raft waits
   const island = await page.evaluate(() => {
     const G = window.__game; const p = G.player.state;
+    G.fed = true;
     G.weather.setWeather('clear', true);
-    G.islands.summon(G.raft.center(), G.raft.radius());
+    G.islands.summon(G.raft.center(), G.raft.radius(), 'medium');
     let t = 0;
-    while (G.islands.island.phase === 'approach' && t < 200) { G.step(1); t += 1; }
+    while (!G.islands.resting && t < 200) { G.step(1); t += 1; }
     const isl = G.islands.island;
     const c = G.islands.center();
-    // swim from the raft toward the island until the sea floor comes up
-    p.pos.set(Math.sign(c.x) * 6, -1, 0); p.inWater = true; p.grounded = false;
-    p.yaw = Math.atan2(-(c.x - p.pos.x), -(c.z - p.pos.z)); p.pitch = 0;
+    const rc = G.raft.center();
+    // swim from the raft edge toward the island until the sea floor comes up
+    const dx = c.x - rc.x, dz = c.z - rc.z, l = Math.hypot(dx, dz);
+    p.pos.set(rc.x + dx / l * (G.raft.radius() + 1.2), -1, rc.z + dz / l * (G.raft.radius() + 1.2)); p.inWater = true; p.grounded = false;
+    p.yaw = Math.atan2(-dx, -dz); p.pitch = 0;
     G.shark.holdOff(999);
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' }));
     let s = 0;
     while (!p.onLand && s < 40) { G.step(0.25); s += 0.25; }
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
     const ashore = p.onLand;
-    // walk to a rock and gather
     const rock = isl.built.resources.find((r) => r.kind === 'rock');
-    const wp = new THREE_V(rock.mesh.position.x + isl.x, 0, rock.mesh.position.z + isl.z);
-    p.pos.set(wp.x + 1.5, G.islands.heightAt(wp.x + 1.5, wp.z) , wp.z); p.grounded = true; p.inWater = false;
+    const wp = { x: rock.mesh.position.x + isl.x, z: rock.mesh.position.z + isl.z };
+    p.pos.set(wp.x + 1.5, G.islands.heightAt(wp.x + 1.5, wp.z), wp.z); p.grounded = true; p.inWater = false;
     G.step(0.2);
     G.aimAt(wp.x, G.islands.heightAt(wp.x, wp.z) + 0.3, wp.z); G.step(0.05);
     const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
     const stone0 = G.inventory.items.stone;
     G.key('KeyE'); G.step(0.1);
-    // the visit timer runs out while ashore: the island waits
-    isl.visitLeft = 0.5; G.step(2);
-    return { t, phase: G.islands.island && G.islands.island.phase, ashore, prompt, stone: G.inventory.items.stone - stone0, landH: +G.islands.heightAt(p.pos.x, p.pos.z).toFixed(2) };
-    function THREE_V(x, y, z) { return { x, y, z }; }
+    // the visit timer runs out while ashore: the raft waits
+    G.islands.state.visitLeft = 0.5; G.step(2);
+    return { t, resting: G.islands.resting, ashore, prompt, stone: G.inventory.items.stone - stone0, size: isl.rec.size, R: +isl.rec.R.toFixed(1) };
   });
-  check('an island drifts in and stops alongside', island.t < 200, JSON.stringify(island));
+  check('the raft drifts up to an island and rests alongside', island.t < 200, JSON.stringify(island));
   check('you can wade ashore and gather stone', island.ashore && island.stone === 2, JSON.stringify(island));
-  check('the island waits while you are ashore', island.phase === 'visit', JSON.stringify(island));
+  check('the raft waits while you are ashore', island.resting, JSON.stringify(island));
   await page.evaluate(() => {
     const G = window.__game; const p = G.player.state; const c = G.islands.center();
     p.yaw = Math.atan2(-(c.x - p.pos.x), -(c.z - p.pos.z)) + 0.6; p.pitch = -0.05; G.tools.setSlot(0, G.player); G.step(0.3);
   });
   await shot('17-island');
   await page.evaluate(() => {
-    const G = window.__game; const p = G.player.state;
+    const G = window.__game; const p = G.player.state; const c = G.islands.center();
     p.pos.set(0, 0.42, 0); p.inWater = false; p.grounded = true; p.onLand = false;
-    p.yaw = Math.atan2(-(G.islands.center().x), 0); p.pitch = -0.02; G.step(0.3);
+    p.yaw = Math.atan2(-c.x, -c.z); p.pitch = -0.02; G.step(0.3);
   });
   await shot('18-island-from-raft');
 
-  // 28. Anchor: with it down the island stays even when you are aboard and time is up
+  // 28. Anchor: with it down the raft stays even when you are aboard and time is up
   const anchor = await page.evaluate(() => {
     const G = window.__game; const T = G.TILE; const p = G.player.state;
-    // Back aboard, the island started drifting on; put it back alongside for this check.
-    const isl = G.islands.island;
-    isl.phase = 'visit'; isl.visitLeft = 60; isl.z = isl.targetZ; isl.held = false;
+    // Back aboard, the raft started drifting on; put it back at the island for this check.
+    const ist = G.islands.state;
+    ist.resting = ist.lock ?? ist.resting; ist.lock = null; ist.visitLeft = 60; ist.held = false;
+    G.inventory.add({ scrap: 4, rope: 3, wood: 2 });
     G.tools.pickBuild('anchor', G.player); G.step(0.4);
     p.pos.set(T * 0.3, p.pos.y, T * 0.3); G.step(0.1);
     G.aimAt(T, 0.6, T); G.step(0.05);
     G.click(0, 1); G.step(0.6);
+    const anchors = G.stations.count('anchor');
     G.tools.setSlot(0, G.player); G.step(0.3);
+    // nothing floating or stuck in the plank under the crosshair
+    for (const d of [...G.debris.items]) if (Math.hypot(d.x - T, d.z - T) < 2.5) G.debris.remove(d);
     G.aimAt(T, 0.9, T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
     G.key('KeyE'); G.step(0.1);
     const down = G.stations.anchored();
-    G.islands.island.visitLeft = 0; G.step(3);
-    const stays = G.islands.island && G.islands.island.phase === 'visit';
+    G.islands.state.visitLeft = 0; G.step(3);
+    const stays = G.islands.resting;
     G.key('KeyE'); G.step(3);
-    return { down, stays, after: G.islands.island && G.islands.island.phase };
+    return { anchors, prompt, down, stays, after: G.islands.island && G.islands.island.phase };
   });
-  check('anchor holds the island; raising it lets it drift on', anchor.down && anchor.stays && anchor.after === 'leave', JSON.stringify(anchor));
+  check('anchor holds the raft at the island; raising it lets it drift on', anchor.down && anchor.stays && anchor.after === 'leave', JSON.stringify(anchor));
 
   // 29. Difficulty: easy drains hunger and thirst slower than hard
   const diff = await page.evaluate(() => {
@@ -699,6 +719,342 @@ fs.mkdirSync(outDir, { recursive: true });
     };
   });
   check('state survives save/restore', snap3.tier === 'Hammerhead' && snap3.stations === 4 && snap3.body === 'tarpPoncho' && snap3.spear === 3 && snap3.oven && snap3.reinforced, JSON.stringify(snap3));
+
+  // ---------- Stage 4 ----------
+  // 32. Islands come in three sizes with different resources
+  const sizes = await page.evaluate(() => {
+    const G = window.__game;
+    const recs = [...G.islands.state.chart.values()].filter((r) => r.kind === 'island');
+    const by = {};
+    for (const r of recs) (by[r.size] = by[r.size] || []).push(r.R);
+    const span = Object.fromEntries(Object.entries(by).map(([k, v]) => [k, [Math.min(...v).toFixed(1), Math.max(...v).toFixed(1), v.length]]));
+    return { n: recs.length, span, kinds: Object.keys(by) };
+  });
+  check('the chart has islands of different sizes', sizes.kinds.length >= 2 && sizes.n >= 10, JSON.stringify(sizes));
+
+  const big = await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    G.stations.list.forEach((st) => { if (st.kind === 'anchor') st.down = false; });
+    p.pos.set(0, 0.42, 0); p.inWater = false; p.grounded = true; p.onLand = false;
+    G.shark.holdOff(999);
+    G.islands.summon(G.raft.center(), G.raft.radius(), 'large');
+    let t = 0;
+    while (G.islands.island?.rec.size !== 'large' || !G.islands.resting) { G.step(1); t += 1; if (t > 260) break; }
+    const isl = G.islands.island;
+    const kinds = [...new Set(isl.built.resources.map((r) => r.kind))];
+    // gather one of each new material
+    const got = {};
+    for (const kind of ['bamboo', 'sand', 'clay', 'shells', 'potato', 'melon']) {
+      const res = isl.built.resources.find((r) => r.kind === kind && r.amount > 0);
+      if (!res) continue;
+      const loot = G.islands.gather(res);
+      if (loot) { G.inventory.add(loot); Object.assign(got, loot); }
+    }
+    const c = G.islands.center();
+    p.pos.set(c.x + c.r * 0.55, 0, c.z + c.r * 0.2);
+    p.pos.y = G.islands.heightAt(p.pos.x, p.pos.z); p.onLand = true; p.inWater = false; p.grounded = true;
+    p.yaw = Math.atan2(-(c.x - p.pos.x), -(c.z - p.pos.z)) - 0.5; p.pitch = -0.08;
+    G.step(0.5);
+    return { t, R: +isl.rec.R.toFixed(1), kinds, got: Object.keys(got) };
+  });
+  check('a large island has bamboo, sand, clay and shells to gather', ['bamboo', 'sand', 'clay', 'shells'].every((k) => big.got.includes(k)), JSON.stringify(big));
+  await shot('19-large-island');
+
+  // 33. Rope, glass and metal: rope from fiber, smelter makes bars and glass
+  const smelt = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    p.pos.set(0, 0.42, 0); p.onLand = false; p.inWater = false; p.grounded = true; G.step(0.2);
+    G.inventory.add({ fiber: 6, stone: 10, clay: 6, ore: 2, sand: 4, wood: 30, plastic: 10, bamboo: 20, rope: 0, glass: 0 });
+    G.inventory.items.ore = 1;
+    G.crafting.tick(1);
+    G.crafting.make('rope');
+    const rope = G.inventory.items.rope;
+    // build a smelter on the floor piece at (-1, 0)
+    G.tools.pickBuild('smelter', G.player); G.step(0.4);
+    G.aimAt(-T, 0.5, 0); G.step(0.05);
+    G.click(0, 1); G.step(0.6);
+    const sm = [...G.stations.list.values()].find((s) => s.kind === 'smelter');
+    if (!sm) return { rope, built: false };
+    G.tools.setSlot(0, G.player); G.step(0.3);
+    G.aimAt(-T, 0.7, 0); G.step(0.05);
+    G.key('KeyE'); G.step(0.1);           // light it
+    G.key('KeyE'); G.step(0.1);           // smelt ore
+    G.step(13);
+    G.key('KeyE'); G.step(0.1);           // take the bar
+    const bars = G.inventory.items.metalBar;
+    G.key('KeyE'); G.step(0.1);           // melt sand
+    G.step(13);
+    G.key('KeyE'); G.step(0.1);
+    return { rope, built: true, bars, glass: G.inventory.items.glass };
+  });
+  check('rope from fiber; smelter turns ore into a bar and sand into glass', smelt.rope === 1 && smelt.bars === 1 && smelt.glass === 1, JSON.stringify(smelt));
+
+  // 34. Planter: plant seeds, rain speeds growth, harvest food and seeds
+  const crop = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    G.inventory.add({ potatoSeed: 2, melonSeed: 1, wood: 10, clay: 4 });
+    G.tools.pickBuild('planter', G.player); G.step(0.4);
+    G.aimAt(0, 0.5, -T); G.step(0.05);
+    G.click(0, 1); G.step(0.6);
+    const pl = [...G.stations.list.values()].find((s) => s.kind === 'planter');
+    if (!pl) return { built: false };
+    G.tools.setSlot(0, G.player); G.step(0.3);
+    G.aimAt(0, 0.6, -T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.key('KeyE'); G.step(0.1);
+    const crop = pl.crop;
+    G.weather.setWeather('clear', true);
+    const g0 = pl.grow; G.step(10); const dry = pl.grow - g0;
+    G.weather.setWeather('rain', true);
+    const g1 = pl.grow; G.step(10); const wet = pl.grow - g1;
+    G.weather.setWeather('clear', true);
+    pl.grow = 0.995; G.step(2);
+    G.aimAt(0, 0.6, -T); G.step(0.05);
+    const ripePrompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    const pot0 = G.inventory.items.potato;
+    G.key('KeyE'); G.step(0.1);
+    return { built: true, prompt, crop, dry: +dry.toFixed(4), wet: +wet.toFixed(4), ripePrompt, potatoes: G.inventory.items.potato - pot0, seeds: G.inventory.items.potatoSeed };
+  });
+  check('plant seeds in a planter; rain makes it grow faster', crop.built && crop.crop === 'potato' && crop.wet > crop.dry * 1.5, JSON.stringify(crop));
+  check('harvest a ripe crop for food and seeds', crop.potatoes >= 2 && crop.seeds >= 2, JSON.stringify(crop));
+
+  // 35. Food slot: R steps to the next food; eating a potato fills you up
+  const food = await page.evaluate(() => {
+    const G = window.__game;
+    G.tools.setSlot(3, G.player); G.step(0.4);
+    G.tools.setFood('coconut'); G.inventory.items.coconut = 0; G.step(0.1);
+    const auto = G.tools.food;
+    G.game.stats.hunger = 50;
+    G.tools.setFood('potato');
+    G.click(0, 1); G.step(1.3);
+    return { auto, hunger: Math.round(G.game.stats.hunger), potato: G.inventory.items.potato };
+  });
+  check('the food slot switches to food you have; potatoes fill you up', food.auto !== 'coconut' && food.hunger > 60, JSON.stringify(food));
+
+  // 36. Solar still makes fresh water in clear weather
+  const still = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    G.inventory.add({ glass: 2, bamboo: 3, plastic: 2 });
+    G.tools.pickBuild('still', G.player); G.step(0.4);
+    p.pos.set(-T * 0.2, p.pos.y, T * 0.1); G.step(0.1);
+    G.aimAt(0, 0.5, T); G.step(0.05);
+    G.click(0, 1); G.step(0.6);
+    const sv = [...G.stations.list.values()].find((s) => s.kind === 'still');
+    if (!sv) return { built: false };
+    G.step(37);
+    const cups = sv.cups;
+    G.game.stats.thirst = 40;
+    G.tools.setSlot(0, G.player); G.step(0.3);
+    G.aimAt(0, 0.6, T); G.step(0.05);
+    G.key('KeyE'); G.step(0.1);
+    return { built: true, cups, thirst: Math.round(G.game.stats.thirst) };
+  });
+  check('the solar still makes drinking water without rain', still.built && still.cups >= 1 && still.thirst > 55, JSON.stringify(still));
+  await page.evaluate(() => { const G = window.__game; const T = G.TILE; const p = G.player.state; p.pos.set(T * 0.3, p.pos.y, T * 0.5); G.aimAt(-T * 0.5, 0.4, -T * 0.6); G.step(0.3); });
+  await shot('20-planter-smelter-still');
+
+  // 37. Railing: you can't walk off an edge that has one
+  const rail = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    // an outer edge facing +x on a floor piece with nothing built on it
+    const side = [1, 0];
+    const t = [...G.raft.tiles.values()].find((k) => !k.broken && !G.stations.hasStation(k) && !G.raft.tileAt(k.i + 1, k.j) && !G.nets.has(k, side));
+    const free = !!t;
+    if (!t) return { free };
+    G.inventory.add({ wood: 4, rope: 2 });
+    G.tools.pickBuild('rail', G.player); G.step(0.4);
+    p.pos.set(t.i * T, p.pos.y, t.j * T); G.step(0.1);
+    G.aimAt(t.i * T + T / 2, 0.9, t.j * T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.click(0, 1); G.step(0.6);
+    const built = G.rails.has(t, side);
+    G.tools.setSlot(0, G.player);
+    p.yaw = -Math.PI / 2; p.pitch = 0; // face +x
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' }));
+    G.step(2);
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
+    G.step(0.2);
+    return { free, prompt, built, inWater: p.inWater, x: +p.pos.x.toFixed(2), edge: +(t.i * T + T / 2).toFixed(2) };
+  });
+  check('a railing stops you walking off the raft', rail.free && rail.built && !rail.inWater && rail.x < rail.edge, JSON.stringify(rail));
+
+  // 38. Lookout tower: climb up, see further
+  const tower = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    G.inventory.add({ wood: 12, bamboo: 8, rope: 4 });
+    // find a free floor piece
+    const free = [...G.raft.tiles.values()].find((t) => !t.broken && !G.stations.hasStation(t) && (t.i !== 0 || t.j !== 0));
+    G.tools.pickBuild('tower', G.player); G.step(0.4);
+    p.pos.set(0, 0.42, 0); G.step(0.1);
+    G.aimAt(free.i * T, 0.5, free.j * T); G.step(0.05);
+    G.click(0, 1); G.step(0.6);
+    const tw = [...G.stations.list.values()].find((s) => s.kind === 'tower');
+    if (!tw) return { built: false, tile: [free.i, free.j] };
+    // a far island: out of sight from the deck, in sight from the top
+    const st = G.islands.state;
+    const rec = G.islands.summon(G.raft.center(), G.raft.radius(), 'small');
+    rec.x = st.rw.x + 700; rec.z = st.rw.z - 100; rec.seen = false;
+    G.islands.state.lock = rec.id;
+    G.step(0.2);
+    const seenLow = rec.seen;
+    G.tools.setSlot(0, G.player); G.step(0.3);
+    G.aimAt(free.i * T, 1.2, free.j * T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.key('KeyE'); G.step(0.3);
+    const up = !!p.tower, y = +p.pos.y.toFixed(2);
+    const seenHigh = rec.seen;
+    p.yaw = 2.6; p.pitch = -0.15; G.step(0.2);
+    return { built: true, prompt, up, y, seenLow, seenHigh };
+  });
+  check('climb the lookout tower and spot islands further away', tower.built && tower.up && tower.y > 3 && !tower.seenLow && tower.seenHigh, JSON.stringify(tower));
+  await shot('21-from-the-tower');
+  const down = await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    G.key('KeyE'); G.step(0.3);
+    return { tower: !!p.tower, y: +p.pos.y.toFixed(2), inWater: p.inWater };
+  });
+  check('climb back down the tower', !down.tower && down.y < 1.5 && !down.inWater, JSON.stringify(down));
+
+  // 39. Sail and map: pick an island on the map and the raft sails to it
+  const sail = await page.evaluate(() => {
+    const G = window.__game; const T = G.TILE; const p = G.player.state;
+    G.inventory.add({ bamboo: 8, rope: 6, plastic: 8 });
+    G.raft.build(-1, -1); G.raft.build(-2, 0);
+    const free = [...G.raft.tiles.values()].find((t) => !t.broken && !G.stations.hasStation(t) && (t.i !== 0 || t.j !== 0));
+    G.tools.pickBuild('sail', G.player); G.step(0.4);
+    // stand on the near side of that floor piece, looking down at it
+    p.pos.set(free.i * T - Math.sign(free.i) * 0.6, 0.42, free.j * T - Math.sign(free.j) * 0.6); p.inWater = false; p.grounded = true; G.step(0.1);
+    G.aimAt(free.i * T, 0.5, free.j * T); G.step(0.05);
+    const buildPrompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.click(0, 1); G.step(0.6);
+    const built = !!G.stations.has('sail');
+    G.tools.setSlot(0, G.player);
+    p.pos.set(free.i * T - Math.sign(free.i) * 1.0, p.pos.y, free.j * T - Math.sign(free.j) * 1.0); G.step(0.3);
+    G.aimAt(free.i * T, 1.4, free.j * T); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.key('KeyE'); G.step(0.1);
+    const mapOpen = !document.getElementById('map').hidden;
+    // set course for a charted island off to the side
+    const st = G.islands.state;
+    const target = [...st.chart.values()].filter((r) => r.kind === 'island' && r.id !== st.resting && Math.hypot(r.x - st.rw.x, r.z - st.rw.z) > 300).sort((a, b) => Math.hypot(a.x - st.rw.x, a.z - st.rw.z) - Math.hypot(b.x - st.rw.x, b.z - st.rw.z))[0];
+    target.seen = true;
+    G.map.tick();
+    return { built, buildPrompt, prompt, mapOpen, target: target.id, tile: [free.i, free.j] };
+  });
+  await page.waitForTimeout(200);
+  await shot('22-map');
+  const sailing = await page.evaluate((id) => {
+    const G = window.__game;
+    const st = G.islands.state;
+    G.islands.setDestination(id);
+    G.closeMenu(); G.step(0.1);
+    const rec = st.chart.get(id);
+    const d0 = Math.hypot(rec.x - st.rw.x, rec.z - st.rw.z);
+    let moved = 0, px = st.rw.x, pz = st.rw.z;
+    for (let k = 0; k < 30; k++) { G.step(1); moved += Math.hypot(st.rw.x - px, st.rw.z - pz); px = st.rw.x; pz = st.rw.z; }
+    const d1 = Math.hypot(rec.x - st.rw.x, rec.z - st.rw.z);
+    return { d0: Math.round(d0), d1: Math.round(d1), moved: Math.round(moved), sailing: G.islands.state.dest === id };
+  }, sail.target);
+  // Under sail the raft covers about twice what the current alone would (1.3 m/s x 30 s = 39 m).
+  check('the sail opens the map; a course set there sails you to the island', sail.built && sail.mapOpen && sailing.moved > 55 && sailing.d1 < sailing.d0 - 20, JSON.stringify({ sail, sailing }));
+  await page.evaluate(() => { const G = window.__game; const p = G.player.state; p.yaw = 0.9; p.pitch = 0.12; G.step(0.3); });
+  await shot('23-under-sail');
+
+  // 40. Messages in bottles: read in order; the last marks the lighthouse
+  const bottle = await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    G.islands.setDestination(null);
+    p.pos.set(0, 0.42, 0); p.inWater = false; p.grounded = true;
+    const d = G.debris.spawn('bottle', p.pos.x, p.pos.z - 2.2);
+    G.step(0.05);
+    G.aimAt(d.x, d.mesh.position.y, d.z); G.step(0.05);
+    const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    G.key('KeyE'); G.step(0.1);
+    const shown = !document.getElementById('note').hidden;
+    const title = document.getElementById('note-title').textContent;
+    return { prompt, shown, title, read: G.story.read };
+  });
+  await shot('24-message');
+  const lastNote = await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    G.key('KeyE'); G.step(0.1);
+    const closed = document.getElementById('note').hidden;
+    G.story.state.read = 7;
+    const lh = G.islands.lighthouse();
+    const seenBefore = lh.seen;
+    const d = G.debris.spawn('bottle', p.pos.x, p.pos.z - 2.2);
+    G.step(0.05);
+    G.aimAt(d.x, d.mesh.position.y, d.z); G.step(0.05);
+    G.key('KeyE'); G.step(0.1);
+    const title = document.getElementById('note-title').textContent;
+    G.closeMenu(); G.step(0.1);
+    return { closed, seenBefore, seenAfter: lh.seen, title, done: G.story.done };
+  });
+  check('a message in a bottle opens a note to read', bottle.shown && bottle.read === 1 && lastNote.closed, JSON.stringify(bottle));
+  check('the last note marks the lighthouse on the map', !lastNote.seenBefore && lastNote.seenAfter && lastNote.done, JSON.stringify(lastNote));
+
+  // 41. Lighting the lighthouse lamp ends the story; you can keep playing
+  const ending = await page.evaluate(() => {
+    const G = window.__game;
+    const st = G.islands.state;
+    const lh = G.islands.lighthouse();
+    st.rw = { x: lh.x, z: lh.z + lh.R + 40 }; st.resting = null; st.dest = null; st.lock = null;
+    G.step(1);
+    const isl = G.islands.island;
+    const lamp = isl && isl.built.resources.find((r) => r.kind === 'lamp');
+    if (!lamp) return { lamp: false, active: isl && isl.rec.kind };
+    G.islands.gather(lamp);
+    G.step(2);
+    return { lamp: true, mode: G.game.mode, shown: !document.getElementById('ending').hidden, lit: G.story.lit };
+  });
+  await page.waitForTimeout(1700);
+  const ended = await page.evaluate(() => ({ mode: window.__game.game.mode, shown: !document.getElementById('ending').hidden }));
+  check('lighting the lighthouse lamp brings the ending', ending.lamp && ending.lit && ended.mode === 'ended' && ended.shown, JSON.stringify({ ending, ended }));
+  await shot('25-ending');
+  const keep = await page.evaluate(() => {
+    document.getElementById('ending-keep').click();
+    return { mode: window.__game.game.mode };
+  });
+  await page.waitForTimeout(200);
+  check('after the ending you can keep sailing', keep.mode === 'play', JSON.stringify(keep));
+  await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    G.weather.setTime(21.5); G.step(0.5);
+    const c = G.islands.center();
+    p.pos.set(0, 0.42, 0); p.yaw = Math.atan2(-c.x, -c.z); p.pitch = 0.08; G.step(0.5);
+  });
+  await shot('26-lighthouse-at-night');
+
+  // 42. Peaceful mode: the shark circles but never attacks
+  const peace = await page.evaluate(() => {
+    const G = window.__game; const p = G.player.state;
+    G.weather.setTime(10);
+    G.applyDifficulty('peaceful', false);
+    if (G.shark.gone) G.shark.setTier(G.shark.tierIndex);
+    G.shark.forceAttack();
+    const h0 = G.game.stats.health;
+    const states = new Set();
+    p.pos.set(5, -1, 0); p.inWater = true; p.grounded = false;
+    for (let i = 0; i < 80; i++) { G.step(0.25); states.add(G.shark.state); p.pos.set(5, p.pos.y, 0); }
+    p.pos.set(0, 0.42, 0); p.inWater = false; p.grounded = true;
+    G.applyDifficulty('normal', false);
+    return { states: [...states], hurt: h0 - G.game.stats.health };
+  });
+  check('peaceful mode: the shark never bites the raft or you', !peace.states.includes('bite') && !peace.states.includes('chase') && peace.hurt <= 0.5, JSON.stringify(peace));
+
+  // 43. Stage 4 state survives save/restore, including the autosave slot
+  const snap4 = await page.evaluate(() => {
+    const G = window.__game;
+    const before = { rails: G.rails.count(), read: G.story.read, chart: G.islands.state.chart.size, sail: !!G.stations.has('sail'), planter: !!G.stations.has('planter'), rw: Math.round(G.islands.state.rw.z) };
+    const ok = G.saveGame();
+    const s = G.readSave();
+    G.restore(s); G.step(0.1);
+    const after = { rails: G.rails.count(), read: G.story.read, chart: G.islands.state.chart.size, sail: !!G.stations.has('sail'), planter: !!G.stations.has('planter'), rw: Math.round(G.islands.state.rw.z) };
+    return { ok, before, after };
+  });
+  // The raft drifts a little during the 0.1 s step after loading.
+  const same = (a, b) => JSON.stringify({ ...a, rw: 0 }) === JSON.stringify({ ...b, rw: 0 }) && Math.abs(a.rw - b.rw) <= 2;
+  check('Stage 4 state survives saving and loading', snap4.ok && same(snap4.before, snap4.after), JSON.stringify(snap4));
 
   // 10. A wider look for the README
   await page.evaluate(() => {

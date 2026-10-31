@@ -29,6 +29,17 @@
     <div class="mat rare" data-k="hide" data-icon="hide" hidden><span class="n">0</span><span class="name">Sharkskin</span></div>
     <div class="mat rare" data-k="jaw" data-icon="jaw" hidden><span class="n">0</span><span class="name">Old shark's jaw</span></div>
     <div class="mat rare" data-k="stone" data-icon="stone" hidden><span class="n">0</span><span class="name">Stone</span></div>
+    <div class="mat rare" data-k="sand" data-icon="sand" hidden><span class="n">0</span><span class="name">Sand</span></div>
+    <div class="mat rare" data-k="clay" data-icon="clay" hidden><span class="n">0</span><span class="name">Clay</span></div>
+    <div class="mat rare" data-k="shells" data-icon="shells" hidden><span class="n">0</span><span class="name">Shells</span></div>
+    <div class="mat rare" data-k="bamboo" data-icon="bamboo" hidden><span class="n">0</span><span class="name">Bamboo</span></div>
+    <div class="mat rare" data-k="seaweed" data-icon="seaweed" hidden><span class="n">0</span><span class="name">Seaweed</span></div>
+    <div class="mat rare" data-k="ore" data-icon="ore" hidden><span class="n">0</span><span class="name">Metal ore</span></div>
+    <div class="mat rare" data-k="rope" data-icon="rope" hidden><span class="n">0</span><span class="name">Rope</span></div>
+    <div class="mat rare" data-k="glass" data-icon="glass" hidden><span class="n">0</span><span class="name">Glass</span></div>
+    <div class="mat rare" data-k="metalBar" data-icon="metalBar" hidden><span class="n">0</span><span class="name">Metal bars</span></div>
+    <div class="mat rare" data-k="potatoSeed" data-icon="seed" hidden><span class="n">0</span><span class="name">Potato seeds</span></div>
+    <div class="mat rare" data-k="melonSeed" data-icon="seed" hidden><span class="n">0</span><span class="name">Melon seeds</span></div>
   </section>
 
   <div id="clock"><span id="clock-icon"></span><span id="clock-text">Day 1 · 8:00</span></div>
@@ -59,9 +70,8 @@
       <div class="slot" data-icon="hook"><kbd>1</kbd><span class="sname">Hook</span></div>
       <div class="slot" data-icon="spear"><kbd>2</kbd><span class="sname">Spear</span></div>
       <div class="slot" data-icon="hammer"><kbd>3</kbd><span class="sname">Hammer</span></div>
-      <div class="slot" data-icon="coconut"><kbd>4</kbd><span class="sname">Coconut</span><em id="coco-count">0</em></div>
+      <div class="slot" id="food-slot"><span class="ficon"></span><kbd>4</kbd><span class="sname" id="food-name">Coconut</span><em id="food-count">0</em></div>
       <div class="slot" data-icon="fish"><kbd>5</kbd><span class="sname">Raw fish</span><em id="fish-count">0</em></div>
-      <div class="slot" data-icon="cooked"><kbd>6</kbd><span class="sname">Cooked</span><em id="cooked-count">0</em></div>
     </div>
   </div>
 
@@ -71,11 +81,14 @@
 
 <section id="title" class="screen">
   <div class="title-block">
-    <p class="tag">Working title · Stage 3.5</p>
+    <p class="tag">Working title · Stage 4</p>
     <h1>Raft<br>Simulation</h1>
     <p class="pitch">You wake up on a few planks lashed together in the middle of the ocean. Hook what drifts past, grow the raft, keep the shark off your floor, and stay alive.</p>
-    <button id="play" type="button">Set out</button>
-    <p class="note">Made for laptops: keyboard with a mouse or touchpad.</p>
+    <div class="row start-row">
+      <button id="continue" type="button" hidden>Continue</button>
+      <button id="play" type="button">Set out</button>
+    </div>
+    <p class="note" id="save-note">Made for laptops: keyboard with a mouse or touchpad.</p>
   </div>
   <div class="controls panel">
     <h2 class="label">Controls</h2>
@@ -84,17 +97,19 @@
       <div><dt>Mouse</dt><dd>Look and aim</dd></div>
       <div><dt>Left click</dt><dd>Use tool (hold to wind up the hook)</dd></div>
       <div><dt>Right click</dt><dd>Let go of the hook line, choose what the hammer builds, or throw a fish as bait</dd></div>
-      <div><dt><kbd>1</kbd>–<kbd>6</kbd> or scroll</dt><dd>Switch tool</dd></div>
-      <div><dt><kbd>E</kbd></dt><dd>Grab, empty a net, use the grill or rain catcher</dd></div>
+      <div><dt><kbd>1</kbd>–<kbd>5</kbd> or scroll</dt><dd>Switch tool</dd></div>
+      <div><dt><kbd>E</kbd></dt><dd>Grab, gather, use what you built, climb the tower</dd></div>
       <div><dt><kbd>C</kbd> or <kbd>Tab</kbd></dt><dd>Crafting and wardrobe</dd></div>
+      <div><dt><kbd>M</kbd></dt><dd>Map (with a sail: click an island to sail there)</dd></div>
       <div><dt><kbd>Q</kbd> (hammer out)</dt><dd>Choose what to build</dd></div>
+      <div><dt><kbd>R</kbd></dt><dd>Next thing to build, or next food</dd></div>
       <div><dt><kbd>Space</kbd></dt><dd>Jump, or climb aboard from the water</dd></div>
       <div><dt><kbd>Shift</kbd></dt><dd>Run or swim faster</dd></div>
       <div><dt><kbd>Esc</kbd></dt><dd>Pause</dd></div>
     </dl>
     <div class="difficulty" role="group" aria-label="Difficulty">
       <span class="label">Difficulty</span>
-      <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button>
+      <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button><button type="button" data-d="peaceful">Peaceful</button>
     </div>
     <div class="quality" role="group" aria-label="Graphics quality">
       <span class="label">Graphics</span>
@@ -121,17 +136,55 @@
   </div>
 </section>
 
+<section id="map" class="screen" hidden>
+  <div class="map-panel panel">
+    <header class="craft-head">
+      <h2>Chart</h2>
+      <span class="craft-hint" id="map-course"></span>
+      <button type="button" id="map-zoom" class="ghost">Zoom</button>
+      <button type="button" id="map-clear" class="ghost" hidden>Clear course</button>
+      <button type="button" id="map-close" class="ghost">Close (M)</button>
+    </header>
+    <div class="map-body">
+      <canvas id="map-canvas" aria-label="Chart of the islands you have seen"></canvas>
+      <aside id="map-info"></aside>
+    </div>
+  </div>
+</section>
+
+<section id="note" class="screen" hidden>
+  <div class="note-paper">
+    <p class="note-count" id="note-count"></p>
+    <h2 id="note-title"></h2>
+    <div id="note-body"></div>
+    <button type="button" id="note-close">Put it away (E)</button>
+  </div>
+</section>
+
+<section id="ending" class="screen" hidden>
+  <div class="card panel">
+    <p class="tag">The lamp is lit</p>
+    <h2>A ship's horn</h2>
+    <p>The old lamp catches and its beam swings out over the water. Two nights later, a horn answers from the dark, and running lights turn toward the island.</p>
+    <dl id="ending-stats"></dl>
+    <div class="row">
+      <button id="ending-keep" type="button">Keep sailing</button>
+      <button id="ending-title" type="button" class="ghost">Title screen</button>
+    </div>
+  </div>
+</section>
+
 <section id="pause" class="screen" hidden>
   <div class="card panel">
     <h2>Paused</h2>
-    <p>The sea waits for you.</p>
+    <p>The sea waits for you. Your raft is saved automatically.</p>
     <div class="row">
       <button id="resume" type="button">Back to the raft</button>
       <button id="quit" type="button" class="ghost">Title screen</button>
     </div>
     <div class="difficulty" role="group" aria-label="Difficulty">
       <span class="label">Difficulty</span>
-      <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button>
+      <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button><button type="button" data-d="peaceful">Peaceful</button>
     </div>
     <div class="quality" role="group" aria-label="Graphics quality">
       <span class="label">Graphics</span>

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STATS, SHARK_TIERS, ITEMS, TILE, COSTS, GRUDGE, CLOTHING, GEAR, STATIONS, UPGRADES, CATCHER, NEXT_PREDATOR_DELAY, DIFFICULTY } from './config.js';
+import { STATS, SHARK_TIERS, ITEMS, TILE, DECK_Y, GRUDGE, CLOTHING, GEAR, STATIONS, UPGRADES, CATCHER, STILL, CROPS, ISLAND_SIZES, NEXT_PREDATOR_DELAY, DIFFICULTY } from './config.js';
 import { createOcean } from './ocean.js';
 import { createSky, SKY } from './sky.js';
 import { createPipeline, QUALITY } from './render.js';
@@ -11,8 +11,11 @@ import { createNets } from './nets.js';
 import { createBait } from './bait.js';
 import { createWeather } from './weather.js';
 import { createCrafting } from './crafting.js';
-import { createStations } from './stations.js';
+import { createStations, TOWER_TOP } from './stations.js';
 import { createIslands } from './islands.js';
+import { createRails } from './rails.js';
+import { createStory } from './story.js';
+import { createMap } from './map.js';
 import { createPlayer } from './player.js';
 import { createTools, SLOTS, BUILD_MODES } from './tools.js';
 import { createInput } from './input.js';
@@ -44,13 +47,18 @@ const shark = createShark(scene, SHARK_TIERS);
 const nets = createNets(raft, debris, fx, audio);
 const bait = createBait(scene, fx, audio);
 const stations = createStations(raft, fx, audio);
+const rails = createRails(raft);
+nets.setEdgeTaken((t, side) => rails.has(t, side));
+rails.setEdgeTaken((t, side) => nets.has(t, side));
 const islands = createIslands(scene, { fx, audio });
+const story = createStory();
 let tools = null;
 const weather = createWeather({
   scene, sun, hemi, ocean, fx, audio, sky,
   onEnvironment: (env) => { if (tools) tools.vmScene.environment = env; },
 });
 const player = createPlayer(camera);
+player.setRails(rails);
 const input = createInput(canvas);
 const hud = createHud();
 
@@ -93,14 +101,36 @@ const GOAL_GROUPS = [
       { id: 'rainDrink', text: 'Drink from a rain catcher', target: 1 },
     ],
   },
+  {
+    title: 'Goals: putting down roots',
+    goals: [
+      { id: 'plant', text: 'Plant seeds in a planter', target: 1 },
+      { id: 'smelt', text: 'Smelt ore or sand in a smelter', target: 1 },
+      { id: 'sail', text: 'Put up a sail', target: 1 },
+      { id: 'bottle', text: 'Read messages in bottles', target: 3 },
+    ],
+  },
+  {
+    title: 'Goals: the far horizon',
+    goals: [
+      { id: 'chart', text: 'Chart islands on your map (M)', target: 6 },
+      { id: 'tower', text: 'Climb a lookout tower', target: 1 },
+      { id: 'harvest', text: 'Harvest a crop', target: 1 },
+      { id: 'lamp', text: 'Light the lighthouse lamp', target: 1 },
+    ],
+  },
 ];
 
 const HINTS = {
   hook: 'Hold left mouse to wind up, let go to throw. Hold again to reel in.',
   spear: 'Click to stab. A few good hits send the shark away.',
-  coconut: 'Click to crack it open: food and water.',
   fish: 'Click to eat it raw. Right-click to throw it as bait for the shark.',
-  cooked: 'Click to eat. Far more filling than raw.',
+};
+const FOOD_HINTS = {
+  coconut: 'Coconut: click to crack it open for food and water. R: next food.',
+  cooked: 'Cooked fish: click to eat. Far more filling than raw. R: next food.',
+  potato: 'Potato: click to eat. R: next food.',
+  melon: 'Watermelon: click to eat. Lots of water in it. R: next food.',
 };
 const HAMMER_HINTS = {
   floor: 'Building floor: click an outline. Q or right-click: choose something else to build.',
@@ -109,9 +139,17 @@ const HAMMER_HINTS = {
   grill: 'Building a grill: click a floor piece. Q or right-click: choose something else.',
   catcher: 'Building a rain catcher: click a floor piece. Q or right-click: choose something else.',
   anchor: 'Building an anchor: click a floor piece. Q or right-click: choose something else.',
+  rail: 'Building a railing: click an outline on an outer edge. Q or right-click: choose something else.',
+  planter: 'Building a planter: click a floor piece. Q or right-click: choose something else.',
+  smelter: 'Building a smelter: click a floor piece. Q or right-click: choose something else.',
+  still: 'Building a solar still: click a floor piece. Q or right-click: choose something else.',
+  sail: 'Building the sail: click a floor piece (you only need one). Q or right-click: choose something else.',
+  tower: 'Building a lookout tower: click a floor piece. Q or right-click: choose something else.',
 };
 function hintFor(id, ui) {
-  return id === 'hammer' ? HAMMER_HINTS[ui.hammerMode] : HINTS[id];
+  if (id === 'hammer') return HAMMER_HINTS[ui.hammerMode];
+  if (id === 'food') return FOOD_HINTS[ui.food];
+  return HINTS[id];
 }
 
 const game = {
@@ -134,7 +172,7 @@ const game = {
 };
 
 const inventory = (() => {
-  const items = { wood: 0, plastic: 0, fiber: 0, scrap: 0, coconut: 0, fish: 0, cooked: 0, tooth: 0, hide: 0, jaw: 0 };
+  const items = Object.fromEntries(Object.keys(ITEMS).map((k) => [k, 0]));
   return {
     items,
     get: (k) => items[k] || 0,
@@ -217,6 +255,15 @@ const events = {
     }
     if (how === 'net') progress('netHaul');
     if (how === 'island' && gained.stone) progress('stone');
+    if (gained.bottle) {
+      inventory.spend({ bottle: gained.bottle });
+      if (story.done) {
+        inventory.add({ glass: 1 });
+        hud.toast('The bottle was empty. Glass is glass: +1 glass', 'gain');
+      } else {
+        openNote(story.readNext());
+      }
+    }
   },
   onMissing(cost) {
     const parts = Object.entries(cost).map(([k, n]) => `${n} ${ITEMS[k].name.toLowerCase()}`);
@@ -302,6 +349,11 @@ const events = {
   },
   onBuildStation(kind) {
     hud.toast(`Built: ${STATIONS[kind].name}`, 'gain');
+    if (kind === 'sail') {
+      progress('sail');
+      hud.toast('Press E at the sail, or M anywhere, to open the map and pick an island', 'gain');
+    }
+    if (kind === 'tower') hud.toast('Press E at the tower to climb up and look out', 'gain');
     if (kind === 'table') {
       progress('table');
       hud.toast('Press E at the crafting table for the bigger recipes', 'gain');
@@ -316,17 +368,44 @@ const events = {
   },
   onStationUse(station, act, r) {
     if (r.craft) openMenu('craft', true);
+    if (r.map) openMap();
+    if (r.climb) {
+      player.climbTower({ x: station.tile.i * TILE, z: station.tile.j * TILE, h: TOWER_TOP - DECK_Y, tile: station.tile });
+      audio.climb?.();
+      progress('tower');
+      hud.toast('From up here you can spot islands much further off. Check the map (M).', 'gain');
+    }
     if (r.anchor !== undefined) hud.toast(r.anchor ? 'Anchor down: the raft stays put' : 'Anchor up', 'gain');
     if (r.drank) {
-      game.stats.thirst = Math.min(100, game.stats.thirst + CATCHER.drink);
-      hud.toast('Fresh rain water', 'gain');
-      progress('rainDrink');
+      const still = station.kind === 'still';
+      game.stats.thirst = Math.min(100, game.stats.thirst + (still ? STILL.drink : CATCHER.drink));
+      hud.toast(still ? 'Fresh water from the still' : 'Fresh rain water', 'gain');
+      if (!still) progress('rainDrink');
     }
-    if (r.took) {
+    if (r.took === true) {
       hud.toast(`<span class="ti">${icon('cooked')}</span>+1 Cooked fish`, 'gain');
       progress('cook');
+    } else if (r.took) {
+      events.onCollect(r.took, 'smelter');
+      progress('smelt');
     }
-    if (r.fueled) hud.toast('The fire is going', 'gain');
+    if (r.smelting !== undefined) hud.toast('Smelting...', 'gain');
+    if (r.fueled) hud.toast(station.kind === 'smelter' ? 'The smelter is heating up' : 'The fire is going', 'gain');
+    if (r.planted) {
+      progress('plant');
+      hud.toast(`Planted ${CROPS[r.planted].name.toLowerCase()}. Rain makes it grow faster.`, 'gain');
+    }
+    if (r.harvested) {
+      events.onCollect(r.harvested, 'planter');
+      progress('harvest');
+    }
+  },
+  onClimbDown() {
+    player.climbTower(null);
+    audio.climb?.();
+  },
+  onRailCatch() {
+    hud.toast('The railing caught you', 'gain');
   },
   onToothLost(tile, side) {
     const x = tile.i * TILE + side[0] * (TILE / 2 - 0.25) + rand(-0.4, 0.4) * Math.abs(side[1]);
@@ -389,26 +468,47 @@ const events = {
   },
 };
 
-tools = createTools({ scene, camera, raft, nets, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
+tools = createTools({ scene, camera, raft, nets, rails, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
 
+const islandName = (rec) => (rec.kind === 'lighthouse' ? 'the lighthouse island' : `a ${ISLAND_SIZES[rec.size].label.toLowerCase()} island`);
+const chartPoint = (rec) => { const st = islands.state; return tmpV.set(rec.x - st.rw.x, 2, rec.z - st.rw.z); };
 islands.on({
-  onSighted() {
-    hud.alert('Land on the horizon! An island is drifting this way.', {
-      kind: 'good', duration: 6, follow: () => { const c = islands.center(); return c ? tmpV.set(c.x, 2, c.z) : null; },
+  onSighted(rec) {
+    progress('chart');
+    hud.alert(`Land on the horizon: ${islandName(rec)}. It's on your map (M).`, {
+      kind: 'good', duration: 6, follow: () => chartPoint(rec),
     });
   },
-  onArrive(sec) {
-    hud.alert(`The island has drifted alongside. It moves on in ${Math.round(sec / 60)} minutes unless you drop an anchor.`, { kind: 'good', duration: 6 });
+  onArrive(rec) {
+    const sec = 240;
+    hud.alert(`You're alongside ${islandName(rec)}. The raft rests here ${Math.round(sec / 60)} minutes unless you drop an anchor.`, { kind: 'good', duration: 6 });
   },
   onLeavingSoon() {
-    hud.alert('The current is picking up: the island moves on in 30 seconds.', { kind: 'danger', duration: 4 });
+    hud.alert('The current is picking up: the raft moves on in 30 seconds.', { kind: 'danger', duration: 4 });
   },
   onWaiting() {
-    hud.alert('The island will drift on once you are back aboard.', { kind: 'good', duration: 4 });
+    hud.alert('The raft will drift on once you are back aboard.', { kind: 'good', duration: 4 });
   },
   onDepart() {
-    hud.alert('The island is drifting away.', { kind: 'good', duration: 3 });
+    hud.alert('The raft is drifting away from the island.', { kind: 'good', duration: 3 });
   },
+  onLamp() {
+    if (story.light()) {
+      progress('lamp');
+      audio.horn?.();
+      setTimeout(() => openEnding(), 1500);
+    }
+  },
+});
+stations.onRipe((st) => hud.toast(`${ITEMS[CROPS[st.crop].food].name} ready to harvest in a planter`, 'gain'));
+rails.onBuiltOver(() => {
+  inventory.add(STATIONS.rail.cost);
+  hud.toast('Took a railing down to build there and kept its materials', 'gain');
+});
+const map = createMap({
+  islands, audio,
+  hasSail: () => !!stations.has('sail'),
+  onCourse: () => hud.toast('Course set. The sail will take you there.', 'gain'),
 });
 
 stations.onLost((st) => hud.toast(`The ${STATIONS[st.kind].name.toLowerCase()} went overboard with its floor piece`, 'warn'));
@@ -486,6 +586,7 @@ function newGame() {
   weather.reset();
   crafting.reset();
   islands.reset();
+  story.reset();
   player.reset();
   tools.reset();
   tools.setSleeve(null);
@@ -522,6 +623,9 @@ function serialize() {
     weather: weather.serialize(),
     crafting: crafting.serialize(),
     islands: islands.serialize(),
+    rails: rails.serialize(),
+    story: story.serialize(),
+    food: tools.food,
     difficulty: game.difficulty,
     nextPredatorIn: game.nextPredatorIn,
     player: player.serialize(),
@@ -538,6 +642,9 @@ function restore(d) {
   weather.restore(d.weather);
   crafting.restore(d.crafting);
   islands.restore(d.islands);
+  rails.restore(d.rails);
+  story.restore(d.story);
+  if (d.food) tools.setFood(d.food);
   if (d.difficulty) applyDifficulty(d.difficulty, false);
   game.nextPredatorIn = d.nextPredatorIn || 0;
   inventory.set(d.inventory);
@@ -559,6 +666,7 @@ const screens = {
   title: document.getElementById('title'),
   pause: document.getElementById('pause'),
   dead: document.getElementById('dead'),
+  ending: document.getElementById('ending'),
 };
 function showScreen(name) {
   for (const k in screens) screens[k].hidden = k !== name;
@@ -576,6 +684,7 @@ async function enterPlay() {
 
 function pause() {
   if (game.mode !== 'play') return;
+  saveGame();
   game.mode = 'paused';
   input.state.enabled = false;
   input.state.mouse = [false, false, false];
@@ -583,6 +692,7 @@ function pause() {
 }
 
 function die() {
+  clearSave();
   game.mode = 'dead';
   input.state.enabled = false;
   input.unlock();
@@ -606,7 +716,54 @@ function die() {
   showScreen('dead');
 }
 
+// ---------- saving ----------
+// One save slot in this browser. Autosaves while you play; a death clears it.
+const SAVE_KEY = 'raft-sim-save';
+function readSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveGame() {
+  if (game.mode !== 'play' && game.mode !== 'paused') return false;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(serialize()));
+    game.saveT = 0;
+    return true;
+  } catch { return false; }
+}
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch { /* storage blocked */ }
+}
+// Title screen: Continue when there is a save; starting fresh asks twice.
+let confirmNew = false;
+function refreshTitle() {
+  const save = readSave();
+  const cont = document.getElementById('continue');
+  const play = document.getElementById('play');
+  confirmNew = false;
+  cont.hidden = !save;
+  play.textContent = save ? 'New raft' : 'Set out';
+  play.classList.toggle('ghost', !!save);
+  document.getElementById('save-note').textContent = save
+    ? `Saved raft: day ${save.weather?.day ?? 1}, ${formatTime(save.alive || 0)} afloat. Made for laptops: keyboard with a mouse or touchpad.`
+    : 'Made for laptops: keyboard with a mouse or touchpad.';
+}
+window.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
+window.addEventListener('pagehide', () => saveGame());
+
+document.getElementById('continue').addEventListener('click', () => {
+  const save = readSave();
+  if (save && restore(save)) enterPlay();
+});
 document.getElementById('play').addEventListener('click', () => {
+  if (readSave() && !confirmNew) {
+    confirmNew = true;
+    document.getElementById('play').textContent = 'Replace the saved raft?';
+    return;
+  }
+  clearSave();
   newGame();
   enterPlay();
 });
@@ -616,24 +773,83 @@ document.getElementById('restart').addEventListener('click', () => {
   enterPlay();
 });
 document.getElementById('quit').addEventListener('click', () => {
+  saveGame();
   game.mode = 'title';
   showScreen('title');
+  refreshTitle();
 });
-// Crafting panel: the world keeps going, but you stop to work on it.
-function openMenu(tab = 'craft', bench = false) {
-  if (game.mode !== 'play' || game.menu) return;
-  game.menu = true;
+// Crafting panel, map and notes: the world keeps going while they're open.
+function holdInput(kind) {
+  if (game.mode !== 'play' || game.menu) return false;
+  game.menu = kind;
   input.clear();
   input.state.enabled = false;
-  crafting.open(tab, bench);
   document.body.classList.remove('playing');
+  // We let go of the mouse ourselves: the browser's notice about it, however
+  // late it comes, isn't the player pressing Esc.
+  game.expectUnlock = input.state.locked;
   input.unlock();
+  return true;
 }
+function openMenu(tab = 'craft', bench = false) {
+  if (holdInput('craft')) crafting.open(tab, bench);
+}
+function openMap() {
+  if (holdInput('map')) map.open();
+}
+const noteEl = { root: document.getElementById('note'), count: document.getElementById('note-count'), title: document.getElementById('note-title'), body: document.getElementById('note-body') };
+function openNote(note) {
+  if (!note) return;
+  progress('bottle');
+  if (note.reveal) {
+    const lh = islands.lighthouse();
+    if (lh) islands.reveal(lh.id);
+  }
+  audio.paper?.();
+  const show = () => {
+    noteEl.count.textContent = `Message ${note.n} of ${note.of}`;
+    noteEl.title.textContent = note.title;
+    noteEl.body.innerHTML = note.body.map((p) => `<p>${p}</p>`).join('');
+    noteEl.root.hidden = false;
+  };
+  if (holdInput('note')) show();
+  else game.pendingNote = show;
+}
+function openEnding() {
+  if (game.menu) closeMenu(false);
+  game.mode = 'ended';
+  input.state.enabled = false;
+  input.unlock();
+  const charted = [...islands.state.chart.values()].filter((r) => r.seen).length;
+  document.getElementById('ending-stats').innerHTML = [
+    ['Days at sea', weather.state.day],
+    ['Time afloat', formatTime(game.alive)],
+    ['Islands charted', charted],
+    ['Messages found', `${story.read} of 8`],
+    ['Floor pieces built', game.counters.built],
+    ['Times you drove a shark off', game.counters.repels],
+  ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  showScreen('ending');
+}
+document.getElementById('ending-keep').addEventListener('click', () => {
+  hud.toast('The ship can wait. The sea is yours as long as you like.', 'gain');
+  enterPlay();
+});
+document.getElementById('ending-title').addEventListener('click', () => {
+  game.mode = 'play';
+  saveGame();
+  game.mode = 'title';
+  showScreen('title');
+  refreshTitle();
+});
 function closeMenu(relock = true) {
   if (!game.menu) return;
+  const kind = game.menu;
   game.menu = false;
   game.menuClosedAt = performance.now();
-  crafting.close();
+  if (kind === 'craft') crafting.close();
+  if (kind === 'map') map.close();
+  if (kind === 'note') noteEl.root.hidden = true;
   if (relock) {
     input.state.enabled = true;
     document.body.classList.add('playing');
@@ -641,14 +857,32 @@ function closeMenu(relock = true) {
   }
 }
 document.getElementById('craft-close').addEventListener('click', () => closeMenu());
+document.getElementById('map-close').addEventListener('click', () => closeMenu());
+document.getElementById('note-close').addEventListener('click', () => closeMenu());
 
 input.onLockChange((locked) => {
+  if (!locked && game.expectUnlock) {
+    game.expectUnlock = false;
+    return;
+  }
+  if (locked) game.expectUnlock = false;
   // The unlock from opening a menu can arrive after a quick close; ignore it.
   const justClosed = performance.now() - (game.menuClosedAt || 0) < 400;
   if (!locked && game.mode === 'play' && !input.state.freeLook && !game.menu && !justClosed) pause();
 });
 window.addEventListener('keydown', (e) => {
   if (game.mode !== 'play') return;
+  if (game.menu === 'note' && (e.code === 'KeyE' || e.code === 'Enter' || e.code === 'Space')) {
+    e.preventDefault();
+    closeMenu();
+    return;
+  }
+  if (e.code === 'KeyM') {
+    e.preventDefault();
+    if (game.menu === 'map') closeMenu();
+    else if (!game.menu) openMap();
+    return;
+  }
   if (e.code === 'KeyC' || e.code === 'Tab' || (e.code === 'KeyQ' && game.menu)) {
     e.preventDefault();
     if (game.menu) closeMenu();
@@ -666,6 +900,8 @@ window.addEventListener('keydown', (e) => {
 canvas.addEventListener('click', () => {
   if (game.mode === 'play' && !input.state.locked && !input.state.freeLook) input.lock();
 });
+
+document.addEventListener('click', (e) => { if (e.target.closest('button')) audio.click(); });
 
 // ---------- per-frame ----------
 function survival(dt) {
@@ -721,26 +957,65 @@ function updatePlay(dt) {
   const wx = weather.update(dt, game.time, camera.position, true);
   player.update(game.time, dt, input, raft, events, 0, islands);
   const ui = tools.update(game.time, dt, input, player, SKY.sunDir);
+  // Footsteps on the deck or sand, strokes when swimming.
+  const ps0 = player.state;
+  const stepPh = Math.floor(ps0.walkPhase / Math.PI);
+  if (stepPh !== game.stepPh) {
+    game.stepPh = stepPh;
+    if (ps0.inWater) audio.stroke();
+    else if (ps0.grounded) audio.step(ps0.onLand ? 'sand' : 'deck');
+  }
   tools.setLighting(sun.intensity, sun.color, hemi.intensity);
   const ps = player.state;
   bait.update(game.time, dt, raft, debris.flow);
   // Wading in an island's shallows is safe; the shark won't come in that far.
   const exposed = ps.inWater && islands.heightAt(ps.pos.x, ps.pos.z) < -1.2;
   shark.update(game.time, dt, { raft, nets, bait, diff: DIFFICULTY[game.difficulty], player: { pos: ps.pos, inWater: exposed }, fx, events });
-  const isl = islands.update(dt, { raftCenter: raft.center(), raftRadius: raft.radius(), aboard: !ps.inWater && !ps.onLand, anchored: stations.anchored() });
+  // A tower that went overboard drops you with it.
+  if (ps.tower && (ps.tower.tile.broken || !stations.hasStation(ps.tower.tile))) {
+    ps.tower = null;
+    ps.grounded = false;
+  }
+  const isl = islands.update(dt, {
+    raftCenter: raft.center(), raftRadius: raft.radius(),
+    aboard: !ps.inWater && !ps.onLand, onLand: ps.onLand, anchored: stations.anchored(),
+    hasSail: !!stations.has('sail'), onTower: !!ps.tower, night: wx.night,
+  });
   keepOffIsland(dt);
+  // Gulls when land is close.
+  const ic = islands.center();
+  game.birdT = (game.birdT || 4) - dt;
+  if (ic && game.birdT <= 0) {
+    game.birdT = rand(4, 11);
+    const d = Math.hypot(ic.x - ps.pos.x, ic.z - ps.pos.z);
+    if (d < ic.r + 90 && wx.kind !== 'storm' && wx.night < 0.5) audio.bird(placeSound(tmpV.set(ic.x, 6, ic.z)).pan);
+  }
   if (ps.onLand && !game.landed) {
     game.landed = true;
     progress('island');
   }
-  if (!isl) game.landed = false;
+  if (!isl.resting && !ps.onLand) game.landed = false;
   nets.update(game.time, dt);
-  stations.update(game.time, dt, wx.kind, ps.pos);
+  rails.update();
+  stations.update(game.time, dt, wx.kind, ps.pos, wx.kind === 'storm' ? 1 : wx.kind === 'rain' ? 0.6 : 0.25);
+  if (story.tick(dt)) {
+    const c = raft.center();
+    const d = debris.spawn('bottle', c.x - debris.flow.x * 60 + rand(-5, 5), c.z - debris.flow.z * 60);
+    hud.alert('Something glints in the water, drifting your way.', {
+      kind: 'good', duration: 6, follow: () => (debris.items.includes(d) ? tmpV.set(d.x, 0.3, d.z) : null),
+    });
+  }
+  game.mapT = (game.mapT || 0) + dt;
+  if (game.menu === 'map' && game.mapT > 0.25) { game.mapT = 0; map.tick(); }
+  if (game.pendingNote && !game.menu) { const f = game.pendingNote; game.pendingNote = null; if (holdInput('note')) f(); }
   debris.update(game.time, dt, raft.center());
   fx.update(dt);
   crafting.tick(dt);
   survival(dt);
   if (game.mode !== 'play') return;
+
+  game.saveT = (game.saveT || 0) + dt;
+  if (game.saveT > 30) saveGame();
 
   // A night that ends at dawn counts as survived.
   if (game.lastHour < 6 && wx.hour >= 6) {
@@ -779,14 +1054,15 @@ function updatePlay(dt) {
   }
 
   hud.setVitals(game.stats);
+  hud.setFood(ui.food, inventory.items);
   hud.setInventory(inventory.items);
   hud.setSlot(ui.slot, hintFor(SLOTS[ui.slot].id, ui));
   hud.setPrompt(ui.prompt);
   hud.setCharge(ui.charge);
   hud.setSwimming(ps.inWater);
-  const islandNote = isl && isl.phase === 'visit'
+  const islandNote = isl.resting
     ? (stations.anchored() ? 'Island: anchored' : `Island: ${formatTime(isl.visitLeft)}`)
-    : isl && isl.phase === 'approach' ? 'Land ahead' : '';
+    : stations.anchored() ? 'Anchored' : isl.sailing ? 'Under sail' : '';
   hud.setClock(wx.day, wx.hour, wx.kind, wx.night, islandNote);
   hud.setBuildBar(SLOTS[ui.slot].id === 'hammer' ? BUILD_MODES : null, ui.hammerMode);
   hud.update(dt, camera);
@@ -845,6 +1121,7 @@ function start(data) {
     showScreen('pause');
   } else {
     showScreen('title');
+    refreshTitle();
   }
   requestAnimationFrame(frame);
 }
@@ -855,10 +1132,10 @@ else start(window.claude?.hot?.data ?? {});
 
 // Handles for automated checks (tools/smoke.js).
 window.__game = {
-  game, raft, shark, debris, nets, bait, stations, weather, crafting, islands, player, tools, inventory, input, camera, events,
+  game, raft, shark, debris, nets, rails, bait, stations, weather, crafting, islands, story, map, player, tools, inventory, input, camera, events,
   applyDifficulty,
-  openMenu, closeMenu,
-  newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline,
+  openMenu, closeMenu, openMap, openNote,
+  newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline, saveGame, readSave, clearSave,
   hold: false,
   draw() {
     ocean.update(game.time, camera.position);

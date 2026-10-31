@@ -107,6 +107,7 @@ export function createNets(raft, debris, fx, audio) {
   let mode = null;
   let ghostsDirty = true;
   let lost = () => {};
+  let edgeTaken = () => false;
 
   // World frame of a net: o = edge midpoint, n = outward, tg = along the edge.
   function frameOf(net) {
@@ -193,7 +194,7 @@ export function createNets(raft, debris, fx, audio) {
       if (t.broken) continue;
       for (const side of SIDES) {
         if (raft.tileAt(t.i + side[0], t.j + side[1])) continue;
-        if (nets.has(key(t, side))) continue;
+        if (nets.has(key(t, side)) || edgeTaken(t, side)) continue;
         out.push({ tile: t, side });
       }
     }
@@ -246,6 +247,8 @@ export function createNets(raft, debris, fx, audio) {
   return {
     nets,
     onLost(fn) { lost = fn; },
+    setEdgeTaken(fn) { edgeTaken = fn; },
+    markDirty() { ghostsDirty = true; },
     count() { return nets.size; },
     has(tile, side) { return nets.has(key(tile, side)); },
     add,

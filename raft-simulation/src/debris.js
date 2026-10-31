@@ -13,6 +13,7 @@ const TYPES = {
   plastic: { weight: 25 },
   fiber: { weight: 22 },
   coconut: { weight: 10 },
+  seaweed: { weight: 9 },
   barrel: { weight: 6 },
 };
 
@@ -74,6 +75,11 @@ function init() {
   M = materials();
   M.bone = new THREE.MeshStandardMaterial({ color: 0xeee6d2, roughness: 0.45 });
   M.hide = new THREE.MeshStandardMaterial({ color: 0x55707f, roughness: 0.55, side: THREE.DoubleSide });
+  M.kelp = new THREE.MeshStandardMaterial({ color: 0x5b6b2a, roughness: 0.6, side: THREE.DoubleSide });
+  M.kelp2 = new THREE.MeshStandardMaterial({ color: 0x7a7a30, roughness: 0.6, side: THREE.DoubleSide });
+  M.bottleGlass = new THREE.MeshStandardMaterial({ color: 0x5f9a6a, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.6 });
+  M.cork = new THREE.MeshStandardMaterial({ color: 0xa47a4a, roughness: 0.9 });
+  M.paper = new THREE.MeshStandardMaterial({ color: 0xf0e6c8, roughness: 0.9 });
   const frond = frondGeometry();
   G = {
     board: new RoundedBoxGeometry(1.1, 0.065, 0.24, 2, 0.012),
@@ -104,6 +110,18 @@ function init() {
     barrel: barrelGeometry(),
     hoop: new THREE.TorusGeometry(0.31, 0.014, 6, 24).rotateY(Math.PI / 2),
     lid: new THREE.CircleGeometry(0.27, 18).rotateY(Math.PI / 2),
+    kelp: (() => {
+      // a wavy ribbon of kelp lying on the water
+      const geo = new THREE.PlaneGeometry(0.9, 0.12, 12, 1).rotateX(-Math.PI / 2);
+      const p = geo.attributes.position;
+      for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) + Math.sin(p.getX(i) * 7) * 0.06);
+      geo.computeVertexNormals();
+      return geo;
+    })(),
+    bladder: new THREE.SphereGeometry(0.035, 8, 6),
+    msgBottle: bottleGeometry().scale(1.6, 1.6, 1.6),
+    cork: new THREE.CylinderGeometry(0.03, 0.026, 0.06, 8).rotateZ(Math.PI / 2),
+    scroll: new THREE.CylinderGeometry(0.04, 0.04, 0.2, 8).rotateZ(Math.PI / 2),
   };
 }
 
@@ -188,6 +206,32 @@ function buildMesh(type) {
     floatY = 0.02;
     radius = 0.3;
     label = 'Coconut';
+  } else if (type === 'seaweed') {
+    count = Math.random() < 0.5 ? 2 : 1;
+    for (let i = 0; i < 2 + count; i++) {
+      const k = mesh(G.kelp, i % 2 ? M.kelp2 : M.kelp);
+      k.rotation.y = i * 0.9 + rand(-0.2, 0.2);
+      k.position.set(rand(-0.1, 0.1), 0.005 * i, rand(-0.1, 0.1));
+      g.add(k);
+      const b = mesh(G.bladder, M.kelp2);
+      b.position.set(Math.cos(i * 0.9) * 0.3, 0.02, -Math.sin(i * 0.9) * 0.3);
+      g.add(b);
+    }
+    floatY = 0.01;
+    radius = 0.5;
+    label = 'Seaweed';
+  } else if (type === 'bottle') {
+    const b = new THREE.Mesh(G.msgBottle, M.bottleGlass);
+    g.add(b);
+    const cork = mesh(G.cork, M.cork);
+    cork.position.x = 0.29;
+    g.add(cork);
+    const scroll = mesh(G.scroll, M.paper);
+    scroll.position.x = -0.02;
+    g.add(scroll);
+    floatY = 0.05;
+    radius = 0.35;
+    label = 'Message in a bottle';
   } else if (type === 'tooth') {
     const t = mesh(G.tooth, M.bone);
     t.rotation.z = 0.25;
@@ -238,6 +282,8 @@ function rollLoot(type, count) {
     case 'plastic': return { plastic: 1 };
     case 'fiber': return { fiber: count };
     case 'coconut': return { coconut: 1 };
+    case 'seaweed': return { seaweed: count + 1 };
+    case 'bottle': return { bottle: 1 };
     case 'tooth': return { tooth: 1 };
     case 'hide': return { hide: 1 };
     case 'jaw': return { jaw: 1 };

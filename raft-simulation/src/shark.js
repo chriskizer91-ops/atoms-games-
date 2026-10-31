@@ -422,6 +422,12 @@ export function createShark(scene, tiers) {
       const { raft, player, fx, events, nets, bait } = world;
       if (s.gone) return;
       diff = world.diff || diff;
+      // Peaceful: it keeps swimming laps, but never commits to an attack.
+      if (diff.peaceful) {
+        if (['approach', 'bite', 'chase', 'retreat'].includes(s.state)) { s.target = null; setState('circle'); }
+        s.attackTimer = Math.max(s.attackTimer, 30);
+        s.notice = 0;
+      }
       s.stateTime += dt;
       s.biteCooldown = Math.max(0, s.biteCooldown - dt);
       s.hurt = Math.max(0, s.hurt - dt);
@@ -448,7 +454,7 @@ export function createShark(scene, tiers) {
 
       const busy = s.state === 'flee' || s.state === 'chase' || s.state === 'retreat' || s.state === 'leave';
       const fed = (s.state === 'bait' || s.state === 'distracted') && pdist > 5;
-      if (player.inWater && pdist < 32 && !busy && !fed) {
+      if (player.inWater && pdist < 32 && !busy && !fed && !diff.peaceful) {
         s.notice += dt;
         if (s.notice > 1.2) {
           s.courage = Math.max(1, tier.hitsToRepelChase + diff.hits);

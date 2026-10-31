@@ -108,7 +108,47 @@ export const ITEMS = {
   hide: { name: 'Sharkskin' },
   jaw: { name: "Old shark's jaw" },
   stone: { name: 'Stone' },
+  sand: { name: 'Sand' },
+  clay: { name: 'Clay' },
+  shells: { name: 'Shells' },
+  bamboo: { name: 'Bamboo' },
+  ore: { name: 'Metal ore' },
+  seaweed: { name: 'Seaweed' },
+  rope: { name: 'Rope' },
+  glass: { name: 'Glass' },
+  metalBar: { name: 'Metal bar' },
+  potato: { name: 'Potato' },
+  melon: { name: 'Watermelon' },
+  potatoSeed: { name: 'Potato seeds' },
+  melonSeed: { name: 'Watermelon seeds' },
+  bottle: { name: 'Message in a bottle' },
 };
+
+// What each food gives when eaten from the food slot (raw fish has its own slot).
+export const FOODS = {
+  coconut: { hunger: 12, thirst: 18 },
+  cooked: { hunger: 32, thirst: 6 },
+  potato: { hunger: 18, thirst: 2 },
+  melon: { hunger: 10, thirst: 26 },
+};
+
+// Crops grow in planters. Rain makes them grow faster.
+export const CROPS = {
+  potato: { name: 'Potato', seed: 'potatoSeed', food: 'potato', grow: 170, yield: [2, 3], seeds: [1, 2] },
+  melon: { name: 'Watermelon', seed: 'melonSeed', food: 'melon', grow: 230, yield: [1, 2], seeds: [1, 2] },
+};
+export const CROP_RAIN_BOOST = 2;
+
+// Smelter: burn wood, turn ore into metal bars and sand into glass.
+export const SMELT = {
+  burn: 120,
+  time: 12,
+  jobs: [
+    { from: { ore: 1 }, to: { metalBar: 1 }, verb: 'Smelt metal ore into a bar' },
+    { from: { sand: 2 }, to: { glass: 1 }, verb: 'Melt sand into glass' },
+  ],
+};
+export const STILL = { cups: 4, every: 35, drink: 24 };
 
 export const COOKED = { hunger: 32, thirst: 6 };
 
@@ -128,11 +168,16 @@ export const CLOTHING = {
   hideVest: { slot: 'body', name: 'Sharkskin vest', cost: { hide: 3, fiber: 2 }, bench: true, color: 0x4d6370, text: 'Grey-blue and rough as sandpaper.' },
   swimShorts: { slot: 'legs', name: 'Woven swim shorts', cost: { fiber: 4, plastic: 2 }, color: 0x2f9a93, text: 'Light shorts woven from fiber and plastic strips.' },
   hideLeggings: { slot: 'legs', name: 'Sharkskin leggings', cost: { hide: 2, fiber: 2 }, bench: true, color: 0x51646e, text: 'Long and tough, stitched from sharkskin.' },
+  shellCirclet: { slot: 'head', name: 'Shell circlet', cost: { shells: 5, rope: 1 }, color: 0xf3d9c4, text: 'Pink and white shells strung round your head.' },
+  bambooHat: { slot: 'head', name: 'Bamboo hat', cost: { bamboo: 3, rope: 1 }, color: 0xc9b46a, text: 'A wide cone of split bamboo.' },
+  seaweedWrap: { slot: 'legs', name: 'Seaweed wrap', cost: { seaweed: 6, rope: 1 }, color: 0x4f6b2f, text: 'Dried kelp, wrapped and tied.' },
 };
 
 // Made in the crafting panel. spear/hook entries replace the tool in your hand.
 export const GEAR = {
   bandage: { name: 'Palm-fiber bandage', cost: { fiber: 3 }, text: 'Wrap a wound: heals 30 health straight away.' },
+  rope: { name: 'Rope', cost: { fiber: 3 }, makes: { rope: 1 }, text: 'Twist palm fiber into a length of rope.' },
+  seaweedRope: { name: 'Seaweed rope', cost: { seaweed: 4 }, makes: { rope: 1 }, text: 'Dried, twisted seaweed makes rope too.' },
   boneSpear: {
     name: 'Bone spear', cost: { tooth: 3, wood: 2, fiber: 2 }, bench: true, once: true, upgrade: 'spear', level: 2,
     text: 'A row of shark teeth bound to the tip. Hits count 1.5 times toward driving a shark off.',
@@ -140,6 +185,10 @@ export const GEAR = {
   metalSpear: {
     name: 'Scrap-metal spear', cost: { scrap: 4, wood: 2, fiber: 2 }, bench: true, once: true, upgrade: 'spear', level: 3,
     text: 'A hammered metal blade. Hits count 2.5 times toward driving a shark off.',
+  },
+  steelSpear: {
+    name: 'Forged spear', cost: { metalBar: 3, bamboo: 2, rope: 2 }, bench: true, once: true, upgrade: 'spear', level: 4,
+    text: 'A forged blade on a bamboo shaft. Hits count 3.5 times toward driving a shark off.',
   },
   metalHook: {
     name: 'Metal hook', cost: { scrap: 3, fiber: 3 }, bench: true, once: true, upgrade: 'hook', level: 2,
@@ -150,11 +199,17 @@ export const GEAR = {
 // Built on the raft with the hammer.
 export const STATIONS = {
   floor: { name: 'Floor piece', cost: { wood: 4, fiber: 2 }, text: 'Make the raft bigger. Click an outline next to the raft.' },
-  net: { name: 'Catch net', cost: { wood: 2, plastic: 3, fiber: 2 }, text: 'Hangs off an outer edge and catches anything that drifts into it.' },
+  net: { name: 'Catch net', cost: { wood: 2, plastic: 3, fiber: 2 }, edge: true, text: 'Hangs off an outer edge and catches anything that drifts into it.' },
+  rail: { name: 'Railing', cost: { wood: 2, rope: 1 }, edge: true, text: 'A rail along an outer edge: you can\'t walk off there, and a hammerhead\'s hit won\'t throw you over it.' },
   table: { name: 'Crafting table', cost: { wood: 6, fiber: 3 }, text: 'Unlocks the bigger recipes and every upgrade. Press E at it to craft.' },
   grill: { name: 'Firepit grill', cost: { wood: 5, scrap: 1 }, text: 'Burn wood to cook raw fish. Lights the raft at night.' },
   catcher: { name: 'Rain catcher', cost: { plastic: 5, wood: 3, fiber: 2 }, bench: true, text: 'Collects fresh water to drink, fastest in rain.' },
-  anchor: { name: 'Anchor', cost: { scrap: 4, fiber: 4, wood: 2 }, bench: true, text: 'Drop it when an island is close and the raft stays there as long as you like.' },
+  anchor: { name: 'Anchor', cost: { scrap: 4, rope: 3, wood: 2 }, bench: true, text: 'Drop it and the raft stops drifting: an island alongside stays as long as you like.' },
+  planter: { name: 'Planter', cost: { wood: 4, clay: 2 }, text: 'A box of soil. Plant seeds from islands; crops grow faster in rain.' },
+  smelter: { name: 'Smelter', cost: { stone: 8, clay: 5 }, bench: true, text: 'Burns wood to smelt metal ore into bars and sand into glass.' },
+  still: { name: 'Solar still', cost: { glass: 2, bamboo: 3, plastic: 2 }, bench: true, text: 'Turns sea water into fresh water in any weather. Holds 4 drinks.' },
+  sail: { name: 'Sail', cost: { bamboo: 6, rope: 4, plastic: 6 }, bench: true, once: true, text: 'A mast and sail. Open the map (M) and pick an island to sail to it.' },
+  tower: { name: 'Lookout tower', cost: { wood: 10, bamboo: 6, rope: 3 }, bench: true, text: 'Climb it (E) to spot islands much further away on the map.' },
 };
 
 // Upgrades applied with the hammer to something already built. All need a crafting table.
@@ -165,7 +220,7 @@ export const UPGRADES = {
   bigCatcher: { name: 'Big rain catcher', on: 'catcher', bench: true, cost: { plastic: 4, wood: 2 }, text: 'A wider funnel and barrel: holds 6 drinks and fills faster.' },
 };
 
-export const SPEAR_POWER = { 1: 1, 2: 1.5, 3: 2.5 };
+export const SPEAR_POWER = { 1: 1, 2: 1.5, 3: 2.5, 4: 3.5 };
 export const HOOK_LEVELS = { 1: { reel: 1, grab: 1, carry: 4 }, 2: { reel: 1.6, grab: 1.4, carry: 6 } };
 
 export const GRILL = { burn: 90, cook: 10, ovenBurn: 160, ovenCook: 5 };
@@ -174,11 +229,7 @@ export const FLOOR_HP = { basic: 100, reinforced: 200 };
 
 // ---------- islands ----------
 export const ISLAND = {
-  firstIn: 150,          // seconds into a new game before the first one shows up
-  every: [260, 380],     // seconds between islands
-  visit: 240,            // seconds it stays before drifting on (without an anchor)
-  approachSpeed: 3,      // m/s while it is still far away
-  radius: [15, 22],
+  visit: 240,            // seconds the raft rests alongside before drifting on (without an anchor)
 };
 
 // ---------- difficulty ----------
@@ -186,6 +237,26 @@ export const DIFFICULTY = {
   easy: { label: 'Easy', drain: 0.6, sharkDamage: 0.6, attackGap: 1.5, hits: -1 },
   normal: { label: 'Normal', drain: 1, sharkDamage: 1, attackGap: 1, hits: 0 },
   hard: { label: 'Hard', drain: 1.35, sharkDamage: 1.4, attackGap: 0.7, hits: 1 },
+  // Sharks still swim around but never bite the raft or you.
+  peaceful: { label: 'Peaceful', drain: 0.6, sharkDamage: 0, attackGap: 1, hits: 0, peaceful: true },
+};
+
+// ---------- the sea around you ----------
+// Islands sit at fixed spots in a generated sea. The raft drifts north on its
+// own; with a sail you can steer toward an island picked on the map.
+export const WORLD = {
+  drift: 1.3,          // m/s the raft drifts without a sail
+  sail: 2.6,           // m/s under sail
+  chunk: 480,          // sea is generated in squares this big, about one island each
+  islandChance: 0.85,
+  sight: 420,          // islands this close get marked on the map
+  towerSight: 1000,    // ... and this close from the top of a lookout tower
+  pullLateral: 220,    // drifting, the current carries you to islands this far off your line
+};
+export const ISLAND_SIZES = {
+  small: { label: 'Small', radius: [8, 11], weight: 4 },
+  medium: { label: 'Medium', radius: [15, 21], weight: 4 },
+  large: { label: 'Large', radius: [27, 34], weight: 2 },
 };
 
 export const COCONUT = { hunger: 12, thirst: 18 };

@@ -13,9 +13,11 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 | Left click | Use the tool in your hand (hold to wind up the hook, hold again to reel in) |
 | Right click | Hook: let go of the line. Hammer: open the build menu. Raw fish: throw it as bait |
 | `Q` (hammer out) | Open the build menu and pick what to build (`R` steps to the next thing) |
-| `1`–`6` or scroll | Switch tool: hook, spear, hammer, coconut, raw fish, cooked fish |
-| `E` | Grab something within reach; empty a net; use the grill, rain catcher, crafting table or anchor; gather on islands |
+| `1`–`5` or scroll | Switch tool: hook, spear, hammer, food, raw fish |
+| `R` (food slot) | Switch to the next food you have: coconut, cooked fish, potato, watermelon |
+| `E` | Grab something within reach; empty a net; use what you built; climb the lookout tower; gather on islands |
 | `C` or `Tab` | Crafting and wardrobe |
+| `M` | Map. With a sail built, click an island to sail there |
 | `Space` | Jump, or climb back aboard from the water |
 | `Shift` | Run or swim faster |
 | `Esc` | Pause |
@@ -31,16 +33,65 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 
 **Graphics quality:** choose Low, Medium (the default) or High on the title screen or in the pause menu. If the first few seconds of play run slowly, the game drops one level on its own and tells you. Your choice is remembered in this browser.
 
-**Difficulty:** choose Easy, Normal or Hard on the title screen or in the pause menu (remembered in this browser, and saved with a game).
+**Difficulty:** choose Easy, Normal, Hard or Peaceful on the title screen or in the pause menu (remembered in this browser, and saved with a game).
 
-| | Easy | Normal | Hard |
-|---|---|---|---|
-| Hunger and thirst drain | 60% | 100% | 135% |
-| Shark damage (to you and the raft) | 60% | 100% | 140% |
-| Time between shark attacks | 1.5× | 1× | 0.7× |
-| Spear hits to drive a shark off | 1 fewer | as listed | 1 more |
+| | Easy | Normal | Hard | Peaceful |
+|---|---|---|---|---|
+| Hunger and thirst drain | 60% | 100% | 135% | 60% |
+| Shark damage (to you and the raft) | 60% | 100% | 140% | none |
+| Time between shark attacks | 1.5× | 1× | 0.7× | never attacks |
+| Spear hits to drive a shark off | 1 fewer | as listed | 1 more | — |
 
-## Stage 3.5 (this build): your changes after playing Stage 3
+## Stage 4 (this build)
+
+- **Saving.** The game saves itself every 30 seconds, when you pause, and when you close or switch away from the tab. The title screen shows **Continue** with the day and time afloat of your saved raft. **New raft** asks once more before replacing it. Dying clears the save. It lives in this browser only.
+- **Peaceful mode.** A fourth difficulty. The shark still swims laps around the raft, but it never bites the raft or you, even when you swim.
+- **A sea with islands at fixed places.** Islands no longer just drift in. The sea is a chart, generated as you travel, with an island in most 480 m squares. The current carries the raft north at about 1.3 m/s and pulls you toward islands close to your line. When you reach one, the raft rests alongside it for 4 minutes, or as long as you like with the anchor down, and moves on once you're back aboard. Islands remember what you gathered.
+- **Three island sizes:**
+
+  | Size | Radius | What's on it |
+  |---|---|---|
+  | Small | 8–11 m | a few palms and bushes, a rock, shells, sand, driftwood |
+  | Medium | 15–21 m | palms, bushes, rocks, bamboo, sand, clay, shells, wild potatoes, often a crate |
+  | Large | 27–34 m | a tall hill, everything above plus watermelons, and rocks with metal ore more often |
+
+- **The map (`M`).** A paper chart of every island you've sighted (marked once it's within 420 m), drawn to size, with a tick on the ones you've visited, the dashed line you've travelled, and a ring for how far you can see. Scroll or click *Zoom* to see further.
+- **New materials** and what they make:
+
+  | Material | Where | Used for |
+  |---|---|---|
+  | Sand | dug on beaches | glass (smelter) |
+  | Clay | dug near the shore | planter, smelter |
+  | Shells | beaches | shell circlet |
+  | Bamboo | groves on medium and large islands | sail, lookout tower, solar still, forged spear, bamboo hat |
+  | Metal ore | red-brown rocks (some rocks) | metal bars (smelter) |
+  | Seaweed | floats past like other debris | seaweed rope, seaweed wrap |
+  | Rope | crafted: 3 palm fiber, or 4 seaweed | railings, anchor, sail, tower, forged spear, new clothes |
+  | Glass | smelter: 2 sand | solar still |
+  | Metal bar | smelter: 1 ore | forged spear |
+  | Potato and watermelon seeds | wild potatoes and watermelons on islands, crates, harvests | planters |
+
+- **New things to build with the hammer:**
+
+  | Build | Cost | Does |
+  |---|---|---|
+  | Railing | 2 wood, 1 rope | Goes on an outer edge. You can't walk off there, and a hammerhead's hit won't throw you over it |
+  | Planter | 4 wood, 2 clay | `E` plants seeds (it alternates between potato and watermelon if you have both). Potatoes take about 3 minutes, watermelons about 4; rain doubles the speed. `E` harvests 2–3 potatoes or 1–2 melons, plus 1–2 seeds back |
+  | Smelter | 8 stone, 5 clay (table) | `E` to feed it wood, then `E` to smelt 1 ore into a metal bar or 2 sand into glass (12 s each) |
+  | Solar still | 2 glass, 3 bamboo, 2 plastic (table) | Fresh water in any weather: a drink every 35 s, holds 4 |
+  | Sail | 6 bamboo, 4 rope, 6 plastic (table, one per raft) | A mast and a patched sail that billows harder in storms. `E` at it opens the map; click an island and the raft sails there at 2.6 m/s |
+  | Lookout tower | 10 wood, 6 bamboo, 3 rope (table) | `E` to climb up. From the platform you spot islands up to 1 km away. `E` again to climb down |
+
+- **New food:** potatoes (18 food, 2 water) and watermelon (10 food, 26 water). Food now shares one hotbar slot: slot 4 holds coconut, cooked fish, potato or watermelon, and `R` switches between the ones you have.
+- **New gear and clothes:** the forged spear (3 metal bars, 2 bamboo, 2 rope; hits count 3.5×), a shell circlet, a bamboo hat and a seaweed wrap.
+- **Messages in bottles.** Every 4–6 minutes a bottle drifts past, and some islands have one on the beach. Inside are notes from Wren, the radio officer of a lost cargo ship, who drifted out here before you. There are 8, read in order. They give hints, and the last one marks a lighthouse on your map, far to the north-east.
+- **The ending.** Reach the lighthouse island, go to the door and press `E` to light the lamp. A ship's horn answers and you get an ending screen with your stats. Then you can **keep sailing** (the lamp stays lit at night) or go back to the title.
+- **Sound:** footsteps (hollow on the deck, soft on sand), swimming strokes, gulls near land, wind that howls in storms, paper when you unroll a note, a ladder when you climb, and a click on menu buttons.
+- **New goals:** "putting down roots" (plant, smelt, a sail, 3 notes) and "the far horizon" (chart 6 islands, climb the tower, harvest, light the lamp).
+
+## Stage 3.5: your changes after playing Stage 3
+
+(Stage 4 changed how islands arrive: see above.)
 
 - **Clothing is for looks only.** No more buffs. The crafting panel's wardrobe shows a figure wearing your outfit, and your first-person sleeve takes the colour of your top. There are 9 pieces: 4 for the head, 3 for the body, 2 for the legs.
 - **No cold any more.** The warmth bar is gone, and so is the extra thirst in the midday sun. Nights and storms only change how things look and the weather. The grill is for cooking (and it lights up the raft at night).
@@ -108,8 +159,8 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 1. **Raft, hook, shark, spear, hammer** (done)
 2. **Building, nets, fish and bait, a shark that remembers you** (done)
 3. **Crafting, clothing, weather and day/night, grill and rain catcher, the hammerhead** (done)
-3.5. **Your changes: clothing for looks, no cold, a build menu, crafting table, recipe unlocks, upgrades, islands, anchor, difficulty** ← this build
-4. **Saving, sound and polish**, plus a story told through messages in bottles
+3.5. **Your changes: clothing for looks, no cold, a build menu, crafting table, recipe unlocks, upgrades, islands, anchor, difficulty** (done)
+4. **Saving, peaceful mode, a charted sea with islands in three sizes, the map and sail, new materials, planters and crops, railings, lookout tower, smelter, solar still, messages in bottles and an ending, sound polish** ← this build
 
 Predators are a tier table in `src/config.js`. A third species only needs a new entry there, plus its look and tactic in `src/shark.js`.
 
@@ -122,7 +173,7 @@ node tools/build.js --dev   # same, unminified
 NODE_PATH=/opt/node-tools/node_modules node tools/smoke.js   # headless playthrough + screenshots in tools/out/
 ```
 
-`tools/smoke.js` simulates input to play through everything (40 checks): hook, shark bite, spear and scar, repair, rebuild, swim, shark chase, climb, coconut, building a floor piece, putting up a net, a net catching material and a fish, emptying it, eating fish, bait luring the shark, a net torn off, opening the build menu with Q and picking from it, night with no cold meter, recipes locked until their materials are found, clothing made and worn for looks, the crafting table, spear and hook upgrades, the grill and its stone-oven upgrade, a reinforced floor, the rain catcher, an island drifting in, wading ashore and gathering stone, the island waiting for you, the anchor, difficulty, the reef shark leaving for good, the hammerhead ramming you off the raft, and save/restore. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
+`tools/smoke.js` simulates input to play through everything (57 checks): hook, shark bite, spear and scar, repair, rebuild, swim, shark chase, climb, coconut, building a floor piece, putting up a net, a net catching material and a fish, emptying it, eating fish, bait luring the shark, a net torn off, opening the build menu with Q and picking from it, night with no cold meter, recipes locked until their materials are found, clothing made and worn for looks, the crafting table, spear and hook upgrades, the grill and its stone-oven upgrade, a reinforced floor, the rain catcher, drifting up to an island, wading ashore and gathering stone, the raft waiting for you, the anchor, difficulty, the reef shark leaving for good, the hammerhead ramming you off the raft, save/restore, and for Stage 4: island sizes, gathering the new materials on a large island, rope, the smelter (bars and glass), planting and harvesting (and rain speeding it up), the food slot, the solar still, a railing stopping you, climbing the tower and spotting a far island, the sail and map taking you to an island, messages in bottles and the lighthouse reveal, the ending and keeping on playing, peaceful mode, and saving Stage 4 state. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
 
 | File | What it does |
 |---|---|
@@ -137,11 +188,14 @@ NODE_PATH=/opt/node-tools/node_modules node tools/smoke.js   # headless playthro
 | `src/bait.js` | Thrown fish bait: flight, floating, scent trail |
 | `src/weather.js` | Clock, day/night, weather states, sun and moon, fog, swell, rain, lightning |
 | `src/crafting.js` | Crafting panel (Craft and Build tabs), wardrobe preview, recipe unlocks, gear and weapon levels |
-| `src/stations.js` | Crafting table, grill / stone oven, rain catcher / big catcher, anchor |
-| `src/islands.js` | Island generation (terrain, palms, bushes, rocks, driftwood, crates), drifting in, visits, gathering |
+| `src/stations.js` | Crafting table, grill / stone oven, rain catcher / big catcher, anchor, planter and crops, smelter, solar still, sail, lookout tower |
+| `src/rails.js` | Railings on outer edges, and keeping you on the raft behind them |
+| `src/islands.js` | The chart of islands (generated square by square), three island sizes and their terrain and resources, the raft's drift and sailing, visits, gathering, the lighthouse |
+| `src/map.js` | The map screen: charted islands, your trail, setting a course |
+| `src/story.js` | The eight messages in bottles and the ending |
 | `src/shark.js` | Shark and hammerhead models (bodies bend as they swim), scars, and behaviour: circle, approach, bite, ram, chase, flee, follow bait, distracted, leave for good |
-| `src/player.js` | First-person movement: walking, jumping, falling in, swimming, climbing |
-| `src/tools.js` | Hook, spear, hammer and coconut: first-person view model, animations, actions |
+| `src/player.js` | First-person movement: walking, jumping, falling in, swimming, climbing, railings, the tower platform |
+| `src/tools.js` | Hook, spear, hammer and food: first-person view model, animations, actions, what `E` does |
 | `src/hud.js`, `src/style.css`, `src/index.html` | On-screen display and screens |
 | `src/audio.js` | Synthesised sound effects and ocean ambience |
 | `src/fx.js` | Spray, mist, blood clouds and splinters |

@@ -23,11 +23,13 @@ function dollSVG(worn) {
   const skin = '#b5794f';
   const shirt = body ? hex(body.color) : '#a89878';
   const pants = legs ? hex(legs.color) : '#8c7a5b';
-  const longLegs = worn.legs === 'hideLeggings' || !legs;
+  const longLegs = worn.legs === 'hideLeggings' || worn.legs === 'seaweedWrap' || !legs;
   let hat = '';
   if (head === 'palmHat') hat = `<ellipse cx="60" cy="30" rx="30" ry="6" fill="#d9b45f"/><path d="M45 30q15-22 30 0z" fill="#c9a24c"/>`;
   if (head === 'bandana') hat = `<path d="M44 28h32v7H44z" fill="#c9483b"/><path d="M76 31l9 5-8 3z" fill="#a83a30"/>`;
   if (head === 'toothBand') hat = `<path d="M44 29h32v4H44z" fill="#6b5a44"/>` + [48, 54, 60, 66, 72].map((x) => `<path d="M${x - 2} 33h4l-2 5z" fill="#eee6d2"/>`).join('');
+  if (head === 'shellCirclet') hat = `<path d="M44 29h32v3H44z" fill="#c9b7a0"/>` + [47, 53, 59, 65, 71].map((x, i) => `<circle cx="${x + 1}" cy="31" r="3" fill="${i % 2 ? '#e9a9a0' : '#f3dcc8'}"/>`).join('');
+  if (head === 'bambooHat') hat = `<path d="M28 32L60 12l32 20z" fill="#c9b46a"/><path d="M60 12v20M44 22l-6 10M76 22l6 10" stroke="#9c8a4e" stroke-width="1.2"/>`;
   if (head === 'jawCrown') hat = `<path d="M43 30l4-12 5 9 4-12 4 12 4-12 4 12 5-9 4 12z" fill="#f1ead8" stroke="#bfb39a" stroke-width="1"/>`;
   let top = `<path d="M40 62h40l4 44H36z" fill="${shirt}"/>`;
   if (worn.body === 'tarpPoncho') top = `<path d="M60 58l34 40H26z" fill="${shirt}"/><path d="M36 98h48v10H36z" fill="${shirt}"/>`;
@@ -128,7 +130,7 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
       if (st.owned.has(id)) actions = wearing ? '<button type="button" class="ghost" data-act="off">Take it off</button>' : '<button type="button" data-act="wear">Wear it</button>';
       else actions = benchNote || benchHere || `<button type="button" data-act="craft" ${inventory.has(c.cost) ? '' : 'disabled'}>Make it</button>`;
     } else if (g) {
-      sub = g.once ? 'Gear · replaces the tool you carry' : 'Gear · use it straight away';
+      sub = g.once ? 'Gear · replaces the tool you carry' : g.makes ? 'Material' : 'Gear · use it straight away';
       if (g.once && st.gear.has(id)) actions = '<p class="done">Made. It\'s in your hands now.</p>';
       else actions = benchNote || benchHere || `<button type="button" data-act="craft" ${inventory.has(g.cost) ? '' : 'disabled'}>Make it</button>`;
     } else if (b) {
@@ -172,6 +174,8 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
         st.worn[c.slot] = id;
       } else if (id === 'bandage') {
         stats.health = Math.min(100, stats.health + 30);
+      } else if (g.makes) {
+        inventory.add(g.makes);
       } else {
         st.gear.add(id);
       }
@@ -249,7 +253,7 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
       if (!benchOk(id)) return 'Needs a crafting table';
       return '';
     },
-    spearLevel() { return st.gear.has('metalSpear') ? 3 : st.gear.has('boneSpear') ? 2 : 1; },
+    spearLevel() { return st.gear.has('steelSpear') ? 4 : st.gear.has('metalSpear') ? 3 : st.gear.has('boneSpear') ? 2 : 1; },
     hookLevel() { return st.gear.has('metalHook') ? 2 : 1; },
     hasGear(id) { return st.gear.has(id); },
     worn(slot) { return st.worn[slot]; },

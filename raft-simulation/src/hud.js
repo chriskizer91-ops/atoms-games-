@@ -25,6 +25,19 @@ const ICONS = {
   cloud: '<path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 10a4 4 0 0 0 1 8z" fill="currentColor" fill-opacity=".25"/>',
   rain: '<path d="M7 14h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 6a4 4 0 0 0 1 8z" fill="currentColor" fill-opacity=".25"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>',
   storm: '<path d="M7 13h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 5a4 4 0 0 0 1 8z" fill="currentColor" fill-opacity=".25"/><path d="M12 14l-2 4h3l-2 4"/>',
+  sand: '<path d="M3 18c3-5 6-7 9-7s6 2 9 7z" fill="currentColor" fill-opacity=".25"/><circle cx="9" cy="15" r=".7" fill="currentColor"/><circle cx="14" cy="14" r=".7" fill="currentColor"/>',
+  clay: '<path d="M6 9c0-3 3-5 6-5s6 2 6 5v7c0 2-3 4-6 4s-6-2-6-4z" fill="currentColor" fill-opacity=".25"/><path d="M6 12c3 1.5 9 1.5 12 0"/>',
+  shells: '<path d="M12 20L4 10c2-4 5-6 8-6s6 2 8 6z" fill="currentColor" fill-opacity=".25"/><path d="M12 20V6M12 20L8 7M12 20l4-13"/>',
+  bamboo: '<path d="M10 3v18M14 3v18"/><path d="M10 8h4M10 14h4" stroke-width="2.6"/><path d="M14 8c3-1 5-3 6-5M10 14c-3-1-5-3-6-5"/>',
+  seaweed: '<path d="M9 21c-3-5 3-8 0-13s0-6 0-6M15 21c3-4-2-7 1-11s1-6 1-6"/>',
+  ore: '<path d="M5 15l2-6 6-3 6 3 1 7-5 3H9z" fill="currentColor" fill-opacity=".25"/><circle cx="10" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/><circle cx="14" cy="15" r="1" fill="currentColor"/>',
+  rope: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3.5"/><path d="M19 12c0 4 1 6 2 8"/>',
+  glass: '<path d="M7 4h10l-1.5 15a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1z" fill="currentColor" fill-opacity=".15"/><path d="M9.5 7l-.5 6"/>',
+  metalBar: '<path d="M3 15l4-6h14l-4 6z" fill="currentColor" fill-opacity=".3"/><path d="M3 15v3h14l4-6v-3M17 15v3"/>',
+  seed: '<ellipse cx="12" cy="13" rx="4.5" ry="6.5" fill="currentColor" fill-opacity=".25"/><path d="M12 7c0-2 1-3 3-4"/>',
+  potato: '<path d="M5 14c-1-5 3-9 8-9s7 4 6 8-4 7-8 6-5-2-6-5z" fill="currentColor" fill-opacity=".3"/><circle cx="10" cy="11" r=".8" fill="currentColor"/><circle cx="14" cy="14" r=".8" fill="currentColor"/>',
+  melon: '<path d="M3 8a9 9 0 0 0 18 0z" fill="currentColor" fill-opacity=".3"/><path d="M5.5 9.5a6.5 6.5 0 0 0 13 0"/><circle cx="10" cy="11" r=".7" fill="currentColor"/><circle cx="14" cy="11" r=".7" fill="currentColor"/><circle cx="12" cy="13.5" r=".7" fill="currentColor"/>',
+  map: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="currentColor" fill-opacity=".2"/><path d="M9 4v14M15 6v14"/>',
   arrow: '<path d="M12 3l7 12h-14z" fill="currentColor" stroke="none"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
 };
@@ -57,9 +70,10 @@ export function createHud() {
     goals: $('goal-list'),
     hint: $('tool-hint'),
     slots: [...document.querySelectorAll('#hotbar .slot')],
-    coco: $('coco-count'),
+    foodN: $('food-count'),
+    foodName: $('food-name'),
+    foodIcon: document.querySelector('#food-slot .ficon'),
     fishN: $('fish-count'),
-    cookedN: $('cooked-count'),
     clockIcon: $('clock-icon'),
     clockText: $('clock-text'),
     buildbar: $('buildbar'),
@@ -109,12 +123,23 @@ export function createHud() {
           lastInv[k] = items[k];
         }
       }
-      el.coco.textContent = items.coconut;
-      el.slots[3].classList.toggle('empty', items.coconut <= 0);
       el.fishN.textContent = items.fish;
       el.slots[4].classList.toggle('empty', items.fish <= 0);
-      el.cookedN.textContent = items.cooked || 0;
-      el.slots[5].classList.toggle('empty', !items.cooked);
+      if (this.food) this.setFood(this.food, items);
+    },
+
+    // The food slot shows whichever food is in it.
+    setFood(kind, items) {
+      this.food = kind;
+      const names = { coconut: 'Coconut', cooked: 'Cooked', potato: 'Potato', melon: 'Melon' };
+      const n = items[kind] || 0;
+      if (el.foodIcon.dataset.k !== kind) {
+        el.foodIcon.dataset.k = kind;
+        el.foodIcon.innerHTML = icon(kind);
+        el.foodName.textContent = names[kind];
+      }
+      if (el.foodN.textContent !== String(n)) el.foodN.textContent = n;
+      el.slots[3].classList.toggle('empty', n <= 0);
     },
 
     setSlot(i, hint) {

@@ -200,6 +200,7 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
         rainGeo.attributes.position.needsUpdate = true;
       }
       audio.setRain?.(st.rain);
+      audio.setWind?.(st.storm || 0);
 
       // ---- sky lighting for everything else, refreshed every few seconds ----
       st.envTimer -= dt;

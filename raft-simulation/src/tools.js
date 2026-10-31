@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { HOOK, SPEAR, HAMMER, COSTS, COCONUT, FISH, COOKED, STATIONS, UPGRADES, SPEAR_POWER, HOOK_LEVELS, PLAYER } from './config.js';
+import { HOOK, SPEAR, HAMMER, COSTS, FISH, FOODS, ITEMS, STATIONS, UPGRADES, SPEAR_POWER, HOOK_LEVELS, PLAYER } from './config.js';
 import { makeFish } from './nets.js';
 import { waveHeight } from './ocean.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -13,26 +13,33 @@ export const SLOTS = [
   { id: 'hook', name: 'Rope hook' },
   { id: 'spear', name: 'Spear' },
   { id: 'hammer', name: 'Hammer' },
-  { id: 'coconut', name: 'Coconut' },
+  { id: 'food', name: 'Food' },
   { id: 'fish', name: 'Raw fish' },
-  { id: 'cooked', name: 'Cooked fish' },
 ];
+// The food slot holds one of these; R switches to the next one you have.
+export const FOOD_KINDS = ['coconut', 'cooked', 'potato', 'melon'];
 
 // What the hammer can build (picked in the build menu; R steps through them).
 export const BUILD_MODES = [
   { id: 'floor', label: 'Floor' },
   { id: 'net', label: 'Catch net' },
+  { id: 'rail', label: 'Railing' },
   { id: 'table', label: 'Crafting table' },
   { id: 'grill', label: 'Grill' },
   { id: 'catcher', label: 'Rain catcher' },
+  { id: 'planter', label: 'Planter' },
   { id: 'anchor', label: 'Anchor' },
+  { id: 'smelter', label: 'Smelter' },
+  { id: 'still', label: 'Solar still' },
+  { id: 'sail', label: 'Sail' },
+  { id: 'tower', label: 'Lookout tower' },
 ];
 
 let MAT = null;
 function initMaterials() {
   if (MAT) return;
   const M = materials();
-  MAT = { bone: new THREE.MeshStandardMaterial({ color: 0xeee6d2, roughness: 0.4 }), skin: M.skin, sleeve: M.cloth, cuff: M.clothDark, handle: M.handle, rope: M.rope, metal: M.metal, stone: M.stone, coconut: M.coconut, float: M.float, floatBand: M.floatBand };
+  MAT = { bone: new THREE.MeshStandardMaterial({ color: 0xeee6d2, roughness: 0.4 }), steel: new THREE.MeshStandardMaterial({ color: 0xdfe6ee, roughness: 0.18, metalness: 1 }), potato: new THREE.MeshStandardMaterial({ color: 0x9a7346, roughness: 0.9 }), rind: new THREE.MeshStandardMaterial({ color: 0x3f7a35, roughness: 0.45 }), flesh: new THREE.MeshStandardMaterial({ color: 0xe0484f, roughness: 0.6 }), skin: M.skin, sleeve: M.cloth, cuff: M.clothDark, handle: M.handle, rope: M.rope, metal: M.metal, stone: M.stone, coconut: M.coconut, float: M.float, floatBand: M.floatBand };
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -96,6 +103,21 @@ function makeHammer() {
   return g;
 }
 
+function makePotato() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8).scale(1.35, 0.85, 1), MAT.potato));
+  return g;
+}
+
+// A wedge of watermelon.
+function makeMelon() {
+  const g = new THREE.Group();
+  const rind = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.04, 14, 1, false, 0, Math.PI * 0.6).rotateX(Math.PI / 2), MAT.rind);
+  const flesh = new THREE.Mesh(new THREE.CylinderGeometry(0.098, 0.098, 0.042, 14, 1, false, 0, Math.PI * 0.6).rotateX(Math.PI / 2), MAT.flesh);
+  g.add(rind, flesh);
+  return g;
+}
+
 function makeCoconut() {
   const g = new THREE.Group();
   g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.085, 3).scale(1, 0.92, 1.1), MAT.coconut));
@@ -134,12 +156,11 @@ const POSE = {
   hook: { arm: [0.25, -0.2, -0.44, 0.1, 0.22, 0], hand: [Math.PI / 2 - 0.35, 0, 0] },
   spear: { arm: [0.24, -0.215, -0.4, 0.02, 0.12, -0.1], hand: [-Math.PI / 2 + 0.1, 0.13, 0] },
   hammer: { arm: [0.28, -0.25, -0.5, 0.15, 0.2, 0], hand: [-0.35, 0.1, 0.15] },
-  coconut: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.35, 0, 0] },
+  food: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.35, 0, 0] },
   fish: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.2, 0.3, 0] },
-  cooked: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.2, 0.3, 0] },
 };
 
-export function createTools({ scene, camera, raft, nets, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats, events }) {
+export function createTools({ scene, camera, raft, nets, rails, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats, events }) {
   initMaterials();
   // ----- first-person view model, drawn in its own pass so it never clips -----
   const vmScene = new THREE.Scene();
@@ -177,7 +198,12 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
     coconut: makeCoconut(),
     fish: makeFish(),
     cooked: makeFish(),
+    potato: makePotato(),
+    melon: makeMelon(),
   };
+  models.potato.position.set(-0.005, 0.0, -0.06);
+  models.melon.position.set(-0.01, 0.0, -0.07);
+  models.melon.rotation.set(0.3, 0.2, 0);
   models.cooked.traverse((o) => { if (o.isMesh) o.material = new THREE.MeshStandardMaterial({ color: 0x8a5a2e, roughness: 0.6 }); });
   // Grappling hook gripped by the shank, prongs forward.
   const heldGrapple = makeGrapple();
@@ -228,7 +254,8 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
     prompt: null,
     lookDebris: null,
     hammerTile: null,
-    hammerMode: 'floor',   // what the hammer builds: 'floor' or 'net'
+    hammerMode: 'floor',   // what the hammer builds (see BUILD_MODES)
+    food: 'coconut',       // what the food slot holds
   };
 
   const camPos = new THREE.Vector3();
@@ -286,13 +313,14 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
     ray.set(camPos, camDir);
     ray.far = HAMMER.reach;
     const hits = ray.intersectObjects([
-      ...raft.hammerTargets(), ...nets.ghostTargets(), ...stations.ghostTargets(),
-      ...stations.hitTargets(), ...nets.hitTargets(),
+      ...raft.hammerTargets(), ...nets.ghostTargets(), ...stations.ghostTargets(), ...rails.ghostTargets(),
+      ...stations.hitTargets(), ...nets.hitTargets(), ...rails.hitTargets(),
     ], false);
     if (!hits.length) return null;
     const u = hits[0].object.userData;
     return {
       tile: u.tile || null, build: u.build || null, netSlot: u.netSlot || null, stationSlot: u.stationSlot || null,
+      railSlot: u.railSlot || null, rail: u.rail || null,
       station: u.station || null, net: u.net || null, point: hits[0].point,
     };
   }
@@ -335,12 +363,13 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
     if (m) st.hammerMode = m;
     raft.setBuildMode(m);
     nets.setMode(m);
+    rails.setMode(m);
     stations.setMode(m);
   }
 
   function costText(cost) {
     return Object.entries(cost)
-      .map(([k, n]) => `${n} ${k === 'fiber' ? 'palm fiber' : k}`)
+      .map(([k, n]) => `${n} ${ITEMS[k] ? ITEMS[k].name.toLowerCase() : k}`)
       .join(' · ');
   }
 
@@ -384,9 +413,22 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
       }
       return;
     }
+    if (tgt.rail) { audio.hammer(); fx.dust(point); return; }
+    if (tgt.railSlot) {
+      if (locked('rail')) return;
+      if (buy(STATIONS.rail.cost)) {
+        rails.add(tgt.railSlot.tile, tgt.railSlot.side);
+        nets.markDirty();
+        audio.build();
+        fx.dust(point);
+        events.onBuildStation?.('rail');
+      }
+      return;
+    }
     if (tgt.stationSlot) {
       const { tile: t, kind } = tgt.stationSlot;
       if (locked(kind)) return;
+      if (STATIONS[kind].once && stations.has(kind)) { audio.error(); return; }
       if (buy(STATIONS[kind].cost)) {
         stations.add(t, kind);
         audio.build();
@@ -399,6 +441,7 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
       if (locked('net')) return;
       if (buy(STATIONS.net.cost)) {
         nets.add(tgt.netSlot.tile, tgt.netSlot.side);
+        rails.markDirty();
         audio.build();
         fx.dust(point);
         events.onBuildNet?.();
@@ -469,6 +512,7 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
 
     reset() {
       releaseHook(false);
+      st.food = 'coconut';
       st.slot = 0;
       st.swap = 1;
       st.anim = null;
@@ -482,6 +526,16 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
       setHammerMode(mode);
     },
     get hammerMode() { return st.hammerMode; },
+    get food() { return st.food; },
+    // Step the food slot to the next food you have (or set one).
+    setFood(kind) {
+      if (kind) { st.food = kind; return; }
+      const i = FOOD_KINDS.indexOf(st.food);
+      for (let k = 1; k <= FOOD_KINDS.length; k++) {
+        const f = FOOD_KINDS[(i + k) % FOOD_KINDS.length];
+        if (inventory.get(f) > 0) { st.food = f; return; }
+      }
+    },
 
     // First-person arm lighting follows the time of day.
     setLighting(sunIntensity, sunColor, hemi) {
@@ -522,8 +576,11 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
       let prompt = null;
 
       // Look-at pickup (E)
-      st.lookDebris = debris.lookTarget(camPos, camDir, PLAYER.reach + (p.inWater ? 0.6 : 0));
-      if (st.lookDebris) {
+      st.lookDebris = p.tower ? null : debris.lookTarget(camPos, camDir, PLAYER.reach + (p.inWater ? 0.6 : 0));
+      if (p.tower) {
+        prompt = { key: 'E', text: 'Climb down' };
+        if (input.wasPressed('KeyE')) events.onClimbDown?.();
+      } else if (st.lookDebris) {
         prompt = { key: 'E', text: `Pick up ${st.lookDebris.label}` };
         if (input.wasPressed('KeyE')) {
           pickUp(st.lookDebris);
@@ -689,9 +746,15 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
         if (tgt?.station || tgt?.net) {
           const name = tgt.station ? STATIONS[tgt.station.kind].name : 'Catch net';
           prompt = up ? offer(up, `Upgrade to ${UPGRADES[up].name.toLowerCase()}`, UPGRADES[up].cost) : { text: `${name}: fully upgraded`, dim: true };
+        } else if (tgt?.rail) {
+          prompt = { text: 'Railing', dim: true };
+        } else if (tgt?.railSlot) {
+          prompt = offer('rail', 'Put up a railing', STATIONS.rail.cost);
         } else if (tgt?.stationSlot) {
           const kind = tgt.stationSlot.kind;
-          prompt = offer(kind, `Build a ${STATIONS[kind].name.toLowerCase()}`, STATIONS[kind].cost);
+          prompt = STATIONS[kind].once && stations.has(kind)
+            ? { text: `You already have a ${STATIONS[kind].name.toLowerCase()}`, dim: true }
+            : offer(kind, `Build a ${STATIONS[kind].name.toLowerCase()}`, STATIONS[kind].cost);
         } else if (tgt?.build) {
           prompt = offer('floor', 'Build floor', STATIONS.floor.cost);
         } else if (tgt?.netSlot) {
@@ -722,16 +785,25 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
         } else if (id === 'hammer') {
           startAnim('swing', 0.42);
           st.cooldown = HAMMER.cooldown;
-        } else if (id === 'coconut' || id === 'fish' || id === 'cooked') {
-          if (inventory.get(id) > 0) {
+        } else if (id === 'food' || id === 'fish') {
+          const what = id === 'food' ? st.food : 'fish';
+          if (inventory.get(what) > 0) {
             startAnim('eat', 1.0);
             st.cooldown = 1.1;
           } else {
             audio.error();
-            events.onMissing?.({ [id]: 1 });
+            events.onMissing?.({ [what]: 1 });
           }
         }
       }
+      // R with the food slot: next food you have.
+      if (id === 'food' && input.wasPressed('KeyR') && !st.anim) {
+        const before = st.food;
+        api.setFood();
+        if (st.food !== before) audio.pickup();
+      }
+      if (id === 'food' && inventory.get(st.food) <= 0 && !st.anim) api.setFood();
+
       // Right-click with a fish: throw it as bait.
       if (id === 'fish' && input.state.clicked[2] && st.swap >= 1 && !st.anim) {
         if (inventory.get('fish') > 0) {
@@ -773,13 +845,14 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
           if (f > 0.9) oy += Math.sin(a.t * 30) * 0.008;
           if (!a.fired && k >= 0.6) {
             a.fired = true;
-            const food = id === 'fish' ? FISH : id === 'cooked' ? COOKED : COCONUT;
-            if ((id === 'coconut' || id === 'fish' || id === 'cooked') && inventory.get(id) > 0) {
-              inventory.spend({ [id]: 1 });
+            const what = id === 'food' ? st.food : 'fish';
+            const food = what === 'fish' ? FISH : FOODS[what];
+            if (food && inventory.get(what) > 0) {
+              inventory.spend({ [what]: 1 });
               stats.hunger = Math.min(100, stats.hunger + food.hunger);
               stats.thirst = Math.min(100, stats.thirst + food.thirst);
               audio.eat();
-              events.onEat?.(id);
+              events.onEat?.(what);
             }
           }
         }
@@ -807,14 +880,14 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
       hand.rotation.set(pose.hand[0], pose.hand[1], pose.hand[2]);
       arm.position.set(base[0] + ox, base[1] + oy, base[2] + oz);
       arm.rotation.set(base[3] + rx, base[4] + ry, base[5] + rz);
-      for (const k in models) models[k].visible = k === id;
+      const shown = id === 'food' ? st.food : id;
+      for (const k in models) models[k].visible = k === shown;
       heldGrapple.visible = h.mode === 'held' || h.mode === 'charging';
       danglingLine.visible = heldGrapple.visible;
       coil.visible = id === 'hook';
-      models.coconut.visible = id === 'coconut' && inventory.get('coconut') > 0;
+      if (id === 'food') models[st.food].visible = inventory.get(st.food) > 0;
       models.fish.visible = id === 'fish' && inventory.get('fish') > 0;
-      models.cooked.visible = id === 'cooked' && inventory.get('cooked') > 0;
-      if (spearBlade) spearBlade.material = [null, MAT.stone, MAT.bone, MAT.metal][crafting.spearLevel()];
+      if (spearBlade) spearBlade.material = [null, MAT.stone, MAT.bone, MAT.metal, MAT.steel][crafting.spearLevel()];
 
       // Light the view model from the real sun direction.
       camQuatInv.copy(camera.quaternion).invert();
@@ -828,6 +901,7 @@ export function createTools({ scene, camera, raft, nets, stations, islands, craf
         charge: h.mode === 'charging' ? h.charge : 0,
         slot: st.slot,
         hammerMode: st.hammerMode,
+        food: st.food,
         hookOut: h.mode !== 'held' && h.mode !== 'charging',
       };
     },
