@@ -1,0 +1,134 @@
+COALOSSUS IMAGE GENERATION
+Created 2026-11-07 with the built-in image generation tool.
+Source: user-provided README.md and attached Coalossus pixel-art sprite.
+Five PNG deliverables: sheet, front, side facing left, back, top with head upward.
+The first four canvases are 1536 x 1024; the top canvas is 1024 x 1536.
+
+PROMPTS USED
+
+01 Character sheet
+==================
+Make a character design sheet for an original creature called Coalossus, for a creature-collecting game. The attached image is the original pixel-art sprite. Keep the same design, colours and personality, but redraw it as clean, high-definition painted concept art, not pixel art.
+
+THE PAGE
+Landscape, 1536 x 1024. On the left, a large three-quarter hero view. On the right, small front, side and back views in a row, all the same size and standing on the same ground line, with the side view facing left. Below them, four close-ups: the face, one front paw, a patch of rock plates with the lava cracks, and the place where the chest fur meets the rock. Next to the small views, a size bar in metres showing it stands 1.8 m tall and is 2.2 m long. The name "COALOSSUS" at the top. No other text.
+
+THE CREATURE
+Coalossus is a huge, friendly bear whose body has hardened into coal rock. It is 1.4 m wide across the shoulders, 2.2 m long from nose to tail, and 1.8 m tall to the top of its shoulder crags.
+- Head: a round bear head covered in dark chocolate-brown fur, drawn as chunky clumped tufts (each tuft at least 5 cm wide, no thin strands). Small round ears with glowing orange inner ears. Warm glowing amber-orange eyes, a short muzzle with a dark nose, and a closed-mouth gentle smile. Its expression is gentle but powerful.
+- Chest: a thick ruff of lighter cocoa-brown fur in big chunky tufts, from the chin down over the chest like a bib.
+- Body and legs: massive and chunky, covered in big rounded plates of matte charcoal-black coal rock, each about 25 to 40 cm across, fitting together like cobblestones. A simple, bold network of glowing lava cracks runs between the plates: orange-red, brighter yellow-orange where the cracks are widest.
+- Back: the shoulders and spine rise into a ridge of solid, chunky coal-rock crags (no thin spikes). The tallest crags are over the shoulders and they get smaller toward the hips. A few crags have small glowing vent openings at their tips. No smoke.
+- Paws: very large, round paws with four thick toes each and no sharp claws. They glow as if dipped in lava: bright orange fading to yellow at the toe tips, with the glow fading up into the cracks of the legs.
+- Tail: a short stubby bear tail made of one rounded coal chunk with a glowing crack.
+- Build: heavy and powerful. Gorilla-like shoulders bigger than the hips, short thick legs, and a head about one quarter of its total height.
+
+POSE
+Standing square on all four legs in a neutral, symmetrical pose. Legs straight down and slightly apart, with clear gaps of background between them. Head facing straight ahead, mouth closed. The same pose in every view. No smoke, sparks or embers anywhere.
+
+THE LOOK (the same for every creature in this game): a friendly creature-collecting game. Chunky, rounded, cute-but-mighty proportions, big warm expressive eyes and simple shapes that read clearly. Stylised hand-painted surfaces with clear blocks of colour and gentle texture, not photoreal. Colours true to the original sprite. No black outlines around the creature or any of its parts. Soft, even, shadowless studio light with only small highlights. Glowing parts glow, with no halo onto the background. Plain flat light-grey background, exactly #C8C8CA, with no floor, shadow, reflection, border or watermark.
+
+
+01 Character sheet correction
+=============================
+Use case: precise-object-edit. Edit the attached Coalossus character sheet with ONLY these corrections before it is used as the master modeling reference:
+1. The tall crooked upward appendage on the rump is an incorrect tail. Replace it in the hero view and side thumbnail with a SHORT STUBBY rounded coal-chunk bear tail, about 15 cm long, immediately behind the hips, with one glowing crack. No tall rear chimney. Preserve the tall SHOULDER crags and smaller spine crags.
+2. Every paw has FOUR thick rounded toes, with no claws; the paw closeup must show four toes.
+3. Replace the entire background with perfectly solid, uniform RGB (200,200,202), hex #C8C8CA, no mottling, gradients, halos or cast/contact shadows.
+Preserve the original painted character identity, facial expression, body proportions, chest fur, ear shapes, palette, rock plates and lava crack network, title COALOSSUS, view layout, scale annotations, four detail panels and 1536 x 1024 canvas. Do not redesign anything else.
+
+02 Front
+========
+Use case: stylized-concept. Asset type: HD orthographic reference for silhouette tracing and projection painting. Input image 1 is the MASTER CHARACTER SHEET: preserve this exact Coalossus identity and paint design. Generate one standalone full-size FRONT view only, no montage, no sheet panels.
+
+Now make the HD views of Coalossus from this sheet, one picture per view. Start with the FRONT view.
+
+Rules for every view:
+- True orthographic, like a technical drawing: no perspective and no tilt. For this one, the camera looks dead at its front from mid-height.
+- Landscape, 1536 x 1024. The whole creature in frame with about a 5% margin, centred left to right, nothing cut off. In every view, at the same scale: the bottoms of its paws on the same pixel row, and the tops of its crags on the same pixel row.
+- Exactly the same creature as the sheet: same plates, same crack pattern, same crags, same fur tufts and the same colours on the same parts in every view. Its left and right halves mirror each other.
+- The same neutral pose in every view, standing square on all four legs with clear gaps of background between the legs.
+- Nothing hair-thin: every part, tuft and crag at least 5 cm across. Nothing see-through, smoky, blurred or flashing. No smoke, sparks or embers.
+- No text.
+
+THE LOOK (the same for every creature in this game): a friendly creature-collecting game. Chunky, rounded, cute-but-mighty proportions, big warm expressive eyes and simple shapes that read clearly. Stylised hand-painted surfaces with clear blocks of colour and gentle texture, not photoreal. Colours true to the original sprite. No black outlines around the creature or any of its parts. Soft, even, shadowless studio light with only small highlights. Glowing parts glow, with no halo onto the background. Plain flat light-grey background, exactly #C8C8CA, with no floor, shadow, reflection, border or watermark.
+
+
+CAMERA AND REGISTRATION: Front elevation, camera level on the creature's mid-height and straight along its longitudinal body axis. Zero perspective, zero top-down angle. Match the small FRONT thumbnail on the right side of the sheet, enlarged faithfully. Symmetric left/right. Landscape canvas exactly 1536 x 1024 pixels. Highest shoulder crag at y=64; paw bottoms at y=960; centered x=768. Preserve 1.4 m shoulder width versus 1.8 m height. Four thick rounded toes on each paw. Tail is SHORT, one rounded coal chunk, not a tall chimney. Do not reveal side or back surfaces that a true frontal camera could not see. Keep bold plate boundaries sharp and lava confined inside cracks. Flat fill RGB 200,200,202 outside the creature; no gradient, paper texture, floor or halo. NO TEXT.
+
+03 Side
+=======
+Use case: stylized-concept. Asset type: HD orthographic game modeling reference. Input image 1 is the master character SHEET; image 2 is the completed FRONT elevation used for scale and exact materials. Generate one new full-size SIDE elevation, no montage.
+
+Same again for the SIDE view: the camera dead at its side, the creature facing LEFT (its nose toward the left edge of the picture). Same scale, same ground line and same top line as the front view, same paint and detail. All the same rules.
+
+
+Rules for every view:
+- True orthographic, like a technical drawing: no perspective and no tilt. For this one, the camera looks dead at its SIDE from mid-height.
+- Landscape, 1536 x 1024. The whole creature in frame with about a 5% margin, centred left to right, nothing cut off. In every view, at the same scale: the bottoms of its paws on the same pixel row, and the tops of its crags on the same pixel row.
+- Exactly the same creature as the sheet: same plates, same crack pattern, same crags, same fur tufts and the same colours on the same parts in every view. Its left and right halves mirror each other.
+- The same neutral pose in every view, standing square on all four legs with clear gaps of background between the legs.
+- Nothing hair-thin: every part, tuft and crag at least 5 cm across. Nothing see-through, smoky, blurred or flashing. No smoke, sparks or embers.
+- No text.
+
+THE LOOK (the same for every creature in this game): a friendly creature-collecting game. Chunky, rounded, cute-but-mighty proportions, big warm expressive eyes and simple shapes that read clearly. Stylised hand-painted surfaces with clear blocks of colour and gentle texture, not photoreal. Colours true to the original sprite. No black outlines around the creature or any of its parts. Soft, even, shadowless studio light with only small highlights. Glowing parts glow, with no halo onto the background. Plain flat light-grey background, exactly #C8C8CA, with no floor, shadow, reflection, border or watermark.
+
+
+SIDE CAMERA: True orthographic LEFT-FACING profile. Nose at LEFT edge side of body, short stubby coal tail to RIGHT. Camera horizontal at mid-height exactly perpendicular to longitudinal axis. Enlarge the sheet's small LEFT-FACING side thumbnail, keeping its quadrupedal bear anatomy. Front and rear legs stand vertically; near and far legs are exactly equal in length and size, neither widened toward camera. Four thick rounded toes per paw, no claws. Only one side of the head visible, no turn toward camera. Do not show a large front-facing chest or two eyes.
+REGISTRATION: Canvas 1536x1024 landscape. Same approximate pixels/metre as the front, highest shoulder crag about y=48 and paw bottoms about y=976. Nose-to-tail 2.2m, height 1.8m; full length about 1135 pixels. Do not expand creature across the full canvas width, keep these physical proportions. Preserve the master sheet's tall shoulder vent crags, smaller ridge down spine and 15cm stubby rounded coal tail. Preserve its painted brown charcoal rocks, bright narrow orange cracks, four-toed molten paws, chunky brown head fur and cocoa chest ruff. Zero smoke, zero ground shadow, zero outlines. Entire outside background solid #C8C8CA, no gradient or texture. NO TEXT.
+
+03 Side correction
+==================
+Use case: precise-object-edit. Edit this exact left-facing SIDE elevation of Coalossus for a technical orthographic reference. Keep its identity, facial profile, colours, head height, shoulder crag height and paw baseline, rock plates and paint design unchanged. TWO geometric corrections only:
+1. The nose-to-tail length is too compressed. Make the whole creature 2.2m long relative to its1.8m height. On the SAME1536x1024 landscape canvas, keep highest shoulder vent near y=24 and paw bottoms near y=976, but expand the full left-facing nose-to-tail horizontal extent to about1160 pixels, nose near x=188 and tail end near x=1348, centered. Lengthen the torso and spacing between front and hind legs to achieve this stout long quadruped profile; do not make it taller. Tail remains a short rounded coal chunk, NOT a long tail or chimney.
+2. Make the paws truly SIDE-ON and pointing LEFT along the same direction as its nose. Four rounded toes still exist per paw but naturally overlap in a strict side profile, not presented as a front-facing row of four toes toward the camera. Keep paws thick and broad, no claws.
+No perspective anywhere. Head and torso fully in strict left profile, single eye visible. Front/back legs stand vertically with a clear gap below belly. Shoulder vent cluster exactly same as reference: central tallest and flanking pair, with only the two visible side silhouettes as in original. Preserve number and locations of all existing ridge crags, ear, coat tufts, rock plates and lava cracks under this geometry adjustment. No floor, no cast shadows, no smoke, no halo or sparks. Solid uniform #C8C8CA background. No text.
+
+04 Back
+=======
+Use case: stylized-concept. Asset type: HD orthographic reference for silhouette tracing and projection painting. Inputs: image 1 MASTER SHEET, image 2 FRONT elevation, image 3 LEFT side elevation. All depict the same Coalossus. Generate one standalone BACK elevation only, no montage.
+
+Same again for the BACK view: the camera dead behind it, looking at its rear, back crags and tail. Same scale, same ground line and same top line as the front view, same paint and detail. All the same rules.
+
+
+Rules for every view:
+- True orthographic, like a technical drawing: no perspective and no tilt. For this one, the camera looks dead at its BACK from mid-height.
+- Landscape, 1536 x 1024. The whole creature in frame with about a 5% margin, centred left to right, nothing cut off. In every view, at the same scale: the bottoms of its paws on the same pixel row, and the tops of its crags on the same pixel row.
+- Exactly the same creature as the sheet: same plates, same crack pattern, same crags, same fur tufts and the same colours on the same parts in every view. Its left and right halves mirror each other.
+- The same neutral pose in every view, standing square on all four legs with clear gaps of background between the legs.
+- Nothing hair-thin: every part, tuft and crag at least 5 cm across. Nothing see-through, smoky, blurred or flashing. No smoke, sparks or embers.
+- No text.
+
+THE LOOK (the same for every creature in this game): a friendly creature-collecting game. Chunky, rounded, cute-but-mighty proportions, big warm expressive eyes and simple shapes that read clearly. Stylised hand-painted surfaces with clear blocks of colour and gentle texture, not photoreal. Colours true to the original sprite. No black outlines around the creature or any of its parts. Soft, even, shadowless studio light with only small highlights. Glowing parts glow, with no halo onto the background. Plain flat light-grey background, exactly #C8C8CA, with no floor, shadow, reflection, border or watermark.
+
+
+CRITICAL BACK CAMERA: Straight rear elevation, camera horizontal at mid-height centered exactly along the body axis from BEHIND. Both rear halves symmetric, no rotation. Show only the BACKS of its head and round ears; NO face, NO eyes, NO muzzle, NO chest bib, NO glowing inner-ear disks, NO front toe tips on the hind paws. Rear paws seen from behind have rounded glowing heels; they still have the same four toes directed away from camera. The head looks forward away from us. Broad shoulders behind the narrower hips, heavy four-legged bear stance. Its short stubby rounded coal-chunk tail is centered at its rump, with one glowing crack. Exactly the same big brown charcoal rock plates and lava networks in corresponding physical locations as sheet and side.
+RIDGE: preserve the master sheet's tallest central SHOULDER crag with two smaller flanking vent crags, then the smaller solid crags descending along the spine toward the rump. No extra chimneys on hips or tail.
+Canvas 1536x1024 landscape, centered x=768, same scale as front, top shoulder vent about y=32, paw bottoms about y=975. Background perfectly uniform #C8C8CA, no floor, no shadows, no halo, no smoke or sparks. No outlines, no text.
+
+04 Back correction
+==================
+Use case: precise-object-edit. Edit this exact rear orthographic image of Coalossus. ONE CORRECTION ONLY: it currently has FOUR glowing vent openings in the shoulder crag cluster, but the established design has THREE. Remove the small CENTRAL SECONDARY orange vent opening directly below the tallest central opening and above the lower solid spine ridge (the small orange oval near x=768,y=125). Fill that opening with the same matte rock surface and merge its small central protrusion into the tall shoulder rock behind it. KEEP the largest top central vent and the two smaller LEFT and RIGHT flanking vents, so exactly THREE glowing vent openings remain. Do not add any others. Preserve every other contour, rock plate, lava crack, ear back, stubby tail, paw, pose, camera, framing, dimensions 1536x1024, and solid grey background. No face or eyes, no smoke, no shadow, no text. Keep all other pixels as close as possible to original.
+
+05 Top
+======
+Use case: stylized-concept. Asset type: HD TOP orthographic modeling reference for tracing and projection painting.
+Input images: 1 master CHARACTER SHEET, 2 FRONT elevation, 3 LEFT SIDE elevation, 4 corrected BACK elevation. These depict ONE identical four-legged Coalossus. Generate ONE new view from a completely different camera: the TOP view, viewed VERTICALLY DOWN, no montage.
+
+Same again for the TOP view: the camera straight down from above, with its head at the TOP of the picture and its tail at the bottom. Make this one portrait, 1024 x 1536, so its whole length fits. Same scale as the side view, same paint and detail. All the same rules.
+
+
+CANVAS AND CAMERA: PORTRAIT exactly 1024 x 1536 pixels. True plan view as if an overhead orthographic camera points straight vertically down at its BACK, zero tilt, zero perspective. Longitudinal axis exactly VERTICAL on the canvas. Nose and head point toward TOP of picture; short stubby tail points toward BOTTOM. Bilateral symmetry across vertical x=512. Show the dorsal surfaces of the head, shoulder crags, back plates and hips. Do NOT draw an upright front view, a face looking up at camera, a rear view, or an oblique bird's-eye portrait. The creature looks straight forward horizontally toward top of canvas with its head neutral, so primarily the TOP of its fur-covered skull and muzzle are visible. No front-facing chest bib; the cocoa ruff can show along the sides of the neck.
+POSE AND SCALE: Same neutral quadrupedal standing bear. Four legs straight down in world space, paws pointing forward toward top of picture, equal-size left/right limbs; four thick rounded toes per paw, no claws. From above the four paws are partly visible at the outside corners of the torso, do not splay legs sideways or change stance. Shoulder width 1.4 m, whole nose-tail length 2.2 m. Match SIDE reference scale approximately 520 pixels/metre: full nose-tail length about 1145 pixels on this 1536-high portrait canvas, centered, e.g. nose near y=195, tail end near y=1340. Shoulder width about 728 pixels, hips narrower.
+IDENTITY: Exactly the same warm chocolate fur, round ears, massive chunky brown-charcoal rock plates, orange-red lava cracks with yellow-orange centers and orange molten paws as references. No new markings. Short stubby rounded coal-chunk tail, about15 cm, one crack. Maintain EXACTLY THREE shoulder vent openings: one large central vent crag and two smaller flanking vent crags in the shoulder region, then solid decreasing crags along spine toward hips. Vents seen from directly above appear circular, not side-view ovals. Same number of crags as side reference, no additional vent openings along spine. Big plates and chunky clumped fur, at least5 cm details.
+
+THE LOOK (the same for every creature in this game): a friendly creature-collecting game. Chunky, rounded, cute-but-mighty proportions, big warm expressive eyes and simple shapes that read clearly. Stylised hand-painted surfaces with clear blocks of colour and gentle texture, not photoreal. Colours true to the original sprite. No black outlines around the creature or any of its parts. Soft, even, shadowless studio light with only small highlights. Glowing parts glow, with no halo onto the background. Plain flat light-grey background, exactly #C8C8CA, with no floor, shadow, reflection, border or watermark.
+
+
+Absolutely flat uniform RGB(200,200,202) #C8C8CA background, no grain, no gradient, no floor, no shadow or glow on background. No smoke, sparks or embers. No black outlines. NO TEXT. Entire creature fully in frame. This image MUST be a strict top-down plan view with HEAD AT TOP.
+
+05 Top proportion correction
+============================
+Use case: precise-object-edit. This is the correct TOP-DOWN view of Coalossus, but its body is too narrow and elongated compared with the established front and side references. Edit ONLY the overall silhouette proportions and scale so this overhead image can be registered with them.
+Keep the canvas PORTRAIT 1024x1536, camera pointing exactly vertically down, nose/head at TOP, tail at BOTTOM. Shorten the complete creature nose-to-tail extent from about1320 pixels to about1160 pixels: nose top near y=188, tail bottom near y=1348. Broaden the shoulders to about780 pixels total, from x=122 to x=902. Keep hips a little narrower than shoulders. This creates a stout broad bear shape, rather than a long narrow body. Preserve relative positions and identity of ALL existing parts and markings under this proportion correction: exactly three shoulder vents, four solid progressively smaller spine crags, two round ears, four legs, four toes per paw, short stubby rounded coal tail, same fur, exact rock arrangement, crack network, colours and painted texture. No new parts or new paint details. No oblique tilt, no face looking toward camera. Background absolutely flat RGB200,200,202 #C8C8CA, no shadow or halo, no text.
+

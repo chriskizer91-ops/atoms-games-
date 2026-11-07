@@ -34,6 +34,43 @@ to the first request.
 - **It's not one of the simplest.** It has two materials (fur and rock), a crag ridge on its back,
   lava-dipped paws and four legs to rig and walk-test. That's a good first test of the whole method.
 
+### Pictures received (7 Nov 2026)
+
+All five pictures are in `coalossus/source/`: the sheet plus front, side, back and top views, along with
+the prompts and notes from the chat that made them. `coalossus/previews/coalossus_lineup.jpg` shows the
+four views at one scale.
+
+![Coalossus views lined up](coalossus/previews/coalossus_lineup.jpg)
+
+**The check list passes:**
+- The side view faces left, and the top view is straight down with the head at the top.
+- There's no face in the back view, and no outlines, floor shadow, smoke or sparks.
+- It has 4 toes per paw, 2 ears and 3 vents in every view that shows them. The vents are one tall
+  centre vent with two smaller ones behind it, and they sit in the same places in every view.
+
+**Line-up numbers** (scaled so it stands 1.8 m tall):
+
+| | Front | Side | Back | Top |
+| --- | --- | --- | --- | --- |
+| Height on the canvas | 953 px | 953 px | 959 px | – |
+| Ground row (bottom of the paws) | 978 | 967 | 977 | – |
+| Size | 1.52 m wide | 2.43 m long | 1.47 m wide | 2.09 m long at the front's width |
+
+- **Heights:** front, side and back agree within 1%. The ground rows are within 11 px. Both get
+  corrected automatically.
+- **Size:** it came out a little chunkier than asked: **1.5 × 2.4 × 1.8 m** instead of 1.4 × 2.2 × 1.8.
+  The method takes widths from the front view and lengths from the side view, so the model will be that
+  size. That's fine for a big bear.
+- **Top view:** about 14% shorter from nose to tail than the side view, and its back paws sit a bit
+  further back. It gets stretched to the side view's length before printing. It only paints the top of
+  the back (the paws get their paint from the front and side), so no re-roll is needed.
+- **Background:** a slightly darker grey (193 to 197) than #C8C8CA, but flat (it varies by 5 at most).
+  It gets replaced with the exact grey when the views are cut out.
+- **Lighting:** a little more shading underneath than "shadowless". Acceptable; it reads as a slightly
+  darker belly.
+- **Sharpening:** not needed. The creature is about 950 px tall in each view and the detail is already
+  crisp.
+
 ### The four decisions (proposed)
 
 The method asks for these before starting. Change any of them.

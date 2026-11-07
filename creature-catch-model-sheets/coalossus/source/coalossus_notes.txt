@@ -1,0 +1,16 @@
+Coalossus reference image set
+
+Generated with the built-in image generation tool from the supplied README and pixel-art sprite.
+
+Files
+- coalossus_sheet.png: 1536 x 1024 character sheet
+- coalossus_front.png: 1536 x 1024 front view
+- coalossus_side.png: 1536 x 1024 side view, facing left
+- coalossus_back.png: 1536 x 1024 back view
+- coalossus_top.png: 1024 x 1536 top view, head toward top
+
+Modeling handoff
+The images are AI-generated visual references. Their rock plate and crack patterns, silhouettes and scale are not mathematically identical across views. Register the views and reconcile the paint before treating them as strict modeling measurements. Backgrounds are light grey with slight pixel variation, rather than a perfectly uniform #C8C8CA fill. The front, side and back have approximately aligned top and paw rows; the top view uses a separate portrait framing. The original README's 1.4 m width x 2.2 m length x 1.8 m height remains the intended dimensional target.
+
+coalossus_prompts.txt records the prompt set and targeted corrections.
+
