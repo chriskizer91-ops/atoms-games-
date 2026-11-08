@@ -1,0 +1,32 @@
+{
+ "texels": 3193767,
+ "seen_by_a_picture": 67.0,
+ "painted_by": {
+  "front": 640829,
+  "back": 428144,
+  "side+x": 503939,
+  "side-x": 504854,
+  "top": 83731
+ },
+ "parts": [
+  "torso",
+  "neck",
+  "head",
+  "snout",
+  "tuft",
+  "horn_L",
+  "horn_R",
+  "ear_fin_L",
+  "ear_fin_R",
+  "wing_L",
+  "wing_R",
+  "front_leg_L",
+  "front_leg_R",
+  "rear_leg_L",
+  "rear_leg_R",
+  "spines",
+  "tail_low",
+  "tail_up",
+  "droplet"
+ ]
+}

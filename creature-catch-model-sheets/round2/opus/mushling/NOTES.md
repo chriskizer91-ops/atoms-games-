@@ -18,7 +18,7 @@ front and three-quarter views, both hands are held up to the mouth, and the gill
   of the arms, coloured from the nearest painted spot on the same part.
 - **Parts:** 6 (cap, body, arm pair, left foot, right foot). Budget split: cap 2,928, body 2,400, each
   arm 408, each foot 378.
-- **Time:** about 35 minutes, start to finish (7 route runs, each about 2 minutes).
+- **Time:** about 22 minutes by the clock (15:38 to 16:00), including 4 route runs and 5 blockouts.
 
 ## What I did and the problems I hit
 
