@@ -1,0 +1,113 @@
+{
+ "blockout": {
+  "triangles": 59908,
+  "views": {
+   "front": {
+    "overlap": 96.5,
+    "missing": 11882,
+    "extra": 8708
+   },
+   "side": {
+    "overlap": 98.5,
+    "missing": 8016,
+    "extra": 3520
+   },
+   "back": {
+    "overlap": 93.4,
+    "missing": 12273,
+    "extra": 26915
+   },
+   "top": {
+    "overlap": 91.9,
+    "missing": 2506,
+    "extra": 61863
+   }
+  }
+ },
+ "big_blank": {
+  "triangles": 699772,
+  "views": {
+   "front": {
+    "overlap": 95.6,
+    "missing": 9682,
+    "extra": 16171
+   },
+   "side": {
+    "overlap": 97.3,
+    "missing": 8300,
+    "extra": 12849
+   },
+   "back": {
+    "overlap": 92.2,
+    "missing": 11155,
+    "extra": 35793
+   },
+   "top": {
+    "overlap": 91.9,
+    "missing": 1526,
+    "extra": 62554
+   }
+  }
+ },
+ "big_printed": {
+  "triangles": 699772,
+  "views": {
+   "front": {
+    "overlap": 95.6,
+    "missing": 9682,
+    "extra": 16171
+   },
+   "side": {
+    "overlap": 97.3,
+    "missing": 8300,
+    "extra": 12849
+   },
+   "back": {
+    "overlap": 92.2,
+    "missing": 11155,
+    "extra": 35793
+   },
+   "top": {
+    "overlap": 91.9,
+    "missing": 1526,
+    "extra": 62554
+   }
+  }
+ },
+ "small_baked": {
+  "triangles": 6000,
+  "views": {
+   "front": {
+    "overlap": 95.9,
+    "missing": 16299,
+    "extra": 7807
+   },
+   "side": {
+    "overlap": 96.8,
+    "missing": 21675,
+    "extra": 3508
+   },
+   "back": {
+    "overlap": 93.2,
+    "missing": 15506,
+    "extra": 24771
+   },
+   "top": {
+    "overlap": 93.1,
+    "missing": 4610,
+    "extra": 48827
+   }
+  }
+ },
+ "print": {
+  "texels": 11049396,
+  "seen_by_a_picture": 45.2,
+  "painted_by": {
+   "front": 789198,
+   "back": 1007765,
+   "side+x": 1183378,
+   "side-x": 1183878,
+   "top": 828465
+  }
+ }
+}

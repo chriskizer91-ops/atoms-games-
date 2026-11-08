@@ -34,6 +34,14 @@ to the first request.
 - **It's not one of the simplest.** It has two materials (fur and rock), a crag ridge on its back,
   lava-dipped paws and four legs to rig and walk-test. That's a good first test of the whole method.
 
+### Status: models built (8 Nov 2026)
+
+The big model (699,772 triangles, pictures printed on) and the small game model (6,000 triangles, baked)
+are done. They're in `coalossus/models/`, with the boards, the phone screenshot and the full write-up in
+[`coalossus/README.md`](coalossus/README.md).
+
+![The three stages](coalossus/previews/coalossus_stages.jpg)
+
 ### Pictures received (7 Nov 2026)
 
 All five pictures are in `coalossus/source/`: the sheet plus front, side, back and top views, along with
