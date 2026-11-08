@@ -1,0 +1,19 @@
+{
+ "texels": 2694761,
+ "seen_by_a_picture": 82.9,
+ "painted_by": {
+  "front": 474883,
+  "back": 530519,
+  "side+x": 469788,
+  "side-x": 477209,
+  "top": 293117
+ },
+ "parts": [
+  "cap",
+  "body",
+  "arm_L",
+  "arm_R",
+  "lfoot",
+  "rfoot"
+ ]
+}

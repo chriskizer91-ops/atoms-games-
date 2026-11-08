@@ -1,0 +1,26 @@
+{
+ "texels": 3378007,
+ "seen_by_a_picture": 68.1,
+ "painted_by": {
+  "front": 653015,
+  "back": 706542,
+  "side+x": 322340,
+  "side-x": 322340,
+  "top": 305624
+ },
+ "parts": [
+  "torso",
+  "head",
+  "muzzle",
+  "ruff",
+  "ear_L",
+  "ear_R",
+  "wing_L",
+  "wing_R",
+  "fleg_L",
+  "fleg_R",
+  "rleg_L",
+  "rleg_R",
+  "tail"
+ ]
+}

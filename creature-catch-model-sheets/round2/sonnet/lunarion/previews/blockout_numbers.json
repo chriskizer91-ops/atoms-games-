@@ -1,0 +1,25 @@
+{
+ "triangles": 59642,
+ "views": {
+  "front": {
+   "overlap": 92.9,
+   "missing": 30464,
+   "extra": 21308
+  },
+  "side": {
+   "overlap": 90.6,
+   "missing": 27020,
+   "extra": 7934
+  },
+  "back": {
+   "overlap": 91.2,
+   "missing": 44597,
+   "extra": 19327
+  },
+  "top": {
+   "overlap": 61.0,
+   "missing": 10124,
+   "extra": 132698
+  }
+ }
+}

@@ -1,0 +1,100 @@
+{
+ "H": 2.6,
+ "width_m": 3.7946666666666666,
+ "length_m": 2.7481012658227852,
+ "views": {
+  "front": {
+   "file": "views/front.png",
+   "mask": "views/front_mask.png",
+   "original": "../../source/lunarion/lunarion_front.png",
+   "size": [
+    1536,
+    1024
+   ],
+   "bg": [
+    196,
+    196,
+    200
+   ],
+   "bbox": [
+    57,
+    26,
+    1480,
+    1001
+   ],
+   "s": 375.0,
+   "uc": 768.5,
+   "vg": 1001.0
+  },
+  "side": {
+   "file": "views/side.png",
+   "mask": "views/side_mask.png",
+   "original": "../../source/lunarion/lunarion_side.png",
+   "size": [
+    1536,
+    1024
+   ],
+   "bg": [
+    193,
+    193,
+    197
+   ],
+   "bbox": [
+    272,
+    26,
+    1274,
+    974
+   ],
+   "s": 364.6153846153846,
+   "uc": 773.0,
+   "vg": 974.0
+  },
+  "back": {
+   "file": "views/back.png",
+   "mask": "views/back_mask.png",
+   "original": "../../source/lunarion/lunarion_back.png",
+   "size": [
+    1536,
+    1024
+   ],
+   "bg": [
+    195,
+    196,
+    199
+   ],
+   "bbox": [
+    54,
+    25,
+    1481,
+    988
+   ],
+   "s": 370.38461538461536,
+   "uc": 767.5,
+   "vg": 988.0
+  },
+  "top": {
+   "file": "views/top.png",
+   "mask": "views/top_mask.png",
+   "original": "../../source/lunarion/lunarion_top.png",
+   "size": [
+    1536,
+    1024
+   ],
+   "bg": [
+    194,
+    194,
+    198
+   ],
+   "bbox": [
+    69,
+    25,
+    1466,
+    999
+   ],
+   "sx": 368.1482782853127,
+   "sy": 354.42653155228,
+   "uc": 767.5,
+   "vc": 512.0
+  }
+ }
+}
