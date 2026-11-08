@@ -4,38 +4,66 @@
 
 ![close views](closeups.jpg)
 
-**Result:** a 6,946-triangle game model (`clovermouse.glb`, 3.1 MB) with one colour texture (2048), a
+**Result:** a 6,988-triangle game model (`clovermouse.glb`, 3.1 MB) with one colour texture (2048), a
 normal map (soft fur) and an all-black glow map (nothing glows). It looks right from the front and the
 three-quarter views: big green eyes, pink nose and smile, round pink-lined ears, paws together at the
 chest, cream belly, pink feet, and a four-leaf clover hat whose leaves read clearly from above. The
 pink tail rises behind in an S and hooks over at the top.
 
 The final game model's Blender file (the lead animates from it):
-`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/round3/clovermouse/out7/model.blend`
+`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/round3/clovermouse/out10/model.blend`
 
 ## Numbers
 
 | | Front | Side | Back | Top |
 | --- | --- | --- | --- | --- |
-| Blockout (60,000 triangles), outline overlap (`blockout.jpg`) | 93.8% | 91.2% | 90.5% | 57.7% |
-| Game model (6,946 triangles), outline overlap | 92.4% | 89.6% | 89.4% | 57.1% |
+| Blockout (60,000 triangles), outline overlap (`blockout.jpg`) | 95.5% | 92.4% | 92.4% | 58.5% |
+| Game model (6,988 triangles), outline overlap | 94.1% | 90.6% | 91.2% | 58.0% |
+| (before the shape fix below: game model) | 92.4% | 89.6% | 89.4% | 57.1% |
 
-- **Texture seen by a picture:** 76.2%. The rest (the hidden side of the arms, the underside of the
+- **Texture seen by a picture:** 72.9% (76.2% before the shape fix; more of the head top is now tucked under the hat). The rest (the hidden side of the arms, the underside of the
   clover, the soles, the inside of the ears) is coloured from the nearest painted spot of the same part.
 - **Why the top number is low:** the top picture draws a different pose. It shows the mouse lying
   stretched out, seen from above at a slant: the face and eyes are visible, the feet stick out behind
   the body and the tail lies flat on the ground. The model follows the front, side and back pictures,
   which all agree on the sitting pose. The top picture is used only to paint the clover.
 - **Parts (17 pieces):** body, body_haunch pair, head, muzzle (the nose), ear pair, cap_clover pair,
-  arm pair, foot pair, tail_a, tail_b, tail_c, tail_d. Budget: head 1,734, body 952, haunches 396
-  each, clover halves 390 each, ears 360 each, arms 360 each, feet 250 each, nose 130, tail 618 in
+  arm pair, foot pair, tail_a, tail_b, tail_c, tail_d. Budget: head 1,764, body 924, haunches 396
+  each, clover halves 420 each, ears 360 each, arms 360 each, feet 240 each, nose 130, tail 618 in
   four pieces.
 - **Animation check:** `pipeline/animate.py` with `{"plan": "round", "mouth": "head"}` rigs it with
   12 bones (body, head, two-bone arms, feet, three tail bones) and all 12 clips without complaint.
   Every part name has the right word: `body*` body; `head`, `muzzle`, `ear`, `cap_clover` head;
   `arm`, `foot`; `tail_*`.
 - **Time:** about 55 minutes by the clock (19:38 to about 20:30, plus a 5-minute final re-run), 7
-  route runs and 4 blockouts.
+  route runs and 4 blockouts; then about 20 minutes for the shape fix below (3 more route runs).
+
+## Shape fix (after review)
+
+The coordinator asked for three shape fixes, keeping the face and paint. Before and after
+(three-quarter back view and face view; left of each pair is before):
+
+![before and after](shape_fix_before_after.jpg)
+
+
+- **The head was boxy** (square top corners from the front, a box-like back). The head's top is
+  hidden under the hat in every picture, and its back is hidden behind the ear in the side picture,
+  so I was free to round both: the head outlines are now domed on top (both views) and round at the
+  back, and the slices are rounder (`n` 1.7 instead of 2). The face area of both outlines is
+  unchanged, so the face prints exactly as before. It now reads as a round dome from the front.
+- **The clover floated** (daylight between hat and head from the front). The head's dome now rises
+  into the underside of the hat, the hat is 4 mm lower, its two halves overlap by 2 cm at the centre
+  line (no gap between them), and its sides bend down like a hat brim over the round head (new
+  `droop` option in `tools/parts.py`). It now sits on the head with no daylight.
+- **Ears and tail (the cheap part):** the ears are 3 cm thick instead of 2.2 cm, so edge-on they read
+  as soft discs, not paddles; the hidden ends inside the tail-hook joins taper off so they don't poke
+  out. The hook is a little smoother but still has a visible bend at each join.
+- **Paint kept:** the green leaf paint the front and back pictures would have put on the newly raised
+  head top is switched off there (`paint_box_skip`), and the painted-over fur under the hat now blends
+  in more softly (wider feather), so the seam on the forehead and the back of the head is fainter.
+- **Numbers:** outline overlap went up (front 92.4 to 94.1%, side 89.6 to 90.6%, back 89.4 to
+  91.2%), because the rounder head fills the space the pictures' hat and ears cover. The animation
+  check still gives 12 bones and all 12 clips.
 
 ## What I did and the problems I hit
 
@@ -109,18 +137,19 @@ folder), then `PY=... bash tools/route_small.sh parts.json views/views.json OUT 
 
 - **From straight in front the clover is a thin green rim**, not the big four-leaf face of the front
   picture (the pictures disagree; see above). From above and at three-quarter angles it is right.
-- **The head is a little boxy** (flat-topped under the hat, straight sides), because both outlines
-  have straight sides and the top is hidden under the hat in every picture.
-- **The ears look like flat paddles** when seen exactly edge-on (from straight in front they are
-  quite thin).
-- A faint line remains across the forehead and the back of the head where the painted-over fur meets
-  the real fur.
-- The tail is smooth and pink but its hook is a little lumpy where its four pieces meet.
+- **The back of the head is still a little flat** from a three-quarter back view (the cheeks give
+  the front outline straight sides), though the top and back are now domed.
+- **The ears are still discs**, 3 cm thick; there is no cupped rim.
+- A faint line remains on the forehead and the back of the head where the painted-over fur meets
+  the real fur (softer than before).
+- The tail is smooth and pink but its hook still shows a bend at each of the joins between its four
+  pieces.
 - The top outline overlap is low (57%) because the top picture shows another pose.
 
 ## Compared with Coalossus and Mushling
 
 From the front and three-quarter views it is close to Mushling: clean face, clean colours, no ghost
-features, and the clover reads well from the usual game camera (above and in front). It falls a little
-short of Mushling and Coalossus in shape: the head is boxier and the hat can't match the front picture,
-because the pictures themselves disagree about the hat and the ears.
+features, and the clover reads well from the usual game camera (above and in front). After the shape fix the
+head reads round and the hat sits on it, so it is close to Mushling in shape as well; it is still a
+touch below Coalossus because the hat can't match the front picture (the pictures disagree about the
+hat and the ears).

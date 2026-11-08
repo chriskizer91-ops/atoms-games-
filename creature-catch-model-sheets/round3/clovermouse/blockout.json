@@ -1,25 +1,25 @@
 {
- "triangles": 59996,
+ "triangles": 59914,
  "views": {
   "front": {
-   "overlap": 93.8,
-   "missing": 33801,
-   "extra": 11043
+   "overlap": 95.5,
+   "missing": 28787,
+   "extra": 3203
   },
   "side": {
-   "overlap": 91.2,
-   "missing": 58020,
-   "extra": 2231
+   "overlap": 92.4,
+   "missing": 50549,
+   "extra": 1622
   },
   "back": {
-   "overlap": 90.5,
-   "missing": 49164,
-   "extra": 20482
+   "overlap": 92.4,
+   "missing": 43437,
+   "extra": 11877
   },
   "top": {
-   "overlap": 57.7,
-   "missing": 202537,
-   "extra": 22800
+   "overlap": 58.5,
+   "missing": 198833,
+   "extra": 21213
   }
  }
 }

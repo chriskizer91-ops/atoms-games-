@@ -89,4 +89,5 @@ After that, every creature of that type needs only its `rig.json`.
 | `motions.py` | The shared clips for each body type, and the move-to-clip rules |
 | `animate.py` | Fits the skeleton, sets the weights, keys the clips, exports the game file and the manifest |
 | `game_data.json`, `extract_game_data.cjs` | Every move (type, tier, power, effects) and every creature's move list and body type, from the game |
-| `../round2/animation/creature-battle-bay.html` | The battle viewer page: picks a creature, plays its moves, walk, hit, faint, send out. The published copy loads its data files alongside it. |
+| `../round2/animation/creature-battle-bay.html` | The battle viewer page: picks a creature, plays its moves, walk, hit, faint, send out, on the Meadow Path stage or the plain studio. The published copy loads its data files alongside it. |
+| `battle_bay/pack_creature.py`, `battle_bay/split_glb.mjs` | Packs an animated creature into the viewer's data files: the model, its textures, its effect points and its moves from the game. |

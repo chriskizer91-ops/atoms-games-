@@ -20,7 +20,9 @@
   #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
   #flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; background: var(--ink); }
   .plate { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
-    right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 3px; pointer-events: none; }
+    max-width: calc(100% - 150px); display: grid; gap: 3px; pointer-events: none;
+    background: color-mix(in srgb, var(--bg) 78%, transparent); padding: 8px 12px; border-radius: 12px; }
+  .stagebtn { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); }
   .plate h1 { margin: 0; font: 600 22px/1.1 var(--font-name); }
   .plate p { margin: 0; font: 400 11px/1.4 var(--font-data); color: var(--muted); letter-spacing: 0.04em; }
   .chip { display: inline-block; padding: 1px 7px; border-radius: 999px; font: 500 11px/1.5 var(--font-name); color: #1b120c; margin-right: 4px; }
@@ -56,6 +58,7 @@
   <p id="types"></p>
   <p id="facts"></p>
 </div>
+<button class="stagebtn" id="stageBtn" type="button" aria-pressed="true" title="Switch between the Meadow Path clearing and the plain studio">Meadow</button>
 <div class="loading" id="loading">
   <p>Loading the creatures</p>
   <div class="track"><div class="fill" id="fill"></div></div>
@@ -78,8 +81,9 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-const IDS = ["mushling", "drizzlon", "lunarion", "coalossus"];
-const TOTAL_MB = 10.7;
+// Chapter 1 creatures first; the first one loads before the page opens, the rest load behind it.
+const IDS = ["mossback", "embroak", "drizzlon", "clovermouse", "puffmunk", "fleecling", "mushling", "lunarion", "coalossus"];
+const TOTAL_MB = 3.0;  // the first creature's files
 // The game's type colours and effect kinds (10-data-types.js, 02-art.js)
 const TYPES = {
   Normal: { kind: "star", c: ["#ffffff", "#fff4c0", "#d8d0c0"], ui: "#d8d0c0" },
@@ -106,11 +110,151 @@ scene.background = new THREE.Color(css.getPropertyValue("--bg").trim());
 const camera = new THREE.PerspectiveCamera(35, 1, 0.02, 200);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
-scene.add(new THREE.HemisphereLight(0xfff1e0, 0x3a2a20, 1.4));
+const hemi = new THREE.HemisphereLight(0xfff1e0, 0x3a2a20, 1.4); scene.add(hemi);
 const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-3, 5, 4); scene.add(key);
 const rim = new THREE.DirectionalLight(0xffb070, 1.0); rim.position.set(3, 3, -4); scene.add(rim);
 const floor = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.MeshStandardMaterial({ color: css.getPropertyValue("--panel").trim(), roughness: 1 }));
-floor.rotation.x = -Math.PI / 2; scene.add(floor);
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0004; key.shadow.normalBias = 0.02; scene.add(key.target);
+
+// ---------------- the stage: a Meadow Path clearing, after Chapter 1's first route (the first 3D demo's
+// clearing idea, painted to match the creatures): sky, painted grass with a worn dirt path, a battle pad,
+// a ring of trees and bushes, tufts and patches of tall grass that sway, flowers, distant hills and clouds.
+// Everything is made in code here; no outside images. Sizes are in metres.
+const meadow = new THREE.Group(); scene.add(meadow);
+const seeded = n => () => ((n = Math.imul(n ^ (n >>> 15), 1 | n) + 0x6d2b79f5 | 0, ((n ^ (n >>> 13)) >>> 0) / 4294967296));
+const R = seeded(7);
+const rr = (a, b) => a + (b - a) * R();
+function canvasTex(w, h, draw, colour = true) {
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = h; draw(cv.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = colour ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); return t;
+}
+function dab(g, x, y, r, col, a) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, col); gr.addColorStop(1, col + "00"); g.globalAlpha = a; g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); g.globalAlpha = 1; }
+const GROUND = 90, pathZ = x => -3.2 + 1.1 * Math.sin(x * 0.13) + 0.5 * Math.sin(x * 0.31 + 1);
+const groundTex = canvasTex(2048, 2048, (g, w, h) => {
+  g.fillStyle = "#6eab48"; g.fillRect(0, 0, w, h);
+  const greens = ["#5c9a3b", "#7dbb52", "#8bc65e", "#4e8a35", "#9ccf68", "#6aa444"];
+  for (let i = 0; i < 4200; i++) dab(g, rr(0, w), rr(0, h), rr(8, 60), greens[i % greens.length], rr(0.12, 0.32));
+  const px = x => (x / GROUND + 0.5) * w, pz = z => (z / GROUND + 0.5) * h;
+  for (let x = -GROUND / 2; x < GROUND / 2; x += 0.12) {  // the worn dirt path of Meadow Path, behind the pad
+    const z = pathZ(x), wdt = 0.75 + 0.15 * Math.sin(x * 0.7);
+    for (let k = 0; k < 3; k++) dab(g, px(x + rr(-0.2, 0.2)), pz(z + rr(-wdt, wdt) * 0.8), rr(10, 22), ["#c8a26a", "#b98f58", "#d6b47c"][k], 0.5);
+  }
+  for (let x = -GROUND / 2; x < GROUND / 2; x += 0.3) for (const sgn of [-1, 1]) dab(g, px(x), pz(pathZ(x) + sgn * rr(0.75, 1.05)), rr(8, 18), greens[(R() * 6) | 0], 0.45);
+});
+const detailTex = canvasTex(512, 512, (g, w, h) => {  // blades of grass, tiled once per metre
+  g.fillStyle = "#a0a0a0"; g.fillRect(0, 0, w, h); g.lineCap = "round";
+  for (let i = 0; i < 2600; i++) {
+    const x = rr(0, w), y = rr(0, h), l = rr(8, 22), a = rr(-0.5, 0.5), v = (rr(120, 205)) | 0;
+    g.strokeStyle = `rgb(${v},${v},${v})`; g.globalAlpha = 0.55; g.lineWidth = rr(1.2, 2.6);
+    for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(x + ox + Math.sin(a) * l, y + oy - Math.cos(a) * l); g.stroke(); }
+  }
+  g.globalAlpha = 1;
+}, false);
+detailTex.wrapS = detailTex.wrapT = THREE.RepeatWrapping;
+const groundMat = new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1 });
+groundMat.onBeforeCompile = sh => {
+  sh.uniforms.uDetail = { value: detailTex };
+  sh.fragmentShader = "uniform sampler2D uDetail;\n" + sh.fragmentShader.replace("#include <map_fragment>",
+    `#include <map_fragment>\n  float dtl = texture2D(uDetail, vMapUv * ${GROUND.toFixed(1)}).r * 1.6;\n  diffuseColor.rgb *= mix(1.0, dtl, 0.55);`);
+};
+const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(GROUND, GROUND), groundMat);
+groundMesh.rotation.x = -Math.PI / 2; groundMesh.receiveShadow = true; meadow.add(groundMesh);
+// the battle pad under the creature: lighter, worn grass with a soft rim, like the game's battle pads
+const padTex = canvasTex(512, 512, (g, w, h) => {
+  const c = w / 2, gr = g.createRadialGradient(c, c, 0, c, c, c);
+  gr.addColorStop(0, "#a9d673ff"); gr.addColorStop(0.62, "#9acb66ff"); gr.addColorStop(0.8, "#7ea44cff"); gr.addColorStop(0.9, "#b39563c0"); gr.addColorStop(1, "#b3956300");
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 500; i++) { const a = rr(0, 6.283), d = Math.sqrt(R()) * c * 0.8; dab(g, c + Math.cos(a) * d, c + Math.sin(a) * d, rr(6, 18), ["#b8de86", "#8fc25c", "#c4b07a"][i % 3], 0.25); }
+});
+const pad = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.MeshStandardMaterial({ map: padTex, transparent: true, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }));
+pad.rotation.x = -Math.PI / 2; pad.position.y = 0.003; pad.receiveShadow = true; pad.renderOrder = 1; meadow.add(pad);
+// sky dome, clouds and far hills
+const sky = new THREE.Mesh(new THREE.SphereGeometry(160, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
+  uniforms: { uTop: { value: new THREE.Color("#4b94e0") }, uBot: { value: new THREE.Color("#d9eef8") } },
+  vertexShader: "varying vec3 vD; void main() { vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+  fragmentShader: "uniform vec3 uTop; uniform vec3 uBot; varying vec3 vD; void main() { gl_FragColor = vec4(mix(uBot, uTop, smoothstep(0.0, 0.45, vD.y)), 1.0); }" }));
+meadow.add(sky);
+const cloudTex = canvasTex(256, 128, (g, w, h) => { for (let i = 0; i < 14; i++) dab(g, rr(50, 206), rr(55, 85) - (i % 3) * 8, rr(26, 46), "#ffffff", 0.55); });
+for (let i = 0; i < 9; i++) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, fog: false, depthWrite: false, transparent: true, opacity: 0.9 }));
+  const a = rr(0, 6.283), d = rr(95, 130); sp.position.set(Math.cos(a) * d, rr(22, 48), Math.sin(a) * d); sp.scale.set(rr(30, 48), rr(13, 18), 1); meadow.add(sp);
+}
+const hillMat = new THREE.MeshStandardMaterial({ color: "#6f9c55", roughness: 1 });
+for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283 + rr(-0.2, 0.2), d = rr(62, 85), h = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), hillMat); h.scale.set(rr(16, 28), rr(5, 11), rr(10, 16)); h.position.set(Math.cos(a) * d, -1.5, Math.sin(a) * d); h.rotation.y = -a; meadow.add(h); }
+// trees and bushes: soft round canopies painted with leaf dabs
+const leafTex = canvasTex(256, 256, (g, w, h) => {
+  g.fillStyle = "#4f8f3a"; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 900; i++) { const x = rr(0, w), y = rr(0, h); for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) dab(g, x + ox, y + oy, rr(5, 13), ["#3d7a2e", "#5fa443", "#77b955", "#2f6826", "#8cc865"][i % 5], 0.5); }
+});
+leafTex.wrapS = leafTex.wrapT = THREE.RepeatWrapping; leafTex.repeat.set(3, 2);
+const leafMats = ["#ffffff", "#e4f0c8", "#cfe3b8", "#f2ffd9"].map(c => new THREE.MeshStandardMaterial({ map: leafTex, color: c, roughness: 0.95 }));
+const trunkMat = new THREE.MeshStandardMaterial({ color: "#7a5434", roughness: 1 });
+function blob(r, detail = 18) {  // a lumpy sphere
+  const g = new THREE.SphereGeometry(r, detail + 6, detail), p = g.attributes.position, v = new THREE.Vector3();
+  const f = [rr(1, 3), rr(1, 3), rr(1, 3)], ph = [rr(0, 6), rr(0, 6), rr(0, 6)];
+  for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).normalize(); const k = 1 + 0.07 * Math.sin(v.x * f[0] * 3 + ph[0]) + 0.06 * Math.sin(v.y * f[1] * 3 + ph[1]) + 0.05 * Math.sin(v.z * f[2] * 3 + ph[2]); p.setXYZ(i, v.x * r * k, v.y * r * k * 0.88, v.z * r * k); }
+  g.computeVertexNormals(); return g;
+}
+function tree(x, z, s) {
+  const t = new THREE.Group(), mat = leafMats[(R() * leafMats.length) | 0];
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * s, 0.32 * s, 3.2 * s, 10), trunkMat); trunk.position.y = 1.6 * s; t.add(trunk);
+  const n = 4 + ((R() * 3) | 0);
+  for (let i = 0; i < n; i++) { const m = new THREE.Mesh(blob(rr(1.3, 2.1) * s), mat), a = i / n * 6.283 + rr(0, 1); m.position.set(Math.cos(a) * rr(0.6, 1.3) * s, rr(3.6, 5.0) * s, Math.sin(a) * rr(0.6, 1.3) * s); m.rotation.y = rr(0, 6.28); t.add(m); }
+  const top = new THREE.Mesh(blob(rr(1.5, 2.0) * s), mat); top.position.y = rr(5.2, 6.0) * s; t.add(top);
+  t.position.set(x, 0, z); meadow.add(t);
+}
+for (let i = 0; i < 34; i++) { const a = rr(0, 6.283), d = rr(15, 32); tree(Math.cos(a) * d, Math.sin(a) * d - 4, rr(0.8, 1.35)); }
+const bushMats = leafMats.map(m => { const b = m.clone(); b.map = leafTex.clone(); b.map.repeat.set(6, 4); b.map.needsUpdate = true; return b; });
+for (let i = 0; i < 18; i++) { const a = rr(0, 6.283), d = rr(10, 16), b = new THREE.Mesh(blob(rr(0.45, 0.85)), bushMats[i % 4]); b.position.set(Math.cos(a) * d, 0.2, Math.sin(a) * d - 3); meadow.add(b); }
+// grass tufts and two patches of tall grass (where wild creatures hide), swaying in the wind
+const bladeTex = canvasTex(256, 256, (g, w, h) => {
+  for (let i = 0; i < 70; i++) {
+    const x = rr(20, w - 20), l = rr(0.45, 1) * h, bend = rr(-40, 40), wd = rr(5, 10);
+    g.fillStyle = ["#62a03f", "#7cba52", "#90c95f", "#558f37", "#a2d470"][i % 5];
+    g.beginPath(); g.moveTo(x - wd, h); g.quadraticCurveTo(x + bend * 0.3, h - l * 0.5, x + bend, h - l); g.quadraticCurveTo(x + bend * 0.3 + wd * 0.4, h - l * 0.5, x + wd, h); g.fill();
+  }
+});
+const tuftGeo = (() => { const parts = []; for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(1, 1); g.translate(0, 0.5, 0); g.rotateY(k * Math.PI / 3); parts.push(g); } const pos = [], uv = [], idx = []; let o = 0; for (const g of parts) { pos.push(...g.attributes.position.array); uv.push(...g.attributes.uv.array); idx.push(...Array.from(g.index.array, i => i + o)); o += g.attributes.position.count; } const out = new THREE.BufferGeometry(); out.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); out.setIndex(idx); out.computeVertexNormals(); return out; })();
+const wind = { value: 0 };
+const tuftMat = new THREE.MeshStandardMaterial({ map: bladeTex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 1 });
+tuftMat.onBeforeCompile = sh => { sh.uniforms.uWind = wind; sh.vertexShader = "uniform float uWind;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  float hh = position.y * position.y; vec4 ip = instanceMatrix[3];\n  transformed.x += sin(uWind * 1.7 + ip.x * 0.6 + ip.z * 0.4) * 0.12 * hh;\n  transformed.z += cos(uWind * 1.3 + ip.x * 0.3) * 0.06 * hh;");
+  sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "#include <normal_fragment_begin>\n  normal = normalize(vNormal);"); };  // both sides lit like the ground
+// tufts lean to the light a little: normals point up so they shade like the ground
+tuftGeo.attributes.normal.array.forEach((_, i, a) => { if (i % 3 === 1) a[i] = 1; else a[i] = 0; });
+const tuftSpots = [];
+for (let i = 0; i < 2600; i++) { const a = rr(0, 6.283), d = 0.5 + Math.sqrt(R()) * 34; const x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.abs(z - pathZ(x)) < 0.9) continue; tuftSpots.push([x, z, rr(0.16, 0.42), rr(0, 6.28)]); }
+for (const [cx, cz] of [[-6.5, -6.5], [7.5, -7.5]]) for (let i = 0; i < 520; i++) { const a = rr(0, 6.283), d = Math.sqrt(R()) * 3.2; tuftSpots.push([cx + Math.cos(a) * d * 1.3, cz + Math.sin(a) * d, rr(0.6, 0.95), rr(0, 6.28)]); }
+const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, tuftSpots.length); tufts.receiveShadow = true; meadow.add(tufts);
+function placeTufts(clearR) {
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), pos = new THREE.Vector3(), sc = new THREE.Vector3();
+  tuftSpots.forEach(([x, z, h, rot], i) => { const d = Math.hypot(x, z), k = d < clearR ? 0 : Math.min(1, (d - clearR) / (0.6 * clearR + 0.2)); q.setFromEuler(e.set(0, rot, 0)); m.compose(pos.set(x, 0, z), q, sc.set(h * 1.4 * k, h * k, h * 1.4 * k)); tufts.setMatrixAt(i, m); });
+  tufts.instanceMatrix.needsUpdate = true;
+}
+// little flowers among the grass
+const flowerSpots = []; for (let i = 0; i < 700; i++) { const a = rr(0, 6.283), d = 0.8 + Math.sqrt(R()) * 26; flowerSpots.push([Math.cos(a) * d, Math.sin(a) * d]); }
+const flowers = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshStandardMaterial({ roughness: 0.8 }), flowerSpots.length); meadow.add(flowers);
+const fcols = ["#ffffff", "#fff3a6", "#ffb8d0", "#ffffff", "#ffd36b", "#e3c8ff"].map(c => new THREE.Color(c));
+function placeFlowers(clearR) {
+  const m = new THREE.Matrix4();
+  flowerSpots.forEach(([x, z], i) => { const s = Math.hypot(x, z) < clearR * 1.1 ? 0 : rr(0.02, 0.036); m.makeScale(s, s * 0.6, s).setPosition(x, rr(0.03, 0.07), z); flowers.setMatrixAt(i, m); flowers.setColorAt(i, fcols[i % fcols.length]); });
+  flowers.instanceMatrix.needsUpdate = true; flowers.instanceColor.needsUpdate = true;
+}
+const fog = new THREE.Fog("#d4eaf5", 22, 120);
+let stageName = "meadow";
+try { stageName = localStorage.getItem("cbay-stage") || "meadow"; } catch (e) { /* storage blocked: use the meadow */ }
+function setStage(name) {
+  stageName = name; const m = name === "meadow";
+  meadow.visible = m; floor.visible = !m; scene.fog = m ? fog : null; scene.background = m ? null : new THREE.Color(css.getPropertyValue("--bg").trim());
+  hemi.color.set(m ? "#cfe8ff" : 0xfff1e0); hemi.groundColor.set(m ? "#5e7f3c" : 0x3a2a20); hemi.intensity = m ? 1.25 : 1.4;
+  key.color.set(m ? "#fff1d6" : 0xffffff); key.intensity = m ? 2.6 : 2.2; rim.intensity = m ? 0.5 : 1.0;
+  const b = document.getElementById("stageBtn"); b.textContent = m ? "Meadow" : "Studio"; b.setAttribute("aria-pressed", String(m));
+  try { localStorage.setItem("cbay-stage", name); } catch (e) { /* not saved */ }
+}
+document.getElementById("stageBtn").onclick = () => setStage(stageName === "meadow" ? "studio" : "meadow");
+setStage(stageName);
 
 // ---------------- loading: each creature is one JSON (glTF binary in base64 + anchors + moves); textures are images
 const loader = new GLTFLoader(), texLoader = new THREE.TextureLoader();
@@ -142,7 +286,7 @@ async function load(id) {
   const tint = { value: new THREE.Vector4(1, 1, 1, 0) };
   const mat = new THREE.MeshStandardMaterial({ map, normalMap, emissiveMap, emissive: emissiveMap ? 0xffffff : 0, roughness: 0.85, metalness: 0 });
   addTint(mat, tint);
-  gltf.scene.traverse(o => { if (o.isMesh) { o.material = mat; o.frustumCulled = false; } });
+  gltf.scene.traverse(o => { if (o.isMesh) { o.material = mat; o.frustumCulled = false; o.castShadow = true; } });
   const root = new THREE.Group(); root.add(gltf.scene); root.visible = false; scene.add(root);
   gltf.scene.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(gltf.scene), size = box.getSize(new THREE.Vector3());
@@ -295,7 +439,7 @@ function moveFx(c, mv) {
 // ---------------- battle text, moves and picker
 const sayEl = document.getElementById("say"); let sayTimer = 0;
 function say(text) { sayEl.classList.remove("off"); let i = 0; clearInterval(sayEl._t); sayEl._t = setInterval(() => { i++; sayEl.textContent = text.slice(0, i); if (i >= text.length) clearInterval(sayEl._t); }, 22); sayTimer = 2.4; }
-let current = "mushling", busy = false;
+let current = IDS[0], busy = false;
 const REACT = [{ id: "hit", name: "Take a hit", react: true }, { id: "faint", name: "Faint", react: true }, { id: "send_out", name: "Send out", react: true }];
 function run(mv) {
   const c = creatures[current]; if (busy || !c) return;
@@ -320,12 +464,15 @@ function show(id) {
   current = id; const c = creatures[id];
   for (const x of Object.values(creatures)) x.root.visible = false;
   c.root.visible = true; c.root.position.set(0, 0, 0); c.root.rotation.y = -0.75; baseLoop(c);
-  const r = Math.max(c.size.x, c.size.z); floor.scale.setScalar(r * 0.9);
+  const r = Math.max(c.size.x, c.size.z); floor.scale.setScalar(r * 0.9); pad.scale.setScalar(Math.max(r * 0.85, 0.45));
+  placeTufts(Math.max(r * 0.8, 0.45)); placeFlowers(Math.max(r * 0.8, 0.45));
+  const sh = key.shadow.camera, ext = Math.max(r, c.size.y) * 1.2; sh.left = sh.bottom = -ext; sh.right = sh.top = ext; sh.near = 0.01; sh.far = ext * 12;
+  key.position.set(-0.55, 1, 0.6).multiplyScalar(ext * 4); key.target.position.set(0, 0, 0); sh.updateProjectionMatrix();
   const vf = THREE.MathUtils.degToRad(camera.fov) / 2, hf = Math.atan(Math.tan(vf) * camera.aspect);
   const dist = Math.max((c.size.y * 1.1 / 2) / Math.tan(vf) / 0.55, (r * 0.62) / Math.tan(hf) / 0.95);
   controls.target.set(0, c.size.y * 0.45, 0); camera.position.set(0, c.size.y * 0.45 + dist * 0.22, dist); controls.minDistance = dist * 0.25; controls.maxDistance = dist * 2.5; controls.update();
   document.getElementById("title").textContent = c.name;
-  document.getElementById("types").innerHTML = c.types.map(t => `<span class="chip" style="background:${TYPES[t].ui}">${t}</span>`).join("") + ` ${BODY[c.plan] || c.plan} body`;
+  document.getElementById("types").innerHTML = c.types.map(t => `<span class="chip" style="background:${TYPES[t].ui}">${t}</span>`).join("") + ` ${BODY[c.body] || BODY[c.plan] || c.plan} body`;
   document.getElementById("facts").textContent = `Built by ${c.builder} · ${c.moves.length} moves from the game`;
   document.querySelectorAll("#pick button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
   buildMoves();
@@ -333,19 +480,30 @@ function show(id) {
 function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); const s = renderer.domElement.height * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); for (const p of [glow, smoke]) { p.u.uScale.value = s; p.u.uMax.value = renderer.domElement.height * 0.16; } }
 addEventListener("resize", () => { resize(); if (creatures[current]) show(current); });
 resize();
-Promise.all(IDS.map(load)).then(() => {
+const NAMES = { mossback: "Mossback", embroak: "Embroak", drizzlon: "Drizzlon", clovermouse: "Clovermouse", puffmunk: "Puffmunk", fleecling: "Fleecling", mushling: "Mushling", lunarion: "Lunarion", coalossus: "Coalossus" };
+load(IDS[0]).then(() => {
   document.getElementById("loading").hidden = true; document.getElementById("dock").hidden = false;
   const pk = document.getElementById("pick");
-  for (const id of IDS) { const b = document.createElement("button"); b.dataset.id = id; b.textContent = creatures[id].name; b.onclick = () => { if (!busy) show(id); }; pk.appendChild(b); }
+  for (const id of IDS) { const b = document.createElement("button"); b.dataset.id = id; b.textContent = NAMES[id] || id; b.disabled = !creatures[id]; b.title = creatures[id] ? "" : "Loading"; b.onclick = () => { if (!busy && creatures[id]) show(id); }; pk.appendChild(b); }
   show(current);
+  (async () => {  // the rest, one at a time, behind the first
+    for (const id of IDS.slice(1)) {
+      try { await load(id); const b = pk.querySelector(`[data-id="${id}"]`); b.disabled = false; b.title = ""; }
+      catch (e) { const b = pk.querySelector(`[data-id="${id}"]`); b.title = "Didn't load"; }
+    }
+    window.modelsReady = true;
+  })();
   const clock = new THREE.Clock(), camBase = new THREE.Vector3(); let amb = 0;
   renderer.setAnimationLoop(() => {
-    const dt = Math.min(clock.getDelta(), 0.05); now += dt;
+    const dt = Math.min(clock.getDelta(), 0.05); now += dt; if (!reduceMotion) wind.value = now;
     for (let i = timers.length - 1; i >= 0; i--) { const t = timers[i]; if (t.until !== undefined) { if (now >= t.at) t.fn(Math.min(1, (now - t.at) / (t.until - t.at))); if (now >= t.until) timers.splice(i, 1); } else if (now >= t.at) { timers.splice(i, 1); t.fn(); } }
     for (const c of Object.values(creatures)) if (c.root.visible) c.mixer.update(dt);
     amb -= dt; const c = creatures[current];
     if (amb <= 0 && c.root.visible) { amb = 0.18; c.root.updateMatrixWorld(true); const s = Math.max(c.k, 0.45);
-      for (const a of c.ambient) { if (!c.anchors[a.anchor]) continue; const p = at(c, a.anchor);
+      for (const a of c.ambient) { if (a.anchor !== "top" && !c.anchors[a.anchor]) continue; const p = a.anchor === "top" ? c.root.localToWorld(new THREE.Vector3(0, c.size.y * 0.97, 0)) : at(c, a.anchor);
+        if (a.kind === "ember" && Math.random() < 0.3) glow.spawn({ pos: p.clone().add(randDir().multiplyScalar(0.02 * s)), vel: new THREE.Vector3(rand(-0.04, 0.04), rand(0.08, 0.2), rand(-0.04, 0.04)), life: rand(0.5, 0.9), size: 0.035 * s, size1: 0, color: pick(["#ffd27a", "#ffb36b", "#f0602c"]) });
+        else if (a.kind === "rain" && Math.random() < 0.22) { const w = c.size.x * 0.35; glow.spawn({ pos: p.clone().add(new THREE.Vector3(rand(-w, w), c.size.y * 0.25, rand(-w, w))), vel: new THREE.Vector3(0, -0.4, 0), life: 0.9, size: 0.03 * s, size1: 0.025 * s, color: "#8fd0ff", gravity: 2.5, floor: ground(c) + 0.01 }); }
+        else if (a.kind === "petal" && Math.random() < 0.05) smoke.spawn({ pos: p.clone().add(randDir().multiplyScalar(0.05 * s)), vel: new THREE.Vector3(rand(-0.06, 0.06), -0.05, rand(-0.06, 0.06)), life: 3.2, size: 0.03, size1: 0.025, color: pick(["#ffb8d0", "#ff9cc0"]), alpha: 0.95 });
         if (a.kind === "smoke") { smoke.spawn({ pos: p, vel: new THREE.Vector3(rand(-0.08, 0.08), rand(0.3, 0.5), rand(-0.08, 0.08)), life: rand(1.8, 2.6), size: 0.1, size1: 0.45, color: "#6b625c", alpha: 0.3 }); if (Math.random() < 0.25) emit("Fire", p, new THREE.Vector3(rand(-0.2, 0.2), rand(0.5, 1), rand(-0.2, 0.2)), 0.5, 0.8); }
         else if (a.kind === "spores" && Math.random() < 0.35) smoke.spawn({ pos: p.clone().add(randDir().multiplyScalar(0.15 * s)), vel: new THREE.Vector3(rand(-0.1, 0.1), rand(0.05, 0.15), rand(-0.1, 0.1)), life: 2.4, size: 0.035, size1: 0.02, color: pick(["#b48ad8", "#d8c4f0"]), alpha: 0.8 });
         else if (a.kind === "drip" && Math.random() < 0.12) glow.spawn({ pos: p, vel: new THREE.Vector3(0, -0.1, 0), life: 0.9, size: 0.05, size1: 0.04, color: "#8fd0ff", gravity: 3, floor: ground(c) + 0.01 });
@@ -357,7 +515,6 @@ Promise.all(IDS.map(load)).then(() => {
     if (shakeT > 0) { shakeT -= dt; camera.position.x += rand(-shakeAmt, shakeAmt); camera.position.y += rand(-shakeAmt, shakeAmt) * 0.5; }
     renderer.render(scene, camera); camera.position.copy(camBase);
   });
-  window.modelsReady = true;
   window.bay = { show, run: id => run([...creatures[current].moves, ...REACT].find(m => m.id === id)), get now() { return now; } };
 }).catch(err => { document.querySelector("#loading p").textContent = "The creatures didn't load. Reload the page to try again. (" + err.message + ")"; });
 </script>
