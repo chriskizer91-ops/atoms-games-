@@ -1,0 +1,8992 @@
+{
+ "moves": {
+  "tackle": {
+   "name": "Tackle",
+   "type": "Normal",
+   "tier": "basic",
+   "power": 35,
+   "fx": {}
+  },
+  "bodyslam": {
+   "name": "Body Slam",
+   "type": "Normal",
+   "tier": "strong",
+   "power": 70,
+   "fx": {}
+  },
+  "growl": {
+   "name": "Growl",
+   "type": "Normal",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "stat": "atk",
+    "stages": -1
+   }
+  },
+  "guardup": {
+   "name": "Guard Up",
+   "type": "Normal",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "stat": "def",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "quickstep": {
+   "name": "Quick Step",
+   "type": "Normal",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "stat": "spd",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "rally": {
+   "name": "Rally",
+   "type": "Normal",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "stat": "atk",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "struggle": {
+   "name": "Struggle",
+   "type": null,
+   "tier": "basic",
+   "power": 30,
+   "fx": {
+    "recoil": 0.25
+   }
+  },
+  "embertap": {
+   "name": "Ember Tap",
+   "type": "Fire",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "flareburst": {
+   "name": "Flare Burst",
+   "type": "Fire",
+   "tier": "strong",
+   "power": 75,
+   "fx": {
+    "status": "burn",
+    "chance": 10
+   }
+  },
+  "cinderhaze": {
+   "name": "Cinder Haze",
+   "type": "Fire",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "status": "burn"
+   }
+  },
+  "splashjab": {
+   "name": "Splash Jab",
+   "type": "Water",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "torrentcrash": {
+   "name": "Torrent Crash",
+   "type": "Water",
+   "tier": "strong",
+   "power": 75,
+   "fx": {}
+  },
+  "soak": {
+   "name": "Soak",
+   "type": "Water",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "stat": "spd",
+    "stages": -1
+   }
+  },
+  "leafflick": {
+   "name": "Leaf Flick",
+   "type": "Plant",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "thornbarrage": {
+   "name": "Thorn Barrage",
+   "type": "Plant",
+   "tier": "strong",
+   "power": 75,
+   "fx": {}
+  },
+  "sporenap": {
+   "name": "Spore Nap",
+   "type": "Plant",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "status": "sleep"
+   }
+  },
+  "pebbletoss": {
+   "name": "Pebble Toss",
+   "type": "Earth",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "quakestomp": {
+   "name": "Quake Stomp",
+   "type": "Earth",
+   "tier": "strong",
+   "power": 75,
+   "fx": {}
+  },
+  "dustcloud": {
+   "name": "Dust Cloud",
+   "type": "Earth",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "stat": "acc",
+    "stages": -1
+   }
+  },
+  "staticzap": {
+   "name": "Static Zap",
+   "type": "Bolt",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "thundersnap": {
+   "name": "Thunder Snap",
+   "type": "Bolt",
+   "tier": "strong",
+   "power": 75,
+   "fx": {
+    "status": "shock",
+    "chance": 10
+   }
+  },
+  "shockpulse": {
+   "name": "Shock Pulse",
+   "type": "Bolt",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "status": "shock"
+   }
+  },
+  "frostnip": {
+   "name": "Frost Nip",
+   "type": "Frost",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "blizzardrush": {
+   "name": "Blizzard Rush",
+   "type": "Frost",
+   "tier": "strong",
+   "power": 75,
+   "fx": {
+    "status": "freeze",
+    "chance": 10
+   }
+  },
+  "chilltouch": {
+   "name": "Chill Touch",
+   "type": "Frost",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "status": "freeze"
+   }
+  },
+  "shadeswipe": {
+   "name": "Shade Swipe",
+   "type": "Shadow",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "nightpounce": {
+   "name": "Night Pounce",
+   "type": "Shadow",
+   "tier": "strong",
+   "power": 75,
+   "fx": {
+    "crit": true
+   }
+  },
+  "venommist": {
+   "name": "Venom Mist",
+   "type": "Shadow",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "status": "poison"
+   }
+  },
+  "glowflash": {
+   "name": "Glow Flash",
+   "type": "Lumen",
+   "tier": "basic",
+   "power": 40,
+   "fx": {}
+  },
+  "radiantbeam": {
+   "name": "Radiant Beam",
+   "type": "Lumen",
+   "tier": "strong",
+   "power": 75,
+   "fx": {}
+  },
+  "dazzle": {
+   "name": "Dazzle",
+   "type": "Lumen",
+   "tier": "util",
+   "power": 0,
+   "fx": {
+    "stat": "acc",
+    "stages": -1
+   }
+  },
+  "drizzledart": {
+   "name": "Drizzle Dart",
+   "type": "Water",
+   "tier": "sig",
+   "power": 50,
+   "fx": {
+    "priority": 1
+   }
+  },
+  "mossmend": {
+   "name": "Mossmend",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 0,
+   "fx": {
+    "heal": 0.5
+   }
+  },
+  "emberlash": {
+   "name": "Ember Lash",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "status": "burn",
+    "chance": 30
+   }
+  },
+  "grassswipe": {
+   "name": "Grass Swipe",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "crit": true
+   }
+  },
+  "statichop": {
+   "name": "Static Hop",
+   "type": "Bolt",
+   "tier": "sig",
+   "power": 50,
+   "fx": {
+    "status": "shock",
+    "chance": 30
+   }
+  },
+  "blazemane": {
+   "name": "Blaze Mane",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "status": "burn",
+    "chance": 10
+   }
+  },
+  "rockfetch": {
+   "name": "Rock Fetch",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 30,
+   "fx": {
+    "hits": [
+     2,
+     2
+    ]
+   }
+  },
+  "acorndrop": {
+   "name": "Acorn Drop",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "def",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "mothdust": {
+   "name": "Moth Dust",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 0,
+   "fx": {
+    "status": "sleep"
+   }
+  },
+  "bubbleburst": {
+   "name": "Bubble Burst",
+   "type": "Water",
+   "tier": "sig",
+   "power": 25,
+   "fx": {
+    "hits": [
+     2,
+     3
+    ]
+   }
+  },
+  "hoppinch": {
+   "name": "Hop Pinch",
+   "type": "Water",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "crit": true
+   }
+  },
+  "currentclimb": {
+   "name": "Current Climb",
+   "type": "Water",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "spd",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "sparkclaw": {
+   "name": "Spark Claw",
+   "type": "Bolt",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "crit": true
+   }
+  },
+  "magmashell": {
+   "name": "Magma Shell",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 0,
+   "fx": {
+    "stat": "def",
+    "stages": 2,
+    "self": true
+   }
+  },
+  "sandtomb": {
+   "name": "Sand Tomb",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "spd",
+    "stages": -1
+   }
+  },
+  "scarabcharge": {
+   "name": "Scarab Charge",
+   "type": "Bolt",
+   "tier": "sig",
+   "power": 85,
+   "fx": {
+    "recoil": 0.25
+   }
+  },
+  "icicletail": {
+   "name": "Icicle Tail",
+   "type": "Frost",
+   "tier": "sig",
+   "power": 50,
+   "fx": {
+    "priority": 1
+   }
+  },
+  "bellyslide": {
+   "name": "Belly Slide",
+   "type": "Frost",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "status": "freeze",
+    "chance": 10
+   }
+  },
+  "mudchomp": {
+   "name": "Mud Chomp",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "stat": "acc",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "lanternglow": {
+   "name": "Lantern Glow",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "drain": 0.5
+   }
+  },
+  "bonerattle": {
+   "name": "Bone Rattle",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "def",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "thornkiss": {
+   "name": "Thorn Kiss",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "drain": 0.5
+   }
+  },
+  "luckynibble": {
+   "name": "Lucky Nibble",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 45,
+   "fx": {
+    "crit": true
+   }
+  },
+  "springkick": {
+   "name": "Spring Kick",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 65,
+   "fx": {}
+  },
+  "bloomcharge": {
+   "name": "Bloom Charge",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 85,
+   "fx": {
+    "recoil": 0.25
+   }
+  },
+  "needlespray": {
+   "name": "Needle Spray",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 20,
+   "fx": {
+    "hits": [
+     2,
+     5
+    ]
+   }
+  },
+  "hornshove": {
+   "name": "Horn Shove",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "stat": "def",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "gemglint": {
+   "name": "Gem Glint",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "acc",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "coilroll": {
+   "name": "Coil Roll",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 30,
+   "fx": {
+    "hits": [
+     2,
+     3
+    ]
+   }
+  },
+  "runeslam": {
+   "name": "Rune Slam",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 85,
+   "fx": {}
+  },
+  "spinepuff": {
+   "name": "Spine Puff",
+   "type": "Water",
+   "tier": "sig",
+   "power": 0,
+   "fx": {
+    "stat": "def",
+    "stages": 2,
+    "self": true
+   }
+  },
+  "lilyrest": {
+   "name": "Lily Rest",
+   "type": "Water",
+   "tier": "sig",
+   "power": 0,
+   "fx": {
+    "heal": 0.5
+   }
+  },
+  "miragedash": {
+   "name": "Mirage Dash",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "priority": 1
+   }
+  },
+  "swampspark": {
+   "name": "Swamp Spark",
+   "type": "Bolt",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "status": "poison",
+    "chance": 30
+   }
+  },
+  "snowballthrow": {
+   "name": "Snowball Throw",
+   "type": "Frost",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "stat": "spd",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "shellfreeze": {
+   "name": "Shell Freeze",
+   "type": "Frost",
+   "tier": "sig",
+   "power": 0,
+   "fx": {
+    "stat": "def",
+    "stages": 2,
+    "self": true
+   }
+  },
+  "mushroomhug": {
+   "name": "Mushroom Hug",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 50,
+   "fx": {
+    "drain": 0.5
+   }
+  },
+  "cavedive": {
+   "name": "Cave Dive",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 70,
+   "fx": {}
+  },
+  "boggrasp": {
+   "name": "Bog Grasp",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "stat": "spd",
+    "stages": -1
+   }
+  },
+  "lurelight": {
+   "name": "Lure Light",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "acc",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "eclipsefang": {
+   "name": "Eclipse Fang",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 90,
+   "fx": {
+    "stat": "acc",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "moonsong": {
+   "name": "Moonsong",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 90,
+   "fx": {
+    "drain": 0.5
+   }
+  },
+  "crescentclaw": {
+   "name": "Crescent Claw",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 75,
+   "fx": {
+    "crit": true
+   }
+  },
+  "cheekstash": {
+   "name": "Cheek Stash",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 50,
+   "fx": {
+    "drain": 0.25
+   }
+  },
+  "woolpuff": {
+   "name": "Wool Puff",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 45,
+   "fx": {
+    "stat": "def",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "dewdropdash": {
+   "name": "Dewdrop Dash",
+   "type": "Water",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "priority": 1
+   }
+  },
+  "burrball": {
+   "name": "Burr Ball",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "stat": "spd",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "splashjuggle": {
+   "name": "Splash Juggle",
+   "type": "Water",
+   "tier": "sig",
+   "power": 45,
+   "fx": {
+    "hits": [
+     2,
+     2
+    ]
+   }
+  },
+  "honkblast": {
+   "name": "Honk Blast",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "stat": "atk",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "rimelick": {
+   "name": "Rime Lick",
+   "type": "Frost",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "status": "freeze",
+    "chance": 20
+   }
+  },
+  "prismglint": {
+   "name": "Prism Glint",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "stat": "acc",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "kilnroll": {
+   "name": "Kiln Roll",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "stat": "def",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "miragehop": {
+   "name": "Mirage Hop",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "acc",
+    "stages": -1
+   }
+  },
+  "flurryspit": {
+   "name": "Flurry Spit",
+   "type": "Frost",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "stat": "spd",
+    "stages": -1
+   }
+  },
+  "aurorasting": {
+   "name": "Aurora Sting",
+   "type": "Frost",
+   "tier": "sig",
+   "power": 75,
+   "fx": {
+    "status": "freeze",
+    "chance": 20
+   }
+  },
+  "snapshut": {
+   "name": "Snap Shut",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 75,
+   "fx": {
+    "crit": true
+   }
+  },
+  "flickerspark": {
+   "name": "Flicker Spark",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "status": "shock",
+    "chance": 20
+   }
+  },
+  "gotchachomp": {
+   "name": "Gotcha Chomp",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 80,
+   "fx": {
+    "stat": "def",
+    "stages": -1
+   }
+  },
+  "runeflash": {
+   "name": "Rune Flash",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "stat": "def",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "twinklepounce": {
+   "name": "Twinkle Pounce",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "crit": true
+   }
+  },
+  "comettail": {
+   "name": "Comet Tail",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 85,
+   "fx": {
+    "recoil": 0.25
+   }
+  },
+  "coreburrow": {
+   "name": "Core Burrow",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "stat": "def",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "scareflap": {
+   "name": "Scare Flap",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "atk",
+    "stages": -1
+   }
+  },
+  "sprigsong": {
+   "name": "Sprig Song",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "drain": 0.25
+   }
+  },
+  "bigyawn": {
+   "name": "Big Yawn",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 50,
+   "fx": {
+    "status": "sleep",
+    "chance": 50
+   }
+  },
+  "shellhum": {
+   "name": "Shell Hum",
+   "type": "Water",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "stat": "spd",
+    "stages": -1
+   }
+  },
+  "starspin": {
+   "name": "Star Spin",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "hits": [
+     2,
+     2
+    ]
+   }
+  },
+  "captainsdive": {
+   "name": "Captain's Dive",
+   "type": "Water",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "priority": 1
+   }
+  },
+  "inksquirt": {
+   "name": "Ink Squirt",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "acc",
+    "stages": -1
+   }
+  },
+  "coinswipe": {
+   "name": "Coin Swipe",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 50,
+   "fx": {
+    "coins": true
+   }
+  },
+  "belltoll": {
+   "name": "Bell Toll",
+   "type": "Bolt",
+   "tier": "sig",
+   "power": 55,
+   "fx": {
+    "status": "shock",
+    "chance": 20
+   }
+  },
+  "coalswipe": {
+   "name": "Coal Swipe",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "status": "burn",
+    "chance": 20
+   }
+  },
+  "pickstrike": {
+   "name": "Pick Strike",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "crit": true
+   }
+  },
+  "steamsplash": {
+   "name": "Steam Splash",
+   "type": "Water",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "status": "burn",
+    "chance": 20
+   }
+  },
+  "warmhug": {
+   "name": "Warm Hug",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "drain": 0.25
+   }
+  },
+  "lotusglow": {
+   "name": "Lotus Glow",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "drain": 0.25
+   }
+  },
+  "mudcharge": {
+   "name": "Mud Charge",
+   "type": "Earth",
+   "tier": "sig",
+   "power": 75,
+   "fx": {
+    "recoil": 0.25
+   }
+  },
+  "inkquill": {
+   "name": "Ink Quill",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "stat": "acc",
+    "stages": -1
+   }
+  },
+  "timetap": {
+   "name": "Time Tap",
+   "type": "Bolt",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "stat": "spd",
+    "stages": 1,
+    "self": true
+   }
+  },
+  "riddleray": {
+   "name": "Riddle Ray",
+   "type": "Lumen",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "stat": "def",
+    "stages": -1,
+    "chance": 30
+   }
+  },
+  "wrapstomp": {
+   "name": "Wrap Stomp",
+   "type": "Normal",
+   "tier": "sig",
+   "power": 80,
+   "fx": {
+    "stat": "spd",
+    "stages": -1
+   }
+  },
+  "echoboom": {
+   "name": "Echo Boom",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 70,
+   "fx": {}
+  },
+  "shadedust": {
+   "name": "Shade Dust",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 60,
+   "fx": {
+    "status": "sleep",
+    "chance": 30
+   }
+  },
+  "dawnbreak": {
+   "name": "Dawnbreak",
+   "type": "Fire",
+   "tier": "sig",
+   "power": 100,
+   "fx": {
+    "drain": 0.25
+   }
+  },
+  "duskfall": {
+   "name": "Duskfall",
+   "type": "Shadow",
+   "tier": "sig",
+   "power": 90,
+   "fx": {
+    "status": "sleep",
+    "chance": 30
+   }
+  },
+  "luckyleaf": {
+   "name": "Lucky Leaf",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 70,
+   "fx": {
+    "crit": true
+   }
+  },
+  "fantastichop": {
+   "name": "Fantastic Hop",
+   "type": "Plant",
+   "tier": "sig",
+   "power": 65,
+   "fx": {
+    "stat": "spd",
+    "stages": 1,
+    "self": true
+   }
+  }
+ },
+ "creatures": {
+  "drizzlon": {
+   "name": "Drizzlon",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 6,
+     "move": "splashjab"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 11,
+     "move": "drizzledart"
+    },
+    {
+     "lv": 12,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "drizzledart",
+   "body": "quad"
+  },
+  "rapidrake": {
+   "name": "Rapidrake",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 6,
+     "move": "splashjab"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 11,
+     "move": "drizzledart"
+    },
+    {
+     "lv": 12,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "drizzledart",
+   "body": "quad"
+  },
+  "tsunadrake": {
+   "name": "Tsunadrake",
+   "types": [
+    "Water",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 6,
+     "move": "splashjab"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 11,
+     "move": "drizzledart"
+    },
+    {
+     "lv": 12,
+     "move": "staticzap"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "drizzledart",
+   "body": "quad"
+  },
+  "mossback": {
+   "name": "Mossback",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 6,
+     "move": "leafflick"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 11,
+     "move": "mossmend"
+    },
+    {
+     "lv": 12,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mossmend",
+   "body": "turtle"
+  },
+  "thornshell": {
+   "name": "Thornshell",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 6,
+     "move": "leafflick"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 11,
+     "move": "mossmend"
+    },
+    {
+     "lv": 12,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mossmend",
+   "body": "turtle"
+  },
+  "elderoak": {
+   "name": "Elderoak",
+   "types": [
+    "Plant",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 6,
+     "move": "leafflick"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 11,
+     "move": "mossmend"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mossmend",
+   "body": "turtle"
+  },
+  "embroak": {
+   "name": "Embroak",
+   "types": [
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 6,
+     "move": "embertap"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 11,
+     "move": "emberlash"
+    },
+    {
+     "lv": 12,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "emberlash",
+   "body": "frog"
+  },
+  "cinderfrog": {
+   "name": "Cinderfrog",
+   "types": [
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 6,
+     "move": "embertap"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 11,
+     "move": "emberlash"
+    },
+    {
+     "lv": 12,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "emberlash",
+   "body": "frog"
+  },
+  "infernotoad": {
+   "name": "Infernotoad",
+   "types": [
+    "Fire",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 6,
+     "move": "embertap"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 11,
+     "move": "emberlash"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "emberlash",
+   "body": "frog"
+  },
+  "clovermouse": {
+   "name": "Clovermouse",
+   "types": [
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 9,
+     "move": "luckynibble"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 28,
+     "move": "guardup"
+    }
+   ],
+   "sig": "luckynibble",
+   "body": "quad"
+  },
+  "hopsprout": {
+   "name": "Hopsprout",
+   "types": [
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 9,
+     "move": "springkick"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 28,
+     "move": "guardup"
+    }
+   ],
+   "sig": "springkick",
+   "body": "bug"
+  },
+  "tuftail": {
+   "name": "Tuftail",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "grassswipe"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "grassswipe",
+   "body": "quad"
+  },
+  "verdantail": {
+   "name": "Verdantail",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "grassswipe"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "grassswipe",
+   "body": "quad"
+  },
+  "bumblop": {
+   "name": "Bumblop",
+   "types": [
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "statichop"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "statichop",
+   "body": "round"
+  },
+  "bumblazer": {
+   "name": "Bumblazer",
+   "types": [
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "statichop"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "statichop",
+   "body": "round"
+  },
+  "dandylion": {
+   "name": "Dandylion",
+   "types": [
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "blazemane"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "blazemane",
+   "body": "quad"
+  },
+  "sunmane": {
+   "name": "Sunmane",
+   "types": [
+    "Fire",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "blazemane"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "blazemane",
+   "body": "quad"
+  },
+  "pebblepup": {
+   "name": "Pebblepup",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "rockfetch"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "rockfetch",
+   "body": "quad"
+  },
+  "boulderhound": {
+   "name": "Boulderhound",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "rockfetch"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "rockfetch",
+   "body": "quad"
+  },
+  "owlcorn": {
+   "name": "Owlcorn",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "acorndrop"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "acorndrop",
+   "body": "bird"
+  },
+  "timberowl": {
+   "name": "Timberowl",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "acorndrop"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "acorndrop",
+   "body": "bird"
+  },
+  "barkbeetle": {
+   "name": "Barkbeetle",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "hornshove"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "hornshove",
+   "body": "bug"
+  },
+  "mothlight": {
+   "name": "Mothlight",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "mothdust"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mothdust",
+   "body": "bug"
+  },
+  "radimoth": {
+   "name": "Radimoth",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "mothdust"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mothdust",
+   "body": "bug"
+  },
+  "budstag": {
+   "name": "Budstag",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "bloomcharge"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bloomcharge",
+   "body": "quad"
+  },
+  "mushling": {
+   "name": "Mushling",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "mushroomhug"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mushroomhug",
+   "body": "round"
+  },
+  "bubblefin": {
+   "name": "Bubblefin",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "bubbleburst"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bubbleburst",
+   "body": "fish"
+  },
+  "surgefin": {
+   "name": "Surgefin",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "bubbleburst"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bubbleburst",
+   "body": "fish"
+  },
+  "crabbit": {
+   "name": "Crabbit",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "hoppinch"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "hoppinch",
+   "body": "bug"
+  },
+  "rampacrab": {
+   "name": "Rampacrab",
+   "types": [
+    "Water",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "hoppinch"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "hoppinch",
+   "body": "bug"
+  },
+  "tidepuff": {
+   "name": "Tidepuff",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "spinepuff"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "spinepuff",
+   "body": "fish"
+  },
+  "koiling": {
+   "name": "Koiling",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "currentclimb"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "currentclimb",
+   "body": "fish"
+  },
+  "koidrake": {
+   "name": "Koidrake",
+   "types": [
+    "Water",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "currentclimb"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "currentclimb",
+   "body": "serpent"
+  },
+  "sealamp": {
+   "name": "Sealamp",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "lurelight"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "lurelight",
+   "body": "round"
+  },
+  "glimmole": {
+   "name": "Glimmole",
+   "types": [
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "sparkclaw"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "sparkclaw",
+   "body": "quad"
+  },
+  "prismole": {
+   "name": "Prismole",
+   "types": [
+    "Bolt",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "sparkclaw"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "sparkclaw",
+   "body": "quad"
+  },
+  "stalagbat": {
+   "name": "Stalagbat",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "cavedive"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "cavedive",
+   "body": "bird"
+  },
+  "magmite": {
+   "name": "Magmite",
+   "types": [
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "magmashell"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "magmashell",
+   "body": "bug"
+  },
+  "volcaneetle": {
+   "name": "Volcaneetle",
+   "types": [
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "magmashell"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "magmashell",
+   "body": "bug"
+  },
+  "gemlin": {
+   "name": "Gemlin",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "gemglint"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "gemglint",
+   "body": "serpent"
+  },
+  "rumblepede": {
+   "name": "Rumblepede",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "coilroll"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "coilroll",
+   "body": "serpent"
+  },
+  "dunefox": {
+   "name": "Dunefox",
+   "types": [
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "miragedash"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "miragedash",
+   "body": "quad"
+  },
+  "cactoad": {
+   "name": "Cactoad",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "needlespray"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "needlespray",
+   "body": "frog"
+  },
+  "scarabolt": {
+   "name": "Scarabolt",
+   "types": [
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "scarabcharge"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "scarabcharge",
+   "body": "bug"
+  },
+  "thundarab": {
+   "name": "Thundarab",
+   "types": [
+    "Bolt",
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "embertap"
+    },
+    {
+     "lv": 16,
+     "move": "scarabcharge"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "flareburst"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "scarabcharge",
+   "body": "bug"
+  },
+  "sandwyrm": {
+   "name": "Sandwyrm",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "sandtomb"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "sandtomb",
+   "body": "serpent"
+  },
+  "duneserpent": {
+   "name": "Duneserpent",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "sandtomb"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "sandtomb",
+   "body": "serpent"
+  },
+  "frostoat": {
+   "name": "Frostoat",
+   "types": [
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "icicletail"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "icicletail",
+   "body": "serpent"
+  },
+  "glacistoat": {
+   "name": "Glacistoat",
+   "types": [
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "icicletail"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "icicletail",
+   "body": "serpent"
+  },
+  "pengloo": {
+   "name": "Pengloo",
+   "types": [
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "bellyslide"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bellyslide",
+   "body": "bird"
+  },
+  "pengarch": {
+   "name": "Pengarch",
+   "types": [
+    "Frost",
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "splashjab"
+    },
+    {
+     "lv": 16,
+     "move": "bellyslide"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bellyslide",
+   "body": "bird"
+  },
+  "yetiny": {
+   "name": "Yetiny",
+   "types": [
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "snowballthrow"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "snowballthrow",
+   "body": "biped"
+  },
+  "sleetle": {
+   "name": "Sleetle",
+   "types": [
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "shellfreeze"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "shellfreeze",
+   "body": "round"
+  },
+  "lilypadle": {
+   "name": "Lilypadle",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "lilyrest"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "lilyrest",
+   "body": "bird"
+  },
+  "wispeel": {
+   "name": "Wispeel",
+   "types": [
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "swampspark"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "swampspark",
+   "body": "serpent"
+  },
+  "mudgator": {
+   "name": "Mudgator",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "mudchomp"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mudchomp",
+   "body": "serpent"
+  },
+  "mudgatron": {
+   "name": "Mudgatron",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "mudchomp"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mudchomp",
+   "body": "serpent"
+  },
+  "mireling": {
+   "name": "Mireling",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "boggrasp"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "boggrasp",
+   "body": "ghost"
+  },
+  "wispkin": {
+   "name": "Wispkin",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "lanternglow"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "lanternglow",
+   "body": "ghost"
+  },
+  "beaconwraith": {
+   "name": "Beaconwraith",
+   "types": [
+    "Lumen",
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 16,
+     "move": "lanternglow"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "lanternglow",
+   "body": "ghost"
+  },
+  "pebbleton": {
+   "name": "Pebbleton",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "runeslam"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "runeslam",
+   "body": "biped"
+  },
+  "bonecat": {
+   "name": "Bonecat",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "bonerattle"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bonerattle",
+   "body": "quad"
+  },
+  "bonepanther": {
+   "name": "Bonepanther",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "bonerattle"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bonerattle",
+   "body": "quad"
+  },
+  "fangling": {
+   "name": "Fangling",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "thornkiss"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "thornkiss",
+   "body": "bird"
+  },
+  "duskfang": {
+   "name": "Duskfang",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "thornkiss"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "thornkiss",
+   "body": "bird"
+  },
+  "rosferatu": {
+   "name": "Rosferatu",
+   "types": [
+    "Shadow",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "leafflick"
+    },
+    {
+     "lv": 16,
+     "move": "thornkiss"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "thornkiss",
+   "body": "biped"
+  },
+  "moonlynx": {
+   "name": "Moonlynx",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "crescentclaw"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "crescentclaw",
+   "body": "quad"
+  },
+  "lunariond": {
+   "name": "Dimmed Lunarion",
+   "types": [
+    "Shadow",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "eclipsefang"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "eclipsefang",
+   "body": "quad"
+  },
+  "lunarion": {
+   "name": "Lunarion",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "moonsong"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "moonsong",
+   "body": "quad"
+  },
+  "puffmunk": {
+   "name": "Puffmunk",
+   "types": [
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 9,
+     "move": "cheekstash"
+    },
+    {
+     "lv": 14,
+     "move": "guardup"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "cheekstash",
+   "body": "quad"
+  },
+  "stashmunk": {
+   "name": "Stashmunk",
+   "types": [
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 9,
+     "move": "cheekstash"
+    },
+    {
+     "lv": 14,
+     "move": "guardup"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "cheekstash",
+   "body": "quad"
+  },
+  "fleecling": {
+   "name": "Fleecling",
+   "types": [
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 9,
+     "move": "woolpuff"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "woolpuff",
+   "body": "quad"
+  },
+  "cloudram": {
+   "name": "Cloudram",
+   "types": [
+    "Normal",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 9,
+     "move": "woolpuff"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "woolpuff",
+   "body": "quad"
+  },
+  "dewt": {
+   "name": "Dewt",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "dewdropdash"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "dewdropdash",
+   "body": "serpent"
+  },
+  "monsoonewt": {
+   "name": "Monsoonewt",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "dewdropdash"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "dewdropdash",
+   "body": "serpent"
+  },
+  "burrhog": {
+   "name": "Burrhog",
+   "types": [
+    "Plant",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "burrball"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "burrball",
+   "body": "round"
+  },
+  "splotter": {
+   "name": "Splotter",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "splashjuggle"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "splashjuggle",
+   "body": "quad"
+  },
+  "tidotter": {
+   "name": "Tidotter",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "splashjuggle"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "splashjuggle",
+   "body": "quad"
+  },
+  "honkwave": {
+   "name": "Honkwave",
+   "types": [
+    "Normal",
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 9,
+     "move": "honkblast"
+    },
+    {
+     "lv": 14,
+     "move": "quickstep"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 28,
+     "move": "guardup"
+    }
+   ],
+   "sig": "honkblast",
+   "body": "bird"
+  },
+  "rimeskink": {
+   "name": "Rimeskink",
+   "types": [
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "rimelick"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "rimelick",
+   "body": "serpent"
+  },
+  "shardling": {
+   "name": "Shardling",
+   "types": [
+    "Earth",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "prismglint"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "prismglint",
+   "body": "round"
+  },
+  "crystalwyrm": {
+   "name": "Crystalwyrm",
+   "types": [
+    "Earth",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "prismglint"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "prismglint",
+   "body": "serpent"
+  },
+  "kilnadillo": {
+   "name": "Kilnadillo",
+   "types": [
+    "Fire",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "kilnroll"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "kilnroll",
+   "body": "round"
+  },
+  "mirajack": {
+   "name": "Mirajack",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "miragehop"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "miragehop",
+   "body": "quad"
+  },
+  "flurrpaca": {
+   "name": "Flurrpaca",
+   "types": [
+    "Frost",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 16,
+     "move": "flurryspit"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "flurryspit",
+   "body": "quad"
+  },
+  "aurorelly": {
+   "name": "Aurorelly",
+   "types": [
+    "Frost",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "aurorasting"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "aurorasting",
+   "body": "ghost"
+  },
+  "snaptrap": {
+   "name": "Snaptrap",
+   "types": [
+    "Plant",
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 16,
+     "move": "snapshut"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "snapshut",
+   "body": "round"
+  },
+  "gnashtrap": {
+   "name": "Gnashtrap",
+   "types": [
+    "Plant",
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 16,
+     "move": "snapshut"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "snapshut",
+   "body": "round"
+  },
+  "fireflink": {
+   "name": "Fireflink",
+   "types": [
+    "Fire",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "staticzap"
+    },
+    {
+     "lv": 16,
+     "move": "flickerspark"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "flickerspark",
+   "body": "bug"
+  },
+  "mimicube": {
+   "name": "Mimicube",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "gotchachomp"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "gotchachomp",
+   "body": "round"
+  },
+  "mimichest": {
+   "name": "Mimichest",
+   "types": [
+    "Shadow",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "gotchachomp"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "gotchachomp",
+   "body": "round"
+  },
+  "glyphling": {
+   "name": "Glyphling",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "runeflash"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "runeflash",
+   "body": "ghost"
+  },
+  "twinkit": {
+   "name": "Twinkit",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "twinklepounce"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "twinklepounce",
+   "body": "quad"
+  },
+  "starlynx": {
+   "name": "Starlynx",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "twinklepounce"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "twinklepounce",
+   "body": "quad"
+  },
+  "comette": {
+   "name": "Comette",
+   "types": [
+    "Lumen",
+    "Fire"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "embertap"
+    },
+    {
+     "lv": 16,
+     "move": "comettail"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "flareburst"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "comettail",
+   "body": "round"
+  },
+  "wormapple": {
+   "name": "Wormapple",
+   "types": [
+    "Plant",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 16,
+     "move": "coreburrow"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "coreburrow",
+   "body": "round"
+  },
+  "scarecrowl": {
+   "name": "Scarecrowl",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "scareflap"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "scareflap",
+   "body": "bird"
+  },
+  "sprigkin": {
+   "name": "Sprigkin",
+   "types": [
+    "Plant",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "sprigsong"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "sprigsong",
+   "body": "biped"
+  },
+  "grovekin": {
+   "name": "Grovekin",
+   "types": [
+    "Plant",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "sprigsong"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "sprigsong",
+   "body": "biped"
+  },
+  "snoozeloth": {
+   "name": "Snoozeloth",
+   "types": [
+    "Normal",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 9,
+     "move": "bigyawn"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "bigyawn",
+   "body": "biped"
+  },
+  "shellbit": {
+   "name": "Shellbit",
+   "types": [
+    "Water",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 16,
+     "move": "shellhum"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "shellhum",
+   "body": "bug"
+  },
+  "conchord": {
+   "name": "Conchord",
+   "types": [
+    "Water",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 16,
+     "move": "shellhum"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "shellhum",
+   "body": "bug"
+  },
+  "glimstar": {
+   "name": "Glimstar",
+   "types": [
+    "Water",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "starspin"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "starspin",
+   "body": "round"
+  },
+  "puffling": {
+   "name": "Puffling",
+   "types": [
+    "Water",
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "frostnip"
+    },
+    {
+     "lv": 16,
+     "move": "captainsdive"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "captainsdive",
+   "body": "bird"
+  },
+  "puffcaptain": {
+   "name": "Puffcaptain",
+   "types": [
+    "Water",
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "frostnip"
+    },
+    {
+     "lv": 16,
+     "move": "captainsdive"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "captainsdive",
+   "body": "bird"
+  },
+  "krakling": {
+   "name": "Krakling",
+   "types": [
+    "Water",
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 16,
+     "move": "inksquirt"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "inksquirt",
+   "body": "ghost"
+  },
+  "kraketide": {
+   "name": "Kraketide",
+   "types": [
+    "Water",
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 16,
+     "move": "inksquirt"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "inksquirt",
+   "body": "ghost"
+  },
+  "rustcoon": {
+   "name": "Rustcoon",
+   "types": [
+    "Normal",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 9,
+     "move": "coinswipe"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 28,
+     "move": "guardup"
+    }
+   ],
+   "sig": "coinswipe",
+   "body": "quad"
+  },
+  "dingdove": {
+   "name": "Dingdove",
+   "types": [
+    "Normal",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 9,
+     "move": "belltoll"
+    },
+    {
+     "lv": 14,
+     "move": "guardup"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "belltoll",
+   "body": "bird"
+  },
+  "coalcub": {
+   "name": "Coalcub",
+   "types": [
+    "Fire",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "coalswipe"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "coalswipe",
+   "body": "quad"
+  },
+  "coalossus": {
+   "name": "Coalossus",
+   "types": [
+    "Fire",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "coalswipe"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "coalswipe",
+   "body": "biped"
+  },
+  "pickaxolotl": {
+   "name": "Pickaxolotl",
+   "types": [
+    "Water",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "pickstrike"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "pickstrike",
+   "body": "frog"
+  },
+  "steamacaque": {
+   "name": "Steamacaque",
+   "types": [
+    "Fire",
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "splashjab"
+    },
+    {
+     "lv": 16,
+     "move": "steamsplash"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "steamsplash",
+   "body": "biped"
+  },
+  "geysape": {
+   "name": "Geysape",
+   "types": [
+    "Fire",
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "splashjab"
+    },
+    {
+     "lv": 16,
+     "move": "steamsplash"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "steamsplash",
+   "body": "biped"
+  },
+  "mittencub": {
+   "name": "Mittencub",
+   "types": [
+    "Fire",
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "frostnip"
+    },
+    {
+     "lv": 16,
+     "move": "warmhug"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "warmhug",
+   "body": "quad"
+  },
+  "lotusprite": {
+   "name": "Lotusprite",
+   "types": [
+    "Water",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "lotusglow"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "lotusglow",
+   "body": "ghost"
+  },
+  "lotusage": {
+   "name": "Lotusage",
+   "types": [
+    "Water",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "lotusglow"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "lotusglow",
+   "body": "ghost"
+  },
+  "mudtusk": {
+   "name": "Mudtusk",
+   "types": [
+    "Earth",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 16,
+     "move": "mudcharge"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mudcharge",
+   "body": "quad"
+  },
+  "inkwing": {
+   "name": "Inkwing",
+   "types": [
+    "Shadow",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 16,
+     "move": "inkquill"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "inkquill",
+   "body": "bird"
+  },
+  "tomeraven": {
+   "name": "Tomeraven",
+   "types": [
+    "Shadow",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 16,
+     "move": "inkquill"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "inkquill",
+   "body": "bird"
+  },
+  "clocktoise": {
+   "name": "Clocktoise",
+   "types": [
+    "Earth",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "staticzap"
+    },
+    {
+     "lv": 16,
+     "move": "timetap"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "timetap",
+   "body": "turtle"
+  },
+  "sphinxie": {
+   "name": "Sphinxie",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "riddleray"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "riddleray",
+   "body": "quad"
+  },
+  "sphinxar": {
+   "name": "Sphinxar",
+   "types": [
+    "Lumen",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "riddleray"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "riddleray",
+   "body": "quad"
+  },
+  "mummoth": {
+   "name": "Mummoth",
+   "types": [
+    "Normal",
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 9,
+     "move": "wrapstomp"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "wrapstomp",
+   "body": "quad"
+  },
+  "echoling": {
+   "name": "Echoling",
+   "types": [
+    "Shadow",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "echoboom"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "echoboom",
+   "body": "round"
+  },
+  "echolith": {
+   "name": "Echolith",
+   "types": [
+    "Shadow",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "echoboom"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "echoboom",
+   "body": "biped"
+  },
+  "umbramoth": {
+   "name": "Umbramoth",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "shadedust"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "shadedust",
+   "body": "bug"
+  },
+  "groggysolarion": {
+   "name": "Groggy Solarion",
+   "types": [
+    "Fire",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "dawnbreak"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "dawnbreak",
+   "body": "quad"
+  },
+  "solarion": {
+   "name": "Solarion",
+   "types": [
+    "Fire",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "dawnbreak"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "dawnbreak",
+   "body": "quad"
+  },
+  "hidinggloaming": {
+   "name": "Hiding Gloaming",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "duskfall"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "duskfall",
+   "body": "ghost"
+  },
+  "gloaming": {
+   "name": "Gloaming",
+   "types": [
+    "Shadow"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "duskfall"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "duskfall",
+   "body": "ghost"
+  },
+  "clovetastical": {
+   "name": "Clove Tastical",
+   "types": [
+    "Plant",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 16,
+     "move": "luckyleaf"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "luckyleaf",
+   "body": "quad"
+  },
+  "hoppinpop": {
+   "name": "Hoppin Pop",
+   "types": [
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "fantastichop"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "fantastichop",
+   "body": "bug"
+  },
+  "tempestram": {
+   "name": "Tempestram",
+   "types": [
+    "Normal",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 9,
+     "move": "woolpuff"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "woolpuff",
+   "body": "quad"
+  },
+  "queenbuzz": {
+   "name": "Queenbuzz",
+   "types": [
+    "Bolt",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "leafflick"
+    },
+    {
+     "lv": 16,
+     "move": "statichop"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "statichop",
+   "body": "round"
+  },
+  "sylvantail": {
+   "name": "Sylvantail",
+   "types": [
+    "Plant",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "grassswipe"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "grassswipe",
+   "body": "quad"
+  },
+  "typhoonewt": {
+   "name": "Typhoonewt",
+   "types": [
+    "Water",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "staticzap"
+    },
+    {
+     "lv": 16,
+     "move": "dewdropdash"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "dewdropdash",
+   "body": "serpent"
+  },
+  "cragmastiff": {
+   "name": "Cragmastiff",
+   "types": [
+    "Earth",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 16,
+     "move": "rockfetch"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "rockfetch",
+   "body": "quad"
+  },
+  "scarecrown": {
+   "name": "Scarecrown",
+   "types": [
+    "Shadow",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "leafflick"
+    },
+    {
+     "lv": 16,
+     "move": "scareflap"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "scareflap",
+   "body": "bird"
+  },
+  "bloomstag": {
+   "name": "Bloomstag",
+   "types": [
+    "Plant",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "bloomcharge"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bloomcharge",
+   "body": "quad"
+  },
+  "mushroyal": {
+   "name": "Mushroyal",
+   "types": [
+    "Shadow",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "leafflick"
+    },
+    {
+     "lv": 16,
+     "move": "mushroomhug"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mushroomhug",
+   "body": "round"
+  },
+  "burrboar": {
+   "name": "Burrboar",
+   "types": [
+    "Plant",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "burrball"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "burrball",
+   "body": "round"
+  },
+  "timberbeetle": {
+   "name": "Timberbeetle",
+   "types": [
+    "Earth",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "leafflick"
+    },
+    {
+     "lv": 16,
+     "move": "hornshove"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "hornshove",
+   "body": "bug"
+  },
+  "oakenowl": {
+   "name": "Oakenowl",
+   "types": [
+    "Plant",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 16,
+     "move": "acorndrop"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "acorndrop",
+   "body": "bird"
+  },
+  "elderkin": {
+   "name": "Elderkin",
+   "types": [
+    "Plant",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "sprigsong"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "sprigsong",
+   "body": "biped"
+  },
+  "pufferoar": {
+   "name": "Pufferoar",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "spinepuff"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "spinepuff",
+   "body": "fish"
+  },
+  "beaconseal": {
+   "name": "Beaconseal",
+   "types": [
+    "Lumen",
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "splashjab"
+    },
+    {
+     "lv": 16,
+     "move": "lurelight"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "lurelight",
+   "body": "round"
+  },
+  "leviafin": {
+   "name": "Leviafin",
+   "types": [
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "bubbleburst"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "bubbleburst",
+   "body": "fish"
+  },
+  "paladcrab": {
+   "name": "Paladcrab",
+   "types": [
+    "Water",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "hoppinch"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "hoppinch",
+   "body": "bug"
+  },
+  "gooseidon": {
+   "name": "Gooseidon",
+   "types": [
+    "Normal",
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 9,
+     "move": "honkblast"
+    },
+    {
+     "lv": 14,
+     "move": "quickstep"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 28,
+     "move": "guardup"
+    }
+   ],
+   "sig": "honkblast",
+   "body": "bird"
+  },
+  "shellcastle": {
+   "name": "Shellcastle",
+   "types": [
+    "Water",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "shellhum"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "shellhum",
+   "body": "bug"
+  },
+  "constellastar": {
+   "name": "Constellastar",
+   "types": [
+    "Water",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "starspin"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "starspin",
+   "body": "round"
+  },
+  "puffadmiral": {
+   "name": "Puffadmiral",
+   "types": [
+    "Water",
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "frostnip"
+    },
+    {
+     "lv": 16,
+     "move": "captainsdive"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "captainsdive",
+   "body": "bird"
+  },
+  "gemonitor": {
+   "name": "Gemonitor",
+   "types": [
+    "Earth",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "gemglint"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "gemglint",
+   "body": "serpent"
+  },
+  "stalagwing": {
+   "name": "Stalagwing",
+   "types": [
+    "Shadow",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "cavedive"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "cavedive",
+   "body": "bird"
+  },
+  "rimedrake": {
+   "name": "Rimedrake",
+   "types": [
+    "Frost"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "rimelick"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "rimelick",
+   "body": "serpent"
+  },
+  "tunnelpede": {
+   "name": "Tunnelpede",
+   "types": [
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "coilroll"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "coilroll",
+   "body": "serpent"
+  },
+  "scrapcoon": {
+   "name": "Scrapcoon",
+   "types": [
+    "Normal",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 9,
+     "move": "coinswipe"
+    },
+    {
+     "lv": 14,
+     "move": "rally"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 28,
+     "move": "guardup"
+    }
+   ],
+   "sig": "coinswipe",
+   "body": "quad"
+  },
+  "bellcondor": {
+   "name": "Bellcondor",
+   "types": [
+    "Normal",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "growl"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 9,
+     "move": "belltoll"
+    },
+    {
+     "lv": 14,
+     "move": "guardup"
+    },
+    {
+     "lv": 20,
+     "move": "bodyslam"
+    }
+   ],
+   "sig": "belltoll",
+   "body": "bird"
+  },
+  "drillotl": {
+   "name": "Drillotl",
+   "types": [
+    "Water",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "pickstrike"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "quickstep"
+    }
+   ],
+   "sig": "pickstrike",
+   "body": "frog"
+  },
+  "sunfennec": {
+   "name": "Sunfennec",
+   "types": [
+    "Fire",
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "glowflash"
+    },
+    {
+     "lv": 16,
+     "move": "miragedash"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "miragedash",
+   "body": "quad"
+  },
+  "saguaroad": {
+   "name": "Saguaroad",
+   "types": [
+    "Plant",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "leafflick"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "sporenap"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "needlespray"
+    },
+    {
+     "lv": 20,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "needlespray",
+   "body": "frog"
+  },
+  "furnadillo": {
+   "name": "Furnadillo",
+   "types": [
+    "Fire",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "kilnroll"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "kilnroll",
+   "body": "round"
+  },
+  "yetitan": {
+   "name": "Yetitan",
+   "types": [
+    "Frost",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "snowballthrow"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "snowballthrow",
+   "body": "biped"
+  },
+  "iglooshell": {
+   "name": "Iglooshell",
+   "types": [
+    "Frost",
+    "Earth"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "frostnip"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "chilltouch"
+    },
+    {
+     "lv": 12,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 16,
+     "move": "shellfreeze"
+    },
+    {
+     "lv": 20,
+     "move": "blizzardrush"
+    },
+    {
+     "lv": 26,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "shellfreeze",
+   "body": "round"
+  },
+  "lilyswan": {
+   "name": "Lilyswan",
+   "types": [
+    "Water",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "splashjab"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "soak"
+    },
+    {
+     "lv": 12,
+     "move": "leafflick"
+    },
+    {
+     "lv": 16,
+     "move": "lilyrest"
+    },
+    {
+     "lv": 20,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 26,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "lilyrest",
+   "body": "bird"
+  },
+  "lanternfly": {
+   "name": "Lanternfly",
+   "types": [
+    "Fire",
+    "Bolt"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "embertap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "cinderhaze"
+    },
+    {
+     "lv": 12,
+     "move": "staticzap"
+    },
+    {
+     "lv": 16,
+     "move": "flickerspark"
+    },
+    {
+     "lv": 20,
+     "move": "flareburst"
+    },
+    {
+     "lv": 26,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "flickerspark",
+   "body": "bug"
+  },
+  "stormeel": {
+   "name": "Stormeel",
+   "types": [
+    "Bolt",
+    "Water"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "staticzap"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "shockpulse"
+    },
+    {
+     "lv": 12,
+     "move": "splashjab"
+    },
+    {
+     "lv": 16,
+     "move": "swampspark"
+    },
+    {
+     "lv": 20,
+     "move": "thundersnap"
+    },
+    {
+     "lv": 26,
+     "move": "torrentcrash"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "swampspark",
+   "body": "serpent"
+  },
+  "mirelich": {
+   "name": "Mirelich",
+   "types": [
+    "Shadow",
+    "Plant"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "shadeswipe"
+    },
+    {
+     "lv": 4,
+     "move": "rally"
+    },
+    {
+     "lv": 8,
+     "move": "venommist"
+    },
+    {
+     "lv": 12,
+     "move": "leafflick"
+    },
+    {
+     "lv": 16,
+     "move": "boggrasp"
+    },
+    {
+     "lv": 20,
+     "move": "nightpounce"
+    },
+    {
+     "lv": 26,
+     "move": "thornbarrage"
+    },
+    {
+     "lv": 34,
+     "move": "guardup"
+    }
+   ],
+   "sig": "boggrasp",
+   "body": "ghost"
+  },
+  "bogtusk": {
+   "name": "Bogtusk",
+   "types": [
+    "Earth",
+    "Normal"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "pebbletoss"
+    },
+    {
+     "lv": 4,
+     "move": "guardup"
+    },
+    {
+     "lv": 8,
+     "move": "dustcloud"
+    },
+    {
+     "lv": 16,
+     "move": "mudcharge"
+    },
+    {
+     "lv": 20,
+     "move": "quakestomp"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "mudcharge",
+   "body": "quad"
+  },
+  "runescroll": {
+   "name": "Runescroll",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "runeflash"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "runeflash",
+   "body": "ghost"
+  },
+  "crescub": {
+   "name": "Crescub",
+   "types": [
+    "Lumen"
+   ],
+   "learn": [
+    {
+     "lv": 1,
+     "move": "tackle"
+    },
+    {
+     "lv": 1,
+     "move": "glowflash"
+    },
+    {
+     "lv": 4,
+     "move": "quickstep"
+    },
+    {
+     "lv": 8,
+     "move": "dazzle"
+    },
+    {
+     "lv": 12,
+     "move": "growl"
+    },
+    {
+     "lv": 16,
+     "move": "crescentclaw"
+    },
+    {
+     "lv": 20,
+     "move": "radiantbeam"
+    },
+    {
+     "lv": 26,
+     "move": "bodyslam"
+    },
+    {
+     "lv": 34,
+     "move": "rally"
+    }
+   ],
+   "sig": "crescentclaw",
+   "body": "quad"
+  }
+ },
+ "typeColors": {
+  "Normal": [
+   "#d8d0c0",
+   "#a89c88",
+   "#6e6454"
+  ],
+  "Fire": [
+   "#ffb36b",
+   "#f0602c",
+   "#a8301c"
+  ],
+  "Water": [
+   "#8fd0ff",
+   "#3a8ee8",
+   "#1f4fa0"
+  ],
+  "Plant": [
+   "#a8e88a",
+   "#4fb04a",
+   "#2a6e34"
+  ],
+  "Earth": [
+   "#e0c08a",
+   "#a8784a",
+   "#6a4a2c"
+  ],
+  "Bolt": [
+   "#fff07a",
+   "#f0c828",
+   "#a07c10"
+  ],
+  "Frost": [
+   "#e4faff",
+   "#9adcf0",
+   "#5a9cc0"
+  ],
+  "Shadow": [
+   "#b48ad8",
+   "#6e46a0",
+   "#3a2260"
+  ],
+  "Lumen": [
+   "#fff8d8",
+   "#f0dc8a",
+   "#b8a050"
+  ]
+ }
+}

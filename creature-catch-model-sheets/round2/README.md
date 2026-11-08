@@ -73,3 +73,14 @@ The builders' improvements, all copies in their `tools/` folders:
   - the boards (`board_blank.jpg`, `board_printed.jpg`, `blockout.jpg`)
   - `NOTES.md`
   - `tools/` (changed tool copies)
+
+## Animation (added after the test)
+
+Mushling, Drizzlon and Sonnet's Lunarion are animated with the shared animation system
+(`../pipeline/ANIMATION.md`). Each creature's real moves come from the game data, plus walk, hit, faint
+and send-out:
+- `opus/mushling/mushling_animated.glb`
+- `opus/drizzlon/drizzlon_animated.glb`
+- `sonnet/lunarion/lunarion_animated.glb`
+
+Pose sheets are in `animation/`.

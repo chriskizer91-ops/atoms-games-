@@ -18,7 +18,9 @@ numpy, scipy and Pillow. `../coalossus/rebuild.sh` runs them all in order.
 | `bake.py` | Bakes colour and a normal map from the big model onto the small one, part by part |
 | `export.py` | Game file (GLB) without a skeleton: one mesh, one material, with colour, normal and glow textures |
 | `repair_view.py` | Print-only repair of a picture from itself (e.g. paints the side view's eye over with fur) |
-| `rig.py` | Skeleton, skin weights and the battle animations; exports the game file (GLB) with them |
+| `rig.py` | Coalossus's own hand-made skeleton and animations (round 1) |
+| `animate.py`, `motions.py` | **The animation system** for every creature: skeleton by body type, shared clips, move-to-clip rules (see `ANIMATION.md`) |
+| `normal_from_relief.py`, `route_small.sh` | The small-model-only route: build, print, relief, normal and glow maps, boards and game file, with no big model |
 
 ## Parts file options (`parts.json`)
 

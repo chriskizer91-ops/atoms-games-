@@ -1,0 +1,302 @@
+"""The shared motion library: every clip for every body type (no Blender needed).
+
+The 2D game animates every move with the same few motions, picked by the move's kind
+(06-battle.js moveAnim): physical moves lunge, special moves fire a stream, strong moves charge
+(the creature swells) then strike, status moves wobble, a hit flinches and shakes, fainting sinks,
+and the send-out pops in. This file is the 3D version of that: one set of clips per body type,
+played for any move of that kind. Effects (embers, droplets, rocks...) are added by the viewer
+or the game by the move's type.
+
+Clip names (the same for every body type):
+  idle, walk                                   loops
+  physical, special, strong_physical, strong_special, boost, boost_guard, status
+  hit, faint, send_out
+A creature can also carry its own clips named after a move id (for example Coalossus's
+coal_swipe); the viewer plays those instead of the shared clip for that move.
+
+Keys: time (s) -> {bone: {"r": (x, y, z) degrees about armature axes, "l": (x, y, z) metres,
+"s": (x, y, z)}}. The creature faces -Y, +X is its left, +Z up. A name with * means both sides
+(the right side mirrors Y and Z rotation and X location). Locations are written for a creature
+whose reference height is 1.0 and scaled by the caller.
+"""
+import math
+
+
+def _tail(x=0.0, y=0.0, z=0.0, n=3):
+    """Spread a tail curl over the tail chain (base moves least)."""
+    share = [0.45, 0.33, 0.22][:n]
+    return {f"tail{i + 1}": {"r": (x * s * 2.2, y * s * 2.2, z * s * 2.2)} for i, s in enumerate(share)}
+
+
+def _merge(*dicts):
+    out = {}
+    for d in dicts:
+        for k, v in d.items():
+            out[k] = dict(out.get(k, {}), **v)
+    return out
+
+
+def _wings(pose, wings):
+    """Add wing bones to a pose: pose is 'rest', 'up', 'half', 'down', 'back', 'droop', or a flap angle."""
+    if not wings:
+        return {}
+    if isinstance(pose, (int, float)):
+        a = float(pose)
+        return {"wing_in_*": {"r": (0, -a, 0)}, "wing_out_*": {"r": (0, -a * 0.6, 0)}}
+    table = {
+        "rest": (0, 0, 0, 0), "up": (0, -32, 0, -18), "half": (0, -14, 0, -8), "down": (0, 22, 0, 14),
+        "back": (18, -6, -24, -4), "droop": (6, 26, 10, 20),
+    }
+    rx, ry, rz, ry2 = table[pose]
+    return {"wing_in_*": {"r": (rx, ry, rz)}, "wing_out_*": {"r": (0, ry2, 0)}}
+
+
+# ---------------------------------------------------------------- four-legged (quad)
+def quad(wings=False):
+    """Four-legged clips (Coalossus, Drizzlon, Lunarion...). Locations are per 1.0 of shoulder height."""
+    W = lambda p: _wings(p, wings)  # noqa: E731
+    M = {}
+    M["idle"] = (3.0, [
+        (0.0, _merge(W(4))),
+        (0.75, _merge(_tail(0, 0, 9), {"head": {"r": (-1.5, 0, 1)}}, W(-6))),
+        (1.5, _merge({"root": {"l": (0, 0, -0.014)}, "spine": {"r": (1.5, 0, 0)}, "head": {"r": (-3, 0, 0)},
+                      "fl_up_*": {"r": (-1.0, 0, 0)}, "rl_up_*": {"r": (1.0, 0, 0)}}, W(4))),
+        (2.25, _merge(_tail(0, 0, -9), {"head": {"r": (-1.5, 0, -1)}}, W(-6))),
+        (3.0, _merge(W(4))),
+    ])
+    keys = []
+    for i in range(9):
+        t = i / 8.0
+        k = {}
+        for leg, ph in (("fl", 0.0), ("rl", 0.5)):
+            for side, off in (("L", 0.0), ("R", 0.5)):
+                p = 2 * math.pi * (t + ph + off)
+                lift = max(0.0, math.cos(p))
+                k[f"{leg}_up_{side}"] = {"r": (-20 * math.sin(p), 0, 0)}
+                k[f"{leg}_low_{side}"] = {"r": (32 * lift, 0, 0)}
+                k[f"{leg}_paw_{side}"] = {"r": (-18 * lift, 0, 0)}
+        b = abs(math.sin(2 * math.pi * t * 2))
+        k = _merge(k, {"root": {"l": (0, 0, 0.03 * b)}, "spine": {"r": (0, 2.5 * math.sin(2 * math.pi * t), 0)},
+                       "hips": {"r": (0, -2.5 * math.sin(2 * math.pi * t), 0)},
+                       "head": {"r": (-2 * b, 0, 2 * math.sin(2 * math.pi * t))}},
+                   _tail(0, 0, 12 * math.sin(2 * math.pi * t)), W(8 * math.sin(2 * math.pi * t * 2)))
+        keys.append((t * 1.1, k))
+    M["walk"] = (1.1, keys)
+    M["physical"] = (1.1, [  # Tackle: crouch, lunge, back
+        (0.0, {}),
+        (0.3, _merge({"root": {"l": (0, 0.19, -0.07)}, "spine": {"r": (6, 0, 0)}, "head": {"r": (8, 0, 0)},
+                      "fl_up_*": {"r": (8, 0, 0)}, "rl_up_*": {"r": (-6, 0, 0)}}, W("half"))),
+        (0.45, _merge({"root": {"l": (0, -0.65, 0.07)}, "spine": {"r": (-4, 0, 0)}, "head": {"r": (-8, 0, 0)},
+                       "fl_up_*": {"r": (-26, 0, 0)}, "fl_low_*": {"r": (10, 0, 0)}, "rl_up_*": {"r": (22, 0, 0)}}, W("back"))),
+        (0.6, _merge({"root": {"l": (0, -0.6, 0.02)}, "fl_up_*": {"r": (-20, 0, 0)}, "rl_up_*": {"r": (18, 0, 0)}}, W("back"))),
+        (1.1, {}),
+    ])
+    M["special"] = (1.1, [  # a stream from the mouth: small squash, head thrust
+        (0.0, {}),
+        (0.18, _merge({"root": {"l": (0, 0.04, -0.05)}, "spine": {"r": (4, 0, 0)}, "head": {"r": (12, 0, 0)},
+                       "neck": {"r": (6, 0, 0)}}, W("half"))),
+        (0.32, _merge({"root": {"l": (0, -0.1, 0.01)}, "spine": {"r": (-3, 0, 0)}, "head": {"r": (-14, 0, 0)},
+                       "neck": {"r": (-8, 0, 0)}}, W("up"))),
+        (0.65, _merge({"root": {"l": (0, -0.07, 0)}, "head": {"r": (-10, 0, 0)}, "neck": {"r": (-6, 0, 0)}}, W("half"))),
+        (1.1, {}),
+    ])
+    high = {"hips": {"r": (-40, 0, 0)}, "rl_up_*": {"r": (40, 0, 0)}, "rl_paw_*": {"r": (-6, 0, 0)},
+            "fl_up_*": {"r": (-34, 0, 0)}, "fl_low_*": {"r": (48, 0, 0)}, "head": {"r": (14, 0, 0)},
+            "spine": {"r": (-4, 0, 0)}, "root": {"l": (0, 0.07, 0.05)}}
+    M["strong_physical"] = (2.0, [  # rear up high, hold, slam the front paws (Quake Stomp, Body Slam)
+        (0.0, {}),
+        (0.5, _merge(high, _tail(-12), W("up"))),
+        (0.82, _merge(high, {"hips": {"r": (-43, 0, 0)}, "rl_up_*": {"r": (43, 0, 0)}}, _tail(-12), W("up"))),
+        (1.0, _merge({"hips": {"r": (4, 0, 0)}, "fl_up_*": {"r": (-4, 0, 0)}, "fl_low_*": {"r": (6, 0, 0)},
+                      "root": {"l": (0, -0.05, -0.07)}, "head": {"r": (8, 0, 0)}}, _tail(8), W("down"))),
+        (1.2, _merge({"root": {"l": (0, -0.035, 0.01)}, "head": {"r": (-4, 0, 0)}}, W("half"))),
+        (2.0, {}),
+    ])
+    M["strong_special"] = (2.1, [  # charge low and swell, rear back, burst forward (Flare Burst)
+        (0.0, {}),
+        (0.62, _merge({"root": {"l": (0, 0.06, -0.1), "s": (1.06, 1.06, 1.06)}, "spine": {"r": (6, 0, 0)}, "head": {"r": (14, 0, 0)},
+                       "fl_up_*": {"r": (6, 0, 0)}, "fl_low_*": {"r": (14, 0, 0)}, "rl_up_*": {"r": (-6, 0, 0)},
+                       "rl_low_*": {"r": (12, 0, 0)}}, W("up"))),
+        (0.78, _merge({"root": {"l": (0, 0.14, 0.02), "s": (1.08, 1.08, 1.08)}, "hips": {"r": (-8, 0, 0)},
+                       "rl_up_*": {"r": (8, 0, 0)}, "head": {"r": (-26, 0, 0)}, "neck": {"r": (-10, 0, 0)}}, W("up"))),
+        (0.92, _merge({"root": {"l": (0, -0.45, 0.02), "s": (1, 1, 1)}, "spine": {"r": (-6, 0, 0)}, "head": {"r": (-12, 0, 0)},
+                       "neck": {"r": (-6, 0, 0)}, "fl_up_*": {"r": (-22, 0, 0)}, "rl_up_*": {"r": (20, 0, 0)}}, W("down"))),
+        (1.35, _merge({"root": {"l": (0, -0.36, 0)}, "head": {"r": (-8, 0, 0)}, "fl_up_*": {"r": (-16, 0, 0)},
+                       "rl_up_*": {"r": (14, 0, 0)}}, W("half"))),
+        (2.1, {}),
+    ])
+    M["boost"] = (1.6, [  # chest out, roar to the sky (Rally)
+        (0.0, {}),
+        (0.35, _merge({"head": {"r": (-34, 0, 0)}, "neck": {"r": (-12, 0, 0)}, "spine": {"r": (-8, 0, 0)},
+                       "fl_up_*": {"r": (-8, 0, 0)}, "root": {"l": (0, 0, 0.035)}}, _tail(-14), W("up"))),
+        (0.6, _merge({"head": {"r": (-36, 0, 3)}, "neck": {"r": (-12, 0, 0)}, "spine": {"r": (-8, 0, 0)}, "root": {"l": (0, 0, 0.035)}}, W("up"))),
+        (0.8, _merge({"head": {"r": (-34, 0, -3)}, "neck": {"r": (-12, 0, 0)}, "spine": {"r": (-8, 0, 0)}, "root": {"l": (0, 0, 0.035)}}, W("up"))),
+        (1.0, _merge({"head": {"r": (-32, 0, 0)}, "neck": {"r": (-10, 0, 0)}, "spine": {"r": (-7, 0, 0)}, "root": {"l": (0, 0, 0.025)}}, W("half"))),
+        (1.6, {}),
+    ])
+    M["boost_guard"] = (1.5, [  # hunker down with legs braced (Guard Up)
+        (0.0, {}),
+        (0.35, _merge({"root": {"l": (0, 0, -0.12)}, "fl_up_*": {"r": (4, 0, 8)}, "rl_up_*": {"r": (-4, 0, -8)},
+                       "fl_low_*": {"r": (18, 0, 0)}, "rl_low_*": {"r": (16, 0, 0)}, "head": {"r": (16, 0, 0)},
+                       "neck": {"r": (8, 0, 0)}, "spine": {"r": (3, 0, 0)}}, W("droop"))),
+        (1.05, _merge({"root": {"l": (0, 0, -0.12)}, "fl_low_*": {"r": (18, 0, 0)}, "rl_low_*": {"r": (16, 0, 0)},
+                       "head": {"r": (16, 0, 0)}, "neck": {"r": (8, 0, 0)}}, W("droop"))),
+        (1.5, {}),
+    ])
+    keys = [(0.0, {})]
+    for i in range(8):  # status on the foe (Growl, Soak, Dazzle...): shakes, then thrusts its head at them
+        sgn = 1 if i % 2 else -1
+        keys.append((0.2 + i * 0.09, _merge({"root": {"l": (0.035 * sgn, 0, -0.02)}, "spine": {"r": (3, 3 * sgn, 0)},
+                                             "head": {"r": (6, 0, 0)}}, W(10 * sgn))))
+    keys += [(1.0, _merge({"spine": {"r": (-4, 0, 0)}, "head": {"r": (-10, 0, 0)}, "neck": {"r": (-6, 0, 0)}}, W("up"))), (1.5, {})]
+    M["status"] = (1.5, keys)
+    M["hit"] = (0.7, [
+        (0.0, {}),
+        (0.08, _merge({"root": {"l": (0, 0.1, 0.01)}, "spine": {"r": (-5, 0, 0)}, "head": {"r": (-12, 0, 0)}}, W("up"))),
+        (0.18, {"root": {"l": (0.045, 0.08, 0)}, "head": {"r": (-8, 0, 0)}}),
+        (0.28, _merge({"root": {"l": (-0.045, 0.07, 0)}, "head": {"r": (-6, 0, 0)}}, W("half"))),
+        (0.38, {"root": {"l": (0.045, 0.05, 0)}}),
+        (0.48, {"root": {"l": (-0.035, 0.02, 0)}}),
+        (0.7, {}),
+    ])
+    fallen = {"fl_up_*": {"r": (30, 0, 8)}, "fl_low_*": {"r": (60, 0, 0)}, "rl_up_*": {"r": (-20, 0, -6)},
+              "rl_low_*": {"r": (50, 0, 0)}, "head": {"r": (34, 0, 10)}, "neck": {"r": (14, 0, 0)},
+              "root": {"r": (0, 18, 0), "l": (0, 0, -0.4)}}
+    M["faint"] = (1.8, [
+        (0.0, {}),
+        (0.4, _merge({"fl_up_*": {"r": (18, 0, 0)}, "fl_low_*": {"r": (38, 0, 0)}, "rl_low_*": {"r": (25, 0, 0)},
+                      "head": {"r": (24, 0, 0)}, "neck": {"r": (10, 0, 0)}, "root": {"l": (0, 0, -0.19)}}, _tail(20), W("droop"))),
+        (1.0, _merge(fallen, _tail(28), W("droop"))),
+        (1.8, _merge(fallen, {"head": {"r": (36, 0, 12)}, "root": {"r": (0, 20, 0), "l": (0, 0, -0.42)}}, _tail(30), W("droop"))),
+    ])
+    M["send_out"] = (0.9, [
+        (0.0, _merge({"root": {"s": (0.02, 0.02, 0.02), "l": (0, 0, 0.7)}}, W("up"))),
+        (0.32, {"root": {"s": (1.08, 1.08, 1.08), "l": (0, 0, 0)}}),
+        (0.45, _merge({"root": {"s": (1.12, 1.12, 0.84)}}, W("down"))),
+        (0.62, _merge({"root": {"s": (0.95, 0.95, 1.08), "l": (0, 0, 0.06)}}, W("up"))),
+        (0.9, {}),
+    ])
+    return M
+
+
+# ---------------------------------------------------------------- round (Mushling and other blob-shaped creatures)
+def round_():
+    """Round-body clips: squash and stretch, hops, little arms and feet. Locations per 1.0 of height."""
+    M = {}
+    M["idle"] = (2.4, [
+        (0.0, {}),
+        (0.6, {"body": {"s": (1.03, 1.03, 0.96)}, "head": {"r": (0, 2.5, 0)}}),
+        (1.2, {"body": {"s": (0.98, 0.98, 1.03)}, "head": {"r": (-2, 0, 0)}, "arm_up_*": {"r": (-4, 0, 0)}}),
+        (1.8, {"body": {"s": (1.03, 1.03, 0.96)}, "head": {"r": (0, -2.5, 0)}}),
+        (2.4, {}),
+    ])
+    keys = []
+    for i in range(9):  # a waddle: rock side to side, feet step in turn
+        t = i / 8.0
+        p = 2 * math.pi * t
+        s = math.sin(p)
+        keys.append((t * 0.9, {
+            "root": {"r": (0, 7 * s, 0), "l": (0, 0, 0.04 * abs(math.sin(2 * p)))},
+            "head": {"r": (0, -4 * s, 0)},
+            "foot_L": {"l": (0, -0.07 * max(0.0, math.cos(p)), 0.06 * max(0.0, math.cos(p)))},
+            "foot_R": {"l": (0, -0.07 * max(0.0, -math.cos(p)), 0.06 * max(0.0, -math.cos(p)))},
+            "arm_up_*": {"r": (8 * s, 0, 0)},
+        }))
+    M["walk"] = (0.9, keys)
+    M["physical"] = (1.1, [  # crouch, hop forward into the foe, bounce back
+        (0.0, {}),
+        (0.25, {"root": {"s": (1.12, 1.12, 0.82)}, "head": {"r": (8, 0, 0)}}),
+        (0.42, {"root": {"l": (0, -0.55, 0.28), "s": (0.92, 0.92, 1.12), "r": (-12, 0, 0)}, "arm_up_*": {"r": (-30, 0, 0)}}),
+        (0.55, {"root": {"l": (0, -0.7, 0.0), "s": (1.1, 1.1, 0.88)}, "head": {"r": (10, 0, 0)}}),
+        (0.75, {"root": {"l": (0, -0.3, 0.12)}}),
+        (1.1, {}),
+    ])
+    M["special"] = (1.1, [  # squash, then stretch forward with a shake of the head (spores / a stream)
+        (0.0, {}),
+        (0.2, {"root": {"s": (1.1, 1.1, 0.86)}, "head": {"r": (10, 0, 0)}}),
+        (0.36, {"root": {"s": (0.94, 0.94, 1.1), "l": (0, -0.08, 0)}, "head": {"r": (-14, 0, 0)}, "arm_up_*": {"r": (-40, 0, 0)}}),
+        (0.5, {"head": {"r": (-10, 6, 0)}, "arm_up_*": {"r": (-40, 0, 0)}}),
+        (0.64, {"head": {"r": (-10, -6, 0)}, "arm_up_*": {"r": (-36, 0, 0)}}),
+        (1.1, {}),
+    ])
+    M["strong_physical"] = (1.8, [  # big jump and a slam (Body Slam)
+        (0.0, {}),
+        (0.4, {"root": {"s": (1.18, 1.18, 0.74)}, "head": {"r": (10, 0, 0)}}),
+        (0.75, {"root": {"l": (0, -0.4, 0.9), "s": (0.9, 0.9, 1.16), "r": (-10, 0, 0)}, "arm_up_*": {"r": (-70, 0, 0)}}),
+        (1.0, {"root": {"l": (0, -0.75, 0.0), "s": (1.26, 1.26, 0.7)}}),
+        (1.2, {"root": {"l": (0, -0.55, 0.06), "s": (0.95, 0.95, 1.06)}}),
+        (1.8, {}),
+    ])
+    M["strong_special"] = (2.0, [  # charge, shaking and swelling, then burst
+        (0.0, {}),
+        (0.25, {"root": {"s": (1.04, 1.04, 1.0), "l": (0.02, 0, 0)}}),
+        (0.4, {"root": {"s": (1.08, 1.08, 1.02), "l": (-0.02, 0, 0)}}),
+        (0.55, {"root": {"s": (1.12, 1.12, 1.04), "l": (0.02, 0, 0)}, "head": {"r": (8, 0, 0)}}),
+        (0.75, {"root": {"s": (1.16, 1.16, 1.0), "l": (-0.02, 0, 0)}, "head": {"r": (12, 0, 0)}}),
+        (0.92, {"root": {"s": (0.9, 0.9, 1.2), "l": (0, -0.12, 0.05)}, "head": {"r": (-18, 0, 0)}, "arm_up_*": {"r": (-80, 0, 0)}}),
+        (1.3, {"root": {"l": (0, -0.08, 0)}, "arm_up_*": {"r": (-50, 0, 0)}}),
+        (2.0, {}),
+    ])
+    M["boost"] = (1.4, [  # arms up, stretch tall, bounce
+        (0.0, {}),
+        (0.3, {"root": {"s": (0.94, 0.94, 1.12), "l": (0, 0, 0.12)}, "arm_up_*": {"r": (-110, 0, 0)}, "head": {"r": (-8, 0, 0)}}),
+        (0.55, {"root": {"s": (1.08, 1.08, 0.9)}, "arm_up_*": {"r": (-100, 0, 0)}}),
+        (0.8, {"root": {"s": (0.96, 0.96, 1.08), "l": (0, 0, 0.08)}, "arm_up_*": {"r": (-110, 0, 0)}}),
+        (1.4, {}),
+    ])
+    M["boost_guard"] = (1.4, [  # duck under the cap, hold
+        (0.0, {}),
+        (0.3, {"root": {"s": (1.1, 1.1, 0.82)}, "head": {"r": (6, 0, 0)}, "arm_up_*": {"r": (20, 0, 0)}}),
+        (1.0, {"root": {"s": (1.1, 1.1, 0.82)}, "head": {"r": (6, 0, 0)}, "arm_up_*": {"r": (20, 0, 0)}}),
+        (1.4, {}),
+    ])
+    keys = [(0.0, {})]
+    for i in range(8):  # status on the foe: wiggle, then lean in
+        sgn = 1 if i % 2 else -1
+        keys.append((0.15 + i * 0.09, {"root": {"r": (0, 9 * sgn, 0)}, "head": {"r": (0, 5 * sgn, 0)}}))
+    keys += [(1.0, {"root": {"r": (-10, 0, 0), "l": (0, -0.06, 0)}, "head": {"r": (-8, 0, 0)}, "arm_up_*": {"r": (-50, 0, 0)}}), (1.4, {})]
+    M["status"] = (1.4, keys)
+    M["hit"] = (0.7, [
+        (0.0, {}),
+        (0.08, {"root": {"l": (0, 0.14, 0.02), "s": (0.9, 0.9, 1.1), "r": (10, 0, 0)}}),
+        (0.18, {"root": {"l": (0.05, 0.1, 0), "s": (1.08, 1.08, 0.92)}}),
+        (0.28, {"root": {"l": (-0.05, 0.08, 0)}}),
+        (0.38, {"root": {"l": (0.04, 0.05, 0)}}),
+        (0.7, {}),
+    ])
+    M["faint"] = (1.6, [
+        (0.0, {}),
+        (0.35, {"root": {"s": (1.1, 1.1, 0.85)}, "head": {"r": (12, 0, 0)}}),
+        (0.9, {"root": {"r": (75, 0, 10), "l": (0, 0.18, 0.05)}, "head": {"r": (10, 0, 0)}, "arm_up_*": {"r": (-40, 0, 0)}}),
+        (1.6, {"root": {"r": (82, 0, 12), "l": (0, 0.22, 0.02)}, "head": {"r": (14, 0, 0)}, "arm_up_*": {"r": (-50, 0, 0)}}),
+    ])
+    M["send_out"] = (0.9, [
+        (0.0, {"root": {"s": (0.02, 0.02, 0.02), "l": (0, 0, 0.7)}}),
+        (0.32, {"root": {"s": (1.1, 1.1, 1.1), "l": (0, 0, 0)}}),
+        (0.45, {"root": {"s": (1.16, 1.16, 0.8)}}),
+        (0.62, {"root": {"s": (0.94, 0.94, 1.1), "l": (0, 0, 0.08)}}),
+        (0.9, {}),
+    ])
+    return M
+
+
+PLANS = {"quad": quad, "round": round_}
+
+
+def clips(plan, wings=False):
+    if plan == "quad":
+        return quad(wings)
+    return PLANS[plan]()
+
+
+def move_clip(move):
+    """Which shared clip a game move plays, following the 2D game's rules (06-battle.js moveAnim)."""
+    fx = move.get("fx") or {}
+    if not move.get("power"):
+        if fx.get("self") or fx.get("heal"):
+            return "boost_guard" if fx.get("stat") == "def" else "boost"
+        return "status"
+    physical = move.get("type") in ("Normal", "Earth") or (move.get("tier") == "sig" and (fx.get("crit") or fx.get("hits")))
+    if move.get("tier") == "strong" or move.get("power", 0) >= 70:
+        return "strong_physical" if physical else "strong_special"
+    return "physical" if physical else "special"

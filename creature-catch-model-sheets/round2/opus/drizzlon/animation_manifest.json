@@ -1,0 +1,77 @@
+{
+ "plan": "quad",
+ "wings": true,
+ "scale": 0.304,
+ "anchors": {
+  "mouth": {
+   "bone": "head",
+   "pos": [
+    0.0,
+    0.4553,
+    0.3075
+   ]
+  },
+  "chest": {
+   "bone": "spine",
+   "pos": [
+    0.0,
+    0.2736,
+    0.2188
+   ]
+  },
+  "paw_fl_L": {
+   "bone": "fl_paw_L",
+   "pos": [
+    0.1121,
+    0.0152,
+    0.198
+   ]
+  },
+  "paw_fl_R": {
+   "bone": "fl_paw_R",
+   "pos": [
+    -0.1121,
+    0.0152,
+    0.198
+   ]
+  },
+  "tail_tip": {
+   "bone": "tail3",
+   "pos": [
+    0.0,
+    0.6511,
+    -0.2962
+   ]
+  },
+  "wing_tip_L": {
+   "bone": "wing_out_L",
+   "pos": [
+    0.3319,
+    0.369,
+    0.0866
+   ]
+  },
+  "wing_tip_R": {
+   "bone": "wing_out_R",
+   "pos": [
+    -0.3319,
+    0.369,
+    0.0866
+   ]
+  }
+ },
+ "clips": {
+  "idle": 3.0,
+  "walk": 1.1,
+  "physical": 1.1,
+  "special": 1.1,
+  "strong_physical": 2.0,
+  "strong_special": 2.1,
+  "boost": 1.6,
+  "boost_guard": 1.5,
+  "status": 1.5,
+  "hit": 0.7,
+  "faint": 1.8,
+  "send_out": 0.9
+ }
+}
