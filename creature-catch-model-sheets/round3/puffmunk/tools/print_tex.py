@@ -1,4 +1,4 @@
-"""Changed copy (round 3, clovermouse / puffmunk; same file as clovermouse/tools): Opus round-2 print_tex.py (per-part "decals" and "paint_power"),
+"""Changed copy (round 3, puffmunk; clovermouse/tools has the same file minus "paint_solid"): Opus round-2 print_tex.py (per-part "decals" and "paint_power"),
 plus a new per-part "paint_shift": {"side": [du, dv]} that reads that picture shifted by du, dv pixels
 for this part only (used with parts.py "offset" when a picture draws a part higher than the others),
 and "paint_skip" also takes a camera name ("side+x", "side-x") or "side_far": a mirrored part is not

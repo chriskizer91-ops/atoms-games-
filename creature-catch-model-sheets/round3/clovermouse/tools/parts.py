@@ -6,7 +6,8 @@ an oval filling the rectangle from the two outlines but a thin oval lying along 
 diagonal, "thick" metres across. That makes a thin disc turned at an angle (a mouse ear facing
 forward and outward) that still matches both outlines. dir 1 runs from (low p, low q) to
 (high p, high q), e.g. for axis z an ear whose outer edge is further back; -1 the other diagonal.
-Also "offset": [dx, dy, dz] metres moves a finished part (when one picture draws it higher than the
+Also "droop": {"axis": "x", "dz": m, "w": m} bends a part's edges down like a hat brim (the clover
+hat sits on the round head with no gap), and "offset": [dx, dy, dz] metres moves a finished part (when one picture draws it higher than the
 other; pair it with print_tex.py "paint_shift" so that picture's paint still lands on it).
 
 A part has an outline in two views. It is sliced along one world axis ("axis"); at each
@@ -198,6 +199,17 @@ class Part:
         pe = np.zeros(3)
         ps[AX[self.p_axis]], ps[AX[self.q_axis]], ps[AX[self.axis]] = pc[0], qc[0], c[0]
         pe[AX[self.p_axis]], pe[AX[self.q_axis]], pe[AX[self.axis]] = pc[-1], qc[-1], c[-1]
+        dr = self.d.get("droop")
+        if dr:
+            # round-3 addition: bend the part's outer edges down like a hat brim sitting on a round
+            # head: z drops by dz * (distance from the centre line / w)^2 along the given axis
+            ax = AX[dr.get("axis", "x")]
+            c0 = float(dr.get("center", 0.0))
+            w = float(dr["w"])
+            dzd = float(dr["dz"])
+            P[..., 2] -= dzd * ((P[..., ax] - c0) / w) ** 2
+            ps[2] -= dzd * ((ps[ax] - c0) / w) ** 2
+            pe[2] -= dzd * ((pe[ax] - c0) / w) ** 2
         off = self.d.get("offset")
         if off:
             # round-3 addition: move the whole part (metres, traced side) after building it
