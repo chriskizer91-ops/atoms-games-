@@ -10,7 +10,14 @@ are picked by the move's type.
 
 1. **A setup file, `rig.json`, next to its `parts.json`.** The plan is the body type (`quad` or
    `round` so far). Example: `{"plan": "quad", "wings": true}`. Part roles are optional: the tool reads
-   them from the part names (legs, head, tail, wing, arm, foot, body...).
+   them from the part names (legs, head, tail, wing, arm, foot, body...). Other options:
+   - `"gait"`: how it walks.
+     - `quad`: `"trot"` (default), `"plod"` (slow, short steps, for turtles) or `"hop"` (frogs).
+     - `round`: `"waddle"` (default) or `"hop"` (a bunny hop, for creatures that sit up).
+   - `"mouth": "head"` (`round` only): the face is on a separate head, not on the body as with Mushling.
+     Effects then come from the head.
+   - **Tails on `round`:** a `round` creature with `tail` parts gets a three-bone tail that sways, wags and
+     flicks (Clovermouse, Puffmunk).
 2. **Run the tool:**
    `python -I pipeline/animate.py model.blend rig.json OUT.glb --albedo albedo.jpg --normal normal.png --emit emissive.jpg --preview PREVIEW_DIR --manifest manifest.json`
    1. It fits the body type's skeleton to where the parts actually are.
@@ -62,9 +69,9 @@ The game tags every one of its 172 creatures with a body type (`look.body`):
 | `serpent` | 19 | To do |
 | `ghost` | 13 | To do |
 | `biped` (two-legged) | 12 | To do |
-| `frog` | 7 | To do |
+| `frog` | 7 | Uses `quad` with `"gait": "hop"` (Embroak) |
 | `fish` | 6 | To do |
-| `turtle` | 4 | To do; can likely start from `quad` |
+| `turtle` | 4 | Uses `quad` with `"gait": "plod"` (Mossback) |
 
 **Adding a body type** is a one-time job:
 - a skeleton fit in `animate.py` (`fit_<plan>` and `weights_<plan>`)

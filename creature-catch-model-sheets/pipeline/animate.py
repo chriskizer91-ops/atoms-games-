@@ -4,7 +4,9 @@ usage: python3 -I animate.py model.blend rig.json OUT.glb [--albedo a.jpg] [--no
                              [--no-materials] [--preview DIR] [--manifest OUT.json]
 
 model.blend  the creature's game model with its parts as separate objects (build.py / route_small.sh)
-rig.json     {"plan": "quad" | "round", "wings": true|false, "roles": {"<part>": "<role>"}}  (roles optional)
+rig.json     {"plan": "quad" | "round", "wings": true|false, "roles": {"<part>": "<role>"},
+              "gait": "trot" | "plod" | "hop" (quad) or "waddle" | "hop" (round),
+              "mouth": "body" | "head" (round: where the face is)}  (all but plan optional)
 
 1. Every part gets a role from its name (legs, head, tail, wing, arm...), or from rig.json.
 2. The body type's skeleton is fitted to where those parts actually are.
@@ -162,7 +164,8 @@ def fit_quad(P, wings):
     return J, anchors, ftop, fit
 
 
-def fit_round(P):
+def fit_round(P, mouth_on="body"):
+    """Round and sitting creatures. mouth_on: "body" (Mushling's face is on its body) or "head"."""
     J = {"root": ((0, 0, 0), (0, 0, 0.2), None)}
     bv = np.concatenate([v for n, s, v in P["body"]])
     hv = np.concatenate([v for n, s, v in P["head"]])
@@ -184,14 +187,30 @@ def fit_round(P):
         c = v.mean(axis=0)
         top = float(v[:, 2].max())
         J[f"foot_{side}"] = ((float(c[0]), float(v[:, 1].max()), 0.6 * top), (float(c[0]), float(v[:, 1].min()), 0.4 * top), "root")
+    tail_pts = None
+    if P.get("tail"):  # a tail chain from the back of the body (Clovermouse, Puffmunk)
+        tv = np.concatenate([v for n, s, v in P["tail"]])
+        tail_pts = chain_points(tv, np.array((0.0, float(bv[:, 1].max()), bz0 + 0.25 * (bz1 - bz0))))
+        par = "body"
+        for k in range(3):
+            J[f"tail{k + 1}"] = (tuple(tail_pts[k]), tuple(tail_pts[k + 1]), par)
+            par = f"tail{k + 1}"
     H = float(max(hv[:, 2].max(), bz1))
-    face_z = bz1 - 0.25 * (bz1 - bz0)
-    anchors = {"mouth": ("body", (0, float(bv[:, 1].min()), face_z)), "chest": ("body", (0, float(bv[:, 1].min()), bz0 + 0.45 * (bz1 - bz0))),
+    if mouth_on == "head":
+        head_only = [v for n, s, v in P["head"] if base_name(n) == "head"] or [hv]
+        mv = np.concatenate(head_only)
+        mz0, mz1 = float(mv[:, 2].min()), float(mv[:, 2].max())
+        mouth = ("head", (0, float(mv[:, 1].min()), mz0 + 0.3 * (mz1 - mz0)))
+    else:
+        mouth = ("body", (0, float(bv[:, 1].min()), bz1 - 0.25 * (bz1 - bz0)))
+    anchors = {"mouth": mouth, "chest": ("body", (0, float(bv[:, 1].min()), bz0 + 0.45 * (bz1 - bz0))),
                "cap_top": ("head", (0, float(np.median(hv[:, 1])), float(hv[:, 2].max())))}
     for side in ("L", "R"):
         if f"foot_{side}" in J:
             anchors[f"paw_{side}"] = (f"foot_{side}", J[f"foot_{side}"][1])
-    return J, anchors, H, dict(arm_pts=arm_pts, bz0=bz0, bz1=bz1)
+    if tail_pts is not None:
+        anchors["tail_tip"] = ("tail3", tuple(tail_pts[-1]))
+    return J, anchors, H, dict(arm_pts=arm_pts, bz0=bz0, bz1=bz1, tail_pts=tail_pts)
 
 
 # ---------------------------------------------------------------- weights
@@ -253,6 +272,13 @@ def weights_round(name, role, side, v, fit):
         W["body"] = attach
     elif role == "foot":
         W[f"foot_{side}"] = np.ones(len(v))
+    elif role == "tail" and fit.get("tail_pts") is not None:
+        pts = fit["tail_pts"]
+        sw = seg_weights(v, pts)
+        base = smooth(np.linalg.norm(v - pts[0], axis=1) / (0.25 * np.linalg.norm(pts[1] - pts[0]) + 1e-6))
+        for k in range(3):
+            W[f"tail{k + 1}"] = sw[:, k] * (base if k == 0 else 1)
+        W["body"] = 1 - base
     else:
         W["body"] = np.ones(len(v))
     return W
@@ -283,6 +309,7 @@ def main():
     blend, rig_path, out = sys.argv[1:4]
     cfg = json.load(open(rig_path))
     plan, wings, roles = cfg["plan"], bool(cfg.get("wings")), cfg.get("roles", {})
+    gait = cfg.get("gait")  # quad: trot (default), plod, hop; round: waddle (default), hop
     bpy.ops.wm.open_mainfile(filepath=os.path.abspath(blend))
     for o in list(bpy.data.objects):
         if o.type != "MESH":
@@ -298,7 +325,7 @@ def main():
     if plan == "quad":
         J, anchors, scale, fit = fit_quad(P, wings)
     else:
-        J, anchors, scale, fit = fit_round(P)
+        J, anchors, scale, fit = fit_round(P, cfg.get("mouth", "body"))
     print("roles:", {n: info[n][0] + ("" if info[n][1] is None else "/" + info[n][1]) for n in info})
     arm_data = bpy.data.armatures.new("rig")
     arm = bpy.data.objects.new("rig", arm_data)
@@ -369,7 +396,7 @@ def main():
     rest = {b.name: b.matrix_local.to_quaternion() for b in arm_data.bones}
     for pb in arm.pose.bones:
         pb.rotation_mode = "QUATERNION"
-    clips = motions.clips(plan, wings)
+    clips = motions.clips(plan, wings, gait)
     for cname, (dur, keys) in clips.items():
         act = bpy.data.actions.new(cname)
         act.use_fake_user = True
@@ -403,7 +430,7 @@ def main():
                               export_def_bones=False, export_optimize_animation_size=True)
     if arg("--manifest"):
         to_gltf = lambda p: [round(float(p[0]), 4), round(float(p[2]), 4), round(float(-p[1]), 4)]  # noqa: E731
-        man = {"plan": plan, "wings": wings, "scale": round(float(scale), 4),
+        man = {"plan": plan, "wings": wings, "gait": gait, "scale": round(float(scale), 4),
                "anchors": {k: {"bone": b, "pos": to_gltf(p)} for k, (b, p) in anchors.items()},
                "clips": {c: d for c, (d, _) in clips.items()}}
         json.dump(man, open(arg("--manifest"), "w"), indent=1)

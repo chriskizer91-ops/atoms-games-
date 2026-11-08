@@ -51,9 +51,30 @@ def _wings(pose, wings):
     return {"wing_in_*": {"r": (rx, ry, rz)}, "wing_out_*": {"r": (0, ry2, 0)}}
 
 
+def _quad_hop(W):
+    """A frog's hop on the spot: crouch, push off with the back legs, front legs reach, land and squash."""
+    return (0.9, [
+        (0.0, {}),
+        (0.12, _merge({"root": {"l": (0, 0, -0.08), "s": (1.04, 1.04, 0.95)}, "fl_up_*": {"r": (5, 0, 0)},
+                       "fl_low_*": {"r": (15, 0, 0)}, "head": {"r": (6, 0, 0)}}, W("half"))),
+        (0.3, _merge({"root": {"l": (0, 0, 0.45), "s": (0.96, 0.96, 1.06)}, "spine": {"r": (-10, 0, 0)},
+                      "fl_up_*": {"r": (-30, 0, 0)}, "rl_up_*": {"r": (35, 0, 0)}, "rl_low_*": {"r": (-20, 0, 0)},
+                      "rl_paw_*": {"r": (20, 0, 0)}, "head": {"r": (-6, 0, 0)}}, _tail(-10), W("up"))),
+        (0.45, _merge({"root": {"l": (0, 0, 0.55)}, "spine": {"r": (-2, 0, 0)}, "fl_up_*": {"r": (-20, 0, 0)},
+                       "rl_up_*": {"r": (15, 0, 0)}}, W("half"))),
+        (0.62, _merge({"root": {"l": (0, 0, 0.02)}, "spine": {"r": (6, 0, 0)}, "fl_up_*": {"r": (-8, 0, 0)},
+                       "fl_low_*": {"r": (10, 0, 0)}, "head": {"r": (8, 0, 0)}}, _tail(8), W("down"))),
+        (0.72, _merge({"root": {"l": (0, 0, -0.06), "s": (1.07, 1.07, 0.9)}, "fl_low_*": {"r": (18, 0, 0)},
+                       "head": {"r": (6, 0, 0)}}, W("half"))),
+        (0.9, {}),
+    ])
+
+
 # ---------------------------------------------------------------- four-legged (quad)
-def quad(wings=False):
-    """Four-legged clips (Coalossus, Drizzlon, Lunarion...). Locations are per 1.0 of shoulder height."""
+def quad(wings=False, gait="trot"):
+    """Four-legged clips (Coalossus, Drizzlon, Lunarion...). Locations are per 1.0 of shoulder height.
+
+    gait: "trot" (default), "plod" (slow, short steps: turtles) or "hop" (frogs: the walk is a hop)."""
     W = lambda p: _wings(p, wings)  # noqa: E731
     M = {}
     M["idle"] = (3.0, [
@@ -64,24 +85,28 @@ def quad(wings=False):
         (2.25, _merge(_tail(0, 0, -9), {"head": {"r": (-1.5, 0, -1)}}, W(-6))),
         (3.0, _merge(W(4))),
     ])
-    keys = []
-    for i in range(9):
-        t = i / 8.0
-        k = {}
-        for leg, ph in (("fl", 0.0), ("rl", 0.5)):
-            for side, off in (("L", 0.0), ("R", 0.5)):
-                p = 2 * math.pi * (t + ph + off)
-                lift = max(0.0, math.cos(p))
-                k[f"{leg}_up_{side}"] = {"r": (-20 * math.sin(p), 0, 0)}
-                k[f"{leg}_low_{side}"] = {"r": (32 * lift, 0, 0)}
-                k[f"{leg}_paw_{side}"] = {"r": (-18 * lift, 0, 0)}
-        b = abs(math.sin(2 * math.pi * t * 2))
-        k = _merge(k, {"root": {"l": (0, 0, 0.03 * b)}, "spine": {"r": (0, 2.5 * math.sin(2 * math.pi * t), 0)},
-                       "hips": {"r": (0, -2.5 * math.sin(2 * math.pi * t), 0)},
-                       "head": {"r": (-2 * b, 0, 2 * math.sin(2 * math.pi * t))}},
-                   _tail(0, 0, 12 * math.sin(2 * math.pi * t)), W(8 * math.sin(2 * math.pi * t * 2)))
-        keys.append((t * 1.1, k))
-    M["walk"] = (1.1, keys)
+    if gait == "hop":
+        M["walk"] = _quad_hop(W)
+    else:
+        dur, swing, knee, paw, bob, sway = (1.8, 12, 20, 12, 0.012, 4) if gait == "plod" else (1.1, 20, 32, 18, 0.03, 2.5)
+        keys = []
+        for i in range(9):
+            t = i / 8.0
+            k = {}
+            for leg, ph in (("fl", 0.0), ("rl", 0.5)):
+                for side, off in (("L", 0.0), ("R", 0.5)):
+                    p = 2 * math.pi * (t + ph + off)
+                    lift = max(0.0, math.cos(p))
+                    k[f"{leg}_up_{side}"] = {"r": (-swing * math.sin(p), 0, 0)}
+                    k[f"{leg}_low_{side}"] = {"r": (knee * lift, 0, 0)}
+                    k[f"{leg}_paw_{side}"] = {"r": (-paw * lift, 0, 0)}
+            b = abs(math.sin(2 * math.pi * t * 2))
+            k = _merge(k, {"root": {"l": (0, 0, bob * b)}, "spine": {"r": (0, sway * math.sin(2 * math.pi * t), 0)},
+                           "hips": {"r": (0, -sway * math.sin(2 * math.pi * t), 0)},
+                           "head": {"r": (-2 * b, 0, 2 * math.sin(2 * math.pi * t))}},
+                       _tail(0, 0, 12 * math.sin(2 * math.pi * t)), W(8 * math.sin(2 * math.pi * t * 2)))
+            keys.append((t * dur, k))
+        M["walk"] = (dur, keys)
     M["physical"] = (1.1, [  # Tackle: crouch, lunge, back
         (0.0, {}),
         (0.3, _merge({"root": {"l": (0, 0.19, -0.07)}, "spine": {"r": (6, 0, 0)}, "head": {"r": (8, 0, 0)},
@@ -180,33 +205,47 @@ def quad(wings=False):
 
 
 # ---------------------------------------------------------------- round (Mushling and other blob-shaped creatures)
-def round_():
-    """Round-body clips: squash and stretch, hops, little arms and feet. Locations per 1.0 of height."""
+def round_(gait="waddle"):
+    """Round-body clips: squash and stretch, hops, little arms and feet. Locations per 1.0 of height.
+
+    Also used for creatures that sit up on their hind feet (Clovermouse, Puffmunk), which can have a
+    tail (tail1..3). gait: "waddle" (default) or "hop" (the walk is a bunny hop)."""
     M = {}
     M["idle"] = (2.4, [
         (0.0, {}),
-        (0.6, {"body": {"s": (1.03, 1.03, 0.96)}, "head": {"r": (0, 2.5, 0)}}),
+        (0.6, _merge({"body": {"s": (1.03, 1.03, 0.96)}, "head": {"r": (0, 2.5, 0)}}, _tail(0, 0, 8))),
         (1.2, {"body": {"s": (0.98, 0.98, 1.03)}, "head": {"r": (-2, 0, 0)}, "arm_up_*": {"r": (-4, 0, 0)}}),
-        (1.8, {"body": {"s": (1.03, 1.03, 0.96)}, "head": {"r": (0, -2.5, 0)}}),
+        (1.8, _merge({"body": {"s": (1.03, 1.03, 0.96)}, "head": {"r": (0, -2.5, 0)}}, _tail(0, 0, -8))),
         (2.4, {}),
     ])
-    keys = []
-    for i in range(9):  # a waddle: rock side to side, feet step in turn
-        t = i / 8.0
-        p = 2 * math.pi * t
-        s = math.sin(p)
-        keys.append((t * 0.9, {
-            "root": {"r": (0, 7 * s, 0), "l": (0, 0, 0.04 * abs(math.sin(2 * p)))},
-            "head": {"r": (0, -4 * s, 0)},
-            "foot_L": {"l": (0, -0.07 * max(0.0, math.cos(p)), 0.06 * max(0.0, math.cos(p)))},
-            "foot_R": {"l": (0, -0.07 * max(0.0, -math.cos(p)), 0.06 * max(0.0, -math.cos(p)))},
-            "arm_up_*": {"r": (8 * s, 0, 0)},
-        }))
-    M["walk"] = (0.9, keys)
+    if gait == "hop":
+        M["walk"] = (0.8, [  # a bunny hop on the spot: squash, spring up with the feet tucked, land
+            (0.0, {}),
+            (0.12, _merge({"root": {"s": (1.08, 1.08, 0.88)}, "head": {"r": (5, 0, 0)}}, _tail(-6))),
+            (0.3, _merge({"root": {"l": (0, 0, 0.3), "s": (0.94, 0.94, 1.08)}, "foot_*": {"l": (0, 0.03, 0.03)},
+                          "arm_up_*": {"r": (-15, 0, 0)}, "head": {"r": (-4, 0, 0)}}, _tail(10))),
+            (0.45, _merge({"root": {"l": (0, 0, 0.34)}, "foot_*": {"l": (0, 0.02, 0.02)}}, _tail(6))),
+            (0.62, _merge({"root": {"l": (0, 0, 0.0), "s": (1.1, 1.1, 0.86)}, "head": {"r": (6, 0, 0)}}, _tail(-8))),
+            (0.8, {}),
+        ])
+    else:
+        keys = []
+        for i in range(9):  # a waddle: rock side to side, feet step in turn
+            t = i / 8.0
+            p = 2 * math.pi * t
+            s = math.sin(p)
+            keys.append((t * 0.9, _merge({
+                "root": {"r": (0, 7 * s, 0), "l": (0, 0, 0.04 * abs(math.sin(2 * p)))},
+                "head": {"r": (0, -4 * s, 0)},
+                "foot_L": {"l": (0, -0.07 * max(0.0, math.cos(p)), 0.06 * max(0.0, math.cos(p)))},
+                "foot_R": {"l": (0, -0.07 * max(0.0, -math.cos(p)), 0.06 * max(0.0, -math.cos(p)))},
+                "arm_up_*": {"r": (8 * s, 0, 0)},
+            }, _tail(0, 0, 10 * s))))
+        M["walk"] = (0.9, keys)
     M["physical"] = (1.1, [  # crouch, hop forward into the foe, bounce back
         (0.0, {}),
         (0.25, {"root": {"s": (1.12, 1.12, 0.82)}, "head": {"r": (8, 0, 0)}}),
-        (0.42, {"root": {"l": (0, -0.55, 0.28), "s": (0.92, 0.92, 1.12), "r": (-12, 0, 0)}, "arm_up_*": {"r": (-30, 0, 0)}}),
+        (0.42, _merge({"root": {"l": (0, -0.55, 0.28), "s": (0.92, 0.92, 1.12), "r": (-12, 0, 0)}, "arm_up_*": {"r": (-30, 0, 0)}}, _tail(12))),
         (0.55, {"root": {"l": (0, -0.7, 0.0), "s": (1.1, 1.1, 0.88)}, "head": {"r": (10, 0, 0)}}),
         (0.75, {"root": {"l": (0, -0.3, 0.12)}}),
         (1.1, {}),
@@ -239,9 +278,9 @@ def round_():
     ])
     M["boost"] = (1.4, [  # arms up, stretch tall, bounce
         (0.0, {}),
-        (0.3, {"root": {"s": (0.94, 0.94, 1.12), "l": (0, 0, 0.12)}, "arm_up_*": {"r": (-110, 0, 0)}, "head": {"r": (-8, 0, 0)}}),
-        (0.55, {"root": {"s": (1.08, 1.08, 0.9)}, "arm_up_*": {"r": (-100, 0, 0)}}),
-        (0.8, {"root": {"s": (0.96, 0.96, 1.08), "l": (0, 0, 0.08)}, "arm_up_*": {"r": (-110, 0, 0)}}),
+        (0.3, _merge({"root": {"s": (0.94, 0.94, 1.12), "l": (0, 0, 0.12)}, "arm_up_*": {"r": (-110, 0, 0)}, "head": {"r": (-8, 0, 0)}}, _tail(0, 0, 14))),
+        (0.55, _merge({"root": {"s": (1.08, 1.08, 0.9)}, "arm_up_*": {"r": (-100, 0, 0)}}, _tail(0, 0, -14))),
+        (0.8, _merge({"root": {"s": (0.96, 0.96, 1.08), "l": (0, 0, 0.08)}, "arm_up_*": {"r": (-110, 0, 0)}}, _tail(0, 0, 10))),
         (1.4, {}),
     ])
     M["boost_guard"] = (1.4, [  # duck under the cap, hold
@@ -253,14 +292,14 @@ def round_():
     keys = [(0.0, {})]
     for i in range(8):  # status on the foe: wiggle, then lean in
         sgn = 1 if i % 2 else -1
-        keys.append((0.15 + i * 0.09, {"root": {"r": (0, 9 * sgn, 0)}, "head": {"r": (0, 5 * sgn, 0)}}))
+        keys.append((0.15 + i * 0.09, _merge({"root": {"r": (0, 9 * sgn, 0)}, "head": {"r": (0, 5 * sgn, 0)}}, _tail(0, 0, 12 * sgn))))
     keys += [(1.0, {"root": {"r": (-10, 0, 0), "l": (0, -0.06, 0)}, "head": {"r": (-8, 0, 0)}, "arm_up_*": {"r": (-50, 0, 0)}}), (1.4, {})]
     M["status"] = (1.4, keys)
     M["hit"] = (0.7, [
         (0.0, {}),
         (0.08, {"root": {"l": (0, 0.14, 0.02), "s": (0.9, 0.9, 1.1), "r": (10, 0, 0)}}),
-        (0.18, {"root": {"l": (0.05, 0.1, 0), "s": (1.08, 1.08, 0.92)}}),
-        (0.28, {"root": {"l": (-0.05, 0.08, 0)}}),
+        (0.18, _merge({"root": {"l": (0.05, 0.1, 0), "s": (1.08, 1.08, 0.92)}}, _tail(0, 0, 12))),
+        (0.28, _merge({"root": {"l": (-0.05, 0.08, 0)}}, _tail(0, 0, -12))),
         (0.38, {"root": {"l": (0.04, 0.05, 0)}}),
         (0.7, {}),
     ])
@@ -268,7 +307,7 @@ def round_():
         (0.0, {}),
         (0.35, {"root": {"s": (1.1, 1.1, 0.85)}, "head": {"r": (12, 0, 0)}}),
         (0.9, {"root": {"r": (75, 0, 10), "l": (0, 0.18, 0.05)}, "head": {"r": (10, 0, 0)}, "arm_up_*": {"r": (-40, 0, 0)}}),
-        (1.6, {"root": {"r": (82, 0, 12), "l": (0, 0.22, 0.02)}, "head": {"r": (14, 0, 0)}, "arm_up_*": {"r": (-50, 0, 0)}}),
+        (1.6, _merge({"root": {"r": (82, 0, 12), "l": (0, 0.22, 0.02)}, "head": {"r": (14, 0, 0)}, "arm_up_*": {"r": (-50, 0, 0)}}, _tail(-10, 0, 10))),
     ])
     M["send_out"] = (0.9, [
         (0.0, {"root": {"s": (0.02, 0.02, 0.02), "l": (0, 0, 0.7)}}),
@@ -283,10 +322,10 @@ def round_():
 PLANS = {"quad": quad, "round": round_}
 
 
-def clips(plan, wings=False):
+def clips(plan, wings=False, gait=None):
     if plan == "quad":
-        return quad(wings)
-    return PLANS[plan]()
+        return quad(wings, gait or "trot")
+    return round_(gait or "waddle") if plan == "round" else PLANS[plan]()
 
 
 def move_clip(move):
