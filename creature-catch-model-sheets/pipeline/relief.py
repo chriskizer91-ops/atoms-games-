@@ -1,6 +1,9 @@
 """Surface relief for the big model, read from the printed paint (numpy only).
 
-usage: python3 -I relief.py grid.npz atlas.json albedo.png parts.json OUT.npz [--preview relief.png]
+usage: python3 -I relief.py grid.npz atlas.json albedo.png parts.json OUT.npz [--preview relief.png] [--height-out height.npy]
+
+--height-out also saves the height map itself at texture resolution (lightly smoothed), for
+normal_from_relief.py: the small-model-only route turns it straight into a normal map.
 
 The pictures already show where the rock plates, lava cracks and fur tufts are. This turns
 the printed texture into a height map per part and samples it at the big model's vertices:
@@ -79,6 +82,7 @@ def main():
     size = tex.shape[0]
     tpm = atlas["texels_per_m"] * size / atlas["size"]
     full = np.zeros(tex.shape[:2], np.float32)
+    fine = np.zeros(tex.shape[:2], np.float32)
     res = {}
     for nm, g in grids.items():
         base = nm[:-2] if nm.endswith(("_L", "_R")) else nm
@@ -94,6 +98,7 @@ def main():
         spacing = circ / K * tpm
         hs = ndimage.gaussian_filter(h, max(spacing * 0.5, 0.5))
         full[r0:r1, c0:c1] = hs
+        fine[r0:r1, c0:c1] = ndimage.gaussian_filter(h, 0.8)
         # sample at each ring vertex (i, j)
         uu = u0 + (np.arange(K) / K) * (u1 - u0)
         vv = g["vr"]
@@ -111,6 +116,8 @@ def main():
         res[nm] = hv.astype(np.float64)
         print(f"  {nm:18s} {kind:5s} relief {hv.min() * 100:+.1f} .. {hv.max() * 100:+.1f} cm")
     np.savez_compressed(out, **res)
+    if arg("--height-out"):
+        np.save(arg("--height-out"), fine)
     prev = arg("--preview")
     if prev:
         v = np.clip((full + 0.03) / 0.06, 0, 1)
