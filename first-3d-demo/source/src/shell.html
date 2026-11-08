@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1b1626">
+<title>Creature Catch 3D</title>
+<style>
+/*FONT*/
+html, body { margin: 0; height: 100%; background: #1b1626; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+body { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Pixelify', monospace; box-sizing: border-box;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#frame { position: relative; flex: none; background: #000; box-shadow: 0 0 0 3px #2a2440, 0 10px 40px rgba(0,0,0,.5); border-radius: 4px; overflow: hidden; }
+#frame canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+#ui { pointer-events: none; }
+/* the touch pad: two halves (the d-pad and L; A, B, MENU and R): under the screen upright, either side of it sideways */
+#pad { display: none; width: 100%; max-width: 520px; height: 210px; position: relative; flex: none; margin-top: 8px; }
+body.touch #pad { display: block; }
+body.side #pad { position: fixed; left: 0; top: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; margin: 0; }
+body.side .half { position: fixed; }
+.half { position: absolute; top: 0; width: 180px; height: 210px; transform-origin: 0 0; pointer-events: auto; touch-action: none; }
+#padL { left: 0; } #padR { right: 0; }
+.btn { position: absolute; border-radius: 50%; background: #3a3150; color: #e8e0f8; font: 18px 'Pixelify', monospace; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 #15111f; touch-action: none; }
+.btn.on { background: #6e5aa0; transform: translateY(2px); box-shadow: 0 2px 0 #15111f; }
+.dir { width: 54px; height: 54px; border-radius: 10px; }
+#bUp { left: 63px; top: 40px; } #bDown { left: 63px; top: 148px; } #bLeft { left: 9px; top: 94px; } #bRight { left: 117px; top: 94px; }
+#bA { right: 26px; top: 70px; width: 70px; height: 70px; background: #7a3a6e; }
+#bB { right: 108px; top: 110px; width: 60px; height: 60px; background: #3a4a7a; }
+#bStart { right: 40px; top: 172px; width: 84px; height: 30px; border-radius: 15px; font-size: 14px; }
+#bA.on { background: #a44e94; } #bB.on { background: #5468a8; }
+.shoulder { top: 4px; width: 92px; height: 30px; border-radius: 15px 15px 6px 6px; font-size: 14px; background: #4a4060; }
+#bL { left: 14px; } #bR { right: 14px; }
+</style>
+</head>
+<body>
+<div id="frame"><canvas id="gl"></canvas><canvas id="ui" width="240" height="160"></canvas></div>
+<div id="pad">
+  <div class="half" id="padL">
+    <div class="btn shoulder" id="bL">L</div>
+    <div class="btn dir" id="bUp">&#9650;</div><div class="btn dir" id="bDown">&#9660;</div>
+    <div class="btn dir" id="bLeft">&#9664;</div><div class="btn dir" id="bRight">&#9654;</div>
+  </div>
+  <div class="half" id="padR">
+    <div class="btn shoulder" id="bR">R</div>
+    <div class="btn" id="bB">B</div><div class="btn" id="bA">A</div><div class="btn" id="bStart">MENU</div>
+  </div>
+</div>
+<script>/*THREE*/</script>
+<script>
+/* Creature Catch 3D: a demo of the opening of Creature Catch, in the 3D style of What the Map Forgot in 3D.
+   Built from cc3d/src by tools/build.py. Font: Pixelify Sans, SIL Open Font License 1.1. three.js r128, MIT licence. */
+/*CODE*/
+</script>
+</body>
+</html>

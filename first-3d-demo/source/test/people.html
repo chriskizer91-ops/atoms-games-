@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset=utf8><style>html,body{margin:0;background:#9fc6e8}canvas{display:block}</style></head><body>
+<script src="../vendor/three.min.js"></script><script src="../src/person.js"></script><script src="../src/looks.js"></script>
+<script>
+const q = new URLSearchParams(location.search), names = (q.get('who') || 'player-a,player-b,juniper,willow').split(','), yaw = +(q.get('yaw') || 0), zoom = +(q.get('zoom') || 1);
+const W = 1400, H = 700, r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); r.localClippingEnabled = true; r.shadowMap.enabled = true; document.body.appendChild(r.domElement);
+r.setClearColor('#a8cce8');
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, W / H, .1, 100);
+scene.add(new THREE.AmbientLight('#ffffff', .36), new THREE.HemisphereLight('#e4eeff', '#6a7a4a', .34));
+const sun = new THREE.DirectionalLight('#fff0d8', .68); sun.position.set(-3, 6, 5); sun.castShadow = true; scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshToonMaterial({ color: '#6cbc48' })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const models = names.map((n, i) => { const L = LOOKS[n]; const m = makePerson({ look: L.look, ready: L.ready }); m.root.scale.setScalar(L.height); m.root.position.x = (i - (names.length - 1) / 2) * .62; m.root.rotation.y = yaw; scene.add(m.root, m.fx); return m; });
+const span = names.length * .62;
+cam.position.set(+(q.get('cx') || 0), q.get('cy') ? +q.get('cy') : .75 + .3 * zoom, q.get('cz') ? +q.get('cz') : (span * 1.25 + 1) / zoom); cam.lookAt(0, q.get('ly') ? +q.get('ly') : .55, 0);
+let t = 0; const act = q.get('act');
+function frame() { t += 1 / 60; models.forEach((m, i) => m.animate(0, 0, t, 1 / 60)); }
+setTimeout(() => { const t0 = performance.now(); for (let i = 0; i < 60; i++) frame();
+if (act) { models.forEach((m) => m.play(act, true)); const k = +(q.get('at') || .4); for (let i = 0; i < 60 * k; i++) frame(); }
+r.render(scene, cam); console.log('[t] done ' + Math.round(performance.now() - t0) + 'ms'); window.DONE = true; }, 50);
+</script></body></html>

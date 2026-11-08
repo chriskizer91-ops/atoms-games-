@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset=utf8><style>html,body{margin:0;background:#ff00ff}canvas{display:block}</style></head><body>
+<script src="../vendor/three.min.js"></script><script src="../src/kit.js"></script><script src="../src/person.js"></script><script src="../src/looks.js"></script><script src="../src/creatures.js"></script><script>for (const f of (new URLSearchParams(location.search).get('lines') || '').split(',').filter(Boolean)) document.write('<script src="../src/lines/' + f + '.js"><\/script>');</script>
+<script>
+// one model turned to the sheet's views, side by side (front, front 3/4, side, back 3/4, back)
+const q = new URLSearchParams(location.search), who = q.get('who'), person = !!LOOKS[who], yaws = (q.get('yaws') || '0,-0.7,-1.5708,2.4,3.1416').split(',').map(Number);
+const N = yaws.length, CW = 360, CH = +(q.get('h') || 420), W = CW * N, r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, CH); r.shadowMap.enabled = false; r.localClippingEnabled = true; document.body.appendChild(r.domElement);
+r.setClearColor('#ff00ff'); r.setScissorTest(true);
+const scene = new THREE.Scene();
+scene.add(new THREE.AmbientLight('#ffffff', .42), new THREE.HemisphereLight('#e4eeff', '#8a8a6a', .36));
+const sun = new THREE.DirectionalLight('#fff0d8', .62); sun.position.set(-2, 5, 6); scene.add(sun);
+let m, h;
+if (person) { const L = LOOKS[who]; m = makePerson({ look: L.look, ready: L.ready }); m.root.scale.setScalar(L.height); h = 1.15 * L.height + (L.look.style === 'spiky' ? .12 : L.look.style === 'ranger' ? .2 : 0); }
+else { m = makeCreature(who); m.update(0, 0, 0); const bb = new THREE.Box3().setFromObject(m.root), sz = bb.getSize(new THREE.Vector3()); h = Math.max(sz.y * 1.15, Math.max(sz.x, sz.z) * 1.05 * 420 / 360); }
+scene.add(m.root);
+const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, .01, 50);
+setTimeout(() => {
+  let t = 0; for (let i = 0; i < 50; i++) { t += 1 / 60; if (person) m.animate(0, 0, t, 1 / 60); else m.update(t, 1 / 60, 0); }
+  const half = h * .62, ar = CW / CH;
+  yaws.forEach((y, i) => {
+    m.root.rotation.y = y; m.root.updateMatrixWorld(true);
+    cam.left = -half * ar; cam.right = half * ar; cam.top = half; cam.bottom = -half; cam.position.set(0, h * .45 + (q.get('up') ? +q.get('up') : .0), 5); cam.lookAt(0, h * .45, 0); cam.updateProjectionMatrix();
+    r.setScissor(i * CW, 0, CW, CH); r.setViewport(i * CW, 0, CW, CH); r.render(scene, cam);
+  });
+  console.log('[t] done');
+}, 50);
+</script></body></html>
