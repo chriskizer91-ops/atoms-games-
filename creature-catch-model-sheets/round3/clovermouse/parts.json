@@ -423,7 +423,7 @@
    "n": 2.0,
    "relief": "fur_soft",
    "smooth": 8,
-   "lo_weight": 1.5,
+   "lo_weight": 2.0,
    "round_ends": {
     "start": 0.02,
     "end": 0.045
@@ -717,7 +717,9 @@
    "n": 2.0,
    "relief": "none",
    "smooth": 2,
-   "lo_weight": 2.0,
+   "lo_weight": 4.0,
+   "k_scale": 1.8,
+   "n_scale": 1.6,
    "remap": true,
    "round_ends": {
     "start": 0.006,
@@ -811,7 +813,7 @@
    "n": 2.0,
    "relief": "fur_soft",
    "smooth": 4,
-   "lo_weight": 1.5,
+   "lo_weight": 1.0,
    "slab": {
     "thick": 0.022,
     "dir": 1

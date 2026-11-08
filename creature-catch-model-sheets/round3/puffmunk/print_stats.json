@@ -1,0 +1,28 @@
+{
+ "texels": 3301819,
+ "seen_by_a_picture": 71.4,
+ "painted_by": {
+  "front": 550946,
+  "back": 422029,
+  "side+x": 578749,
+  "side-x": 578064,
+  "top": 334229
+ },
+ "parts": [
+  "body",
+  "head",
+  "muzzle",
+  "head_cheek_L",
+  "head_cheek_R",
+  "head_cheek_berry_L",
+  "head_cheek_berry_R",
+  "ear_L",
+  "ear_R",
+  "head_berry",
+  "arm_L",
+  "arm_R",
+  "foot_L",
+  "foot_R",
+  "tail"
+ ]
+}

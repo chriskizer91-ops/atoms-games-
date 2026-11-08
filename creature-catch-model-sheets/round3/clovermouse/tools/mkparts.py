@@ -10,16 +10,16 @@ parts.append(dict(name="body_haunch", kind="m", axis="z", n=2.0, relief="fur_sof
     round_ends={"start": 0.01, "end": 0.02}, paint_skip=["top"],
     views={"front": P("760,850 830,845 880,870 915,910 935,960 942,1010 940,1060 928,1100 900,1135 850,1155 780,1160 740,1140 730,1080 735,1000 745,920"),
            "side": P("560,840 650,830 730,845 800,880 845,930 862,990 858,1050 835,1100 790,1140 720,1165 620,1170 520,1160 450,1130 420,1080 418,1020 430,960 465,900 510,860")}))
-parts.append(dict(name="head", kind="c", axis="z", n=2.0, relief="fur_soft", smooth=8, lo_weight=1.5,
+parts.append(dict(name="head", kind="c", axis="z", n=2.0, relief="fur_soft", smooth=8, lo_weight=2.0,
     round_ends={"start": 0.02, "end": 0.045},
     paint_skip=["top"],
     views={"front": P("626,190 700,193 765,205 815,228 850,262 874,305 889,355 898,410 905,470 912,520 914,550 906,590 888,625 860,652 815,676 740,694 626,702 512,694 437,676 392,652 364,625 346,590 338,550 340,520 347,470 354,410 363,355 378,305 402,262 437,228 487,205 552,193"),
            "side": P("345,240 400,218 480,204 580,198 660,200 725,210 790,235 840,275 870,325 882,385 876,445 860,500 838,548 810,592 772,632 720,665 640,684 540,690 450,684 380,666 330,642 298,622 273,598 256,572 245,545 243,515 249,482 260,455 268,430 275,400 281,370 288,342 297,315 308,290 320,265 332,250")}))
-parts.append(dict(name="muzzle", kind="c", axis="z", n=2.0, relief="none", smooth=2, lo_weight=2.0, remap=True,
+parts.append(dict(name="muzzle", kind="c", axis="z", n=2.0, relief="none", smooth=2, lo_weight=4.0, k_scale=1.8, n_scale=1.6, remap=True,
     round_ends={"start": 0.006, "end": 0.006}, paint_skip=["top", "back"], paint_shift={"side": [0, -50]},
     views={"front": P("600,520 628,516 658,520 667,540 655,561 628,568 602,561 590,540"),
            "side": P("212,500 220,480 240,471 262,474 272,500 266,527 240,532 220,525")}))
-parts.append(dict(name="ear", kind="m", axis="z", n=2.0, relief="fur_soft", smooth=4, lo_weight=1.5,
+parts.append(dict(name="ear", kind="m", axis="z", n=2.0, relief="fur_soft", smooth=4, lo_weight=1.0,
     slab={"thick": 0.022, "dir": 1}, remap=True, round_ends={"start": 0.01, "end": 0.02},
     paint_skip=["top", "side_far"], paint_box_skip={"front": [[838, 120, 885, 210]], "back": [[360, 90, 405, 122]]},
     views={"front": P("865,170 900,155 950,152 985,165 1010,185 1040,215 1060,250 1075,290 1083,330 1085,365 1080,400 1068,440 1050,470 1025,500 995,522 955,538 915,545 885,540 865,520 858,470 855,400 855,330 857,250 860,200"),

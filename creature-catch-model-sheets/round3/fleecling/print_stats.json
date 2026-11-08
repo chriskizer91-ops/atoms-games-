@@ -1,12 +1,12 @@
 {
- "texels": 2784192,
- "seen_by_a_picture": 67.3,
+ "texels": 2735785,
+ "seen_by_a_picture": 61.6,
  "painted_by": {
-  "front": 368292,
-  "back": 344539,
-  "side+x": 391967,
-  "side-x": 391994,
-  "top": 391020
+  "front": 330114,
+  "back": 356765,
+  "side+x": 333271,
+  "side-x": 333564,
+  "top": 342547
  },
  "parts": [
   "head",
