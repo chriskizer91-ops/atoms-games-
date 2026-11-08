@@ -1,7 +1,7 @@
 """Rig and animate any creature from its traced parts (Blender). The animation system's main tool.
 
 usage: python3 -I animate.py model.blend rig.json OUT.glb [--albedo a.jpg] [--normal n.png] [--emit e.jpg]
-                             [--no-materials] [--preview DIR] [--manifest OUT.json]
+                             [--no-materials] [--preview DIR [--preview-clips walk,hit]] [--manifest OUT.json]
 
 model.blend  the creature's game model with its parts as separate objects (build.py / route_small.sh)
 rig.json     {"plan": "quad" | "round", "wings": true|false, "roles": {"<part>": "<role>"},
@@ -419,7 +419,8 @@ def main():
     arm.animation_data.action = bpy.data.actions["idle"]
     bpy.context.scene.render.fps = FPS
     if arg("--preview"):
-        preview(bpy, arm, list(clips.items()), arg("--preview"), mesh)
+        only = arg("--preview-clips")  # e.g. walk,boost: render just these clips
+        preview(bpy, arm, [kv for kv in clips.items() if not only or kv[0] in only.split(",")], arg("--preview"), mesh)
     bpy.ops.object.select_all(action="DESELECT")
     arm.select_set(True)
     mesh.select_set(True)
