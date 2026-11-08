@@ -19,6 +19,12 @@ def main():
 
     blend, out = sys.argv[1], sys.argv[2]
     bpy.ops.wm.open_mainfile(filepath=os.path.abspath(blend))
+    only = arg("--only")
+    if only:  # keep only parts whose names start with one of these (comma list)
+        keep = tuple(only.split(","))
+        for o in list(bpy.data.objects):
+            if o.type == "MESH" and not o.name.startswith(keep):
+                bpy.data.objects.remove(o, do_unlink=True)
     obs = [o for o in bpy.data.objects if o.type == "MESH"]
     for o in list(bpy.data.objects):
         if o.type != "MESH":
@@ -60,7 +66,8 @@ def main():
     ob = bpy.context.view_layer.objects.active
     ob.name = os.path.splitext(os.path.basename(out))[0]
     bpy.ops.export_scene.gltf(filepath=os.path.abspath(out), export_format="GLB", export_image_format="AUTO",
-                              export_tangents=bool(arg("--normal")), export_yup=True, export_apply=True)
+                              export_tangents=bool(arg("--normal")), export_yup=True, export_apply=True,
+                              export_materials="NONE" if "--no-materials" in sys.argv else "EXPORT")
     tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
     print(f"exported {out}: {tris} triangles, {os.path.getsize(out) / 1e6:.1f} MB")
 
