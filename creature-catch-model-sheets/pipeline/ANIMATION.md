@@ -16,6 +16,9 @@ are picked by the move's type.
      - `round`: `"waddle"` (default) or `"hop"` (a bunny hop, for creatures that sit up).
    - `"mouth": "head"` (`round` only): the face is on a separate head, not on the body as with Mushling.
      Effects then come from the head.
+   - `"anchors": {"ember": "head_ember"}`: extra effect points at the centre of a part. The tool ties
+     each one to the bone that part moves with. Embroak's ember glow comes from its tongue-tip bead this
+     way.
    - **Tails on `round`:** a `round` creature with `tail` parts gets a three-bone tail that sways, wags and
      flicks (Clovermouse, Puffmunk).
 2. **Run the tool:**

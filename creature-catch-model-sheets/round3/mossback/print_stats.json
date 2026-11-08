@@ -1,0 +1,23 @@
+{
+ "texels": 2976397,
+ "seen_by_a_picture": 49.1,
+ "painted_by": {
+  "front": 238228,
+  "back": 275339,
+  "side+x": 346111,
+  "side-x": 343755,
+  "top": 272119
+ },
+ "parts": [
+  "body_shell",
+  "body_belly",
+  "body_bush",
+  "body_flower",
+  "head",
+  "front_leg_L",
+  "front_leg_R",
+  "rear_leg_L",
+  "rear_leg_R",
+  "tail"
+ ]
+}

@@ -6,7 +6,8 @@ usage: python3 -I animate.py model.blend rig.json OUT.glb [--albedo a.jpg] [--no
 model.blend  the creature's game model with its parts as separate objects (build.py / route_small.sh)
 rig.json     {"plan": "quad" | "round", "wings": true|false, "roles": {"<part>": "<role>"},
               "gait": "trot" | "plod" | "hop" (quad) or "waddle" | "hop" (round),
-              "mouth": "body" | "head" (round: where the face is)}  (all but plan optional)
+              "mouth": "body" | "head" (round: where the face is),
+              "anchors": {"<name>": "<part>"} (extra effect points at a part's centre)}  (all but plan optional)
 
 1. Every part gets a role from its name (legs, head, tail, wing, arm...), or from rig.json.
 2. The body type's skeleton is fitted to where those parts actually are.
@@ -342,10 +343,12 @@ def main():
         if par:
             arm_data.edit_bones[name].parent = arm_data.edit_bones[par]
     bpy.ops.object.mode_set(mode="OBJECT")
+    main_bone = {}
     for n, o in parts.items():
         r, s, v = info[n]
         W = (weights_quad if plan == "quad" else weights_round)(n, r, s, v, fit)
         tot = sum(W.values())
+        main_bone[n] = max((b for b in W if b in J), key=lambda b: float(np.mean(W[b] / np.maximum(tot, 1e-6))), default="root")
         for bone, w in W.items():
             if bone not in J:
                 continue
@@ -357,6 +360,9 @@ def main():
                     vg.add(np.where(q == level)[0].tolist(), float(level), "REPLACE")
         o.modifiers.new("rig", "ARMATURE").object = arm
         o.parent = arm
+    for k, part in cfg.get("anchors", {}).items():  # extra effect points at a part's centre, e.g. {"ember": "head_ember"}
+        if part in info:
+            anchors[k] = (main_bone[part], tuple(info[part][2].mean(axis=0)))
     # materials
     if "--no-materials" not in sys.argv and arg("--albedo"):
         m = bpy.data.materials.new("creature")

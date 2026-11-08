@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # round 3 copy of round 2 opus's route_small.sh (itself a copy of pipeline/route_small.sh). Uses this
 # folder's tools where present: board.py (three-quarter views framed by size), print_tex.py (view_warp,
-# paint_ellipse_skip), build.py + parts.py (n_scale, k_scale), emissive.py (black unless a part asks to glow).
+# paint_ellipse_skip), build.py + parts.py (n_scale, k_scale), emissive.py (black unless a part asks to glow),
+# relief.py (relief kind "grain", per-part relief_gain).
 # usage: PY=/path/to/venv/bin/python bash route_small.sh PARTS.json VIEWS.json OUTDIR [TRIANGLES=7000] [NAME]
 set -euo pipefail
 T="$(cd "$(dirname "$0")" && pwd)"

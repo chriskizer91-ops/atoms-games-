@@ -1,0 +1,30 @@
+{
+ "texels": 3213247,
+ "seen_by_a_picture": 76.2,
+ "painted_by": {
+  "front": 545079,
+  "back": 733994,
+  "side+x": 568443,
+  "side-x": 567557,
+  "top": 84242
+ },
+ "parts": [
+  "body",
+  "body_haunch_L",
+  "body_haunch_R",
+  "head",
+  "muzzle",
+  "ear_L",
+  "ear_R",
+  "cap_clover_L",
+  "cap_clover_R",
+  "arm_L",
+  "arm_R",
+  "foot_L",
+  "foot_R",
+  "tail_a",
+  "tail_b",
+  "tail_c",
+  "tail_d"
+ ]
+}
