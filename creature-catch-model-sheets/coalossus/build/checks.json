@@ -28,24 +28,24 @@
   "triangles": 699772,
   "views": {
    "front": {
-    "overlap": 95.6,
-    "missing": 9682,
-    "extra": 16171
+    "overlap": 95.7,
+    "missing": 9698,
+    "extra": 15974
    },
    "side": {
     "overlap": 97.3,
-    "missing": 8300,
-    "extra": 12849
+    "missing": 8239,
+    "extra": 13004
    },
    "back": {
     "overlap": 92.2,
-    "missing": 11155,
-    "extra": 35793
+    "missing": 11219,
+    "extra": 35629
    },
    "top": {
     "overlap": 91.9,
-    "missing": 1526,
-    "extra": 62554
+    "missing": 1325,
+    "extra": 62708
    }
   }
  },
@@ -53,24 +53,24 @@
   "triangles": 699772,
   "views": {
    "front": {
-    "overlap": 95.6,
-    "missing": 9682,
-    "extra": 16171
+    "overlap": 95.7,
+    "missing": 9698,
+    "extra": 15974
    },
    "side": {
     "overlap": 97.3,
-    "missing": 8300,
-    "extra": 12849
+    "missing": 8239,
+    "extra": 13004
    },
    "back": {
     "overlap": 92.2,
-    "missing": 11155,
-    "extra": 35793
+    "missing": 11219,
+    "extra": 35629
    },
    "top": {
     "overlap": 91.9,
-    "missing": 1526,
-    "extra": 62554
+    "missing": 1325,
+    "extra": 62708
    }
   }
  },
@@ -101,13 +101,13 @@
  },
  "print": {
   "texels": 11049396,
-  "seen_by_a_picture": 45.2,
+  "seen_by_a_picture": 45.1,
   "painted_by": {
-   "front": 789198,
+   "front": 795061,
    "back": 1007765,
-   "side+x": 1183378,
-   "side-x": 1183878,
-   "top": 828465
+   "side+x": 1187416,
+   "side-x": 1187779,
+   "top": 806341
   }
  }
 }

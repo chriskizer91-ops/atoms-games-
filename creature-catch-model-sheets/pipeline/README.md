@@ -16,7 +16,9 @@ numpy, scipy and Pillow. `../coalossus/rebuild.sh` runs them all in order.
 | `relief.py` | Reads plates, cracks and fur from the printed paint and turns them into surface relief for the big model |
 | `emissive.py` | Glow map: keeps only the lava-bright colours |
 | `bake.py` | Bakes colour and a normal map from the big model onto the small one, part by part |
-| `export.py` | Game file (GLB): one mesh, one material, with colour, normal and glow textures |
+| `export.py` | Game file (GLB) without a skeleton: one mesh, one material, with colour, normal and glow textures |
+| `repair_view.py` | Print-only repair of a picture from itself (e.g. paints the side view's eye over with fur) |
+| `rig.py` | Skeleton, skin weights and the battle animations; exports the game file (GLB) with them |
 
 ## Parts file options (`parts.json`)
 
@@ -31,6 +33,9 @@ numpy, scipy and Pillow. `../coalossus/rebuild.sh` runs them all in order.
 | `round_ends` | `{"start": m, "end": m}`: domed ends instead of flat caps |
 | `paint_skip` | Pictures not to print on this part (e.g. `["top"]` for the legs) |
 | `paint_box_skip` | Per picture, boxes (picture pixels) not to print from |
+| `cap_fill` | `{"start": [centre, rim]}`: a radial colour gradient for an end cap no picture sees (the paw soles) |
 | `relief` | `rock`, `fur`, `vent` or `none` (defaults by part name) |
 | `lo_weight` | Gives this part more (>1) or fewer (<1) of the small model's triangles |
-| `j` | Joint the part will move with (for rigging later) |
+| `j` | Joint the part moves with (rig.py ties parts to bones by part name) |
+
+The top level of `parts.json` also has `repairs`: the patches `repair_view.py` applies per picture.

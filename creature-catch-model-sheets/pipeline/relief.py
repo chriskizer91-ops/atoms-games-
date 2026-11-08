@@ -56,6 +56,9 @@ def relief_map(rgb, kind, tpm):
         tuft = np.clip(hpf / 35.0, -1, 1)
         smooth = ndimage.gaussian_filter(np.clip((glow - 0.2) * 3, 0, 1), px(0.006))  # eyes, inner ears
         h = 0.010 * tuft * (1 - smooth)
+        # eyes (bright, glowing on fur) get a gentle dome so they catch the light
+        eye = ndimage.gaussian_filter((glow > 0.35).astype(np.float32), px(0.012))
+        h += 0.012 * np.clip(eye * 1.6, 0, 1)
     elif kind == "vent":
         mouth = ndimage.gaussian_filter((glow > 0.4).astype(np.float32), px(0.01))
         h = 0.003 * grain - 0.035 * mouth

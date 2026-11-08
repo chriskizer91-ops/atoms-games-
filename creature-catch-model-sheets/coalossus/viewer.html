@@ -4,127 +4,540 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Coalossus Model Bay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=JetBrains+Mono:wght@400;500&family=Pixelify+Sans:wght@500&display=swap">
 <style>
-  :root { --bg: #17120f; --panel: rgba(30, 24, 20, 0.86); --ink: #f3e9df; --muted: #b9a999; --accent: #ff8a2a; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
-    font: 14px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
-  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
-  .bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
-    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; background: linear-gradient(transparent, rgba(0,0,0,0.55)); }
-  button { appearance: none; border: 1px solid rgba(255,255,255,0.18); background: var(--panel); color: var(--ink);
-    padding: 9px 12px; border-radius: 999px; font: inherit; cursor: pointer; }
-  button[aria-pressed="true"] { background: var(--accent); color: #1b0f05; border-color: var(--accent); font-weight: 600; }
-  .labels { position: fixed; inset: 0; pointer-events: none; text-align: center; }
-  .labels div { position: absolute; transform: translate(-50%, -100%); background: var(--panel); padding: 6px 10px;
-    border-radius: 10px; white-space: nowrap; }
-  .labels b { display: block; font-size: 13px; }
-  .labels span { color: var(--muted); font-size: 12px; }
-  .msg { position: fixed; inset: 0; display: grid; place-items: center; color: var(--muted); pointer-events: none; }
+  /* Layout: one full-screen 3D stage; name plate top-left, labels float over each model,
+     battle text box and move buttons along the bottom, like the battle screen in the game. */
+  :root {
+    --bg: #15100d;          /* coal-dark stage */
+    --panel: #221a15;       /* plates and buttons */
+    --ink: #f4ebe2;
+    --muted: #b6a596;
+    --lava: #ff8a2a;        /* accent: lava crack orange */
+    --lava-ink: #1d1006;
+    --line: #3a2d24;
+    --t-normal: #d8d0c0;    /* the game's type colours */
+    --t-fire: #f0602c;
+    --t-earth: #a8784a;
+    --box: #f6efe2;         /* battle text box */
+    --box-ink: #2a1c14;
+    --font-name: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --font-game: "Pixelify Sans", "Courier New", monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; margin: 0; }
+  [hidden] { display: none !important; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow: hidden; }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; background: var(--ink); }
+  .plate { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+    display: grid; gap: 2px; pointer-events: none; }
+  .plate h1 { margin: 0; font: 600 22px/1.1 var(--font-name); letter-spacing: 0.01em; }
+  .plate p { margin: 0; font: 400 11px/1.3 var(--font-data); color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .plate .hint { margin-top: 4px; font: 400 12px/1.3 var(--font-body); text-transform: none; letter-spacing: 0; transition: opacity 0.4s; }
+  .labels { position: fixed; inset: 0; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -100%); background: var(--panel); border: 1px solid var(--line);
+    padding: 4px 9px; border-radius: 9px; text-align: center; white-space: nowrap; transition: opacity 0.25s; }
+  .labels.quiet .label { opacity: 0; }
+  .label b { display: block; font: 500 12px/1.2 var(--font-name); }
+  .label span { font: 400 10px/1.3 var(--font-data); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; display: grid; gap: 8px;
+    padding-block: 8px calc(10px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .say { justify-self: center; width: min(560px, 100%); box-sizing: border-box; background: var(--box); color: var(--box-ink);
+    border: 3px solid var(--box-ink); border-radius: 8px; box-shadow: inset 0 0 0 2px var(--box), inset 0 0 0 4px var(--t-earth);
+    padding: 9px 12px; font: 500 16px/1.25 var(--font-game); min-height: 1.25em; transition: opacity 0.25s; }
+  .say.off { opacity: 0; }
+  .moves { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-block: 2px; padding-inline: 12px; justify-content: safe center;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 28px), transparent); }
+  .moves::-webkit-scrollbar { display: none; }
+  .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .seg { display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+  button { appearance: none; border: 0; background: transparent; color: var(--ink); font: 500 14px/1 var(--font-name);
+    padding: 8px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  button[aria-pressed="true"] { background: var(--lava); color: var(--lava-ink); }
+  button:focus-visible { outline: 2px solid var(--lava); outline-offset: 2px; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .solo { background: var(--panel); border: 1px solid var(--line); }
+  .move { flex: none; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--tc); padding: 8px 11px 8px 9px; border-radius: 10px; }
+  .move.normal { --tc: var(--t-normal); } .move.fire { --tc: var(--t-fire); } .move.earth { --tc: var(--t-earth); } .move.react { --tc: var(--muted); }
+  .loading { position: fixed; inset: 0; display: grid; place-content: center; gap: 10px; text-align: center; padding-inline: 16px; }
+  .loading p { margin: 0; color: var(--muted); font: 400 13px/1.4 var(--font-body); }
+  .loading .track { width: min(260px, 70vw); height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .loading .fill { height: 100%; width: 0%; background: var(--lava); transition: width 0.2s; }
+  .loading .mb { font: 400 11px/1 var(--font-data); color: var(--muted); font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) { .plate .hint, .loading .fill, .say { transition: none; } }
 </style>
+</head>
+<body>
+<canvas id="stage" aria-label="Coalossus 3D models. Drag to turn, pinch or scroll to zoom."></canvas>
+<div id="flash"></div>
+<div class="plate"><h1>Coalossus</h1><p>No. 98 · Fire / Earth · 1.8 m tall</p><p class="hint" id="hint" hidden>Drag to turn · pinch to zoom</p></div>
+<div class="labels" id="labels"></div>
+<div class="loading" id="loading">
+  <p>Loading the models</p>
+  <div class="track"><div class="fill" id="fill"></div></div>
+  <span class="mb" id="mb">0.0 / 8.1 MB</span>
+</div>
+<div class="dock" id="dock" hidden>
+  <div class="say off" id="say" aria-live="polite">&nbsp;</div>
+  <div class="moves" id="moves" role="group" aria-label="Moves"></div>
+  <div class="row">
+    <div class="seg" role="group" aria-label="Which model">
+      <button id="m-both" data-mode="both" aria-pressed="true">Both</button>
+      <button id="m-big" data-mode="big" aria-pressed="false">Big</button>
+      <button id="m-small" data-mode="small" aria-pressed="false">Small</button>
+    </div>
+    <button id="walk" class="solo" aria-pressed="false">Walk</button>
+    <button id="paint" class="solo" aria-pressed="true">Paint on</button>
+  </div>
+</div>
+
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
 } }
 </script>
-</head>
-<body>
-<canvas id="c"></canvas>
-<div class="labels" id="labels"></div>
-<div class="msg" id="msg">Loading Coalossus…</div>
-<div class="bar" id="bar">
-  <button data-mode="both" aria-pressed="true">Big + small</button>
-  <button data-mode="big">Big</button>
-  <button data-mode="small">Small</button>
-  <button data-paint="1" aria-pressed="true">Paint</button>
-</div>
 <script type="module">
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
-const params = new URLSearchParams(location.search);
-const canvas = document.getElementById("c");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = getComputedStyle(document.documentElement);
+const col = n => css.getPropertyValue(n).trim();
+const canvas = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x17120f);
+scene.background = new THREE.Color(col("--bg"));
 const camera = new THREE.PerspectiveCamera(35, 1, 0.05, 100);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
-controls.target.set(0, 0.85, 0);
+controls.minDistance = 2.5;
+controls.maxDistance = 20;
 scene.add(new THREE.HemisphereLight(0xfff1e0, 0x3a2a20, 1.4));
 const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-3, 5, 4); scene.add(key);
 const rim = new THREE.DirectionalLight(0xffb070, 1.2); rim.position.set(3, 3, -4); scene.add(rim);
-const floor = new THREE.Mesh(new THREE.CircleGeometry(6, 64), new THREE.MeshStandardMaterial({ color: 0x241b16, roughness: 1 }));
+const floor = new THREE.Mesh(new THREE.CircleGeometry(7, 64), new THREE.MeshStandardMaterial({ color: col("--panel"), roughness: 1 }));
 floor.rotation.x = -Math.PI / 2; scene.add(floor);
 
+// ---------------- loading ----------------
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-const clay = new THREE.MeshStandardMaterial({ color: 0xb8b3ad, roughness: 0.8 });
-const models = {};
-const info = { big: "Big model", small: "Small model" };
+const SIZES = { "models/coalossus_full.glb": 4906288, "models/coalossus_small.glb": 3219360 };
+const totalBytes = Object.values(SIZES).reduce((a, b) => a + b, 0);
+const got = {};
+function progress() {
+  const sum = Object.values(got).reduce((a, b) => a + b, 0);
+  document.getElementById("fill").style.width = `${Math.min(100, (100 * sum) / totalBytes).toFixed(1)}%`;
+  document.getElementById("mb").textContent = `${(sum / 1e6).toFixed(1)} / ${(totalBytes / 1e6).toFixed(1)} MB`;
+}
+function loadGlb(url) { return new Promise((ok, fail) => loader.load(url, ok, e => { got[url] = e.loaded; progress(); }, fail)); }
 
-function load(name, url) {
-  return new Promise((ok, fail) => loader.load(url, g => {
-    const root = g.scene; let tris = 0;
-    root.traverse(o => { if (o.isMesh) { o.userData.paint = o.material; tris += o.geometry.index ? o.geometry.index.count / 3 : o.geometry.attributes.position.count / 3; } });
-    models[name] = { root, tris }; scene.add(root); ok();
-  }, undefined, fail));
+// A tint mixed over the lit colour: the game's white hit flash and coloured boost overlay.
+function addTint(mat, uniform) {
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTint = uniform;
+    sh.fragmentShader = "uniform vec4 uTint;\n" + sh.fragmentShader.replace("#include <dithering_fragment>",
+      "#include <dithering_fragment>\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, uTint.rgb, uTint.a);");
+  };
 }
 
-let mode = params.get("mode") || "both", paint = params.get("paint") !== "0";
-const labels = {};
+const models = {};
+// points on the model, in glTF space (x, up, forward) at the rest pose, and the bone each rides on
+const ANCHORS = {
+  ventC: ["spine", [0, 1.79, 0.33]], ventL: ["spine", [0.155, 1.69, 0.15]], ventR: ["spine", [-0.155, 1.69, 0.15]],
+  mouth: ["head", [0, 1.29, 1.22]], chest: ["spine", [0, 0.95, 0.78]],
+};
+async function loadModel(name, url) {
+  const gltf = await loadGlb(url);
+  let src = null; gltf.scene.traverse(o => { if (o.isMesh && !src) src = o.material; });
+  const maps = [src.map, src.emissiveMap, src.normalMap];
+  const tint = { value: new THREE.Vector4(1, 1, 1, 0) };
+  const mat = new THREE.MeshStandardMaterial({ map: maps[0], emissiveMap: maps[1], emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.85, metalness: 0 });
+  if (maps[2]) mat.normalMap = maps[2];
+  const clay = new THREE.MeshStandardMaterial({ color: 0xb8b3ad, roughness: 0.8 });
+  addTint(mat, tint); addTint(clay, tint);
+  let tris = 0;
+  gltf.scene.traverse(o => { if (o.isMesh) { o.material = mat; o.frustumCulled = false; tris += o.geometry.index ? o.geometry.index.count / 3 : o.geometry.attributes.position.count / 3; } });
+  const root = new THREE.Group(); root.add(gltf.scene); scene.add(root);
+  gltf.scene.updateMatrixWorld(true);
+  const anchors = {};
+  for (const [k, [b, p]] of Object.entries(ANCHORS)) {
+    const bone = gltf.scene.getObjectByName(b);
+    anchors[k] = { bone, local: bone.worldToLocal(new THREE.Vector3(...p)) };
+  }
+  for (const b of ["fl_paw_R", "fl_paw_L", "rl_paw_R", "rl_paw_L"]) {
+    const bone = gltf.scene.getObjectByName(b);
+    const w = new THREE.Vector3(); bone.getWorldPosition(w); w.z += 0.16; w.y -= 0.03;
+    anchors[b] = { bone, local: bone.worldToLocal(w) };
+  }
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  const actions = {};
+  for (const c of gltf.animations) actions[c.name] = mixer.clipAction(c);
+  const m = { name, root, tris, mat, clay, tint, mixer, actions, anchors, current: null, onDone: null, busy: false };
+  mixer.addEventListener("finished", e => {
+    if (e.action !== m.current) return;
+    const done = m.onDone; m.onDone = null;
+    if (!m.hold) baseLoop(m);
+    if (done) done();
+  });
+  models[name] = m;
+}
+function at(m, k) { const a = m.anchors[k]; return a.bone.localToWorld(a.local.clone()); }
+function forward(m) { return new THREE.Vector3(0, 0, 1).applyQuaternion(m.root.quaternion); }
+function target(m) { return m.root.localToWorld(new THREE.Vector3(0, 0.9, 2.4)); }
+function ground(m) { return m.root.position.y; }
+
+// ---------------- animation ----------------
+let walking = false;
+function baseLoop(m) {
+  const a = m.actions[walking ? "walk" : "idle"];
+  a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled = true; a.setEffectiveWeight(1); a.setEffectiveTimeScale(1);
+  if (m.current && m.current !== a) m.current.crossFadeTo(a, 0.2, false);
+  a.play(); m.current = a;
+}
+function playClip(m, name, done) {
+  const a = m.actions[name];
+  a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.enabled = true; a.setEffectiveWeight(1); a.setEffectiveTimeScale(1);
+  if (m.current && m.current !== a) m.current.crossFadeTo(a, name === "send_out" ? 0.0 : 0.12, false);
+  a.play(); m.current = a; m.onDone = done || null;
+}
+
+// ---------------- effects ----------------
+let now = 0;
+const timers = [];
+function after(t, fn) { timers.push({ at: now + t, fn }); }
+function during(t0, dur, fn) { timers.push({ at: now + t0, until: now + t0 + dur, fn }); }
+
+class Particles {
+  constructor(max, additive) {
+    this.max = max; this.n = 0;
+    this.pos = new Float32Array(max * 3); this.col = new Float32Array(max * 3);
+    this.size = new Float32Array(max); this.alpha = new Float32Array(max);
+    this.s = [];
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute("color", new THREE.BufferAttribute(this.col, 3).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute("size", new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute("alpha", new THREE.BufferAttribute(this.alpha, 1).setUsage(THREE.DynamicDrawUsage));
+    this.uScale = { value: 400 }; this.uMax = { value: 160 };
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uScale: this.uScale, uMax: this.uMax }, transparent: true, depthWrite: false,
+      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+      vertexShader: `attribute float size; attribute float alpha; attribute vec3 color; uniform float uScale; uniform float uMax;
+        varying vec3 vC; varying float vA;
+        void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = min(size * uScale / max(-mv.z, 0.1), uMax);
+          gl_Position = projectionMatrix * mv; vC = color; vA = alpha; }`,
+      fragmentShader: additive
+        ? `varying vec3 vC; varying float vA; void main(){ float d = length(gl_PointCoord - 0.5) * 2.0; float a = clamp(1.0 - d, 0.0, 1.0); a *= a; gl_FragColor = vec4(vC * a * vA, 1.0); }`
+        : `varying vec3 vC; varying float vA; void main(){ float d = length(gl_PointCoord - 0.5) * 2.0; float a = pow(clamp(1.0 - d, 0.0, 1.0), 1.6) * vA; gl_FragColor = vec4(vC, a); }`,
+    });
+    this.points = new THREE.Points(g, mat); this.points.frustumCulled = false; this.points.renderOrder = 2;
+    scene.add(this.points);
+  }
+  spawn(o) {
+    if (this.s.length >= this.max) this.s.shift();
+    const c = new THREE.Color(o.color || "#ffffff");
+    this.s.push({ p: o.pos.clone(), v: (o.vel || new THREE.Vector3()).clone(), age: 0, life: o.life || 0.6, s0: o.size || 0.1, s1: o.size1 ?? 0,
+      c, g: o.gravity || 0, drag: o.drag || 0, a: o.alpha ?? 1, floor: o.floor });
+  }
+  update(dt) {
+    const keep = [];
+    for (const q of this.s) {
+      q.age += dt; if (q.age >= q.life) continue;
+      q.v.y -= q.g * dt; q.v.multiplyScalar(Math.max(0, 1 - q.drag * dt)); q.p.addScaledVector(q.v, dt);
+      if (q.floor !== undefined && q.p.y < q.floor) { q.p.y = q.floor; q.v.y *= -0.3; q.v.x *= 0.6; q.v.z *= 0.6; }
+      keep.push(q);
+    }
+    this.s = keep;
+    for (let i = 0; i < this.max; i++) {
+      const q = this.s[i];
+      if (!q) { this.size[i] = 0; this.alpha[i] = 0; continue; }
+      const t = q.age / q.life;
+      this.pos.set([q.p.x, q.p.y, q.p.z], i * 3); this.col.set([q.c.r, q.c.g, q.c.b], i * 3);
+      this.size[i] = q.s0 + (q.s1 - q.s0) * t;
+      this.alpha[i] = q.a * Math.min(1, t * 8) * (1 - t * t);
+    }
+    const g = this.points.geometry;
+    for (const k of ["position", "color", "size", "alpha"]) g.attributes[k].needsUpdate = true;
+  }
+}
+const glow = new Particles(2400, true);
+const smoke = new Particles(900, false);
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[(Math.random() * a.length) | 0];
+const FIRE = ["#ffb36b", "#f0602c", "#ffd27a", "#a8301c"];
+const EARTH = ["#e0c08a", "#a8784a", "#6a4a2c"];
+const NORMAL = ["#ffffff", "#fff4c0", "#d8d0c0"];
+const randDir = () => new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize();
+
+// rocks (Pebble Toss, Quake Stomp)
+const rockGeo = new THREE.DodecahedronGeometry(0.075, 0);
+const rockMat = new THREE.MeshStandardMaterial({ color: 0x4a3326, roughness: 1, emissive: 0x3a1204, emissiveIntensity: 1 });
+const rocks = new THREE.InstancedMesh(rockGeo, rockMat, 60); rocks.frustumCulled = false; scene.add(rocks);
+const rockState = []; const dummy = new THREE.Object3D();
+function throwRock(p, v, floorY, size = 1) { if (rockState.length >= 60) rockState.shift(); rockState.push({ p: p.clone(), v: v.clone(), r: randDir(), spin: rand(4, 10), age: 0, life: 2.2, floor: floorY, s: size * rand(0.7, 1.4) }); }
+function updateRocks(dt) {
+  rockState.forEach(r => { r.age += dt; r.v.y -= 9.8 * dt; r.p.addScaledVector(r.v, dt);
+    if (r.p.y < r.floor + 0.04) { r.p.y = r.floor + 0.04; if (r.v.y < -1) { for (let i = 0; i < 4; i++) smoke.spawn({ pos: r.p, vel: randDir().multiplyScalar(0.6).setY(0.4), life: 0.7, size: 0.15, size1: 0.4, color: "#8a6a4a", alpha: 0.5 }); } r.v.y *= -0.35; r.v.x *= 0.5; r.v.z *= 0.5; } });
+  for (let i = rockState.length - 1; i >= 0; i--) if (rockState[i].age > rockState[i].life) rockState.splice(i, 1);
+  for (let i = 0; i < 60; i++) {
+    const r = rockState[i];
+    if (!r) { dummy.scale.setScalar(0); }
+    else { dummy.position.copy(r.p); dummy.quaternion.setFromAxisAngle(r.r, r.age * r.spin); dummy.scale.setScalar(r.s * Math.min(1, (r.life - r.age) * 3)); }
+    dummy.updateMatrix(); rocks.setMatrixAt(i, dummy.matrix);
+  }
+  rocks.instanceMatrix.needsUpdate = true;
+}
+// rings (shockwave, impact) and stat arrows
+const rings = [];
+function ring(center, color, r0, r1, life, flat = true) {
+  const m = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 64), new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  m.position.copy(center); if (flat) m.rotation.x = -Math.PI / 2; else m.lookAt(camera.position);
+  scene.add(m); rings.push({ m, r0, r1, life, age: 0 });
+}
+const arrowGeo = new THREE.ConeGeometry(0.06, 0.16, 4);
+const arrows = [];
+function arrow(p, color, down = false) {
+  const m = new THREE.Mesh(arrowGeo, new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.position.copy(p); if (down) m.rotation.x = Math.PI; scene.add(m); arrows.push({ m, v: down ? -1 : 1, age: 0, life: 0.75 });
+}
+function updateShapes(dt) {
+  for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.age += dt; const t = r.age / r.life;
+    if (t >= 1) { scene.remove(r.m); r.m.geometry.dispose(); r.m.material.dispose(); rings.splice(i, 1); continue; }
+    r.m.scale.setScalar(r.r0 + (r.r1 - r.r0) * (1 - (1 - t) * (1 - t))); r.m.material.opacity = 1 - t; }
+  for (let i = arrows.length - 1; i >= 0; i--) { const a = arrows[i]; a.age += dt; const t = a.age / a.life;
+    if (t >= 1) { scene.remove(a.m); a.m.material.dispose(); arrows.splice(i, 1); continue; }
+    a.m.position.y += a.v * dt * 1.2; a.m.material.opacity = Math.min(1, t * 6) * (1 - t); }
+}
+
+// screen flash and camera shake (the game's flashScreen and shake)
+const flashEl = document.getElementById("flash");
+let flashA = 0, shakeAmt = 0, shakeT = 0;
+function screenFlash(color, a = 0.5) { if (reduceMotion) return; flashEl.style.background = color; flashA = a; }
+function shake(amt, dur) { if (reduceMotion) return; shakeAmt = amt; shakeT = dur; }
+function tintPulse(m, color, dur, fn) { const c = new THREE.Color(color); during(0, dur, k => { m.tint.value.set(c.r, c.g, c.b, fn(k)); }); after(dur, () => m.tint.value.w = 0); }
+function glowTo(m, to, dur, back = 0.6) { const from = m.mat.emissiveIntensity; during(0, dur, k => m.mat.emissiveIntensity = from + (to - from) * k); after(dur, () => during(0, back, k => m.mat.emissiveIntensity = to + (1 - to) * k)); }
+
+// burst of particles (the game's CC.burst)
+function burst(p, colors, n, speed, size = 0.12, life = 0.5) {
+  for (let i = 0; i < n; i++) glow.spawn({ pos: p, vel: randDir().multiplyScalar(rand(0.3, 1) * speed), life: life * rand(0.7, 1.2), size: size * rand(0.7, 1.4), size1: 0, color: pick(colors), drag: 2.5 });
+}
+function impact(m, colors, big = false) {
+  const p = target(m);
+  burst(p, colors, big ? 90 : 36, big ? 4.5 : 2.6, big ? 0.2 : 0.14);
+  glow.spawn({ pos: p, life: 0.22, size: big ? 1.6 : 0.9, size1: 0.1, color: "#ffffff" });
+  ring(p, colors[0], 0.1, big ? 1.4 : 0.7, 0.35, false);
+}
+function emberStream(m, from, dur, rate = 7) {
+  during(0, dur, () => { const p = at(m, from); const d = target(m).sub(p).normalize();
+    for (let i = 0; i < rate; i++) glow.spawn({ pos: p, vel: d.clone().multiplyScalar(rand(3.5, 5.5)).add(randDir().multiplyScalar(0.5)), life: rand(0.45, 0.6), size: rand(0.1, 0.2), size1: 0.03, color: pick(FIRE), gravity: -0.6 }); });
+}
+function trail(m, from, dur) {
+  during(0, dur, () => { const p = at(m, from);
+    for (let i = 0; i < 12; i++) glow.spawn({ pos: p.clone().add(randDir().multiplyScalar(0.06)), vel: randDir().multiplyScalar(0.3).setY(0.4), life: rand(0.3, 0.5), size: rand(0.14, 0.26), size1: 0, color: pick(FIRE) }); });
+}
+function charge(m, colors, dur) {
+  during(0, dur, () => { const c = at(m, "chest");
+    for (let i = 0; i < 4; i++) { const p = c.clone().add(randDir().multiplyScalar(1.5)); glow.spawn({ pos: p, vel: c.clone().sub(p).divideScalar(0.45), life: 0.45, size: 0.12, size1: 0.05, color: pick(colors) }); } });
+}
+function ventPuff(m, n = 10, dark = false) {
+  for (const v of ["ventC", "ventL", "ventR"]) { const p = at(m, v);
+    for (let i = 0; i < n; i++) smoke.spawn({ pos: p, vel: new THREE.Vector3(rand(-0.3, 0.3), rand(0.8, 1.6), rand(-0.3, 0.3)), life: rand(1.2, 1.8), size: 0.18, size1: 0.7, color: dark ? "#2e2622" : "#7a706a", alpha: dark ? 0.75 : 0.45, drag: 0.6 });
+    for (let i = 0; i < n / 2; i++) glow.spawn({ pos: p, vel: new THREE.Vector3(rand(-0.6, 0.6), rand(1.2, 2.4), rand(-0.6, 0.6)), life: rand(0.5, 0.9), size: 0.07, size1: 0, color: pick(FIRE), gravity: 1.5 }); }
+}
+function statUp(m) {
+  const c = m.root.position;
+  for (let i = 0; i < 12; i++) after(i * 0.05, () => { const a = rand(0, Math.PI * 2), r = rand(0.7, 1.1); arrow(new THREE.Vector3(c.x + Math.cos(a) * r, c.y + rand(0.1, 0.6), c.z + Math.sin(a) * r), pick(["#ff8a3a", "#ffc070"])); });
+  tintPulse(m, "#ff9a4a", 0.7, k => 0.15 + Math.abs(Math.sin(k * Math.PI * 3)) * 0.35);
+}
+function hitFlash(m) {
+  for (let i = 0; i < 3; i++) { after(i * 0.1, () => m.tint.value.set(1, 1, 1, 0.85)); after(i * 0.1 + 0.05, () => m.tint.value.w = 0); }
+  const p = at(m, "chest"); burst(p, NORMAL, 16, 2.4, 0.12); glow.spawn({ pos: p, life: 0.2, size: 0.9, size1: 0.1, color: "#ffffff" });
+}
+function shockwave(m) {
+  const f = m.root.localToWorld(new THREE.Vector3(0, 0.03, 0.75)); f.y = ground(m) + 0.03;
+  ring(f, "#e0c08a", 0.2, 3.6, 0.7); after(0.12, () => ring(f, "#a8784a", 0.2, 2.6, 0.6));
+  for (let i = 0; i < 40; i++) { const d = new THREE.Vector3(rand(-1, 1), 0, rand(-1, 1)).normalize();
+    smoke.spawn({ pos: f.clone().addScaledVector(d, 0.4), vel: d.multiplyScalar(rand(1.5, 3)).setY(rand(0.2, 0.7)), life: rand(0.8, 1.3), size: 0.25, size1: 0.8, color: pick(["#8a6a4a", "#a8845e", "#5e4532"]), alpha: 0.6, drag: 1.6 }); }
+  for (let i = 0; i < 12; i++) { const d = new THREE.Vector3(rand(-1, 1), 0, rand(-1, 1)).normalize(); throwRock(f.clone().addScaledVector(d, rand(0.4, 1.4)), new THREE.Vector3(d.x * rand(0.5, 1.5), rand(2.5, 4.5), d.z * rand(0.5, 1.5)), ground(m)); }
+}
+function dissolve(m, dur) {
+  m.mat.transparent = true; m.clay.transparent = true;
+  during(0, dur, k => { m.mat.opacity = m.clay.opacity = 1 - k;
+    for (let i = 0; i < 6; i++) glow.spawn({ pos: m.root.localToWorld(new THREE.Vector3(rand(-0.7, 0.7), rand(0.1, 1.1) * (1 - k * 0.6), rand(-1, 1))), vel: new THREE.Vector3(rand(-0.2, 0.2), rand(0.6, 1.3), rand(-0.2, 0.2)), life: 0.8, size: rand(0.05, 0.1), size1: 0, color: pick(["#f0602c", "#ffb36b", "#a8301c", "#6a4a2c"]) }); });
+  after(dur, () => { m.root.visible = false; m.mat.opacity = m.clay.opacity = 1; m.mat.transparent = m.clay.transparent = false; });
+}
+function sendOutFx(m) {
+  const p = m.root.localToWorld(new THREE.Vector3(0, 0.6, 0));
+  glow.spawn({ pos: p, life: 0.3, size: 2.2, size1: 0.2, color: "#ffffff" }); burst(p, NORMAL, 40, 3, 0.1, 0.5);
+  const f = m.root.position.clone(); f.y += 0.03; ring(f, "#ffffff", 0.2, 2.0, 0.5);
+}
+
+// ---------------- moves (what each button does) ----------------
+const MOVES = [
+  { id: "tackle", label: "Tackle", type: "normal", run: m => { after(0.45, () => impact(m, NORMAL)); after(0.45, () => shake(0.03, 0.2)); } },
+  { id: "ember_tap", label: "Ember Tap", type: "fire", run: m => { after(0.3, () => emberStream(m, "mouth", 0.35)); after(0.78, () => impact(m, FIRE)); } },
+  { id: "pebble_toss", label: "Pebble Toss", type: "earth", run: m => {
+      after(0.48, () => { const p = at(m, "fl_paw_R"), d = forward(m);
+        for (let i = 0; i < 7; i++) throwRock(p, d.clone().multiplyScalar(rand(3.2, 4.6)).add(new THREE.Vector3(rand(-0.6, 0.6), rand(2.2, 3.4), rand(-0.6, 0.6))), ground(m)); });
+      after(1.05, () => impact(m, EARTH)); } },
+  { id: "coal_swipe", label: "Coal Swipe", type: "fire", run: m => { after(0.3, () => trail(m, "fl_paw_R", 0.5)); after(0.6, () => { impact(m, FIRE, true); shake(0.04, 0.25); screenFlash("#f0602c", 0.25); }); } },
+  { id: "flare_burst", label: "Flare Burst", type: "fire", run: m => {
+      charge(m, FIRE, 0.75); glowTo(m, 3.2, 0.75, 0.9); tintPulse(m, "#ff7a2a", 0.75, k => 0.25 * k);
+      after(0.9, () => { const p = at(m, "mouth"), d = forward(m);
+        for (let i = 0; i < 160; i++) glow.spawn({ pos: p, vel: d.clone().multiplyScalar(rand(3, 7)).add(randDir().multiplyScalar(rand(0.5, 2))), life: rand(0.5, 0.9), size: rand(0.15, 0.35), size1: 0.05, color: pick(FIRE), drag: 1.2, gravity: -1 });
+        screenFlash("#f0602c", 0.5); shake(0.06, 0.4); ventPuff(m, 8); });
+      after(1.2, () => impact(m, FIRE, true)); } },
+  { id: "quake_stomp", label: "Quake Stomp", type: "earth", run: m => { charge(m, EARTH, 0.6); after(1.0, () => { shockwave(m); shake(0.1, 0.5); screenFlash("#a8784a", 0.35); }); after(1.25, () => impact(m, EARTH, true)); } },
+  { id: "guard_up", label: "Guard Up", type: "normal", run: m => { after(0.3, () => statUp(m)); } },
+  { id: "rally", label: "Rally", type: "normal", run: m => { after(0.35, () => { statUp(m); ventPuff(m, 8); shake(0.02, 0.4); }); } },
+  { id: "cinder_haze", label: "Cinder Haze", type: "fire", run: m => {
+      during(0.2, 0.9, () => { for (const v of ["ventC", "ventL", "ventR"]) { const p = at(m, v), d = target(m).sub(p).normalize();
+        smoke.spawn({ pos: p, vel: d.clone().multiplyScalar(rand(1.2, 2)).add(new THREE.Vector3(0, rand(0.4, 0.9), 0)), life: rand(1.4, 2), size: 0.25, size1: 1.1, color: pick(["#2e2622", "#3d332c", "#4a3c33"]), alpha: 0.7, drag: 0.5 });
+        glow.spawn({ pos: p, vel: d.clone().multiplyScalar(rand(1.5, 2.5)).add(randDir().multiplyScalar(0.5)), life: 1.2, size: 0.07, size1: 0, color: pick(FIRE) }); } }); } },
+  { id: "hit", label: "Take a hit", type: "react", text: n => `${n} was hit!`, run: m => { hitFlash(m); shake(0.04, 0.25); } },
+  { id: "faint", label: "Faint", type: "react", text: n => `${n} fainted!`, hold: true, run: m => { after(0.7, () => dissolve(m, 1.1)); } },
+  { id: "send_out", label: "Send out", type: "react", text: n => `Go! ${n}!`, run: m => { m.root.visible = true; sendOutFx(m); } },
+];
+
+// ---------------- the battle text box ----------------
+const sayEl = document.getElementById("say");
+let sayTimer = 0;
+function say(text) {
+  sayEl.classList.remove("off"); let i = 0; clearInterval(sayEl._t);
+  sayEl._t = setInterval(() => { i++; sayEl.textContent = text.slice(0, i); if (i >= text.length) clearInterval(sayEl._t); }, 22);
+  sayTimer = 2.4;
+}
+
+let busy = false;
+function shown() { return Object.values(models).filter(m => m.root.visible || m.fainted); }
+function runMove(mv) {
+  if (busy) return;
+  busy = true; setButtons();
+  say(mv.text ? mv.text("Coalossus") : `Coalossus used ${mv.label}!`);
+  const list = Object.values(models).filter(m => mode === "both" || mode === m.name);
+  let left = list.length;
+  const finish = () => { if (--left <= 0) { busy = false; setButtons(); } };
+  for (const m of list) {
+    if (mv.id === "send_out") m.root.visible = true;
+    m.hold = !!mv.hold;
+    mv.run(m);
+    playClip(m, mv.id, () => {
+      if (mv.id === "faint") { m.fainted = true; after(0.9, () => { m.fainted = false; m.hold = false; m.root.visible = true; sendOutFx(m); say("Coalossus is back!"); playClip(m, "send_out", finish); }); }
+      else finish();
+    });
+  }
+}
+
+// ---------------- layout and controls ----------------
+let mode = "both", paint = true;
+const labelEls = {};
+const names = { big: "Big model", small: "Small model" };
 function layout() {
   const both = mode === "both";
   const portrait = innerHeight > innerWidth;
-  const stacked = both && portrait;  // phones: big on top, small below
+  const stacked = both && portrait;
   floor.visible = !stacked;
   for (const [n, m] of Object.entries(models)) {
-    m.root.visible = both || mode === n;
-    m.root.position.set(stacked ? 0 : both ? (n === "big" ? -1.25 : 1.25) : 0, stacked ? (n === "big" ? 1.3 : -1.3) : 0, 0);
-    m.root.rotation.y = stacked ? -0.38 : -0.55;
-    m.root.traverse(o => { if (o.isMesh) o.material = paint ? o.userData.paint : clay; });
+    m.root.visible = (both || mode === n) && !m.fainted;
+    m.root.position.set(stacked ? 0 : both ? (n === "big" ? -1.4 : 1.4) : 0, stacked ? (n === "big" ? 1.35 : -1.35) : 0, 0);
+    m.root.rotation.y = stacked ? -0.7 : both ? -0.75 : -0.8;
+    m.root.traverse(o => { if (o.isMesh) o.material = paint ? m.mat : m.clay; });
   }
-  const lab = document.getElementById("labels"); lab.innerHTML = "";
+  const box = document.getElementById("labels"); box.innerHTML = "";
   for (const n of ["big", "small"]) {
-    labels[n] = null;
+    labelEls[n] = null;
     if (!models[n] || !(both || mode === n)) continue;
-    const d = document.createElement("div");
-    d.innerHTML = `<b>${info[n]}</b><span>${models[n].tris.toLocaleString()} triangles</span>`;
-    lab.appendChild(d); labels[n] = d;
+    const d = document.createElement("div"); d.className = "label";
+    d.innerHTML = `<b>${names[n]}</b><span>${models[n].tris.toLocaleString()} triangles</span>`;
+    box.appendChild(d); labelEls[n] = d;
   }
-  if (stacked) { camera.position.set(0, 1.75, 9.6); controls.target.set(0, 0.75, 0); }
-  else { const dist = both ? (portrait ? 9.5 : 7.4) : (portrait ? 6.6 : 4.6); camera.position.set(0, 1.9, dist); controls.target.set(0, 0.8, 0); }
+  if (stacked) { camera.position.set(0, 2.0, 10.8); controls.target.set(0, 0.62, 0); }
+  else { const dist = both ? (portrait ? 10.5 : 8.6) : (portrait ? 9.4 : 6.2); camera.position.set(0, 2.0, dist); controls.target.set(0, 0.85, 0); }
   controls.update();
-  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
-  document.querySelector("[data-paint]").setAttribute("aria-pressed", paint);
+  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  const p = document.getElementById("paint"); p.setAttribute("aria-pressed", String(paint)); p.textContent = paint ? "Paint on" : "Paint off";
+  document.getElementById("walk").setAttribute("aria-pressed", String(walking));
 }
-function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+function setButtons() { document.querySelectorAll(".move").forEach(b => b.disabled = busy); document.getElementById("labels").classList.toggle("quiet", busy); }
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  const s = renderer.domElement.height * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  glow.uScale.value = smoke.uScale.value = s;
+  glow.uMax.value = smoke.uMax.value = renderer.domElement.height * 0.16;
+}
 addEventListener("resize", () => { resize(); layout(); });
-document.getElementById("bar").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.mode) mode = b.dataset.mode; else paint = !paint;
-  layout();
+const movesEl = document.getElementById("moves");
+for (const mv of MOVES) {
+  const b = document.createElement("button"); b.className = `move ${mv.type}`; b.textContent = mv.label; b.id = `mv-${mv.id}`;
+  b.addEventListener("click", () => runMove(mv)); movesEl.appendChild(b);
+}
+document.getElementById("dock").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || b.classList.contains("move")) return;
+  if (b.dataset.mode) { mode = b.dataset.mode; layout(); }
+  else if (b.id === "paint") { paint = !paint; layout(); }
+  else if (b.id === "walk") { walking = !walking; for (const m of Object.values(models)) if (!busy) baseLoop(m); layout(); }
 });
+const hint = document.getElementById("hint");
+canvas.addEventListener("pointerdown", () => { hint.style.opacity = "0"; }, { once: true });
+
+// ---------------- start ----------------
 resize();
-Promise.all([load("big", "models/coalossus_full.glb"), load("small", "models/coalossus_small.glb")]).then(() => {
-  document.getElementById("msg").remove(); layout();
-  const v = new THREE.Vector3();
+Promise.all([
+  loadModel("big", "models/coalossus_full.glb"),
+  loadModel("small", "models/coalossus_small.glb"),
+]).then(() => {
+  document.getElementById("loading").hidden = true; hint.hidden = false; document.getElementById("dock").hidden = false;
+  layout();
+  for (const m of Object.values(models)) baseLoop(m);
+  const clock = new THREE.Clock(), v = new THREE.Vector3(), up = new THREE.Vector3(0, 2.1, 0), camBase = new THREE.Vector3();
+  let wisp = 0;
   renderer.setAnimationLoop(() => {
-    controls.update(); renderer.render(scene, camera);
-    for (const [n, d] of Object.entries(labels)) {
+    const dt = Math.min(clock.getDelta(), 0.05); now += dt;
+    for (let i = timers.length - 1; i >= 0; i--) {
+      const t = timers[i];
+      if (t.until !== undefined) { if (now >= t.at) t.fn(Math.min(1, (now - t.at) / (t.until - t.at))); if (now >= t.until) timers.splice(i, 1); }
+      else if (now >= t.at) { timers.splice(i, 1); t.fn(); }
+    }
+    for (const m of Object.values(models)) m.mixer.update(dt);
+    // the vents always smoke a little
+    wisp -= dt;
+    if (wisp <= 0) { wisp = 0.16;
+      for (const m of Object.values(models)) if (m.root.visible) { m.root.updateMatrixWorld(true); const p = at(m, pick(["ventC", "ventC", "ventL", "ventR"]));
+        smoke.spawn({ pos: p, vel: new THREE.Vector3(rand(-0.08, 0.08), rand(0.3, 0.5), rand(-0.08, 0.08)), life: rand(1.8, 2.6), size: 0.1, size1: 0.45, color: "#6b625c", alpha: 0.3 });
+        if (Math.random() < 0.25) glow.spawn({ pos: p, vel: new THREE.Vector3(rand(-0.2, 0.2), rand(0.5, 1), rand(-0.2, 0.2)), life: 0.8, size: 0.05, size1: 0, color: pick(FIRE) }); } }
+    glow.update(dt); smoke.update(dt); updateRocks(dt); updateShapes(dt);
+    if (flashA > 0) { flashEl.style.opacity = String(flashA); flashA = Math.max(0, flashA - dt * 4); if (flashA === 0) flashEl.style.opacity = "0"; }
+    if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) sayEl.classList.add("off"); }
+    controls.update();
+    camBase.copy(camera.position);
+    if (shakeT > 0) { shakeT -= dt; camera.position.x += rand(-shakeAmt, shakeAmt); camera.position.y += rand(-shakeAmt, shakeAmt) * 0.5; }
+    renderer.render(scene, camera);
+    camera.position.copy(camBase);
+    for (const [n, d] of Object.entries(labelEls)) {
       if (!d) continue;
-      v.copy(models[n].root.position).add(new THREE.Vector3(0, 2.05, 0)).project(camera);
+      v.copy(models[n].root.position).add(up).project(camera);
       d.style.left = `${(v.x * 0.5 + 0.5) * innerWidth}px`;
-      d.style.top = `${Math.max(64, (-v.y * 0.5 + 0.5) * innerHeight)}px`;
+      d.style.top = `${Math.max(132, (-v.y * 0.5 + 0.5) * innerHeight)}px`;
     }
   });
   window.modelsReady = true;
-}).catch(err => { document.getElementById("msg").textContent = "Could not load the models: " + err.message; });
+  window.bay = { runMove: id => runMove(MOVES.find(m => m.id === id)), models, get now() { return now; } };
+}).catch(err => {
+  document.querySelector("#loading p").textContent = "The models didn't load. Reload the page to try again. (" + err.message + ")";
+});
 </script>
+
 </body>
 </html>

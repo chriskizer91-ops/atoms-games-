@@ -96,7 +96,7 @@ def texels_for_part(g, size):
     An, Bn, Cn, Dn = Ne[i0][:, j0], Ne[i0][:, j1], Ne[i0 + 1][:, j0], Ne[i0 + 1][:, j1]
     nrm = (An * (1 - tj)[..., None] + Bn * tj[..., None]) * (1 - ti)[..., None] + (Cn * (1 - tj)[..., None] + Dn * tj[..., None]) * ti[..., None]
     nrm /= np.maximum(np.linalg.norm(nrm, axis=-1, keepdims=True), 1e-12)
-    return (r0, r1, c0, c1), pos, nrm
+    return (r0, r1, c0, c1), pos, nrm, np.repeat(i_f[:, None], len(cols), axis=1), N
 
 
 def extend_image(img, mask, rim=2):
@@ -134,13 +134,15 @@ def main():
     weight_view = pd.get("view_weight", {"top": 0.6})
     names = list(grids.keys())
     # texel positions for every part
-    P_all, N_all, where, pid = [], [], [], []
+    P_all, N_all, where, pid, IF, NR = [], [], [], [], [], []
     for k, nm in enumerate(names):
-        box, pos, nrm = texels_for_part(grids[nm], size)
+        box, pos, nrm, i_f, nr = texels_for_part(grids[nm], size)
         P_all.append(pos.reshape(-1, 3))
         N_all.append(nrm.reshape(-1, 3))
         where.append(box)
         pid.append(np.full(pos.shape[0] * pos.shape[1], k, np.int16))
+        IF.append(i_f.reshape(-1))
+        NR.append(nr)
     P = np.concatenate(P_all)
     Nn = np.concatenate(N_all)
     PID = np.concatenate(pid)
@@ -199,8 +201,25 @@ def main():
         bestw[better] = wv[better]
         print(f"  {cname:7s} paints {int((wv > 0.01).sum()):,} texels")
     seen = wsum > 1e-4
+    frac_pictures = float(seen.mean())
     col = np.zeros((len(P), 3))
     col[seen] = acc[seen] / wsum[seen, None]
+    # caps no picture can see (e.g. the soles of the paws): a radial gradient (parts.json "cap_fill")
+    capfill = {p["name"]: p.get("cap_fill", {}) for p in pd["parts"]}
+    off = 0
+    for k, nm in enumerate(names):
+        n = len(IF[k])
+        base = nm.rsplit("_", 1)[0] if nm.endswith(("_L", "_R")) else nm
+        for end, spec in capfill.get(base, {}).items():
+            i_f = IF[k]
+            t = np.clip(-i_f, 0, 1) if end == "start" else np.clip(i_f - (NR[k] - 1), 0, 1)
+            m = (t > 0) & ~seen[off:off + n]
+            if m.any():
+                c_in, c_out = (np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)], float) for h in spec)
+                tt = t[m][:, None]
+                col[off:off + n][m] = c_out * (1 - tt) + c_in * tt
+                seen[off:off + n][m] = True
+        off += n
     # assemble the texture, fill unseen texels from the same part, then the gutters
     tex = np.zeros((size, size, 3), np.float32)
     seen_img = np.zeros((size, size), bool)
@@ -232,7 +251,7 @@ def main():
     dbg[cover & ~seen_img] = (255, 255, 255)
     Image.fromarray(dbg).save(os.path.join(out, "seen.png"))
     np.savez_compressed(os.path.join(out, "texel.npz"), part=part_img, seen=seen_img)
-    frac = seen.mean()
+    frac = frac_pictures
     stats = {"texels": int(len(P)), "seen_by_a_picture": round(100 * float(frac), 1),
              "painted_by": {c[0]: int((best == i).sum()) for i, c in enumerate(cams)}, "parts": names}
     with open(os.path.join(out, "print.json"), "w") as f:

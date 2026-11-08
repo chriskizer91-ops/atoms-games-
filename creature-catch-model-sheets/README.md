@@ -37,7 +37,8 @@ to the first request.
 ### Status: models built (8 Nov 2026)
 
 The big model (699,772 triangles, pictures printed on) and the small game model (6,000 triangles, baked)
-are done. They're in `coalossus/models/`, with the boards, the phone screenshot and the full write-up in
+are done, both with a skeleton and 14 battle animations from the game (Coal Swipe, Quake Stomp, Flare
+Burst and the rest). They're in `coalossus/models/`, with the boards, the phone screenshot and the full write-up in
 [`coalossus/README.md`](coalossus/README.md).
 
 ![The three stages](coalossus/previews/coalossus_stages.jpg)
