@@ -42,7 +42,7 @@ by our animation system. This list covers every model that game uses, read from 
 | 8 | **Tuftail** | Grassland, common | four-legged | wild, Bramble's team | to do |
 | 9 | **Pebblepup** | Grassland, common | four-legged | wild, Bramble's team | to do |
 | 10 | **Bumblop** | Grassland, uncommon | round | wild | to do |
-| 11 | **Dewt** | Grassland, uncommon (day) | serpent | wild | **needs the serpent skeleton** |
+| 11 | **Dewt** | Grassland, uncommon (day) | serpent (but it walks on four legs) | wild | to do; the four-legged skeleton works |
 | 12 | **Dandylion** | Grassland, rare | four-legged | wild | to do |
 | 13 | Wormapple | Orchard (east of the Grassland) | round | wild | to do |
 | 14 | Scarecrowl | Orchard | bird | wild | **needs the bird skeleton** |
@@ -167,26 +167,33 @@ Grassland Outpost. The walls, floors, windows, doormats and rugs are made in cod
 | Battle stages | Meadow Path clearing ✅ done. Still to make: a Grassland clearing and a Home Village yard (Juniper's battle). Both are made in code. |
 | Leaf Trail Charm, Vault Key | Story items. Small pictures in the menu are enough; models only if we want a "you got it" scene. |
 
-## How each kind gets made
+## How each kind gets made (the plan from 9 Nov)
 
-| Kind | How | Pictures per thing |
-| --- | --- | --- |
-| Creatures, people | Paint-and-bake, as before | 5 (sheet, front, side, back, top) |
-| Buildings | Paint-and-bake. Boxes and a roof are the easiest shape for the method. | 5 |
-| Furniture, props, the cube | Paint-and-bake, but one picture each: a 4-view sheet (front, side, back, top on one picture, same scale). Simple things like crates, the bench or the stairs can also be made in code with painted textures. | 1 |
-| Trees, tall grass, flower patches | In code, like the meadow stage | 0 |
-| Ground, water, sky, room walls and floors | In code with painted textures | 0 |
+- **Towns and paths:** the diorama look. The 2D game's own painted ground is the floor, with 3D buildings,
+  props and people standing on it.
+- **Battles:** the 2D game's own painted battle backgrounds, with the 3D creatures in front.
+- **Creatures and people:** paint-and-bake, as before (5 pictures each). The things people carry are
+  modelled in code and put in their hands: Elder Willow's staff, Farmer Bramble's pitchfork, Tinker's net,
+  Rosa's tray, Fern's basket and Pip's cubes.
+- **Buildings, furniture, props and the capture cube:** modelled straight from the 2D game's own art, with
+  no reference picture of each object. They're covered with cuts from **8 texture sheets**: woods, roofs,
+  walls and stone, floors and fabrics, nature and metal, and three sheets of details (furniture fronts,
+  doors, windows and signs, machines).
+- **Trees, tall grass, ground, water, sky:** the game's own art, or made in code.
 
-**Picture count, roughly:**
-- creatures and people: 41 × 5 = 205
-- buildings: 6 × 5 = 30
-- furniture, props and the cube: about 35 one-picture sheets
+**The picture requests** (`chapter1/`):
+- `picture-request-main-characters.html`: the two heroes, 10 pictures.
+- `picture-request-chapter1.html`:
+  - the 8 creatures you meet: 40 pictures
+  - the other 10 people: 50 pictures
+  - the 8 texture sheets: 8 pictures
 
 ## New animation work
 
 - **Person skeleton** (12 people): idle, walk, talk, wave, throw a cube, cheer, lose.
 - **Bug skeleton** (Hopsprout and Hoppin Pop): hops on springy legs, buzzes.
-- **Serpent skeleton** (the Dewt line): S-curve slither, coil, strike.
+- **Serpent skeleton** (Monsoonewt and Typhoonewt, later): S-curve slither, coil, strike. Dewt walks on
+  four legs, so it uses the four-legged skeleton.
 - **Bird skeleton** (Scarecrowl, Scarecrown): flap, hop, swoop.
 - **Furniture and props:** no skeleton. A few small moving parts (the cube's lid, the healing machine's
   lights, the log rolling away).
