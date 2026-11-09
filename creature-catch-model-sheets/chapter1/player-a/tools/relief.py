@@ -1,4 +1,7 @@
-"""Changed copy (round 3, clovermouse / puffmunk): adds the relief kind "fur_soft".
+"""Changed copy (chapter 1, player-a): round 3's Puffmunk copy ("fur_soft") plus Mossback's "grain" kind and
+per-part "relief_gain"; "grain" here is gentler (see below). Earlier notes:
+
+Changed copy (round 3, clovermouse / puffmunk): adds the relief kind "fur_soft".
 
 "fur" reads every light/dark change in the paint as fur tufts and gaps, so painted features (eye
 outlines, eyebrows, the mouth line, the edges of pink paws and blush) come out as deep carved
@@ -92,6 +95,14 @@ def relief_map(rgb, kind, tpm):
     elif kind == "vent":
         mouth = ndimage.gaussian_filter((glow > 0.4).astype(np.float32), px(0.01))
         h = 0.003 * grain - 0.035 * mouth
+    elif kind == "grain":
+        # round 3 (Mossback): only the fine grain of the paint, no cracks or blobs. Chapter 1: fades out
+        # across strong painted edges (seams, straps, buckle outlines) so cloth never shows carved lines
+        hp2 = L - ndimage.gaussian_filter(L, px(0.008))
+        Ls = ndimage.gaussian_filter(L, max(px(0.0015), 0.7))
+        edge = np.hypot(ndimage.sobel(Ls, 0), ndimage.sobel(Ls, 1)) / 8.0
+        calm = ndimage.gaussian_filter(np.clip(1 - (edge - 10.0) / 10.0, 0, 1), max(px(0.002), 0.8))
+        h = 0.0025 * np.clip(hp2 / 40.0, -1, 1) * calm
     else:
         h = np.zeros_like(L)
     return h
@@ -105,6 +116,7 @@ def main():
     with open(parts_path) as f:
         pd = json.load(f)
     kinds = {p["name"]: p.get("relief", KIND_DEFAULT.get(p["name"], "rock")) for p in pd["parts"]}
+    gains = {p["name"]: float(p.get("relief_gain", 1.0)) for p in pd["parts"]}
     tex = np.asarray(Image.open(albedo_path).convert("RGB"))
     size = tex.shape[0]
     tpm = atlas["texels_per_m"] * size / atlas["size"]
@@ -117,7 +129,7 @@ def main():
         u0, v0, u1, v1 = g["rect"]
         c0, c1 = int(np.floor(u0 * size)), int(np.ceil(u1 * size))
         r0, r1 = int(np.floor((1 - v1) * size)), int(np.ceil((1 - v0) * size))
-        h = relief_map(tex[r0:r1, c0:c1], kind, tpm)
+        h = relief_map(tex[r0:r1, c0:c1], kind, tpm) * gains.get(base, 1.0)
         P = g["P"]
         N, K, _ = P.shape
         # low-pass to the vertex spacing before sampling

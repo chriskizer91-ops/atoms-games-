@@ -1,4 +1,6 @@
-"""Changed copy (round 3, clovermouse / puffmunk; same file as clovermouse/tools): Opus round-2 board.py (frames the three-quarter views by size); only the path to pipeline/ changed.
+"""Chapter 1 (player-a): unchanged copy of round 3's Puffmunk tools/board.py.
+
+Changed copy (round 3, clovermouse / puffmunk; same file as clovermouse/tools): Opus round-2 board.py (frames the three-quarter views by size); only the path to pipeline/ changed.
 
 Comparison board: picture vs model per view, red/blue difference, outline overlap %.
 

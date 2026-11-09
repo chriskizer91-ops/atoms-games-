@@ -80,10 +80,11 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 // Chapter 1 creatures first; the first one loads before the page opens, the rest load behind it.
-const IDS = ["mossback", "embroak", "drizzlon", "clovermouse", "puffmunk", "fleecling", "mushling", "lunarion", "coalossus"];
-const TOTAL_MB = 3.0;  // the first creature's files
+const IDS = ["player-a", "player-b", "mossback", "embroak", "drizzlon", "clovermouse", "puffmunk", "fleecling", "mushling", "lunarion", "coalossus"];
+const TOTAL_MB = 1.9;  // the first one's files
 // The game's type colours and effect kinds (10-data-types.js, 02-art.js)
 const TYPES = {
   Normal: { kind: "star", c: ["#ffffff", "#fff4c0", "#d8d0c0"], ui: "#d8d0c0" },
@@ -304,8 +305,8 @@ async function load(id) {
 }
 
 // ---------------- animation
-let walking = false;
-function baseLoop(c) { const a = c.actions[walking ? "walk" : "idle"]; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled = true; a.setEffectiveWeight(1); if (c.current && c.current !== a) c.current.crossFadeTo(a, 0.2, false); a.play(); c.current = a; }
+let walking = false, running = false;
+function baseLoop(c) { const a = c.actions[running && c.actions.run ? "run" : walking ? "walk" : "idle"]; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled = true; a.setEffectiveWeight(1); if (c.current && c.current !== a) c.current.crossFadeTo(a, 0.2, false); a.play(); c.current = a; }
 function playClip(c, name, done) { const a = c.actions[name]; if (!a) { if (done) done(); return; } a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.enabled = true; a.setEffectiveWeight(1); if (c.current && c.current !== a) c.current.crossFadeTo(a, name === "send_out" ? 0 : 0.12, false); a.play(); c.current = a; c.onDone = done || null; }
 
 // ---------------- effects
@@ -440,6 +441,50 @@ function moveFx(c, mv) {
 const sayEl = document.getElementById("say"); let sayTimer = 0;
 function say(text) { sayEl.classList.remove("off"); let i = 0; clearInterval(sayEl._t); sayEl._t = setInterval(() => { i++; sayEl.textContent = text.slice(0, i); if (i >= text.length) clearInterval(sayEl._t); }, 22); sayTimer = 2.4; }
 let current = IDS[0], busy = false;
+// ---------------- the capture cube, made in code: purple lid, blue base, a glowing seam and a round white button
+function makeCube(s) {
+  const g = new THREE.Group(), lidPivot = new THREE.Group();
+  const half = new RoundedBoxGeometry(1, 0.5, 1, 3, 0.12);
+  const base = new THREE.Mesh(half, new THREE.MeshStandardMaterial({ color: "#3a8ee8", roughness: 0.35 })); base.position.y = 0.25;
+  const lid = new THREE.Mesh(half, new THREE.MeshStandardMaterial({ color: "#8a4fd8", roughness: 0.35 })); lid.position.set(0, 0.25, 0.5);
+  lidPivot.position.set(0, 0.5, -0.5); lidPivot.add(lid);
+  const seam = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.05, 1.02), new THREE.MeshBasicMaterial({ color: "#ffffff" })); seam.position.y = 0.5;
+  const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.06, 20), new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#d8f0ff", emissiveIntensity: 0.5, roughness: 0.3 }));
+  btn.rotation.x = Math.PI / 2; btn.position.set(0, 0.5, 0.52);
+  g.add(base, lidPivot, seam, btn); g.scale.setScalar(s); g.userData.lid = lidPivot;
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+const cubes = [];
+function throwCube(c) {
+  const ev = c.manifest.events?.throw; if (!ev || !c.anchors[ev.anchor]) return;
+  after(ev.release, () => {
+    // aim at a spot ahead of the thrower and to the left of the screen, where the camera can see it land
+    const s = c.size.y * 0.055, cube = makeCube(s), p = at(c, ev.anchor), H = c.size.y, g = 9.8 * H * 0.7, vy = H * 1.7;
+    const target = c.root.position.clone().add(new THREE.Vector3(-0.34 * H, 0, 0.12 * H)), floor = ground(c);
+    const t = (vy + Math.sqrt(vy * vy + 2 * g * Math.max(0, p.y - floor))) / g;
+    cube.position.copy(p); scene.add(cube);
+    cubes.push({ cube, v: new THREE.Vector3((target.x - p.x) / t, vy, (target.z - p.z) / t), spin: new THREE.Vector3(rand(4, 7), rand(-3, 3), rand(-2, 2)), age: 0, landed: -1, floor, s, c });
+  });
+}
+function updateCubes(dt) {
+  for (let i = cubes.length - 1; i >= 0; i--) {
+    const q = cubes[i]; q.age += dt;
+    if (q.landed < 0) {
+      q.v.y -= 9.8 * q.c.size.y * 0.7 * dt; q.cube.position.addScaledVector(q.v, dt);
+      q.cube.rotation.x += q.spin.x * dt; q.cube.rotation.y += q.spin.y * dt; q.cube.rotation.z += q.spin.z * dt;
+      if (q.cube.position.y <= q.floor) { q.cube.position.y = q.floor; q.landed = q.age; q.cube.rotation.set(0, q.c.root.rotation.y + Math.PI, 0); }
+    } else {
+      const t = q.age - q.landed;
+      if (t < 0.45) q.cube.position.y = q.floor + Math.abs(Math.sin(t * 14)) * q.s * 0.6 * (1 - t / 0.45);
+      if (t > 0.5 && !q.opened) { q.opened = true; const p = q.cube.position.clone().add(new THREE.Vector3(0, q.s * 0.8, 0)); glow.spawn({ pos: p, life: 0.35, size: q.s * 14, size1: q.s, color: "#ffffff" }); burst("Normal", p, 30, q.s * 30, Math.max(q.c.k, 0.45)); ring(new THREE.Vector3(p.x, q.floor + 0.01, p.z), "#ffffff", q.s, q.s * 18, 0.5); }
+      if (q.opened) q.cube.userData.lid.rotation.x = -Math.min(1, (t - 0.5) / 0.2) * 1.9;
+      if (t > 1.6) { q.cube.scale.multiplyScalar(Math.max(0, 1 - dt * 8)); }
+      if (t > 1.9) { scene.remove(q.cube); cubes.splice(i, 1); }
+    }
+  }
+}
+const SAYS = { talk: c => `${c.name}: "Want to see my creatures?"`, wave: c => `${c.name} waves!`, throw: c => `${c.name} threw a capture cube!`, point: c => `${c.name}: "Go!"`, cheer: c => `${c.name} cheers!`, lose: c => `${c.name}: "Aww..."` };
 const REACT = [{ id: "hit", name: "Take a hit", react: true }, { id: "faint", name: "Faint", react: true }, { id: "send_out", name: "Send out", react: true }];
 function run(mv) {
   const c = creatures[current]; if (busy || !c) return;
@@ -451,14 +496,19 @@ function run(mv) {
     else { say(`Go! ${c.name}!`); c.root.visible = true; sendOutFx(c); playClip(c, "send_out", done); }
     return;
   }
+  if (mv.person) { say((SAYS[mv.clip] || (() => mv.name))(c)); if (mv.clip === "throw") throwCube(c); playClip(c, mv.clip, done); return; }
   say(`${c.name} used ${mv.name}!`); moveFx(c, mv); playClip(c, mv.clip, done);
 }
-function setButtons() { document.querySelectorAll("#moves button").forEach(b => { if (b.id !== "walk") b.disabled = busy; }); }
+function setButtons() { document.querySelectorAll("#moves button").forEach(b => { if (b.id !== "walk" && b.id !== "run") b.disabled = busy; }); }
 function buildMoves() {
   const c = creatures[current], el = document.getElementById("moves"); el.innerHTML = "";
   const w = document.createElement("button"); w.id = "walk"; w.textContent = "Walk"; w.setAttribute("aria-pressed", String(walking));
-  w.onclick = () => { walking = !walking; w.setAttribute("aria-pressed", String(walking)); for (const x of Object.values(creatures)) if (!busy) baseLoop(x); }; el.appendChild(w);
-  for (const mv of [...c.moves, ...REACT]) { const b = document.createElement("button"); b.className = "move" + (mv.react ? " react" : ""); b.textContent = mv.name; if (!mv.react) b.style.setProperty("--tc", TYPES[mv.type]?.ui || "#ccc"); b.title = mv.react ? mv.name : `${mv.type} · ${mv.cat.replace("_", " ")}`; b.onclick = () => run(mv); el.appendChild(b); }
+  w.onclick = () => { walking = !walking; if (walking) running = false; w.setAttribute("aria-pressed", String(walking)); const rb = document.getElementById("run"); if (rb) rb.setAttribute("aria-pressed", "false"); for (const x of Object.values(creatures)) if (!busy) baseLoop(x); }; el.appendChild(w);
+  if (c.kind === "person") {
+    const r = document.createElement("button"); r.id = "run"; r.textContent = "Run"; r.setAttribute("aria-pressed", String(running));
+    r.onclick = () => { running = !running; if (running) walking = false; r.setAttribute("aria-pressed", String(running)); w.setAttribute("aria-pressed", "false"); for (const x of Object.values(creatures)) if (!busy) baseLoop(x); }; el.appendChild(r);
+  }
+  for (const mv of c.kind === "person" ? c.moves : [...c.moves, ...REACT]) { const b = document.createElement("button"); b.className = "move" + (mv.react ? " react" : ""); b.textContent = mv.name; if (!mv.react) b.style.setProperty("--tc", TYPES[mv.type]?.ui || "#ccc"); b.title = mv.react || mv.person ? mv.name : `${mv.type} · ${mv.cat.replace("_", " ")}`; b.onclick = () => run(mv); el.appendChild(b); }
 }
 function show(id) {
   current = id; const c = creatures[id];
@@ -472,15 +522,20 @@ function show(id) {
   const dist = Math.max((c.size.y * 1.1 / 2) / Math.tan(vf) / 0.55, (r * 0.62) / Math.tan(hf) / 0.95);
   controls.target.set(0, c.size.y * 0.45, 0); camera.position.set(0, c.size.y * 0.45 + dist * 0.22, dist); controls.minDistance = dist * 0.25; controls.maxDistance = dist * 2.5; controls.update();
   document.getElementById("title").textContent = c.name;
-  document.getElementById("types").innerHTML = c.types.map(t => `<span class="chip" style="background:${TYPES[t].ui}">${t}</span>`).join("") + ` ${BODY[c.body] || BODY[c.plan] || c.plan} body`;
-  document.getElementById("facts").textContent = `Built by ${c.builder} · ${c.moves.length} moves from the game`;
+  if (c.kind === "person") {
+    document.getElementById("types").innerHTML = `<span class="chip" style="background:#e8d5b5">Person</span> ${c.role}`;
+    document.getElementById("facts").textContent = `Built by ${c.builder} · ${c.moves.length} actions, plus walk and run`;
+  } else {
+    document.getElementById("types").innerHTML = c.types.map(t => `<span class="chip" style="background:${TYPES[t].ui}">${t}</span>`).join("") + ` ${BODY[c.body] || BODY[c.plan] || c.plan} body`;
+    document.getElementById("facts").textContent = `Built by ${c.builder} · ${c.moves.length} moves from the game`;
+  }
   document.querySelectorAll("#pick button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
   buildMoves();
 }
 function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); const s = renderer.domElement.height * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); for (const p of [glow, smoke]) { p.u.uScale.value = s; p.u.uMax.value = renderer.domElement.height * 0.16; } }
 addEventListener("resize", () => { resize(); if (creatures[current]) show(current); });
 resize();
-const NAMES = { mossback: "Mossback", embroak: "Embroak", drizzlon: "Drizzlon", clovermouse: "Clovermouse", puffmunk: "Puffmunk", fleecling: "Fleecling", mushling: "Mushling", lunarion: "Lunarion", coalossus: "Coalossus" };
+const NAMES = { "player-a": "Hero (boy)", "player-b": "Hero (girl)", mossback: "Mossback", embroak: "Embroak", drizzlon: "Drizzlon", clovermouse: "Clovermouse", puffmunk: "Puffmunk", fleecling: "Fleecling", mushling: "Mushling", lunarion: "Lunarion", coalossus: "Coalossus" };
 load(IDS[0]).then(() => {
   document.getElementById("loading").hidden = true; document.getElementById("dock").hidden = false;
   const pk = document.getElementById("pick");
@@ -508,7 +563,7 @@ load(IDS[0]).then(() => {
         else if (a.kind === "spores" && Math.random() < 0.35) smoke.spawn({ pos: p.clone().add(randDir().multiplyScalar(0.15 * s)), vel: new THREE.Vector3(rand(-0.1, 0.1), rand(0.05, 0.15), rand(-0.1, 0.1)), life: 2.4, size: 0.035, size1: 0.02, color: pick(["#b48ad8", "#d8c4f0"]), alpha: 0.8 });
         else if (a.kind === "drip" && Math.random() < 0.12) glow.spawn({ pos: p, vel: new THREE.Vector3(0, -0.1, 0), life: 0.9, size: 0.05, size1: 0.04, color: "#8fd0ff", gravity: 3, floor: ground(c) + 0.01 });
         else if (a.kind === "sparkle" && Math.random() < 0.4) glow.spawn({ pos: p.clone().add(randDir().multiplyScalar(0.3 * s)), vel: new THREE.Vector3(0, 0.15, 0), life: 1.0, size: 0.09 * s, size1: 0, color: pick(TYPES.Lumen.c) }); } }
-    glow.update(dt); smoke.update(dt); updateShapes(dt);
+    glow.update(dt); smoke.update(dt); updateShapes(dt); updateCubes(dt);
     if (flashA > 0) { flashEl.style.opacity = String(flashA); flashA = Math.max(0, flashA - dt * 4); if (flashA === 0) flashEl.style.opacity = "0"; }
     if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) sayEl.classList.add("off"); }
     controls.update(); camBase.copy(camera.position);

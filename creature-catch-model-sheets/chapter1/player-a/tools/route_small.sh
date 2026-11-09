@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Changed copy (round 3, clovermouse / puffmunk; same file as clovermouse/tools) of pipeline/route_small.sh, based on Opus's round-2 copy.
-# Changes: uses this folder's build.py + parts.py (n_scale/k_scale, "slab"), print_tex.py, board.py
+# Changed copy (chapter 1, player-a; same as round 3 clovermouse/puffmunk tools) of pipeline/route_small.sh, based on Opus round-2 copy.
+# Changes: uses this folder's build.py + parts.py (n_scale/k_scale, "slab", "ring_ease"), print_tex.py, relief.py ("grain"), board.py
 # (frames the three-quarter views by size) and emissive.py (all-black glow map unless
 # EMISSIVE_ARGS is set); the PIL step runs with $PY instead of the system python3.
 # usage: PY=/path/to/venv/bin/python bash route_small.sh PARTS.json VIEWS.json OUTDIR [TRIANGLES=7000] [NAME]

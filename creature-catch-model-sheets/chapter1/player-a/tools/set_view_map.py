@@ -1,4 +1,6 @@
-"""opus tool (round 3): set a view's picture-to-metres numbers by hand in views.json.
+"""Chapter 1 (player-a): unchanged copy of round 3's Puffmunk tools/set_view_map.py.
+
+opus tool (round 3): set a view's picture-to-metres numbers by hand in views.json.
 
 usage: python3 -I set_view_map.py views.json VIEW key=value [key=value ...]
 

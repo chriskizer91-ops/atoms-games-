@@ -1,0 +1,38 @@
+{
+ "texels": 3223712,
+ "seen_by_a_picture": 65.0,
+ "painted_by": {
+  "front": 613320,
+  "back": 652161,
+  "side+x": 395278,
+  "side-x": 357296,
+  "top": 98828
+ },
+ "parts": [
+  "head",
+  "ear_L",
+  "ear_R",
+  "hair",
+  "hair_bangs",
+  "hair_lock_L",
+  "hair_lock_R",
+  "hair_lock_low_L",
+  "hair_lock_low_R",
+  "ponytail",
+  "ponytail_plume",
+  "neck",
+  "collar",
+  "vest",
+  "backpack",
+  "arm_L",
+  "arm_R",
+  "hand_L",
+  "hand_R",
+  "hips",
+  "cube",
+  "leg_L",
+  "leg_R",
+  "boot_L",
+  "boot_R"
+ ]
+}

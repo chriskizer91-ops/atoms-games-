@@ -1,4 +1,6 @@
-"""Changed copy (round 3, clovermouse / puffmunk): glow map.
+"""Chapter 1 (player-a): unchanged copy of round 3's Puffmunk tools/emissive.py.
+
+Changed copy (round 3, clovermouse / puffmunk): glow map.
 
 usage: python3 -I emissive.py albedo.png emissive.png [--size 1024] [--off]
 

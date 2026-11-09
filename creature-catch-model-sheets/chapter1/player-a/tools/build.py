@@ -1,4 +1,6 @@
-"""Changed copy (round 3, clovermouse / puffmunk; same file as clovermouse/tools): Sonnet round-2 build.py (n_scale / k_scale via tools/parts.py); only the path to pipeline/ changed.
+"""Chapter 1 (player-a): unchanged copy of round 3's Puffmunk tools/build.py.
+
+Changed copy (round 3, clovermouse / puffmunk; same file as clovermouse/tools): Sonnet round-2 build.py (n_scale / k_scale via tools/parts.py); only the path to pipeline/ changed.
 
 Build the model from the traced parts (runs inside Blender's Python module).
 
