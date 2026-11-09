@@ -38,6 +38,14 @@ ROLE_WORDS = [  # first match wins
 ]
 
 
+BIPED_WORDS = [  # people (plan "biped"); first match wins
+    ("ponytail", "hair_tail"), ("hand", "hand"), ("glove", "hand"), ("foot", "foot"), ("boot", "foot"), ("shoe", "foot"),
+    ("arm", "arm"), ("leg", "leg"), ("hips", "hips"), ("belt", "hips"), ("cube", "hips"), ("neck", "neck"),
+    ("head", "head"), ("hair", "head"), ("face", "head"), ("nose", "head"), ("ear", "head"), ("hat", "head"),
+    ("backpack", "chest"), ("collar", "chest"), ("torso", "torso"), ("jacket", "torso"), ("vest", "torso"), ("shirt", "torso"),
+]
+
+
 def arg(flag, default=None):
     return sys.argv[sys.argv.index(flag) + 1] if flag in sys.argv else default
 
@@ -57,14 +65,15 @@ def base_name(n):
     return n[:-2] if n.endswith(("_L", "_R")) else n
 
 
-def role_of(name, roles):
+def role_of(name, roles, words=None):
     b = base_name(name)
     if b in roles:
         return roles[b]
-    for word, role in ROLE_WORDS:
+    words = words or ROLE_WORDS
+    for word, role in words:
         if word in b.lower():
             return role
-    return "body"
+    return "torso" if words is BIPED_WORDS else "body"
 
 
 def side_of(name, v):
@@ -214,6 +223,133 @@ def fit_round(P, mouth_on="body"):
     return J, anchors, H, dict(arm_pts=arm_pts, bz0=bz0, bz1=bz1, tail_pts=tail_pts)
 
 
+def _band(v, z, half):
+    m = np.abs(v[:, 2] - z) <= half
+    return v[m] if m.sum() >= 3 else v[np.argsort(np.abs(v[:, 2] - z))[:8]]
+
+
+def fit_biped(P):
+    """People: hips, spine, chest, neck, head, arms (upper, fore, hand), legs (thigh, shin, foot), ponytail."""
+    J = {"root": ((0, 0, 0), (0, 0, 0.2), None)}
+    allv = np.concatenate([v for lst in P.values() for n, s, v in lst])
+    H = float(allv[:, 2].max())
+    legs, feet = {}, {}
+    for name, side, v in P.get("leg", []):
+        top, bot = float(v[:, 2].max()), float(v[:, 2].min())
+        L = top - bot
+        hip_z, knee_z = top - 0.06 * L, bot + 0.47 * L
+        hb, kb = _band(v, hip_z, 0.05 * L), _band(v, knee_z, 0.04 * L)
+        legs[side] = dict(hip=np.array([np.median(hb[:, 0]), np.median(hb[:, 1]), hip_z]),
+                          knee=np.array([np.median(kb[:, 0]), np.median(kb[:, 1]), knee_z]), top=top, bot=bot)
+    for name, side, v in P.get("foot", []):
+        z0, z1 = float(v[:, 2].min()), float(v[:, 2].max())
+        az = min(z0 + 0.6 * (z1 - z0), z0 + 0.075 * H)
+        ab = _band(v, az, 0.25 * (z1 - z0) + 1e-3)
+        ankle = np.array([np.median(ab[:, 0]), np.median(ab[:, 1]), az])
+        toe = np.array([np.median(v[:, 0]), float(v[:, 1].min()) + 0.15 * (float(v[:, 1].max()) - float(v[:, 1].min())), z0 + 0.25 * (az - z0)])
+        feet[side] = dict(ankle=ankle, toe=toe, z0=z0, z1=z1)
+    tv = np.concatenate([v for n, s, v in P.get("torso", [])] or [allv])
+    arm_tops = [float(v[:, 2].max()) for n, s, v in P.get("arm", [])]
+    shoulder_z = float(np.mean(arm_tops)) if arm_tops else float(tv[:, 2].max())
+    hip_z = float(np.mean([l["hip"][2] for l in legs.values()])) if legs else 0.5 * H
+    yc = float(np.median(tv[:, 1]))
+    d = shoulder_z - hip_z
+    waist_z, chest_z = hip_z + 0.33 * d, hip_z + 0.68 * d
+    hv = np.concatenate([v for n, s, v in P.get("head", []) if base_name(n) in ("head", "face")] or [v for n, s, v in P.get("head", [])] or [allv[allv[:, 2] > shoulder_z]])
+    head_all = np.concatenate([v for n, s, v in P.get("head", [])] or [hv])
+    hz0 = float(hv[:, 2].min())
+    hyc = float(np.median(hv[:, 1]))
+    J["hips"] = ((0, yc, hip_z), (0, yc, waist_z), "root")
+    J["spine"] = ((0, yc, waist_z), (0, yc, chest_z), "hips")
+    J["chest"] = ((0, yc, chest_z), (0, yc, shoulder_z), "spine")
+    J["neck"] = ((0, yc, shoulder_z), (0, hyc, hz0 + 0.12 * (float(head_all[:, 2].max()) - hz0)), "chest")
+    J["head"] = (J["neck"][1], (0, hyc, float(head_all[:, 2].max())), "neck")
+    arm_pts, hand_tip = {}, {}
+    for name, side, v in P.get("arm", []):
+        pts = chain_points(v, v[np.argmax(v[:, 2])], 2)
+        arm_pts[side] = pts
+        J[f"upper_arm_{side}"] = (tuple(pts[0]), tuple(pts[1]), "chest")
+        J[f"forearm_{side}"] = (tuple(pts[1]), tuple(pts[2]), f"upper_arm_{side}")
+    for name, side, v in P.get("hand", []):
+        wrist = arm_pts[side][2] if side in arm_pts else v[np.argmax(v[:, 2])]
+        tip = v[np.argmax(np.linalg.norm(v - wrist, axis=1))]
+        hand_tip[side] = tip
+        J[f"hand_{side}"] = (tuple(wrist), tuple(tip), f"forearm_{side}" if side in arm_pts else "chest")
+    for side, l in legs.items():
+        ankle = feet[side]["ankle"] if side in feet else np.array([l["knee"][0], l["knee"][1], l["bot"]])
+        J[f"thigh_{side}"] = (tuple(l["hip"]), tuple(l["knee"]), "hips")
+        J[f"shin_{side}"] = (tuple(l["knee"]), tuple(ankle), f"thigh_{side}")
+        if side in feet:
+            J[f"foot_{side}"] = (tuple(ankle), tuple(feet[side]["toe"]), f"shin_{side}")
+    pony = None
+    if P.get("hair_tail"):
+        pv = np.concatenate([v for n, s, v in P["hair_tail"]])
+        pony = chain_points(pv, np.array((0.0, hyc, float(hv[:, 2].max()))), 2)
+        J["pony1"] = (tuple(pony[0]), tuple(pony[1]), "head")
+        J["pony2"] = (tuple(pony[1]), tuple(pony[2]), "pony1")
+    hz1 = float(hv[:, 2].max())
+    anchors = {"mouth": ("head", (0, float(hv[:, 1].min()), hz0 + 0.25 * (hz1 - hz0))),
+               "chest": ("chest", (0, float(tv[:, 1].min()), chest_z)),
+               "head_top": ("head", (0, hyc, float(head_all[:, 2].max())))}
+    for side, tip in hand_tip.items():
+        w = np.array(J[f"hand_{side}"][0])
+        anchors[f"hand_{side}"] = (f"hand_{side}", tuple((w + tip) / 2))
+    fit = dict(H=H, hip_z=hip_z, waist_z=waist_z, chest_z=chest_z, shoulder_z=shoulder_z, legs=legs, feet=feet, arm_pts=arm_pts, pony=pony)
+    return J, anchors, H, fit
+
+
+def weights_biped(name, role, side, v, fit):
+    z, H = v[:, 2], fit["H"]
+    W = {}
+    if role == "head":
+        W["head"] = np.ones(len(v))
+    elif role == "neck":
+        t = smooth((z - fit["shoulder_z"]) / (0.05 * H))
+        W["head"], W["chest"] = t, 1 - t
+    elif role == "hair_tail" and fit["pony"] is not None:
+        pts = fit["pony"]
+        sw = seg_weights(v, pts)
+        base = smooth(np.linalg.norm(v - pts[0], axis=1) / (0.3 * np.linalg.norm(pts[1] - pts[0]) + 1e-6))
+        W["pony1"], W["pony2"], W["head"] = sw[:, 0] * base, sw[:, 1], (1 - base) * sw[:, 0]
+    elif role in ("torso", "chest", "hips"):
+        d = fit["shoulder_z"] - fit["hip_z"]
+        if role == "chest":
+            W["chest"] = np.ones(len(v))
+        elif role == "hips":
+            up = smooth((z - (fit["waist_z"] + 0.05 * d)) / (0.25 * d))
+            W["hips"], W["spine"] = 1 - up, up
+        else:
+            wh = 1 - smooth((z - (fit["hip_z"] + 0.12 * d)) / (0.3 * d))
+            wc = smooth((z - (fit["chest_z"] - 0.12 * d)) / (0.24 * d))
+            W["hips"], W["chest"] = wh, wc
+            W["spine"] = np.clip(1 - wh - wc, 0, 1)
+    elif role == "arm" and side in fit["arm_pts"]:
+        pts = fit["arm_pts"][side]
+        sw = seg_weights(v, pts, sharp=0.25)
+        attach = 1 - smooth(np.linalg.norm(v - pts[0], axis=1) / (0.3 * np.linalg.norm(pts[1] - pts[0]) + 1e-6))
+        W[f"upper_arm_{side}"] = sw[:, 0] * (1 - attach)
+        W[f"forearm_{side}"] = sw[:, 1] * (1 - attach)
+        W["chest"] = attach
+    elif role == "hand":
+        W[f"hand_{side}"] = np.ones(len(v))
+    elif role == "leg" and side in fit["legs"]:
+        l = fit["legs"][side]
+        L = l["top"] - l["bot"]
+        th = smooth((z - (l["knee"][2] - 0.05 * L)) / (0.1 * L))
+        topb = smooth((z - (l["hip"][2] - 0.02 * L)) / (0.08 * L)) * 0.8
+        W[f"thigh_{side}"] = th * (1 - topb)
+        W["hips"] = th * topb
+        W[f"shin_{side}"] = 1 - th
+    elif role == "foot" and side in fit["feet"]:
+        f = fit["feet"][side]
+        up = smooth((z - (f["ankle"][2] + 0.01 * H)) / (0.035 * H))
+        W[f"shin_{side}"] = up
+        W[f"foot_{side}"] = 1 - up
+    else:
+        W["chest"] = np.ones(len(v))
+    return W
+
+
 # ---------------------------------------------------------------- weights
 def weights_quad(name, role, side, v, fit):
     x, y, z = v[:, 0], v[:, 1], v[:, 2]
@@ -320,11 +456,13 @@ def main():
     info = {}
     for n, o in parts.items():
         v = verts(o)
-        r, s = role_of(n, roles), side_of(n, verts(o))
+        r, s = role_of(n, roles, BIPED_WORDS if plan == "biped" else None), side_of(n, verts(o))
         P.setdefault(r, []).append((n, s, v))
         info[n] = (r, s, v)
     if plan == "quad":
         J, anchors, scale, fit = fit_quad(P, wings)
+    elif plan == "biped":
+        J, anchors, scale, fit = fit_biped(P)
     else:
         J, anchors, scale, fit = fit_round(P, cfg.get("mouth", "body"))
     print("roles:", {n: info[n][0] + ("" if info[n][1] is None else "/" + info[n][1]) for n in info})
@@ -346,7 +484,7 @@ def main():
     main_bone = {}
     for n, o in parts.items():
         r, s, v = info[n]
-        W = (weights_quad if plan == "quad" else weights_round)(n, r, s, v, fit)
+        W = {"quad": weights_quad, "biped": weights_biped}.get(plan, weights_round)(n, r, s, v, fit)
         tot = sum(W.values())
         main_bone[n] = max((b for b in W if b in J), key=lambda b: float(np.mean(W[b] / np.maximum(tot, 1e-6))), default="root")
         for bone, w in W.items():
@@ -439,7 +577,7 @@ def main():
         to_gltf = lambda p: [round(float(p[0]), 4), round(float(p[2]), 4), round(float(-p[1]), 4)]  # noqa: E731
         man = {"plan": plan, "wings": wings, "gait": gait, "scale": round(float(scale), 4),
                "anchors": {k: {"bone": b, "pos": to_gltf(p)} for k, (b, p) in anchors.items()},
-               "clips": {c: d for c, (d, _) in clips.items()}}
+               "clips": {c: d for c, (d, _) in clips.items()}, "events": motions.EVENTS.get(plan, {})}
         json.dump(man, open(arg("--manifest"), "w"), indent=1)
     print(f"exported {out}: {os.path.getsize(out) / 1e6:.2f} MB, {len(J)} bones, {len(clips)} clips: {', '.join(clips)}")
 

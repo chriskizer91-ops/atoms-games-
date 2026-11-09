@@ -7,7 +7,7 @@ and the send-out pops in. This file is the 3D version of that: one set of clips 
 played for any move of that kind. Effects (embers, droplets, rocks...) are added by the viewer
 or the game by the move's type.
 
-Clip names (the same for every body type):
+Clip names (the same for every creature body type; people have their own set, see biped()):
   idle, walk                                   loops
   physical, special, strong_physical, strong_special, boost, boost_guard, status
   hit, faint, send_out
@@ -319,7 +319,112 @@ def round_(gait="waddle"):
     return M
 
 
-PLANS = {"quad": quad, "round": round_}
+# ---------------------------------------------------------------- people (biped)
+def biped():
+    """Two-legged clips for people. Locations are per 1.0 of height. The pictures' A-pose is the rest pose;
+    most clips first relax the arms down to the sides (REL). Rotations are about the armature axes: X
+    negative swings a limb forward, Y raises the left arm when negative (the right arm when positive,
+    written out per side), Z turns the body."""
+    import math as m
+    REL_L, REL_R = (3, 20, 0), (3, -20, 0)
+
+    def arms(l=(0, 0, 0), r=(0, 0, 0), fl=-10, fr=-10):
+        return {"upper_arm_L": {"r": (REL_L[0] + l[0], REL_L[1] + l[1], REL_L[2] + l[2])},
+                "upper_arm_R": {"r": (REL_R[0] + r[0], REL_R[1] + r[1], REL_R[2] + r[2])},
+                "forearm_L": {"r": (fl, 0, 0)}, "forearm_R": {"r": (fr, 0, 0)}}
+
+    M = {}
+    M["idle"] = (3.0, [
+        (0.0, arms()),
+        (0.75, _merge(arms(), {"chest": {"r": (-1.5, 0, 0)}, "head": {"r": (0, 0, 3)}, "pony1": {"r": (0, 0, 3)}})),
+        (1.5, _merge(arms(l=(-2, 0, 0), r=(-2, 0, 0)), {"root": {"l": (0.004, 0, -0.003)}, "head": {"r": (2, 0, 0)}})),
+        (2.25, _merge(arms(), {"chest": {"r": (-1.5, 0, 0)}, "head": {"r": (0, 0, -3)}, "pony1": {"r": (0, 0, -3)}})),
+        (3.0, arms()),
+    ])
+
+    def cycle(dur, thigh, knee, arm, fore, bob, lean, n=9):
+        keys = []
+        for i in range(n):
+            t = i / (n - 1)
+            p = 2 * m.pi * t
+            sw_l, sw_r = max(0.0, m.cos(p)), max(0.0, -m.cos(p))
+            k = arms(l=(arm * m.sin(p), 0, 0), r=(-arm * m.sin(p), 0, 0), fl=fore, fr=fore)
+            k = _merge(k, {
+                "thigh_L": {"r": (-thigh * m.sin(p), 0, 0)}, "thigh_R": {"r": (thigh * m.sin(p), 0, 0)},
+                "shin_L": {"r": (knee * sw_l ** 1.5, 0, 0)}, "shin_R": {"r": (knee * sw_r ** 1.5, 0, 0)},
+                "foot_L": {"r": (-12 * sw_l, 0, 0)}, "foot_R": {"r": (-12 * sw_r, 0, 0)},
+                "root": {"l": (0.008 * m.sin(p), 0, bob * m.cos(2 * p))},
+                "hips": {"r": (0, 0, 6 * m.sin(p))}, "spine": {"r": (lean, 0, -3 * m.sin(p))},
+                "chest": {"r": (0, 0, -6 * m.sin(p))}, "head": {"r": (-lean * 0.6, 0, 2 * m.sin(p))},
+                "pony1": {"r": (6 * m.sin(2 * p), 0, 10 * m.sin(p))}, "pony2": {"r": (5 * m.sin(2 * p), 0, 8 * m.sin(p - 0.6))},
+            })
+            keys.append((t * dur, k))
+        return (dur, keys)
+
+    M["walk"] = cycle(1.0, 22, 38, 18, -14, 0.010, 2)
+    M["run"] = cycle(0.66, 38, 75, 35, -70, 0.030, 12)
+    M["talk"] = (2.0, [
+        (0.0, arms()),
+        (0.35, _merge(arms(r=(-22, 8, 0), fr=-62), {"head": {"r": (3, 0, 0)}, "chest": {"r": (0, 0, 3)}})),
+        (0.7, _merge(arms(r=(-26, 10, 0), fr=-72), {"head": {"r": (-2, 3, 0)}, "chest": {"r": (0, 0, 4)}})),
+        (1.05, _merge(arms(r=(-20, 6, 0), fr=-58), {"head": {"r": (4, -2, 0)}, "chest": {"r": (0, 0, 2)}})),
+        (1.4, _merge(arms(r=(-24, 9, 0), fr=-68), {"head": {"r": (0, 2, 0)}})),
+        (2.0, arms()),
+    ])
+    up_r = lambda y, x=0: {"upper_arm_R": {"r": (x, y, 0)}}  # noqa: E731  raised right arm (rest A-pose + y)
+    M["wave"] = (1.8, [
+        (0.0, arms()),
+        (0.3, _merge(arms(), up_r(105), {"forearm_R": {"r": (0, 25, 0)}, "head": {"r": (0, -4, 0)}, "chest": {"r": (0, -3, 0)}})),
+        (0.55, _merge(arms(), up_r(110), {"forearm_R": {"r": (0, 45, 0)}, "head": {"r": (0, -4, 0)}, "chest": {"r": (0, -3, 0)}})),
+        (0.8, _merge(arms(), up_r(108), {"forearm_R": {"r": (0, 12, 0)}, "head": {"r": (0, -4, 0)}, "chest": {"r": (0, -3, 0)}})),
+        (1.05, _merge(arms(), up_r(110), {"forearm_R": {"r": (0, 45, 0)}, "head": {"r": (0, -4, 0)}, "chest": {"r": (0, -3, 0)}})),
+        (1.3, _merge(arms(), up_r(105), {"forearm_R": {"r": (0, 20, 0)}})),
+        (1.8, arms()),
+    ])
+    M["throw"] = (1.3, [  # overhand cube throw with the right hand; the cube leaves the hand at 0.5 s
+        (0.0, arms()),
+        (0.28, _merge(arms(l=(-40, 0, 0)), {"upper_arm_R": {"r": (38, 92, 0)}, "forearm_R": {"r": (-95, 0, 0)},
+                      "chest": {"r": (0, 0, -18)}, "spine": {"r": (-4, 0, -6)}, "hips": {"r": (0, 0, -6)},
+                      "thigh_L": {"r": (-16, 0, 0)}, "shin_L": {"r": (12, 0, 0)}, "head": {"r": (0, 0, 10)}})),
+        (0.5, _merge(arms(l=(25, 10, 0)), {"upper_arm_R": {"r": (-80, 40, 0)}, "forearm_R": {"r": (-18, 0, 0)},
+                     "chest": {"r": (0, 0, 16)}, "spine": {"r": (10, 0, 6)}, "hips": {"r": (0, 0, 6)},
+                     "thigh_L": {"r": (-24, 0, 0)}, "shin_L": {"r": (6, 0, 0)}, "thigh_R": {"r": (14, 0, 0)},
+                     "root": {"l": (0, -0.04, -0.01)}, "head": {"r": (4, 0, -8)}})),
+        (0.75, _merge(arms(l=(20, 5, 0)), {"upper_arm_R": {"r": (-48, 12, 0)}, "forearm_R": {"r": (-30, 0, 0)},
+                      "chest": {"r": (0, 0, 22)}, "spine": {"r": (14, 0, 6)}, "hips": {"r": (0, 0, 6)},
+                      "thigh_L": {"r": (-20, 0, 0)}, "shin_L": {"r": (8, 0, 0)}, "thigh_R": {"r": (12, 0, 0)},
+                      "root": {"l": (0, -0.05, -0.012)}})),
+        (1.3, arms()),
+    ])
+    crouch = {"root": {"l": (0, 0, -0.035)}, "thigh_L": {"r": (-25, 0, 0)}, "thigh_R": {"r": (-25, 0, 0)},
+              "shin_L": {"r": (45, 0, 0)}, "shin_R": {"r": (45, 0, 0)}, "foot_L": {"r": (-20, 0, 0)}, "foot_R": {"r": (-20, 0, 0)}}
+    arms_up = {"upper_arm_L": {"r": (-10, -125, 0)}, "upper_arm_R": {"r": (-10, 125, 0)},
+               "forearm_L": {"r": (0, -15, 0)}, "forearm_R": {"r": (0, 15, 0)}}
+    M["cheer"] = (1.5, [
+        (0.0, arms()),
+        (0.16, _merge(arms(), crouch)),
+        (0.36, _merge(arms_up, {"root": {"l": (0, 0, 0.07)}, "head": {"r": (-8, 0, 0)}, "pony1": {"r": (-14, 0, 0)}})),
+        (0.56, _merge(arms_up, crouch, {"root": {"l": (0, 0, -0.02)}, "pony1": {"r": (10, 0, 0)}})),
+        (0.8, _merge(arms_up, {"root": {"l": (0, 0, 0.05)}, "head": {"r": (-6, 0, 0)}, "pony1": {"r": (-10, 0, 0)}})),
+        (1.0, _merge(arms_up, {"root": {"l": (0, 0, 0)}})),
+        (1.5, arms()),
+    ])
+    slump = _merge(arms(l=(4, 6, 0), r=(4, -6, 0), fl=-4, fr=-4), {"head": {"r": (26, 0, 0)}, "neck": {"r": (8, 0, 0)},
+                   "spine": {"r": (12, 0, 0)}, "chest": {"r": (6, 0, 0)}, "root": {"l": (0, 0, -0.02)},
+                   "thigh_L": {"r": (-8, 0, 0)}, "thigh_R": {"r": (-8, 0, 0)}, "shin_L": {"r": (14, 0, 0)}, "shin_R": {"r": (14, 0, 0)},
+                   "pony1": {"r": (12, 0, 0)}})
+    M["lose"] = (2.0, [(0.0, arms()), (0.6, slump), (2.0, _merge(slump, {"head": {"r": (30, 0, 0)}}))])
+    M["point"] = (1.2, [  # sending a creature in: point straight ahead with the right arm
+        (0.0, arms()),
+        (0.3, _merge(arms(), {"upper_arm_R": {"r": (-82, -8, 0)}, "forearm_R": {"r": (-4, 0, 0)}, "chest": {"r": (0, 0, 10)}, "head": {"r": (-3, 0, 0)}})),
+        (0.85, _merge(arms(), {"upper_arm_R": {"r": (-84, -8, 0)}, "forearm_R": {"r": (-4, 0, 0)}, "chest": {"r": (0, 0, 10)}, "head": {"r": (-3, 0, 0)}})),
+        (1.2, arms()),
+    ])
+    return M
+
+
+PLANS = {"quad": quad, "round": round_, "biped": biped}
+EVENTS = {"biped": {"throw": {"release": 0.5, "anchor": "hand_R"}}}  # timed moments the viewer or game hooks into
 
 
 def clips(plan, wings=False, gait=None):

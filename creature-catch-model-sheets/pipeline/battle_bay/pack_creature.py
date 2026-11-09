@@ -4,6 +4,7 @@ usage: NODE_DIR=<folder with node_modules holding @gltf-transform/core, /extensi
        python3 pack_creature.py ID ANIMATED.glb ANIM_MANIFEST.json "BUILDER" '[{"anchor": "mouth", "kind": "ember"}]' OUTDIR
 Writes OUTDIR/models/ID.json (quantized GLB in base64 + effect anchors + the creature's moves from the game) and
 OUTDIR/textures/ID_* (colour, normal, glow). Normal maps over 1.5 MB are halved for phones.
+People: set PERSON="Name|role" to pack a person (actions instead of moves; the throw launches a capture cube).
 Ambient kinds the viewer knows: smoke, spores, drip, sparkle, ember, rain, petal; anchor "top" = above the creature.
 """
 import base64, json, os, shutil, subprocess, sys
@@ -30,15 +31,17 @@ for slot, f in sm["textures"].items():
         from PIL import Image
         im = Image.open(f"{out}/textures/{f}")
         im.resize((im.width // 2, im.height // 2), Image.LANCZOS).save(f"{out}/textures/{f}", optimize=True)
+PERSON_ACTIONS = [("talk", "Talk"), ("wave", "Wave"), ("throw", "Throw a cube"), ("point", "Point"), ("cheer", "Cheer"), ("lose", "Lose")]
+person = os.environ.get("PERSON")  # people: PERSON="Name|role" (no game creature data)
 gd = json.load(open(f"{REPO}/pipeline/game_data.json"))
-cr = gd["creatures"][cid]
-moves = []
+cr = gd["creatures"].get(cid, {"name": cid, "types": [], "learn": []}) if not person else {"name": person.split("|")[0], "types": [], "learn": []}
+moves = [{"id": k, "name": n, "clip": k, "person": True, "type": "Normal", "cat": "action"} for k, n in PERSON_ACTIONS] if person else []
 for e in cr["learn"]:
     m = gd["moves"][e["move"]]
     clip = motions.move_clip(m)
     moves.append({"id": e["move"], "name": m["name"], "type": m["type"], "tier": m["tier"], "power": m.get("power", 0), "lv": e["lv"], "clip": clip, "cat": clip})
 am = json.load(open(man_path))
-d = {"id": cid, "name": cr["name"], "types": cr["types"], "body": cr.get("body"), "glb": base64.b64encode(open(f"{split}/{cid}_q.glb", "rb").read()).decode(),
+d = {"id": cid, "name": cr["name"], "types": cr["types"], "body": cr.get("body"), **({"kind": "person", "role": person.split("|")[1]} if person else {}), "glb": base64.b64encode(open(f"{split}/{cid}_q.glb", "rb").read()).decode(),
      "textures": sm["textures"], "manifest": am, "moves": moves, "ambient": ambient, "builder": builder, "plan": am["plan"]}
 json.dump(d, open(f"{out}/models/{cid}.json", "w"))
 sizes = {f"textures/{f}": os.path.getsize(f"{out}/textures/{f}") for f in sm["textures"].values()}

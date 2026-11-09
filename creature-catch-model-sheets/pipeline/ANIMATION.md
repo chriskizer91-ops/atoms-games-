@@ -71,10 +71,32 @@ The game tags every one of its 172 creatures with a body type (`look.body`):
 | `bug` | 19 | To do |
 | `serpent` | 19 | To do |
 | `ghost` | 13 | To do |
-| `biped` (two-legged) | 12 | To do |
+| `biped` (two-legged) | 12 | Skeleton **done** (built for people, below); two-legged creatures can use it too |
 | `frog` | 7 | Uses `quad` with `"gait": "hop"` (Embroak) |
 | `fish` | 6 | To do |
 | `turtle` | 4 | Uses `quad` with `"gait": "plod"` (Mossback) |
+
+## People (`"plan": "biped"`)
+
+The heroes and every other person use a two-legged skeleton. The rest pose is the pictures' A-pose; most
+clips first relax the arms down to the sides.
+
+- **Bones:**
+  - the trunk: hips, spine, chest, neck, head
+  - each arm: upper arm, forearm, hand
+  - each leg: thigh, shin, foot
+  - a two-bone ponytail, if there is one
+- **Part names:** the tool reads each part's job from words in its name (`BIPED_WORDS` in `animate.py`):
+  - `ponytail` swings from the head
+  - `hand`/`glove`, `foot`/`boot`/`shoe`
+  - `arm` and `leg`: one part per limb, which bends at the elbow or knee by itself
+  - `hips`/`belt`/`cube`, `neck`, `head`/`hair`/`face`
+  - `backpack`/`collar` ride on the chest
+  - `torso`/`jacket`/`vest`/`shirt` bend at the waist
+- **Clips:** idle, walk, run, talk, wave, throw (a cube), cheer, lose and point.
+- **Timed moments:** the manifest's `events` say when things happen, so the viewer or the game can hook
+  in. For example, `throw` releases the cube from `hand_R` at 0.5 s.
+- **Effect points:** `hand_L`, `hand_R`, `mouth`, `chest` and `head_top`.
 
 **Adding a body type** is a one-time job:
 - a skeleton fit in `animate.py` (`fit_<plan>` and `weights_<plan>`)
