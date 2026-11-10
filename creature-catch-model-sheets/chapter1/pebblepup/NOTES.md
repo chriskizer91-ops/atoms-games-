@@ -4,7 +4,7 @@
 
 ![close views](closeups.jpg)
 
-**Result:** a TRIS-triangle game model (`pebblepup.glb`) with one colour texture (2048), a soft-fur
+**Result:** a 6,990-triangle game model (`pebblepup.glb`, 4.2 MB) with one colour texture (2048), a soft-fur
 normal map and an all-black glow map (nothing glows). It reads as the puppy in the pictures from every
 side: big brown eyes, the grey pebble on its nose, the pink tongue out, floppy ears with stone patches,
 the cream chest, muzzle and toes, grey stone patches on the back and legs, and the curled tail.
@@ -17,20 +17,22 @@ The final game model's Blender file (the lead animates from it):
 | | Front | Side | Back | Top |
 | --- | --- | --- | --- | --- |
 | Blockout (60,000 triangles), outline overlap (`blockout.jpg`) | 94.0% | 92.3% | 94.1% | 83.4% |
-| Game model (TRIS triangles), outline overlap | FRONT% | SIDE% | BACK% | TOP% |
+| Game model (6,990 triangles), outline overlap | 93.2% | 91.1% | 93.5% | 82.9% |
 
-- **Texture seen by a picture:** SEEN%. The rest (the belly, the insides of the legs and ears, the hidden
+- **Texture seen by a picture:** 69.8%. The rest (the belly, the insides of the legs and ears, the hidden
   backs of the tongue and pebble, the soles) is coloured from the nearest painted spot of the same part;
   the soles get a cream pad colour.
 - **Parts (14 pieces):** `head`, `muzzle`, `head_pebble`, `head_tongue`, `ear` pair, `body`,
-  `body_chest`, `front_leg` pair, `rear_leg` pair, `tail_a`, `tail_b`. BUDGET
+  `body_chest`, `front_leg` pair, `rear_leg` pair, `tail_a`, `tail_b`. Budget: head 1,710, body 880, ears
+  600 each, rear legs 504 each, front legs 440 each, muzzle 352, tail 494 in two pieces, chest 224, tongue
+  132, pebble 110.
 - **Skeleton words:** `head`, `muzzle`, `head_pebble`, `head_tongue`, `ear` ride the head; `body`,
   `body_chest` the body; `front_leg`, `rear_leg` mirrored pairs; `tail_a`, `tail_b` the tail chain.
 - **Glow:** 0% (black map, checked in `emissive.jpg` and on the lit board).
 - **Size:** 0.45 m tall and 0.49 m long by the pictures (the prompt said 0.65 m long; the curled tail
   doesn't reach out behind). The model follows the pictures.
-- **Time:** about 35 minutes of my own work (02:00 to about 02:40 by the clock, with the boards waiting
-  in turn behind the other creatures' runs), 2 route runs and 1 blockout.
+- **Time:** about 35 minutes of my own work (from about 01:20 to 02:45 by the clock, interleaved with
+  the others while their boards rendered), 2 route runs and 1 blockout.
 
 ## Why the top score is low
 
@@ -75,8 +77,16 @@ Rebuild: `make_views.py WORK/views 0.45 front side back top`, then
 
 ## What still looks wrong
 
-REMAINING
+- **The back of the head** has a faint lighter patch where the back picture's tail was switched off
+  (no picture sees that spot, so it is filled from the fur around it).
+- **A small red dot** under the chin, where the front picture's tongue lands on the chest beside the
+  3D tongue.
+- The two tail pieces show a soft bend where they join, and the curl's tip is a rounded club.
+- The ears are thick flaps (as asked: at least 4 cm) and a little blocky from behind.
+- The stone patches are paint with a gentle bump, not raised stones.
 
 ## Compared with round 3
 
-COMPARE
+Close to round 3's best. The outline scores (93 / 91 / 94%) are as good as Fleecling's and
+Puffmunk's, the face is clean with one pair of eyes, and the paint has no ghost features from the front
+and three-quarter views. The weak spots are small (the back of the head, the tail joint).

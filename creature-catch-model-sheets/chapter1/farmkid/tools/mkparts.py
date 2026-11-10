@@ -57,7 +57,9 @@ add(name="collar", kind="c", axis="z", n=2.2, relief="grain", smooth=3, lo_weigh
     views={"front": P("434,424 594,424 604,445 608,474 418,474 422,445"),
            "side": P("446,428 584,424 592,450 594,478 440,480 438,455")})
 add(name="torso", kind="c", axis="z", n=2.6, relief="grain", smooth=6, lo_weight=1.1, nomask=["front", "side"],
-    round_ends={"start": 0.0, "end": 0.03}, paint_skip=["top"], paint_box_skip=HAND_BOX,
+    round_ends={"start": 0.0, "end": 0.03}, paint_skip=["top"],
+    # the side picture's laces stick out in front of the chest and printed cream marks on its sides
+    paint_box_skip={"side": HAND_BOX["side"] + [[392, 470, 452, 580]]},
     views={"front": P("511,445 570,450 625,472 650,505 655,550 640,600 622,640 627,680 635,700 632,725 640,745 652,765 668,800 670,840 672,872 350,872 352,840 354,800 370,765 383,745 390,725 387,700 396,680 401,640 382,600 367,550 372,505 397,472 452,450"),
            "side": P("440,450 520,445 580,455 608,490 615,550 622,620 620,700 626,780 630,840 626,866 365,866 362,840 368,780 378,720 392,660 402,600 410,540 420,490")})
 add(name="hips", kind="c", axis="z", n=2.5, relief="grain", smooth=4, lo_weight=0.8,
