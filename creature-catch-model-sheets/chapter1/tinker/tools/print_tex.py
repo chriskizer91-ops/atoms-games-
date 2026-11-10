@@ -1,5 +1,5 @@
 """Changed copy (chapter 1, player-b): round 3's Puffmunk tools/print_tex.py plus a per-part
-"paint_color_skip": ["skin", "orange", "dark"]. A picture does not print its pixels of those colours onto
+"paint_color_skip": ["skin", "orange", "dark"] (batch 2 adds "skin_pale" for blond hair). A picture does not print its pixels of those colours onto
 that part (they are filled from the same part's other paint instead). On a person, the pictures show
 forehead skin between the bangs, the ears and cheeks beside the hair, the orange hair tie and the orange
 collar right next to the hair; wherever the model's hair is a little larger or placed a little
@@ -219,6 +219,9 @@ def main():
         m = {"skin": (R > 175) & (G > 115) & (B > 80) & (R > G + 15) & (G > B + 10) & (R - B > 45) & (L > 140),
              "orange": (R > 190) & (G > 70) & (G < 175) & (B < 100) & (R - G > 55),
              "dark": (L < 85) & (a.max(axis=2) - a.min(axis=2) < 45)}
+        # chapter 1 batch 2 (tinker): blond hair passes the skin test above; "skin_pale" is skin whose blue
+        # is close to its green (skin about 253,191,137; pale yellow hair about 253,204,117 has far less blue)
+        m["skin_pale"] = m["skin"] & (G - B < 68) & (B > 105)
         return {k: ndimage.binary_dilation(v, iterations=2) for k, v in m.items()}
     names = list(grids.keys())
     # texel positions for every part

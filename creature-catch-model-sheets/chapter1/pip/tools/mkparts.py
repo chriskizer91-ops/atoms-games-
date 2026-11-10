@@ -15,6 +15,29 @@ def top(pts):
     return P(" ".join(f"{round(TUC - x * TSX)},{round(TVC + y * TSY)}" for x, y in pts))
 def sym(rows):  # rows of (y, half-width) -> symmetric top outline
     return [(-h, y) for y, h in rows] + [(h, y) for y, h in rows[::-1]]
+def glass_y(x):  # front edge of the glasses (metres): about 2 cm in front of the round face, out to the hinges
+    xs = [0.0, 0.03, 0.06, 0.08, 0.10, 0.112, 0.13, 0.146]
+    ys = [-0.2125, -0.210, -0.199, -0.1875, -0.167, -0.146, -0.125, -0.11]
+    x = abs(x)
+    for i in range(len(xs) - 1):
+        if x <= xs[i + 1]:
+            t = (x - xs[i]) / (xs[i + 1] - xs[i]); return ys[i] + t * (ys[i + 1] - ys[i])
+    return ys[-1]
+def glasses_front():  # the front outline of the glasses: two round rims, the bridge and the hinges (front picture pixels)
+    import math
+    shapes_e = [(446, 308, 55, 59), (581, 308, 56, 59)]  # lens rims: centre and radii
+    rects = [(365, 295, 396, 321), (630, 295, 662, 321), (494, 296, 532, 313)]  # hinges and bridge
+    tops, bots = [], []
+    for u in range(365, 663, 3):
+        zs = []
+        for cx, cy, rx, ry in shapes_e:
+            if abs(u - cx) < rx:
+                h = ry * math.sqrt(1 - ((u - cx) / rx) ** 2); zs += [cy - h, cy + h]
+        for x0, y0, x1, y1 in rects:
+            if x0 <= u <= x1: zs += [y0, y1]
+        if zs: tops.append((u, min(zs))); bots.append((u, max(zs)))
+    pts = tops + bots[::-1]
+    return [[int(round(a)), int(round(b))] for a, b in pts]
 def band(x0, x1, f, t, n=13):  # a thin curved band seen from above: front edge y = f(x), t metres thick
     xs = [x0 + (x1 - x0) * i / (n - 1) for i in range(n)]
     return [(x, f(x)) for x in xs] + [(x, f(x) + t) for x in xs[::-1]]
@@ -40,8 +63,8 @@ add(name="nose", kind="c", axis="z", n=2.0, relief="none", smooth=2, lo_weight=2
 # the eyes onto the plate, like seeing them through the lenses.
 add(name="glasses", kind="c", axis="x", n=4.0, relief="none", smooth=1.5, lo_weight=2.2, nomask=["front", "top"],
     round_ends={"start": 0.0, "end": 0.0}, paint_skip=["top", "back", "side"],
-    views={"front": P("368,296 393,293 398,275 412,258 432,248 455,246 478,250 494,263 500,280 503,296 522,296 526,280 534,263 550,250 575,246 598,248 620,258 632,275 637,293 660,296 660,320 637,322 630,340 615,358 595,368 575,370 552,366 535,354 526,336 522,312 503,312 499,336 490,354 473,366 450,370 428,368 408,358 395,340 388,322 368,320"),
-           "top": top(band(-0.146, 0.146, lambda x: -0.205 + 4.4 * x * x, 0.011))})
+    views={"front": glasses_front(),
+           "top": top(band(-0.146, 0.146, glass_y, 0.009, n=17))})
 # The main hair is sliced upward; its front edge (side picture) steps back from the forehead to behind the
 # ear, so it frames the face with no brim. The outline is a smooth hull through the curls' bases.
 add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.4, nomask=["front", "side"],
@@ -51,8 +74,8 @@ add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=
 # the fringe: a pad of curls in front of the forehead, sliced front-to-back so its lower edge arcs up at the temples
 add(name="hair_bangs", kind="c", axis="y", n=2.2, relief="grain", smooth=3, lo_weight=2.5, nomask=["side", "top"],
     round_ends={"start": 0.012, "end": 0.0}, paint_skip=["back"], paint_color_skip=["skin"],
-    views={"side": P("315,170 322,148 340,128 365,113 400,104 440,104 440,196 400,197 355,197 328,192 316,184"),
-           "top": top(sym([(-0.205, 0.04), (-0.199, 0.07), (-0.186, 0.10), (-0.166, 0.12), (-0.14, 0.13), (-0.085, 0.13)]))})
+    views={"side": P("330,175 336,150 352,128 378,112 420,104 450,104 450,196 400,198 355,198 335,192 329,184"),
+           "top": top(sym([(-0.192, 0.05), (-0.186, 0.08), (-0.175, 0.105), (-0.158, 0.122), (-0.135, 0.13), (-0.08, 0.13)]))})
 # the big hooked curl on top of the head
 add(name="hair_curl", kind="c", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=2.2, nomask=["front", "side"],
     round_ends={"start": 0.01, "end": 0.012}, paint_skip=["back"],
@@ -75,12 +98,12 @@ add(name="skirt_apron", kind="c", axis="z", n=2.4, relief="grain", smooth=6, lo_
 # the bow at the back of the waistband (its loops and knot), and its two tails
 add(name="belt_bow", kind="c", axis="z", n=2.6, relief="grain", smooth=3, lo_weight=0.9,
     round_ends={"start": 0.01, "end": 0.012}, paint_skip=["front", "top"],
-    views={"back": P("283,702 330,690 395,705 440,705 500,690 548,700 556,740 546,786 500,796 440,800 395,800 330,796 284,786 276,740"),
+    views={"back": P("382,730 400,712 440,710 492,722 548,722 600,710 640,712 658,735 655,780 640,810 590,815 548,792 492,792 430,815 390,810 378,780"),
            "side": P("620,716 668,712 712,722 734,742 732,770 712,790 668,800 620,800")},
     order=["back", "side"])
 add(name="belt_bow_tail", kind="m", axis="z", n=2.4, relief="grain", smooth=2, lo_weight=0.6,
     round_ends={"start": 0.0, "end": 0.006}, paint_skip=["front", "top"],
-    views={"back": P("378,782 425,790 412,850 392,915 360,928 322,915 338,862 360,808"),
+    views={"back": P("497,772 532,776 512,820 498,870 486,935 452,942 412,908 440,852 470,800"),
            "side": P("632,780 690,790 712,850 732,912 724,942 700,958 682,935 664,875 646,820")},
     order=["back", "side"])
 # ---- arms and hands ---------------------------------------------------------------------------

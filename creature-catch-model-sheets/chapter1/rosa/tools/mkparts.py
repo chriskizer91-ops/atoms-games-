@@ -30,7 +30,7 @@ add(name="ear", kind="m", axis="z", n=2.2, relief="none", smooth=2, lo_weight=2.
 add(name="hair", kind="c", paint_color_skip=["skin"], axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.4, nomask=["front", "side"],
     round_ends={"start": 0.02, "end": 0.04}, paint_skip=["top"],
     views={"front": P("512,98 555,101 600,115 635,140 662,175 680,215 686,255 684,295 673,330 653,360 628,384 598,396 512,400 426,396 396,384 371,360 351,330 340,295 338,255 344,215 362,175 389,140 424,115 469,101"),
-           "side": P("470,100 530,101 590,115 640,145 680,190 697,240 697,290 685,330 660,365 625,388 585,398 540,396 528,385 548,368 560,335 560,300 548,280 512,266 472,250 432,232 402,212 384,190 374,168 370,145 378,122 410,106")})
+           "side": P("470,98 530,101 590,115 640,145 680,190 697,240 697,290 685,330 660,365 625,388 585,398 540,396 528,385 548,368 560,335 560,300 548,280 512,266 472,250 432,232 405,212 390,196 376,181 362,165 357,145 362,125 382,110 420,101")})
 # the fringe: a band that wraps around the forehead from temple to temple, sliced side to side (axis x) so
 # its lower edge follows the hairline exactly as the front picture draws it (the big swoop to her right)
 add(name="hair_bangs", kind="one", paint_color_skip=["skin"], axis="x", n=2.0, relief="grain", smooth=3, lo_weight=2.5,
@@ -43,13 +43,13 @@ add(name="hair_bangs", kind="one", paint_color_skip=["skin"], axis="x", n=2.0, r
 # the bun, high on the back of the head
 add(name="bun", kind="c", paint_color_skip=["skin"], axis="z", n=2.1, relief="grain", smooth=5, lo_weight=2.0, nomask=["front", "side"],
     round_ends={"start": 0.03, "end": 0.03},
-    views={"front": P("512,27 555,32 585,50 595,80 592,105 615,118 630,140 636,175 634,215 620,240 404,240 390,215 388,175 394,140 409,118 432,105 429,80 439,50 469,32"),
-           "side": P("560,40 620,35 680,45 720,70 742,110 748,160 740,210 715,248 680,262 620,262 565,250 535,205 528,145 532,95 542,62")})
+    views={"front": P("512,27 560,32 595,52 615,85 626,125 628,165 618,205 595,235 560,252 512,258 464,252 429,235 406,205 396,165 398,125 409,85 429,52 464,32"),
+           "side": P("640,36 690,46 728,78 746,122 748,172 730,218 692,250 640,262 590,252 555,222 535,180 533,125 550,80 588,48")})
 # the ringlets hanging beside each cheek, in front of the ears (a mirrored pair)
 add(name="hair_curl", kind="m", paint_color_skip=["skin"], axis="z", n=2.0, relief="grain", smooth=3, lo_weight=1.6, nomask=["front", "side"],
-    round_ends={"start": 0.006, "end": 0.004}, paint_skip=["top"],
-    views={"front": P("610,292 640,292 655,318 660,350 655,385 650,410 652,432 640,442 626,434 628,405 620,378 611,350 606,322"),
-           "side": P("455,272 492,270 502,300 499,340 492,380 490,410 480,432 464,427 466,395 457,360 448,322 447,290")})
+    round_ends={"start": 0.014, "end": 0.004}, paint_skip=["top"],
+    views={"front": P("610,292 640,292 655,318 660,350 657,385 655,410 657,430 645,445 628,442 622,425 624,400 617,375 610,350 606,322"),
+           "side": P("455,272 492,270 502,300 500,340 494,380 494,410 488,432 474,438 462,428 462,398 455,360 448,322 447,290")})
 # ---- neck, torso (bodice + apron bib) -------------------------------------------------------
 add(name="neck", kind="c", axis="z", n=2.0, relief="none", smooth=3, lo_weight=0.5, paint_skip=["top"],
     views={"front": P("470,372 555,372 558,458 467,458"),
@@ -72,7 +72,7 @@ add(name="hand", kind="m", axis="z", n=2.3, relief="none", smooth=3, lo_weight=2
 add(name="skirt", kind="c", axis="z", n=2.2, relief="grain", smooth=6, lo_weight=1.1, nomask=["front", "side"],
     round_ends={"start": 0.012, "end": 0.0}, paint_skip=["top"],
     paint_box_skip={"side": [[448, 555, 592, 942], [555, 595, 690, 845]]},
-    views={"front": P("418,645 606,645 630,690 665,750 700,820 735,900 765,980 790,1060 810,1130 826,1190 830,1225 815,1250 700,1258 512,1260 324,1258 209,1250 194,1225 198,1190 214,1130 234,1060 259,980 289,900 324,820 359,750 394,690"),
+    views={"front": P("418,645 606,645 632,690 669,750 706,820 742,900 772,980 797,1060 817,1130 832,1190 835,1225 815,1250 700,1258 512,1260 324,1258 209,1250 189,1225 192,1190 207,1130 227,1060 252,980 282,900 318,820 355,750 392,690"),
            "side": P("378,645 575,645 592,700 612,770 635,850 655,930 675,1010 695,1090 715,1150 730,1182 733,1205 715,1232 600,1242 450,1243 320,1238 290,1225 283,1185 282,1120 272,1092 272,1072 285,1020 305,950 325,870 345,790 360,720 372,670")})
 # the apron's bow at the back of the waist (loops and knot), and its two tails hanging over the skirt
 add(name="skirt_bow", kind="c", axis="z", n=2.6, relief="grain", smooth=3, lo_weight=0.9, nomask=["back", "side"],

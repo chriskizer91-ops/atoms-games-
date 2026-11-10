@@ -1,6 +1,8 @@
 """Chapter 1 copy (Tuftail and the second batch): round 3 Puffmunk's print_tex.py plus Mossback's
 "paint_ellipse_skip": {view: [[cx, cy, rx, ry], ...]} (do not print that picture inside those ellipses,
-picture pixels, for this part).
+picture pixels, for this part), and Mossback's "view_warp": {view: {"u": [[model_px, picture_px], ...],
+"v": [...]}} (read that picture somewhere else for this part, e.g. a tail the model makes wider than one
+picture draws it).
 
 Changed copy (round 3, puffmunk; clovermouse/tools has the same file minus "paint_solid"): Opus round-2 print_tex.py (per-part "decals" and "paint_power"),
 plus a new per-part "paint_shift": {"side": [du, dv]} that reads that picture shifted by du, dv pixels
@@ -199,6 +201,7 @@ def main():
     skip = {p["name"]: set(p.get("paint_skip", [])) for p in pd["parts"]}
     boxskip = {p["name"]: p.get("paint_box_skip", {}) for p in pd["parts"]}
     ellskip = {p["name"]: p.get("paint_ellipse_skip", {}) for p in pd["parts"]}
+    warps = {p["name"]: p["view_warp"] for p in pd["parts"] if p.get("view_warp")}
     weight_view = pd.get("view_weight", {"top": 0.6})
     decal_spec = {p["name"]: p["decals"] for p in pd["parts"] if p.get("decals")}
     power_part = {p["name"]: p["paint_power"] for p in pd["parts"] if p.get("paint_power")}
@@ -283,8 +286,21 @@ def main():
                 inb = (PID == k) & (((pu - cx) / rx) ** 2 + ((pv - cy) / ry) ** 2 <= 1)
                 wv[inb] = 0
         su, sv = pu, pv
-        if shift_part:
+        if warps:
             su, sv = pu.copy(), pv.copy()
+            for k, nm in enumerate(names):
+                wspec = warps.get(base_of(nm), {}).get(vname)
+                if not wspec:
+                    continue
+                sel = PID == k
+                if "u" in wspec:
+                    a = np.array(wspec["u"], float)
+                    su[sel] = np.interp(pu[sel], a[:, 0], a[:, 1])
+                if "v" in wspec:
+                    a = np.array(wspec["v"], float)
+                    sv[sel] = np.interp(pv[sel], a[:, 0], a[:, 1])
+        if shift_part:
+            su, sv = su.copy(), sv.copy()
             for k, nm in enumerate(names):
                 sh = shift_part.get(base_of(nm), {}).get(vname)
                 if sh:

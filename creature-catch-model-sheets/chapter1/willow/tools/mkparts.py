@@ -34,12 +34,12 @@ add(name="ear", kind="m", axis="z", n=2.2, relief="none", smooth=2, lo_weight=3.
 # ears stay clear. Its top is low enough to leave the bald crown bare from behind.
 add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.2, nomask=["front", "side"],
     paint_color_skip=["skin"], round_ends={"start": 0.02, "end": 0.05},
-    views={"front": mir("512,150 600,140 660,146 695,165 715,200 726,240 730,270 720,300 700,322 670,338 620,348 512,352"),
+    views={"front": mir("512,150 600,146 650,155 688,178 712,208 726,240 730,270 720,300 700,322 670,338 620,348 512,352"),
            "side": P("560,148 620,140 670,148 700,170 712,200 720,230 722,262 712,290 698,318 672,345 640,362 592,352 562,330 550,300 547,270 550,230 555,190")})
 # the puff above each ear that curls up and out beside the bald dome (a mirrored pair)
-add(name="hair_puff", kind="m", axis="z", n=2.2, relief="grain", smooth=4, lo_weight=1.6, nomask=["front", "side"],
+add(name="hair_puff", kind="m", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=1.6, nomask=["front", "side"],
     paint_color_skip=["skin"], round_ends={"start": 0.0, "end": 0.025},
-    views={"front": P("596,112 612,90 640,78 668,80 692,95 705,120 708,150 705,190 690,240 640,240 605,230 598,160"),
+    views={"front": P("598,150 605,115 625,90 650,80 675,85 695,100 706,125 708,160 700,200 680,235 640,240 608,225"),
            "side": P("494,122 520,102 560,92 610,92 650,100 675,120 685,150 690,190 680,240 600,240 578,215 560,185 520,165")})
 # ---- the beard (moustache included): hangs from the cheeks to a point on the chest ----------------
 add(name="beard", kind="c", axis="z", n=2.2, relief="grain", smooth=6, lo_weight=2.6, nomask=["front", "side"],
