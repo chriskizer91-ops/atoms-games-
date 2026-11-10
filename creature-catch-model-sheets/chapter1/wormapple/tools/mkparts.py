@@ -32,7 +32,8 @@ parts.append(dict(name="body", kind="c", axis="z", n=2.0, relief="none", smooth=
                   # and the front, side and back pictures' dark stem dimple would print ghost dimples on the
                   # apple's top in front of, beside and behind the stem
                   paint_box_skip={"side": [[130, 500, 415, 925], [480, 350, 720, 420], [650, 280, 1000, 348]],
-                                  "top": [[780, 840, 1190, 1080]],
+                                  # the top picture draws the worm peeking over the apple's front edge
+                                  "top": [[780, 840, 1190, 1080], [470, 30, 800, 280]],
                                   # (and where the leaf hangs over the apple's shoulder in the front and back pictures)
                                   "front": [[520, 370, 760, 450], [370, 285, 615, 348]],
                                   "back": [[500, 370, 720, 455], [620, 285, 960, 352]]},
@@ -48,7 +49,6 @@ parts.append(dict(name="body_stem", kind="one", axis="z", n=2.0, relief="grain",
 # the side), running from the stem out to the creature's right and back
 parts.append(dict(name="body_leaf", kind="one", axis="z", n=2.0, relief="grain", relief_gain=0.5, smooth=3,
                   lo_weight=1.5, slab={"thick": 0.024, "dir": -1}, round_ends={"start": 0.006, "end": 0.006},
-                  crange=[0.347, 1.0],  # starts just above the apple's top, so no green sliver lies on the apple
                   paint_skip=["top"],
                   views={"front": P("190,180 240,140 330,90 420,60 500,58 570,80 615,130 630,190 615,260 590,300 "
                                     "520,330 420,340 330,310 260,250 215,205"),

@@ -12,9 +12,11 @@
   "tuftail"
  ],
  "people": [
+  "bramble",
   "farmkid",
   "fern",
   "hazel",
+  "juniper",
   "oakley",
   "pip",
   "player-a",
@@ -24,6 +26,7 @@
   "willow"
  ],
  "bytes": {
+  "bramble": 853849,
   "clovermouse": 766537,
   "dandylion": 828013,
   "dewt": 634561,
@@ -33,6 +36,7 @@
   "fern": 835384,
   "fleecling": 622190,
   "hazel": 871190,
+  "juniper": 858726,
   "mossback": 910895,
   "oakley": 805283,
   "pebblepup": 1002489,

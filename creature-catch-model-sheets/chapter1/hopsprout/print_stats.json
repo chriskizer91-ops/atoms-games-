@@ -1,0 +1,31 @@
+{
+ "texels": 3027579,
+ "seen_by_a_picture": 76.7,
+ "painted_by": {
+  "front": 509998,
+  "back": 563578,
+  "side+x": 552317,
+  "side-x": 552158,
+  "top": 245413
+ },
+ "parts": [
+  "head",
+  "head_sprout",
+  "head_sprout_leaf_L",
+  "head_sprout_leaf_R",
+  "head_antenna_L",
+  "head_antenna_R",
+  "body_front",
+  "body_back",
+  "body_wing_L",
+  "body_wing_R",
+  "front_leg_L",
+  "front_leg_R",
+  "mid_leg_L",
+  "mid_leg_R",
+  "rear_leg_thigh_L",
+  "rear_leg_thigh_R",
+  "rear_leg_L",
+  "rear_leg_R"
+ ]
+}

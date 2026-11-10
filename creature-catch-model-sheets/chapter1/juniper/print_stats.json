@@ -1,0 +1,39 @@
+{
+ "texels": 3228816,
+ "seen_by_a_picture": 59.5,
+ "painted_by": {
+  "front": 626887,
+  "back": 640685,
+  "side+x": 332387,
+  "side-x": 336665,
+  "top": 0
+ },
+ "parts": [
+  "head",
+  "ear_L",
+  "ear_R",
+  "hair",
+  "hair_bangs",
+  "hair_spike",
+  "hair_spike_side_L",
+  "hair_spike_side_R",
+  "hair_spike_low_L",
+  "hair_spike_low_R",
+  "hair_lock_L",
+  "hair_lock_R",
+  "neck",
+  "collar_scarf",
+  "collar_scarf_tail",
+  "torso",
+  "hips",
+  "hips_cube",
+  "arm_L",
+  "arm_R",
+  "hand_L",
+  "hand_R",
+  "leg_L",
+  "leg_R",
+  "shoe_L",
+  "shoe_R"
+ ]
+}
