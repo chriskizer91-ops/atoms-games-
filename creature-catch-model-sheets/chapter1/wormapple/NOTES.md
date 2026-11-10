@@ -11,7 +11,7 @@ hole in the front with the green worm poking out of it (big eyes, open smile, li
 brown stem leaning to one side and the big green leaf.
 
 The final game model's Blender file (the lead animates from it):
-`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/chapter1/wormapple/r3/model.blend`
+`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/chapter1/wormapple/r7/model.blend`
 
 ## Numbers
 
@@ -20,9 +20,9 @@ The final game model's Blender file (the lead animates from it):
 | Blockout (60,000 triangles), outline overlap (`blockout.jpg`) | 96.0% | 95.5% | 96.4% | 84.8% |
 | Game model (6,954 triangles), outline overlap | 95.4% | 94.3% | 95.9% | 84.8% |
 
-- **Texture seen by a picture:** 90.6%, the highest of the four: the apple is round and every picture
-  sees it. The rest (the underside, the hidden back of the worm) is coloured from the nearest painted spot
-  of the same part.
+- **Texture seen by a picture:** 86.2%, the highest of the four: the apple is round and every picture
+  sees it. The rest (the underside, the hidden back of the worm, and the apple's top round the stem, where
+  the pictures are switched off) is coloured from the nearest painted spot of the same part.
 - **Size:** 0.36 m wide, 0.39 m deep, 0.45 m tall to the top of the leaf, close to the request's 0.4 m.
 - **Parts (6):** `body` (the apple), `body_stem`, `body_leaf`, `head` (the worm's head, with the face),
   `head_worm` (the worm's body coming out of the hole), `head_nub` (the waving nub). Budget: apple
@@ -30,8 +30,9 @@ The final game model's Blender file (the lead animates from it):
 - **Skeleton words (round plan):** `body`, `body_stem`, `body_leaf` stay with the apple; `head`,
   `head_worm`, `head_nub` move with the worm. ("worm" holds no other skeleton word.)
 - **Glow:** 0% (black map, checked in `emissive.jpg` and on the lit board).
-- **Time:** about 30 minutes of work (02:00 to 03:00 and a re-run after the break, by the clock), with
-  1 blockout and 3 route runs.
+- **Time:** about 45 minutes of work (02:00 to 03:00, then 11:30 to 12:25 after the break, by the clock),
+  with 1 blockout and 7 route runs. That is two runs over the brief's five: the last two went on the green
+  patch on the apple's top (below), which shows in the front three-quarter view.
 
 ## Why top is lower
 
@@ -88,7 +89,9 @@ then `python3 -I tools/mkparts.py parts.json` and
 
 - **The hole is flat paint.** From a low side angle the worm's body sits on the apple's surface rather
   than coming out of a real hole.
-- **No dimple round the stem:** the apple's top is a smooth dome; the stem stands on it.
+- **No dimple round the stem:** the apple's top is a smooth dome; the stem stands on it. Round the stem
+  the top is coloured from nearby paint (the pictures are switched off there), so it is a little flat in
+  colour, with a faint straight edge where the top picture's paint starts again.
 - From the exact side, a soft vertical seam and a lighter patch show on the apple where the side
   picture is switched off (the hole area and the dimple).
 - The leaf is a little faceted at its edges, and both of its faces show the same front-facing paint.
