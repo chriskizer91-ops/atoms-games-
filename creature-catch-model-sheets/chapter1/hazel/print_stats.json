@@ -1,0 +1,39 @@
+{
+ "texels": 2937379,
+ "seen_by_a_picture": 54.0,
+ "painted_by": {
+  "front": 485686,
+  "back": 447247,
+  "side+x": 308928,
+  "side-x": 285694,
+  "top": 71499
+ },
+ "parts": [
+  "head",
+  "ear_L",
+  "ear_R",
+  "hair",
+  "hair_bangs",
+  "hair_lock_L",
+  "hair_lock_R",
+  "ponytail_long",
+  "hair_bow",
+  "hair_bow_tail_L",
+  "hair_bow_tail_R",
+  "neck",
+  "torso",
+  "arm_L",
+  "arm_R",
+  "hand_L",
+  "hand_R",
+  "skirt",
+  "skirt_bow",
+  "skirt_bow_tail_L",
+  "skirt_bow_tail_R",
+  "satchel",
+  "leg_L",
+  "leg_R",
+  "shoe_L",
+  "shoe_R"
+ ]
+}

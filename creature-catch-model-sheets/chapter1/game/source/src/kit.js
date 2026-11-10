@@ -34,6 +34,21 @@ const KIT = (() => {
     m.customProgramCacheKey = () => 'cc-toon' + (see ? '-see' : '') + (sway ? '-sway' + sway : '');
     return m;
   }
+  // the painted look for buildings, furniture and props (Chapter 1): smooth Lambert light on the painted tiles, no cel
+  // bands, no rim; the same see-through hole near the player and the same wind sway as toon()
+  function paint(color, o) {
+    o = o || {};
+    const m = new THREE.MeshLambertMaterial(Object.assign({ color: color || '#ffffff' }, o.mat || {}));
+    if (o.vc) m.vertexColors = true;
+    const see = !!o.see, sway = o.sway || 0;
+    m.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, SEE, WIND);
+      sh.fragmentShader = 'uniform vec3 uSee;\nuniform float uSeeZ;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n' + (see ? SEEFN : ''));
+      if (sway) sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n{ vec4 wp = modelMatrix * vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\n wp = modelMatrix * instanceMatrix * vec4(transformed, 1.0);\n#endif\n float k = max(0.0, transformed.y - ' + sway.toFixed(1) + ') * 0.045; transformed.x += sin(uT * 1.6 + wp.x * 0.05 + wp.z * 0.03) * k; transformed.z += cos(uT * 1.3 + wp.z * 0.05) * k * 0.6; }');
+    };
+    m.customProgramCacheKey = () => 'cc-lam' + (see ? '-see' : '') + (sway ? '-sway' + sway : '');
+    return m;
+  }
   function inkMat(o) {
     o = o || {};
     const m = new THREE.MeshBasicMaterial({ color: o.color || '#1d1b2c', side: THREE.BackSide });
@@ -157,8 +172,9 @@ const KIT = (() => {
         for (let i = 0; i < p.count; i++) {
           _v.fromBufferAttribute(p, i).applyMatrix4(_m4); _n.fromBufferAttribute(nn, i).applyMatrix3(_m3).normalize();
           b.P.push(_v.x, _v.y, _v.z); b.N.push(_n.x, _n.y, _n.z);
-          if (o.uv) { const ax = Math.abs(_n.x), ay = Math.abs(_n.y), az = Math.abs(_n.z); if (ay > ax && ay > az) b.U.push(_v.x / o.uv[0], _v.z / o.uv[0]); else if (ax > az) b.U.push(_v.z / o.uv[0], _v.y / o.uv[1]); else b.U.push(_v.x / o.uv[0], _v.y / o.uv[1]); }
-          else b.U.push(u ? u.getX(i) : 0, u ? u.getY(i) : 0);
+          if (o.uvf) { const q = o.uvf(_v, _n); b.U.push(q[0], q[1]); } // uvf(v, n) -> [u, v]: a mapping of its own
+          else if (o.uv) { const ax = Math.abs(_n.x), ay = Math.abs(_n.y), az = Math.abs(_n.z), ox = o.uvo ? o.uvo[0] : 0, oy = o.uvo ? o.uvo[1] : 0; if (ay > ax && ay > az) b.U.push((_v.x - ox) / o.uv[0], (_v.z - oy) / o.uv[0]); else if (ax > az) b.U.push((_v.z - ox) / o.uv[0], (_v.y - oy) / o.uv[1]); else b.U.push((_v.x - ox) / o.uv[0], (_v.y - oy) / o.uv[1]); }
+          else b.U.push(u ? u.getX(i) * (o.uvs ? o.uvs[0] : 1) : 0, u ? u.getY(i) * (o.uvs ? o.uvs[1] : 1) : 0); // uvs: scales the geometry's own uv
           const c = !tint ? [1, 1, 1] : typeof tint === 'function' ? tint(_v, _n, i) : tint; b.C.push(c[0], c[1], c[2]); b.W.push(ink);
         }
         const flip = _m4.determinant() < 0; // a mirrored piece: wind its triangles the other way so they still face out
@@ -231,5 +247,5 @@ const KIT = (() => {
   // a soft round sprite texture (glows, sparkles)
   const glowTex = canvasTex(64, 64, (g) => { const gr = g.createRadialGradient(32, 32, 0, 32, 32, 31); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.35, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); });
 
-  return { TAU, PI, cl, sm, lerp, rgb, ramp, RIM, INK, SEE, SEEFN, WIND, toon, inkMat, mkGeo, surf, lathe, tube, rbox, lumpy, slab, place, qDir, builder, eyeTex, eyeGeo, onBall, canvasTex, glowTex, mergeVerts, BOXG };
+  return { TAU, PI, cl, sm, lerp, rgb, ramp, RIM, INK, SEE, SEEFN, WIND, toon, paint, inkMat, mkGeo, surf, lathe, tube, rbox, lumpy, slab, place, qDir, builder, eyeTex, eyeGeo, onBall, canvasTex, glowTex, mergeVerts, BOXG };
 })();

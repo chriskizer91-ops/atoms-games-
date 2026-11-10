@@ -1,4 +1,8 @@
-"""New tool (chapter 1): close views of a printed small model, for review and for closeups.jpg.
+"""Changed copy (chapter 1 creatures) of chapter1/player-a/tools/closeups.py: frames the whole-body views
+by the creature's biggest size (length, width or height), not its height, so long and wide creatures fit,
+and lays the four views out as a 2 x 2 sheet (no cropped upper-body panels).
+
+New tool (chapter 1): close views of a printed small model, for review and for closeups.jpg.
 
 usage: python3 -I closeups.py model.blend albedo.png normal.png OUT.jpg [--emit e.png] [--samples 24]
                               [--face z0,z1] [--title "..."]
@@ -69,25 +73,22 @@ def main():
         return Image.fromarray(rgb.astype(np.uint8))
 
     mid = Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z + 0.5 * Hm))
-    body_d = float(arg("--body-dist", "2.25")) * Hm
-    a = shot(-35, 12, mid, body_d, 60, (700, 1000), "front34")
-    b = shot(145, 15, mid, body_d, 60, (700, 1000), "back34")
-    fc = Vector((0, lo.y + 0.25 * (hi.y - lo.y), (z0 + z1) / 2))
-    fd = 2.6 * (z1 - z0) * 60 / 50
-    c = shot(-30, 6, fc, fd, 50, (1000, 1000), "face34")
-    d = shot(0, 3, fc, fd, 50, (1000, 1000), "face")
-    W = 700 + 700 + 1000 + 40
-    sheet = Image.new("RGB", (W, 1000 + 1000 + 90), (245, 245, 243))
+    size = max(Hm, hi.y - lo.y, hi.x - lo.x)
+    body_d = float(arg("--body-dist", "2.0")) * size
+    a = shot(-35, 15, mid, body_d, 50, (1000, 750), "front34")
+    b = shot(145, 18, mid, body_d, 50, (1000, 750), "back34")
+    fy = float(arg("--face-y", str(lo.y + 0.25 * (hi.y - lo.y))))
+    fc = Vector((0, fy, (z0 + z1) / 2))
+    fd = 2.2 * (z1 - z0) * 50 / 36
+    c = shot(-30, 8, fc, fd, 50, (1000, 750), "face34")
+    d = shot(0, 4, fc, fd, 50, (1000, 750), "face")
+    W = 1000 + 1000 + 30
+    sheet = Image.new("RGB", (W, 60 + 750 + 10 + 750 + 10), (245, 245, 243))
     dr = ImageDraw.Draw(sheet)
     dr.text((20, 15), arg("--title", "close views"), fill=(20, 20, 20), font=font(30))
     y = 60
-    sheet.paste(a, (10, y)); sheet.paste(b, (720, y)); sheet.paste(c.resize((1000, 1000)), (1430, y))
-    sheet.paste(d.resize((1000, 1000)), (1430, y + 1010))
-    # second row on the left: bigger crops of the two three-quarter views' upper bodies
-    up_a = a.crop((140, 60, 560, 480)).resize((700, 700))
-    up_b = b.crop((140, 60, 560, 480)).resize((700, 700))
-    sheet.paste(up_a, (10, y + 1010)); sheet.paste(up_b, (720, y + 1010))
-    sheet = sheet.crop((0, 0, W, y + 1010 + 1000 + 10))
+    sheet.paste(a, (10, y)); sheet.paste(b, (1020, y))
+    sheet.paste(c, (10, y + 760)); sheet.paste(d, (1020, y + 760))
     sheet.save(out, quality=90)
     print(out)
 

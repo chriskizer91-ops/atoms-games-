@@ -279,6 +279,8 @@ const BATTLE = (() => {
     scene.remove(cube.root);
     await G.sleep(.25);
   }
+  // when the cube leaves the thrower's hand: our people let go at manifest.events.throw (0.5 s), the old ones at .42-.44 s
+  const throwWait = (p, old) => (p && p.throwAt ? p.throwAt : old);
   async function faintAnim(s) { CC.sfx('faint'); await s.model.play('faint'); }
 
   // ---------- catching ----------
@@ -291,7 +293,7 @@ const BATTLE = (() => {
     await UI.say('You threw a Basic Cube!', { auto: .2 });
     const f = B.foe, cube = makeCube(); cube.root.scale.setScalar(26); scene.add(cube.root);
     shot('cube');
-    if (B.you) B.you.play('throw', true); await G.sleep(.42);
+    if (B.you) B.you.play('throw', true); await G.sleep(B.you ? throwWait(B.you, .42) : .42);
     const a = B.you ? B.you.anchor('hand', new THREE.Vector3()) : YOU.clone().add(new THREE.Vector3(0, 20, 0)), b = top(f, .55);
     CC.sfx('throw');
     await G.tween(.6, (k) => { cube.root.position.lerpVectors(a, b, k); cube.root.position.y += Math.sin(k * Math.PI) * 46; cube.spin.rotation.set(k * 12, k * 5, 0); });
@@ -351,7 +353,7 @@ const BATTLE = (() => {
       if (s) { s.hpShown = m.hp; for (let i = 0; i < 16; i++) fx.emit({ x: s.home.x + G.rand(-18, 18), y: G.rand(0, 6), z: s.home.z + G.rand(-12, 12), vy: G.rand(40, 80), life: .9, size: 6, shape: 'star', color: G.pick(['#f8e050', '#ffffff']), add: true }); popAt(s, 'LEVEL UP!', '#f8e050'); s.model.play('happy'); }
       CC.sfx('levelup');
       await UI.say(name + ' grew to Lv ' + m.lv + '!');
-      if (MON.canEvolve(m)) m.evoAsk = true;
+      if (MON.canEvolve(m) && EVOLVE) m.evoAsk = true;
       for (const mv of MON.newMovesAt(m.id, m.lv)) await STORY.learnMove(m, mv);
     }
     if (s) s.xpShown = null;
@@ -423,7 +425,7 @@ const BATTLE = (() => {
     B.allyIndex = i; B.ally = side(G.state.party[i], false); B.fought[i] = true;
     shot(first ? 'you' : 'ally');
     await UI.say('Go, ' + nmShort(B.ally) + '!', { auto: .3 });
-    if (B.you) { B.you.play('throw', true); await G.sleep(.44); }
+    if (B.you) { B.you.play('throw', true); await G.sleep(throwWait(B.you, .44)); }
     await throwFrom(B.you ? B.you.anchor('hand', new THREE.Vector3()) : YOU.clone().add(new THREE.Vector3(0, 20, 0)), ALLY, B.ally);
   }
   async function checkFaints() {
@@ -457,7 +459,7 @@ const BATTLE = (() => {
       if (B.trainer.intro) await UI.say(B.trainer.intro, { who: B.trainer.name });
       shot('foe');
       await UI.say(B.trainer.name + ' sent out ' + MON.name(B.foe.mon) + '!', { auto: .4 });
-      if (B.them) { B.them.play('throw', true); await G.sleep(.44); }
+      if (B.them) { B.them.play('throw', true); await G.sleep(throwWait(B.them, .44)); }
       await throwFrom(B.them ? B.them.anchor('hand', new THREE.Vector3()) : TRAINER.clone().add(new THREE.Vector3(0, 20, 0)), FOE, B.foe);
     }
     await sendAlly(B.allyIndex, true);
@@ -562,6 +564,8 @@ const BATTLE = (() => {
     if (MON.canEvolve(m)) m.evoAsk = true; // already past its next stage's level too
     return true;
   }
+  // Chapter 1 has no evolving (our evolved forms aren't modelled yet); ?evolve turns the earlier demo's evolving back on
+  const EVOLVE = /[?&]evolve/.test(location.search);
   // after a win: anyone who reached its evolution level gets asked (one that fainted waits for a later win)
   async function evolveParty() {
     for (const m of G.state.party) {
@@ -728,5 +732,5 @@ const BATTLE = (() => {
     G.pop(screen_); drop(B.ally); drop(B.foe); B.ally = B.foe = null; fx.clear(); setLook(null);
     G.update = was.update; G.render = was.render; BATTLE.active = false;
   }
-  return { fight, demo, setup(r) { R = r; }, faceShot, active: false, camera, scene };
+  return { fight, demo, setup(r) { R = r; }, faceShot, active: false, camera, scene, _B: B };
 })();

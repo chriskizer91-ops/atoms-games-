@@ -1,0 +1,35 @@
+{
+ "texels": 3301337,
+ "seen_by_a_picture": 60.2,
+ "painted_by": {
+  "front": 587427,
+  "back": 620792,
+  "side+x": 332328,
+  "side-x": 332753,
+  "top": 129571
+ },
+ "parts": [
+  "head",
+  "ear_L",
+  "ear_R",
+  "nose",
+  "glasses",
+  "hair",
+  "hair_bangs",
+  "hair_curl",
+  "neck",
+  "torso",
+  "skirt_apron",
+  "belt_bow",
+  "belt_bow_tail_L",
+  "belt_bow_tail_R",
+  "arm_L",
+  "arm_R",
+  "hand_L",
+  "hand_R",
+  "leg_L",
+  "leg_R",
+  "boot_L",
+  "boot_R"
+ ]
+}

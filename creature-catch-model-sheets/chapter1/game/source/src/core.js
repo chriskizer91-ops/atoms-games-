@@ -105,10 +105,12 @@ function loop(now) {
 }
 G.perf = /[?&]perf/.test(location.search) ? { n: 0, ms: 0 } : null;
 G.maxDt = /[?&]fast/.test(location.search) ? .2 : .05;
-// the looks you pick in the Looks menu, kept for next time: town '3d' | 'diorama', battles '3d' | 'painted'
-G.look = (() => { try { const v = JSON.parse(localStorage.getItem('cc3d-look')); if (v && v.town && v.battle) return v; } catch (e) { /* none saved */ } return { town: '3d', battle: '3d' }; })();
+// the looks you pick in the Looks menu, kept for next time: town '3d' | 'diorama', battles '3d' | 'painted'.
+// Chapter 1 starts in the diorama town with the painted battles (a key of its own, so the earlier demo's saved choice doesn't carry over)
+G.LOOK_KEY = 'cc3d-ch1-look';
+G.look = (() => { try { const v = JSON.parse(localStorage.getItem(G.LOOK_KEY)); if (v && v.town && v.battle) return v; } catch (e) { /* none saved */ } return { town: 'diorama', battle: 'painted' }; })();
 { const m = location.search.match(/[?&]town=(\w+)/), n = location.search.match(/[?&]fights=(\w+)/); if (m) G.look.town = m[1]; if (n) G.look.battle = n[1]; }
-G.saveLook = () => { try { localStorage.setItem('cc3d-look', JSON.stringify(G.look)); } catch (e) { /* storage off */ } };
+G.saveLook = () => { try { localStorage.setItem(G.LOOK_KEY, JSON.stringify(G.look)); } catch (e) { /* storage off */ } };
 G.start = () => {
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
   bindPad(); resize();

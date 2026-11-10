@@ -1,0 +1,24 @@
+{
+ "creatures": [
+  "clovermouse",
+  "drizzlon",
+  "embroak",
+  "fleecling",
+  "mossback",
+  "puffmunk"
+ ],
+ "people": [
+  "player-a",
+  "player-b"
+ ],
+ "bytes": {
+  "clovermouse": 766537,
+  "drizzlon": 739641,
+  "embroak": 609830,
+  "fleecling": 622190,
+  "mossback": 910895,
+  "player-a": 899563,
+  "player-b": 926623,
+  "puffmunk": 893281
+ }
+}

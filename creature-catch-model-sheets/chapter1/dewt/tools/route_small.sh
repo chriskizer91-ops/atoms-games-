@@ -20,9 +20,9 @@ $PY "$(pick relief.py)" "$OUT/grid.npz" "$OUT/atlas.json" "$OUT/print/albedo.png
 $PY "$(pick normal_from_relief.py)" "$OUT/height.npy" "$OUT/atlas.json" "$OUT/grid.npz" "$OUT/normal.png"
 $PY "$T/emissive.py" "$OUT/print/albedo.png" "$OUT/emissive.png" --size 1024 --parts "$PARTS" --texel "$OUT/print/texel.npz" --names "$OUT/print/print.json"
 if [ -z "${SKIP_BLANK:-}" ]; then
-$PY "$(pick board.py)" "$OUT/model.blend" "$VIEWS" "$OUT/board_blank.jpg" "$NAME · shape only ($TRIS triangles)" --samples 16 --three-quarter
+$PY "$(pick board.py)" "$OUT/model.blend" "$VIEWS" "$OUT/board_blank.jpg" "$NAME · shape only ($TRIS triangles)" --samples ${BLANK_SAMPLES:-16} --three-quarter
 fi
-$PY "$(pick board.py)" "$OUT/model.blend" "$VIEWS" "$OUT/board_printed.jpg" "$NAME · printed and lit" --mode lit --tex "$OUT/print/albedo.png" --normal "$OUT/normal.png" --emit "$OUT/emissive.png" --samples 24 --three-quarter
+$PY "$(pick board.py)" "$OUT/model.blend" "$VIEWS" "$OUT/board_printed.jpg" "$NAME · printed and lit" --mode lit --tex "$OUT/print/albedo.png" --normal "$OUT/normal.png" --emit "$OUT/emissive.png" --samples ${BOARD_SAMPLES:-24} --three-quarter
 $PY -c "from PIL import Image; import sys; o=sys.argv[1]; Image.open(o+'/print/albedo.png').convert('RGB').save(o+'/albedo.jpg', quality=90); Image.open(o+'/emissive.png').convert('RGB').save(o+'/emissive.jpg', quality=88)" "$OUT"
 $PY "$(pick export.py)" "$OUT/model.blend" "$OUT/$NAME.glb" --albedo "$OUT/albedo.jpg" --normal "$OUT/normal.png" --emit "$OUT/emissive.jpg"
 echo "done: $OUT/$NAME.glb, boards in $OUT/board_*.jpg"

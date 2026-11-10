@@ -32,13 +32,13 @@ add(name="ear", kind="m", axis="z", n=2.2, relief="none", smooth=2, lo_weight=3.
 # ---- white hair: a mane round the back and sides of the head, plus the two puffs above the ears -----
 # The main mass is sliced upward; its front edge (side picture) sits behind the ears, so the face and
 # ears stay clear. Its top is low enough to leave the bald crown bare from behind.
-add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.2, nomask=["front", "side"],
-    paint_color_skip=["skin"], round_ends={"start": 0.02, "end": 0.05},
+add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=3.0, nomask=["front", "side"],
+    round_ends={"start": 0.02, "end": 0.05},
     views={"front": mir("512,150 600,146 650,155 688,178 712,208 726,240 730,270 720,300 700,322 670,338 620,348 512,352"),
            "side": P("560,148 620,140 670,148 700,170 712,200 720,230 722,262 712,290 698,318 672,345 640,362 592,352 562,330 550,300 547,270 550,230 555,190")})
 # the puff above each ear that curls up and out beside the bald dome (a mirrored pair)
-add(name="hair_puff", kind="m", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=1.6, nomask=["front", "side"],
-    paint_color_skip=["skin"], round_ends={"start": 0.0, "end": 0.025},
+add(name="hair_puff", kind="m", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=2.2, nomask=["front", "side"],
+    round_ends={"start": 0.0, "end": 0.025},
     views={"front": P("598,150 605,115 625,90 650,80 675,85 695,100 706,125 708,160 700,200 680,235 640,240 608,225"),
            "side": P("494,122 520,102 560,92 610,92 650,100 675,120 685,150 690,190 680,240 600,240 578,215 560,185 520,165")})
 # ---- the beard (moustache included): hangs from the cheeks to a point on the chest ----------------
@@ -63,7 +63,7 @@ add(name="hand", kind="m", axis="z", n=2.3, relief="none", smooth=3, lo_weight=2
     round_ends={"start": 0.015, "end": 0.008},
     views={"front": P("790,722 855,705 880,760 910,810 927,860 925,895 910,910 895,905 880,880 860,860 845,855 832,825 810,770"),
            "side": P("498,690 597,690 600,740 597,800 590,850 575,885 555,898 535,890 520,862 505,842 484,836 481,810 492,770 495,730")})
-add(name="skirt_robe", kind="c", axis="z", n=2.2, relief="grain", smooth=6, lo_weight=0.9, nomask=["front", "side"],
+add(name="skirt_robe", kind="c", axis="z", n=2.2, relief="grain", smooth=6, lo_weight=0.5, nomask=["front", "side"],
     round_ends={"start": 0.008, "end": 0.0},
     paint_box_skip={"side": [[455, 630, 662, 905]]},
     views={"front": mir("512,630 668,630 683,700 705,800 731,920 746,1000 766,1100 786,1200 806,1300 812,1330 800,1350 760,1362 700,1368 512,1372"),

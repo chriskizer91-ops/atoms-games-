@@ -15,8 +15,13 @@ def mirror_half(half, uc=UC):
     return half + left
 
 
-def scale_u(poly, f, uc=UC):
-    return [[uc + (u - uc) * f, v] for u, v in poly]
+def scale_u(poly, f, uc=UC, v0=None, v1=None):
+    """Widen an outline about the centre line; with v0, v1 the widening grows from 1 at row v0 to f at row v1."""
+    out = []
+    for u, v in poly:
+        g = f if v0 is None else 1 + (f - 1) * min(max((v - v0) / (v1 - v0), 0.0), 1.0)
+        out.append([uc + (u - uc) * g, v])
+    return out
 
 
 parts = []
@@ -24,7 +29,7 @@ parts = []
 parts.append(dict(
     name="head", kind="c", axis="z", n=2.0, relief="fur_soft", smooth=5, lo_weight=2.6,
     round_ends={"start": 0.02, "end": 0.03}, paint_skip=["top"],
-    paint_ellipse_skip={"side": [[605, 290, 120, 95]]},
+    paint_ellipse_skip={"side": [[595, 225, 70, 115]]},
     views={"front": P("768,225 840,232 900,258 940,298 965,345 1000,388 1015,420 1005,460 975,490 920,514 850,525 "
                       "768,528 686,525 616,514 561,490 531,460 521,420 536,388 571,345 596,298 636,258 696,232"),
            "side": P("365,300 377,270 402,250 440,236 500,227 560,224 620,236 668,265 698,310 708,370 703,420 680,460 "
@@ -36,9 +41,9 @@ parts.append(dict(
            "side": P("312,405 330,392 365,385 410,390 430,410 432,460 415,488 385,495 355,482 332,460 316,435")}))
 parts.append(dict(
     name="ear", kind="m", axis="z", n=2.0, relief="fur_soft", smooth=3, lo_weight=2.2,
-    slab={"thick": 0.045, "dir": 1}, round_ends={"start": 0.01, "end": 0.012},
+    slab={"thick": 0.055, "dir": 1}, cap={"y": 0.085}, round_ends={"start": 0.01, "end": 0.01},
     paint_skip=["top", "side_far"],
-    views={"front": P("850,245 890,185 950,115 1000,62 1028,38 1048,60 1058,110 1062,170 1058,240 1040,300 1005,350 "
+    views={"front": P("850,245 890,185 950,115 1000,60 1030,32 1056,58 1066,110 1070,170 1064,240 1046,300 1008,352 "
                       "965,385 925,360 895,320 865,285"),
            "side": P("485,215 510,150 545,90 580,45 605,25 630,35 660,75 690,130 708,190 714,260 708,320 690,375 "
                      "640,380 590,360 540,320 500,270")}))
@@ -70,6 +75,7 @@ parts.append(dict(
 parts.append(dict(
     name="rear_leg", kind="m", axis="z", n=2.3, relief="fur_soft", smooth=3, lo_weight=1.5,
     round_ends={"start": 0.008, "end": 0.04}, paint_skip=["top", "side_far"], cap_fill={"start": sole},
+    paint_box_skip={"back": [[0, 0, 1536, 700]]},  # the back picture's tail covers the haunches
     views={"back": P("555,620 690,620 692,700 680,770 668,820 664,880 666,930 660,965 640,980 560,980 552,960 "
                      "560,935 572,915 578,880 580,830 574,785 562,755 553,710 550,660"),
            "side": P("800,600 880,580 950,600 965,650 975,710 1000,750 1012,800 1015,850 1017,900 1017,950 "
@@ -81,10 +87,18 @@ back_half = P("768,22 820,26 850,50 852,120 872,190 940,215 985,300 1010,380 103
 parts.append(dict(
     name="tail", kind="c", axis="z", n=2.1, relief="none", smooth=12, lo_weight=1.0,
     round_ends={"start": 0.03, "end": 0.03}, nomask=["side", "back"], paint_power=5,
-    view_warp={"back": {"u": [[0, UC - UC / TAIL_W], [1536, UC + UC / TAIL_W]]},
-               "front": {"u": [[0, UC - UC * 1.14], [1536, UC + UC * 1.14]]},
-               "top": {"u": [[0, 767.5 - 767.5 * 1.12], [1536, 767.5 + 768.5 * 1.12]]}},
-    views={"back": scale_u(mirror_half(back_half), TAIL_W),
+    # read the pictures squeezed toward the centre line, so the wider tail takes only tail paint
+    # (not the orange cheek tufts and haunches beside the back picture's narrower tail)
+    view_warp={"back": {"u": [[0, UC - UC / 1.3], [1536, UC + UC / 1.3]]},
+               "front": {"u": [[0, UC - UC * 1.1], [1536, UC + UC * 1.1]]},
+               "top": {"u": [[0, 767.5 - 767.5 * 1.05], [1536, 767.5 + 768.5 * 1.05]]}},
+    # the side picture draws the rump in front of the tail's base
+    # the top picture draws the body over the front of the tail
+    paint_box_skip={"side": [[930, 560, 1040, 800]], "top": [[0, 0, 1536, 610]]},
+    # the front picture draws the ears, crest and cheek tufts in front of the tail
+    paint_ellipse_skip={"front": [[555, 210, 95, 180], [981, 210, 95, 180], [768, 195, 40, 50], [530, 430, 35, 50],
+                                  [1006, 430, 35, 50]]},
+    views={"back": scale_u(mirror_half(back_half), TAIL_W, v0=150, v1=260),
            "side": P("800,505 760,480 750,430 752,370 765,320 800,275 850,240 868,190 890,140 930,100 990,60 "
                      "1060,40 1130,40 1165,60 1220,110 1265,170 1283,240 1295,320 1297,410 1285,490 1260,560 "
                      "1230,630 1185,690 1130,735 1060,752 1000,745 965,700 960,640 940,590 900,550 850,525")}))

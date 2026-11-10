@@ -21,7 +21,7 @@ const MAIN = (() => {
       for (let i = 0; i < 12; i++) B.add(new THREE.ConeGeometry(300 + (i % 3) * 120, 300 + (i % 4) * 110, 6), M.plain, [(i - 6) * 330, 130, -1500 - (i % 2) * 250], [0, i, 0], null, { tint: (v, n) => KIT.rgb(n.y > .6 ? '#8a6ab0' : n.x > 0 ? '#5a4a8a' : '#6e5a9e') });
       B.add(new THREE.CircleGeometry(500, 32), M.glow, [-300, 1, -800], [-Math.PI / 2, 0, 0], [1, .35, 1], { tint: '#f8b080', ink: 0 });
       for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2, r = 320 + (i % 4) * 40; if (Math.sin(a) < -.3 && Math.abs(Math.cos(a)) < .7) continue; B.add(KIT.lumpy(24 + (i % 3) * 6, i, .2), M.leaf, [Math.cos(a) * r, 34, Math.sin(a) * r - 60], null, [1, 1.2, 1], { tint: (v, n) => KIT.rgb(n.y > .4 ? '#5a9a48' : '#2f6a34') }); }
-      B.build(scene, KIT.inkMat({ k: PLACES.PXINK }), { cast: true, receive: true });
+      B.build(scene, null, { cast: true, receive: true }); // painted, no ink (as our models)
       // a field of tall grass round the cube
       const spots = []; for (let i = 0; i < 900; i++) { const a = Math.random() * Math.PI * 2, r = 12 + Math.sqrt(Math.random()) * 170; spots.push([Math.cos(a) * r, Math.sin(a) * r - 10, 1 + Math.random() * .6]); }
       const im = new THREE.InstancedMesh(PLACES.TUFT, PLACES.grassMat, spots.length), d = new THREE.Object3D();
@@ -144,6 +144,22 @@ const MAIN = (() => {
   }
   UI.hasFace = (who) => !!(BATTLE.active ? BATTLE.faceShot(who) : WORLD.info && WORLD.faceShot(who));
 
+  // ---------- loading our painted models and tiles, with a progress bar ----------
+  async function loadModels() {
+    let k1 = 0, k2 = 0;
+    const scr = { draw() {
+      const k = k1 * .85 + k2 * .15;
+      UI.rect(0, 0, 240, 160, '#1b1626');
+      UI.text('Creature Catch', 120, 52, '#ffffff', { size: 18, align: 'center', shadow: '#5a2a6e' });
+      UI.text('Loading the painted models...', 120, 82, '#e8e0f8', { size: 9, align: 'center' });
+      UI.bar(50, 98, 140, k, '#9a7ae0');
+      UI.text(Math.round(k * 100) + '%', 120, 108, '#b8a8d8', { size: 8, align: 'center' });
+    } };
+    G.push(scr);
+    try { await Promise.all([MODELS.load((k) => { k1 = k; }), TILES.load((k) => { k2 = k; })]); } catch (e) { console.error(e); }
+    k1 = k2 = 1; await G.sleep(.05);
+    G.pop(scr);
+  }
   // ---------- start ----------
   async function boot() {
     UI.init();
@@ -154,8 +170,10 @@ const MAIN = (() => {
     WORLD.setup(R); BATTLE.setup(R);
     G.afterRender = afterRender;
     if (document.fonts && document.fonts.load) { try { await document.fonts.load('10px Pixelify'); } catch (e) { /* the monospace fallback */ } }
+    await loadModels();
     const at = (location.search.match(/[?&]at=(\w+)/) || [])[1];
     if (at === 'moves') { const q = (k) => (location.search.match(new RegExp('[?&]' + k + '=(\\w+)')) || [])[1]; for (;;) await BATTLE.demo({ who: q('who'), look: +(q('bg') || 0) }); }
+    if (at === 'lineup') return lineup();
     if (at) return devStart(at);
     TITLE.build();
     G.render = TITLE.render; G.update = null;
@@ -173,6 +191,26 @@ const MAIN = (() => {
     await G.fade(.6, 1);
     G.render = WORLD.render; G.update = WORLD.update;
     await WORLD.run(() => opening(look));
+  }
+  // for checking models up close: ?at=lineup&who=drizzlon,player-a,willow&act=attack&yaw=0.5 (the town's light; people
+  // scaled as in town, creatures as their town follower size; act plays on all of them, again every 2.5 s)
+  function lineup() {
+    const q = (k, d) => (location.search.match(new RegExp('[?&]' + k + '=([\\w,.:-]+)')) || [])[1] || d;
+    const who = q('who', 'drizzlon,mossback,embroak,player-a,player-b').split(','), act = q('act', ''), yaw = +q('yaw', 0);
+    const scene = new THREE.Scene(); scene.background = new THREE.Color('#9cc8e8');
+    scene.add(new THREE.AmbientLight('#ffffff', .36), new THREE.HemisphereLight('#e4eeff', '#7a8a5a', .34));
+    const sun = new THREE.DirectionalLight('#fff2dc', .68); sun.position.set(-110, 220, 140); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -80, right: 80, top: 80, bottom: -80 }); scene.add(sun);
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), KIT.paint('#7cc456')); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    const sp = 24, items = who.map((id, i) => {
+      const isP = !!LOOKS[id]; const m = isP ? WORLD.person(id) : WORLD.creature(id);
+      m.root.position.set((i - (who.length - 1) / 2) * sp, 0, 0); m.root.rotation.y = yaw; scene.add(m.root); return { m, isP };
+    });
+    const cam = new THREE.PerspectiveCamera(30, 1.5, 1, 2000), span = who.length * sp;
+    const zoom = +q('zoom', 1), dist = (span + 10) / (2 * Math.tan(15 * Math.PI / 180) * 1.5) / zoom; cam.position.set(0, 12 + dist * .16, dist); cam.lookAt(0, 10, 0);
+    let next = .8;
+    G.update = (dt) => { next -= dt; if (act && next <= 0) { next = 2.5; for (const it of items) { if (it.isP) it.m.play(act, true); else it.m.play(act); } } };
+    G.render = (dt) => { for (const it of items) { if (it.isP) it.m.animate(0, 0, G.t, dt); else it.m.update(G.t, dt, 0); } KIT.SEE.uSee.value.set(0, 0, 0); R.render(scene, cam); };
+    MAIN.lineupItems = items;
   }
   // a quick start somewhere in the story, for testing (?at=village, willow, meadow, battle, rival, legend)
   async function devStart(at) {

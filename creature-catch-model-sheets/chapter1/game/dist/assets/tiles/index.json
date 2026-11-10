@@ -1,0 +1,290 @@
+{
+ "planks_light": {
+  "file": "planks_light.jpg",
+  "kind": "tile",
+  "use": "floors, crates, signs",
+  "aspect": 1.0
+ },
+ "planks_dark": {
+  "file": "planks_dark.jpg",
+  "kind": "tile",
+  "use": "dark boards",
+  "aspect": 1.0
+ },
+ "wood_polished": {
+  "file": "wood_polished.jpg",
+  "kind": "tile",
+  "use": "tables, dressers, the piano",
+  "aspect": 1.0
+ },
+ "bark": {
+  "file": "bark.jpg",
+  "kind": "tile",
+  "use": "tree trunks, the fallen log, staffs",
+  "aspect": 1.0
+ },
+ "boards_grey": {
+  "file": "boards_grey.jpg",
+  "kind": "tile",
+  "use": "fences",
+  "aspect": 1.0
+ },
+ "wood_cream": {
+  "file": "wood_cream.jpg",
+  "kind": "tile",
+  "use": "window and door frames, trim",
+  "aspect": 1.0
+ },
+ "roof_red": {
+  "file": "roof_red.jpg",
+  "kind": "tile",
+  "use": "your house",
+  "aspect": 1.0
+ },
+ "roof_purple": {
+  "file": "roof_purple.jpg",
+  "kind": "tile",
+  "use": "Pip's Cube Shop",
+  "aspect": 1.0
+ },
+ "roof_orange": {
+  "file": "roof_orange.jpg",
+  "kind": "tile",
+  "use": "Rosa's Inn",
+  "aspect": 1.0
+ },
+ "shingles_barn": {
+  "file": "shingles_barn.jpg",
+  "kind": "tile",
+  "use": "Farmer Bramble's barn",
+  "aspect": 1.0
+ },
+ "roof_moss": {
+  "file": "roof_moss.jpg",
+  "kind": "tile",
+  "use": "Elder Willow's house",
+  "aspect": 1.0
+ },
+ "stripes_mint": {
+  "file": "stripes_mint.jpg",
+  "kind": "tile",
+  "use": "the Healing Hut's roof",
+  "aspect": 1.0
+ },
+ "plaster_cream": {
+  "file": "plaster_cream.jpg",
+  "kind": "tile",
+  "use": "plaster walls",
+  "aspect": 1.0
+ },
+ "boards_white": {
+  "file": "boards_white.jpg",
+  "kind": "tile",
+  "use": "the Healing Hut's walls",
+  "aspect": 1.0
+ },
+ "boards_red": {
+  "file": "boards_red.jpg",
+  "kind": "tile",
+  "use": "the barn's walls",
+  "aspect": 1.0
+ },
+ "cobblestone": {
+  "file": "cobblestone.jpg",
+  "kind": "tile",
+  "use": "footings",
+  "aspect": 1.0
+ },
+ "brick_red": {
+  "file": "brick_red.jpg",
+  "kind": "tile",
+  "use": "chimneys",
+  "aspect": 1.0
+ },
+ "stone_sandy": {
+  "file": "stone_sandy.jpg",
+  "kind": "tile",
+  "use": "fireplaces and hearths",
+  "aspect": 1.0
+ },
+ "floorboards": {
+  "file": "floorboards.jpg",
+  "kind": "tile",
+  "use": "room floors",
+  "aspect": 1.0
+ },
+ "checker_mint": {
+  "file": "checker_mint.jpg",
+  "kind": "tile",
+  "use": "the Healing Hut's floor",
+  "aspect": 1.0
+ },
+ "rug_red": {
+  "file": "rug_red.jpg",
+  "kind": "tile_x",
+  "use": "rugs",
+  "aspect": 1.0
+ },
+ "rug_blue": {
+  "file": "rug_blue.jpg",
+  "kind": "tile_x",
+  "use": "rugs",
+  "aspect": 1.0
+ },
+ "quilt": {
+  "file": "quilt.jpg",
+  "kind": "tile",
+  "use": "bed covers",
+  "aspect": 1.0
+ },
+ "doormat": {
+  "file": "doormat.jpg",
+  "kind": "tile",
+  "use": "doormats",
+  "aspect": 1.0
+ },
+ "hay": {
+  "file": "hay.jpg",
+  "kind": "tile",
+  "use": "hay bales, the barn",
+  "aspect": 1.0
+ },
+ "leaves": {
+  "file": "leaves.jpg",
+  "kind": "tile",
+  "use": "bushes and trees",
+  "aspect": 1.0
+ },
+ "leaves_berries": {
+  "file": "leaves_berries.jpg",
+  "kind": "tile",
+  "use": "berry bushes",
+  "aspect": 1.0
+ },
+ "leaves_flowers": {
+  "file": "leaves_flowers.jpg",
+  "kind": "tile",
+  "use": "flower bushes",
+  "aspect": 1.0
+ },
+ "rock": {
+  "file": "rock.jpg",
+  "kind": "tile",
+  "use": "rocks and boulders",
+  "aspect": 1.0
+ },
+ "iron_rivets": {
+  "file": "iron_rivets.jpg",
+  "kind": "tile",
+  "use": "the stove, lamps, barrel hoops",
+  "aspect": 1.0
+ },
+ "books": {
+  "file": "books.webp",
+  "kind": "decal",
+  "use": "the bookshelf",
+  "aspect": 1.067
+ },
+ "herb_shelf": {
+  "file": "herb_shelf.webp",
+  "kind": "decal",
+  "use": "the herb shelf",
+  "aspect": 1.004
+ },
+ "clock_face": {
+  "file": "clock_face.webp",
+  "kind": "decal",
+  "use": "the grandfather clock",
+  "aspect": 1.0
+ },
+ "notice_board": {
+  "file": "notice_board.webp",
+  "kind": "decal",
+  "use": "Rosa's notice board",
+  "aspect": 1.006
+ },
+ "piano_front": {
+  "file": "piano_front.webp",
+  "kind": "decal",
+  "use": "the piano",
+  "aspect": 1.016
+ },
+ "stove_front": {
+  "file": "stove_front.webp",
+  "kind": "decal",
+  "use": "the stove",
+  "aspect": 1.053
+ },
+ "door": {
+  "file": "door.webp",
+  "kind": "decal",
+  "use": "front doors",
+  "aspect": 0.859
+ },
+ "door_round": {
+  "file": "door_round.webp",
+  "kind": "decal",
+  "use": "Elder Willow's door",
+  "aspect": 0.909
+ },
+ "window": {
+  "file": "window.webp",
+  "kind": "decal",
+  "use": "windows",
+  "aspect": 1.034
+ },
+ "window_round": {
+  "file": "window_round.webp",
+  "kind": "decal",
+  "use": "Elder Willow's windows",
+  "aspect": 0.959
+ },
+ "sign_heart": {
+  "file": "sign_heart.webp",
+  "kind": "decal",
+  "use": "the Healing Hut's sign",
+  "aspect": 0.964
+ },
+ "sign_inn": {
+  "file": "sign_inn.webp",
+  "kind": "decal",
+  "use": "Rosa's Inn sign",
+  "aspect": 1.15
+ },
+ "healing_machine": {
+  "file": "healing_machine.webp",
+  "kind": "decal",
+  "use": "the healing machine",
+  "aspect": 0.962
+ },
+ "cube_vault": {
+  "file": "cube_vault.webp",
+  "kind": "decal",
+  "use": "the Cube Vault",
+  "aspect": 0.962
+ },
+ "mailbox": {
+  "file": "mailbox.webp",
+  "kind": "decal",
+  "use": "the mailbox",
+  "aspect": 0.974
+ },
+ "lamp_glass": {
+  "file": "lamp_glass.webp",
+  "kind": "decal",
+  "use": "street lamps",
+  "aspect": 0.781
+ },
+ "hay_bale_end": {
+  "file": "hay_bale_end.webp",
+  "kind": "decal",
+  "use": "hay bale ends",
+  "aspect": 0.988
+ },
+ "barrel_top": {
+  "file": "barrel_top.webp",
+  "kind": "decal",
+  "use": "barrel tops",
+  "aspect": 0.99
+ }
+}

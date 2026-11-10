@@ -1,0 +1,29 @@
+{
+ "texels": 2993098,
+ "seen_by_a_picture": 77.1,
+ "painted_by": {
+  "front": 375269,
+  "back": 281213,
+  "side+x": 737416,
+  "side-x": 737117,
+  "top": 234953
+ },
+ "parts": [
+  "head",
+  "head_bubble",
+  "head_bubble_side_L",
+  "head_bubble_side_R",
+  "body",
+  "body_bubble_a",
+  "body_bubble_b",
+  "body_bubble_c",
+  "tail_bubble",
+  "tail_a",
+  "tail_b",
+  "tail_c",
+  "front_leg_L",
+  "front_leg_R",
+  "rear_leg_L",
+  "rear_leg_R"
+ ]
+}

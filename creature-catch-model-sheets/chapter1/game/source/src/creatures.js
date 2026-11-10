@@ -47,7 +47,9 @@ function makeCreature(id, opts) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: KIT.glowTex, color, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
     s.position.set(pos[0], pos[1], pos[2]); s.scale.setScalar(size); parent.add(s); C.glows.push({ s, size, color }); return s;
   };
-  D.build(C, KIT);
+  // our painted GLB model, when one is packed for this creature (models.js); otherwise the model built here in code
+  const glb = !opts.code && typeof MODELS !== 'undefined' && MODELS.has(id) ? MODELS.creatureBody(id, C, D) : null;
+  if (!glb) D.build(C, KIT);
   // ---------- motion ----------
   const st = { t: 0, act: null, blinkIn: 1 + Math.random() * 2, blinkT: -1, walkPh: 0, fadeV: 1, flashV: 0 };
   const off = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 };
@@ -76,9 +78,10 @@ function makeCreature(id, opts) {
   function play(name) {
     const def = (D.actions && D.actions[name]) || ACT[name] || CREATURE_ACTIONS[name]; if (!def) return Promise.resolve();
     if (name !== 'faint' && name !== 'vanish') st.fadeV = Math.max(st.fadeV, 0);
+    if (glb) glb.start(name, def);
     return new Promise((ok) => { if (st.act && st.act.ok) st.act.ok(); st.act = { name, def, t: 0, ok, hitDone: false }; });
   }
-  function reset() { if (st.act && st.act.ok) st.act.ok(); st.act = null; st.fadeV = 1; st.flashV = 0; C.blink = 0; Object.assign(off, { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 }); }
+  function reset() { if (glb) glb.end(); if (st.act && st.act.ok) st.act.ok(); st.act = null; st.fadeV = 1; st.flashV = 0; C.blink = 0; Object.assign(off, { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 }); }
   const tmpCol = new THREE.Color();
   let flashCol = new THREE.Color('#ffffff'), lastFade = 1;
   function update(t, dt, walk) {
@@ -87,19 +90,20 @@ function makeCreature(id, opts) {
     Object.assign(off, { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 });
     // breathing, and the creature's own idle
     const br = Math.sin(t * 2.4 + (opts.seed || 0));
-    off.sy += .025 * br; off.sx -= .01 * br;
-    if (walk > 0) { st.walkPh += dt * 14 * walk; off.y += Math.abs(Math.sin(st.walkPh)) * .05 * (D.hopper ? 2.2 : 1); off.rz += Math.sin(st.walkPh) * .05 * (D.hopper ? 0 : 1); off.rx += D.hopper ? -.1 * Math.abs(Math.sin(st.walkPh)) : 0; }
-    if (D.idle) D.idle(C, t, dt, walk || 0, st);
+    if (!glb) { off.sy += .025 * br; off.sx -= .01 * br; } // (our models breathe and walk in their own clips)
+    if (walk > 0 && !glb) { st.walkPh += dt * 14 * walk; off.y += Math.abs(Math.sin(st.walkPh)) * .05 * (D.hopper ? 2.2 : 1); off.rz += Math.sin(st.walkPh) * .05 * (D.hopper ? 0 : 1); off.rx += D.hopper ? -.1 * Math.abs(Math.sin(st.walkPh)) : 0; }
+    if (D.idle && !glb) D.idle(C, t, dt, walk || 0, st);
     // an action on top
     let u = 0;
     if (st.act) {
       const a = st.act; a.t += dt; u = Math.min(1, a.t / a.def.dur);
       a.def.f(u, off, C, st);
-      if (D.act) D.act(C, a.name, u, t);
+      if (glb) glb.shape(off, a.name); else if (D.act) D.act(C, a.name, u, t);
       if (a.def.hit && !a.hitDone && u >= a.def.hit) { a.hitDone = true; if (a.onHit) a.onHit(); }
       if (u >= 1) { if (a.ok) { a.ok(); a.ok = null; } if (!a.def.hold) st.act = null; }
     }
     rig.position.set(off.x, off.y, off.z); rig.rotation.set(off.rx, off.ry, off.rz); rig.scale.set(off.sx, off.sy, off.sz);
+    if (glb) glb.update(dt, walk || 0, st.act);
     // blinking
     if (st.blinkT < 0) { st.blinkIn -= dt; if (st.blinkIn <= 0) { st.blinkT = 0; st.blinkIn = 2 + Math.random() * 3; } }
     let bk = 0; if (st.blinkT >= 0) { st.blinkT += dt; const k = st.blinkT / .16; bk = k < 1 ? Math.sin(PI * k) : 0; if (k >= 1) st.blinkT = -1; }
@@ -112,12 +116,14 @@ function makeCreature(id, opts) {
     st.flashV = Math.max(0, st.flashV - dt * 2.5 * (st.act && st.act.name === 'vanish' ? 0 : 1));
     const fk = cl(st.flashV, 0, 1);
     for (const m of mats) if (m.emissive && m.userData.e0) { m.emissive.copy(m.userData.e0).lerp(flashCol, fk); m.emissiveIntensity = lerp(m.userData.i0, 1, fk); }
+    if (glb) glb.flash(fk, flashCol);
     if (Math.abs(st.fadeV - lastFade) > 1e-3) { lastFade = st.fadeV; const tr = st.fadeV < .999; for (const m of mats) { if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; } m.opacity = st.fadeV; } root.visible = st.fadeV > .01; }
   }
   // where its mouth is, in the world (for things it breathes or spits); the ember's tip for Embroak
   const _mw = new THREE.Vector3();
   function mouth(out) {
     out = out || new THREE.Vector3();
+    if (glb) { root.updateMatrixWorld(true); return glb.anchor(D.mouthPart || 'mouth', out); }
     if (D.mouthPart && C.parts[D.mouthPart]) { root.updateMatrixWorld(true); return C.parts[D.mouthPart].getWorldPosition(out); }
     const hp = C.parts.head; root.updateMatrixWorld(true);
     if (hp) return hp.localToWorld(out.set(...(D.mouth || [0, -.05, .12])));
@@ -125,7 +131,8 @@ function makeCreature(id, opts) {
   }
   const api = {
     mouth,
-    id, root, rig, parts: C.parts, height: D.height, size: D.size || 1, eyeY: D.eyeY || D.height * .7, width: D.width || .5, hopper: !!D.hopper,
+    glb: !!glb, ghost: glb ? glb.ghost : null, anchor: glb ? (n, out) => glb.anchor(n, out || new THREE.Vector3()) : null,
+    id, root, rig, parts: glb ? glb.parts : C.parts, height: D.height, size: D.size || 1, eyeY: D.eyeY || D.height * .7, width: D.width || .5, hopper: !!D.hopper,
     update, reset,
     play(name, onHit) { const p = play(name); if (onHit && st.act) st.act.onHit = onHit; return p; },
     flash(k, col) { st.flashV = k; flashCol = new THREE.Color(col || '#ffffff'); },

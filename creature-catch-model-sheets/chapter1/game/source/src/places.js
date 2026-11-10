@@ -172,23 +172,32 @@ const PLACES = (() => {
   };
   const roofTex = (a, b, c) => tex(32, 32, (g) => { fill(g, a, 0, 0, 32, 32); for (let y = 0; y < 32; y += 6) { fill(g, b, 0, y + 5, 32, 1); fill(g, c, 0, y, 32, 1); const off = (y / 6) % 2 ? 4 : 0; for (let x = off; x < 32; x += 8) fill(g, b, x, y, 1, 5); } });
   const SEE = true;
+  // Chapter 1: everything is re-skinned with the painted tiles (tiles.js) and lit smoothly (KIT.paint), no cel bands or
+  // ink, to match our painted models. Each tile starts as the old canvas texture above and turns painted when it loads.
+  const PT = (name, old) => TILES.tex(name, old);
+  const pm = (map, o) => KIT.paint('#ffffff', Object.assign({ vc: true, see: SEE }, o || {}, { mat: { map } }));
   const MAT = {
-    vc: KIT.toon('#ffffff', { vc: true, see: SEE }),
-    plain: KIT.toon('#ffffff', { vc: true }),
-    leaf: KIT.toon('#ffffff', { vc: true, sway: 14, see: SEE }),
+    vc: KIT.paint('#ffffff', { vc: true, see: SEE }),
+    plain: KIT.paint('#ffffff', { vc: true }),
+    leaf: KIT.paint('#ffffff', { vc: true, sway: 14, see: SEE }),
     glow: new THREE.MeshBasicMaterial({ vertexColors: true }),
-    plaster: KIT.toon('#ffffff', { vc: true, see: SEE, mat: { map: TX.plaster } }),
-    wood: KIT.toon('#ffffff', { vc: true, see: SEE, mat: { map: TX.wood } }),
-    stone: KIT.toon('#ffffff', { vc: true, see: SEE, mat: { map: TX.stone } }),
-    roofRed: KIT.toon('#ffffff', { vc: true, see: SEE, mat: { map: roofTex('#c84a3a', '#8a2a22', '#e06a52') } }),
-    barn: KIT.toon('#ffffff', { vc: true, see: SEE, mat: { map: TX.barn } }),
-    roofOrange: KIT.toon('#ffffff', { vc: true, see: SEE, mat: { map: roofTex('#e8743a', '#b04a22', '#f8945a') } }),
-    roofPurple: KIT.toon('#ffffff', { vc: true, see: SEE, mat: { map: roofTex('#7a5ac8', '#4e3690', '#9a7ae0') } }),
-    floor: KIT.toon('#ffffff', { vc: true, mat: { map: TX.floor } }),
-    checker: KIT.toon('#ffffff', { vc: true, mat: { map: TX.checker } }),
-    wallIn: KIT.toon('#ffffff', { vc: true, mat: { map: TX.wallIn } }),
+    // walls: each house kind its own (the earlier demo's colours: cream plaster, red barn boards, white hut boards, Willow's planks)
+    plaster: pm(PT('plaster_cream', TX.plaster)), barn: pm(PT('boards_red', TX.barn)), hutWall: pm(PT('boards_white')),
+    wood: pm(PT('planks_light', TX.wood)), woodDark: pm(PT('planks_dark', TX.wood)), polished: pm(PT('wood_polished', TX.wood)), cream: pm(PT('wood_cream')), bark: pm(PT('bark', TX.wood)),
+    stone: pm(PT('cobblestone', TX.stone)), brick: pm(PT('brick_red', TX.stone)), hearth: pm(PT('stone_sandy', TX.stone)), iron: pm(PT('iron_rivets')), rock: pm(PT('rock', TX.stone)),
+    // roofs: your house red, the shop purple, the inn orange, the barn's shingles, Willow's moss, the hut's mint stripes
+    roofRed: pm(PT('roof_red', roofTex('#c84a3a', '#8a2a22', '#e06a52'))), roofOrange: pm(PT('roof_orange', roofTex('#e8743a', '#b04a22', '#f8945a'))),
+    roofPurple: pm(PT('roof_purple', roofTex('#7a5ac8', '#4e3690', '#9a7ae0'))), roofBarn: pm(PT('shingles_barn', roofTex('#a8342a', '#7a2a22', '#c84a3a'))),
+    roofMoss: pm(PT('roof_moss')), roofMint: pm(PT('stripes_mint')),
+    hay: pm(PT('hay')), leaves: pm(PT('leaves'), { sway: 14 }), leavesFlowers: pm(PT('leaves_flowers'), { sway: 14 }), leavesBerries: pm(PT('leaves_berries'), { sway: 14 }),
+    // rooms (no see-through indoors)
+    floor: pm(PT('floorboards', TX.floor), { see: false }), checker: pm(PT('checker_mint', TX.checker), { see: false }), wallIn: pm(PT('plaster_cream', TX.wallIn), { see: false }),
+    rugRed: pm(PT('rug_red'), { see: false }), rugBlue: pm(PT('rug_blue'), { see: false }), quilt: pm(PT('quilt'), { see: false }), doormat: pm(PT('doormat'), { see: false }),
   };
   for (const k in MAT) MAT[k].vertexColors = true;
+  // a sticker (door, window, sign, furniture front...) as a flat panel w x h centred at p, facing +Z turned by ry (and tilted by rx)
+  const sticker = (B, name, p, w, h, ry, rx) => B.add(TILES.PLANE, TILES.stickerMat(name), p, [rx || 0, ry || 0, 0, 'YXZ'], [w, h || w / TILES.aspect(name), 1], { ink: 0 });
+  const stickerH = (name, w) => w / TILES.aspect(name);
   const INK = KIT.inkMat({ see: SEE }), INKL = KIT.inkMat({ see: SEE, sway: 14 }), INKP = KIT.inkMat();
   // in the game's pixel units the ink is thicker: .45 px, as Farwick's
   const PXINK = 56; // ink scale for things built in pixels (KIT.INK is .008 m for models a metre high)
@@ -273,7 +282,7 @@ const PLACES = (() => {
   // ---------- trees: Farwick's (a trunk and five leafy lumps) and pines; instanced ----------
   const leafCol = (v, n) => { const t = Math.max(0, n.y) * .7 + .3 * Math.max(0, -n.x); return rgb(t > .62 ? '#5aa848' : t > .3 ? '#3f8a3a' : n.y < -.3 ? '#1e4a26' : '#2a6e34'); };
   const TREES = (() => {
-    const make = (fn) => { const B = KIT.builder(), g = new THREE.Group(); fn(B); B.build(g, INKPXL); return g.children.map((m) => m.geometry); };
+    const make = (fn) => { const B = KIT.builder(), g = new THREE.Group(); fn(B); B.build(g, null); return g.children.map((m) => m.geometry); };
     seed = 99;
     const round = make((B) => {
       B.add(new THREE.CylinderGeometry(2.4, 3, 18, 8), MAT.leaf, [0, 9, 0], null, null, { tint: (v, n) => rgb(n.x > .3 ? '#5a3a22' : '#7a5232'), ink: 1 });
@@ -357,47 +366,49 @@ const PLACES = (() => {
 
   // ---------- houses ----------
   const shadeY = (a, b, c) => (v, n) => rgb(n.y > .5 ? a : n.y < -.5 ? c : b);
+  // roof tiles: rows run along the ridge and stand upright on both slopes (u along x, v up the slope)
+  const roofUV = (sx, sy) => (v) => [v.x / sx, v.y / sy];
   function gableHouse(B, o) {
     const { X0, Z0, W, D, wall, roof, roofCol, door, windows, WH } = o;
     const x0 = X0 + 2, x1 = X0 + W - 2, zb = Z0 + 6, zf = Z0 + D - 2, depth = zf - zb, zc = (zf + zb) / 2, rise = depth * .5, RH = WH + rise, ov = 5, ovs = 4, slope = rise / (depth / 2);
-    B.box(MAT[wall], x0, 0, zb, x1, WH, zf, { uv: wall === 'stone' ? [32, 32] : [32, 34] });
+    B.box(MAT[wall], x0, 0, zb, x1, WH, zf, { uv: [36, 36] });
     for (const [x, s] of [[x0, -1], [x1, 1]]) { // the gable ends
       const g = new THREE.BufferGeometry(), P = s < 0 ? [x, WH, zb, x, WH, zf, x, RH, zc] : [x, WH, zf, x, WH, zb, x, RH, zc];
-      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.computeVertexNormals(); B.add(g, MAT[wall], null, null, null, { uv: [32, 34] });
+      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.computeVertexNormals(); B.add(g, MAT[wall], null, null, null, { uv: [36, 36] });
     }
     const L = Math.hypot(depth / 2 + ov, rise + ov * slope), ang = Math.atan2(rise, depth / 2);
     for (const s of [1, -1]) {
       const cz = zc + s * (depth / 2 + ov) / 2, cy = RH - (rise + ov * slope) / 2;
-      B.add(KIT.BOXG, MAT[roof], [(x0 + x1) / 2, cy, cz], [s * ang, 0, 0], [x1 - x0 + ovs * 2, 2.4, L], { uv: [32, 32] });
+      B.add(KIT.BOXG, MAT[roof], [(x0 + x1) / 2, cy, cz], [s * ang, 0, 0], [x1 - x0 + ovs * 2, 2.4, L], { uvf: roofUV(26, 18) });
     }
     B.box(MAT.vc, x0 - ovs, RH - 1, zc - 2, x1 + ovs, RH + 1.8, zc + 2, { tint: roofCol });
-    B.box(MAT.stone, x0 - .4, 0, zf - .5, x1 + .4, 3, zf + .7, { uv: [32, 32] });
-    for (const cx of windows) { // windows: a frame, glass, bars, a sill
-      const wx0 = X0 + cx * T + 2.5, wx1 = wx0 + 11, wy0 = 12, wy1 = 23;
-      B.box(MAT.vc, wx0 - 1.2, wy0 - 1.2, zf, wx1 + 1.2, wy1 + 1.2, zf + .7, { tint: '#6a4628' });
-      B.box(MAT.glow, wx0, wy0, zf + .1, wx1, wy1, zf + .9, { tint: (v) => rgb(v.y > wy0 + 6 ? '#bfe4f4' : '#8cc6e4'), ink: 0 });
-      B.box(MAT.vc, (wx0 + wx1) / 2 - .6, wy0, zf + .9, (wx0 + wx1) / 2 + .6, wy1, zf + 1.3, { tint: '#6a4628', ink: .3 });
-      B.box(MAT.vc, wx0, (wy0 + wy1) / 2 - .5, zf + .9, wx1, (wy0 + wy1) / 2 + .5, zf + 1.3, { tint: '#6a4628', ink: .3 });
-      B.box(MAT.vc, wx0 - 1.6, wy0 - 2.2, zf, wx1 + 1.6, wy0 - 1, zf + 2.4, { tint: '#f4ecd8' });
-      if (o.boxes) { B.box(MAT.vc, wx0 - 1, wy0 - 5.5, zf + .6, wx1 + 1, wy0 - 2.2, zf + 3.8, { tint: '#7a5232' }); for (let k = 0; k < 6; k++) B.add(KIT.lumpy(1, k, .1), MAT.vc, [wx0 + 1 + k * 1.8, wy0 - 1.4 + (k % 2) * .6, zf + 2.2], null, .9, { tint: ['#e84838', '#f8d040', '#f07ab0', '#ffffff'][(k + cx) % 4], ink: .4 }); }
+    B.box(MAT.stone, x0 - .4, 0, zf - .5, x1 + .4, 3.4, zf + .9, { uv: [20, 20] });
+    for (const cx of windows) { // windows: the painted window, a cream sill, flower boxes
+      const wx = X0 + cx * T + 8, ww = 14, wh = stickerH('window', ww), wy = 18;
+      B.box(MAT.woodDark, wx - ww / 2 + 1, wy - wh / 2 + 1, zf - .1, wx + ww / 2 - 1, wy + wh / 2 - 1, zf + .15, { uv: [16, 16] });
+      sticker(B, 'window', [wx, wy, zf + .35], ww, wh);
+      B.box(MAT.cream, wx - ww / 2 - .6, wy - wh / 2 - 1.6, zf, wx + ww / 2 + .6, wy - wh / 2 - .3, zf + 2.2, { uv: [12, 12] });
+      if (o.boxes) { const y0 = wy - wh / 2 - 1.6; B.box(MAT.woodDark, wx - ww / 2, y0 - 3.2, zf + .6, wx + ww / 2, y0, zf + 3.6, { uv: [12, 12] }); for (let k = 0; k < 6; k++) B.add(KIT.lumpy(1, k, .1), MAT.vc, [wx - ww / 2 + 1.6 + k * 2.2, y0 + .6 + (k % 2) * .6, zf + 2.2], null, .9, { tint: ['#e84838', '#f8d040', '#f07ab0', '#ffffff'][(k + Math.round(cx)) % 4] }); }
     }
     return { zf, RH, zc, x0, x1, slope, WH };
   }
-  function doorPanel(group, x, zf, col, round) { // a door on a hinge at its left edge, to swing open
+  // a door on a hinge at its left edge, to swing open: the painted door on a plank backing
+  function doorPanel(group, x, zf, kind, round) {
     const pivot = new THREE.Group(); pivot.position.set(x, 0, zf + .6); group.add(pivot);
-    const B = KIT.builder();
-    if (round) B.add(new THREE.CylinderGeometry(5, 5, 1, 20, 1, false, 0, PI), MAT.vc, [5, 16, 0], [PI / 2, 0, PI / 2], null, { tint: col });
-    B.box(MAT.vc, 0, 0, -.5, 10, round ? 16 : 21, .5, { tint: col });
-    for (const k of [2.5, 5, 7.5]) B.box(MAT.vc, k - .3, .5, .5, k + .3, round ? 19 : 20.5, .8, { tint: '#4a3020', ink: 0 });
-    B.box(MAT.vc, 7.4, 9, .5, 8.6, 11, 1.4, { tint: '#f0c040', ink: .3 });
-    B.build(pivot, INKPX);
+    const B = KIT.builder(), w = DOORW, h = round ? 19 : 20.5, name = round ? 'door_round' : 'door';
+    if (!round) B.box(MAT.woodDark, .3, 0, -.5, w - .3, h - .3, .3, { uv: [16, 16] });
+    sticker(B, name, [w / 2, h / 2, .45], w, h);
+    sticker(B, name, [w / 2, h / 2, -.65], w, h, PI);
+    B.build(pivot, null);
+    pivot.traverse((m) => { if (m.isMesh && m.material.userData.sticker) m.castShadow = false; });
     return { pivot, set open(k) { pivot.rotation.y = k * 1.6; } };
   }
+  const DOORW = 13;
   const HOUSES = {
     home(B, o) {
       const h = gableHouse(B, Object.assign(o, { wall: 'plaster', roof: 'roofRed', roofCol: '#8a2a22', WH: 30, windows: [0.3, 2.95], boxes: true }));
-      const c0 = o.X0 + 10, c1 = c0 + 7, cz1 = h.zc - 3, yb = h.RH - (h.zc - cz1) * h.slope - 3; // a chimney
-      B.box(MAT.stone, c0, yb, h.zc - 10, c1, h.RH + 8, cz1, { uv: [16, 16] }); B.box(MAT.vc, c0 - .8, h.RH + 8, h.zc - 10.8, c1 + .8, h.RH + 9.6, cz1 + .8, { tint: '#787078' });
+      const c0 = o.X0 + 10, c1 = c0 + 7, cz1 = h.zc - 3, yb = h.RH - (h.zc - cz1) * h.slope - 3; // a brick chimney
+      B.box(MAT.brick, c0, yb, h.zc - 10, c1, h.RH + 8, cz1, { uv: [14, 14] }); B.box(MAT.vc, c0 - .8, h.RH + 8, h.zc - 10.8, c1 + .8, h.RH + 9.6, cz1 + .8, { tint: '#787078' });
       o.smoke = [(c0 + c1) / 2, h.RH + 10, h.zc - 6.5];
       return h;
     },
@@ -405,120 +416,126 @@ const PLACES = (() => {
       const h = gableHouse(B, Object.assign(o, { wall: 'plaster', roof: 'roofPurple', roofCol: '#4e3690', WH: 30, windows: [0.4] }));
       // a striped awning over the front
       const ax0 = o.X0 + 1, ax1 = o.X0 + o.W - 1, az = h.zf;
-      for (let i = 0; i < 8; i++) { const sx0 = ax0 + (ax1 - ax0) * i / 8, sx1 = ax0 + (ax1 - ax0) * (i + 1) / 8; B.add(KIT.BOXG, MAT.vc, [(sx0 + sx1) / 2, 27, az + 4.5], [.55, 0, 0], [sx1 - sx0, .8, 11], { tint: i % 2 ? '#f4f0f8' : '#3a6ae8', ink: .6 }); }
-      for (let i = 0; i < 8; i++) { const sx = ax0 + (ax1 - ax0) * (i + .5) / 8; B.add(new THREE.CylinderGeometry(2.2, 2.2, .8, 10, 1, false, 0, PI), MAT.vc, [sx, 23.4, az + 9.2], [0, 0, PI / 2], [1, 1, 1], { tint: i % 2 ? '#f4f0f8' : '#3a6ae8', ink: .4 }); }
+      for (let i = 0; i < 8; i++) { const sx0 = ax0 + (ax1 - ax0) * i / 8, sx1 = ax0 + (ax1 - ax0) * (i + 1) / 8; B.add(KIT.BOXG, MAT.vc, [(sx0 + sx1) / 2, 27, az + 4.5], [.55, 0, 0], [sx1 - sx0, .8, 11], { tint: i % 2 ? '#f4f0f8' : '#3a6ae8' }); }
+      for (let i = 0; i < 8; i++) { const sx = ax0 + (ax1 - ax0) * (i + .5) / 8; B.add(new THREE.CylinderGeometry(2.2, 2.2, .8, 10, 1, false, 0, PI), MAT.vc, [sx, 23.4, az + 9.2], [0, 0, PI / 2], [1, 1, 1], { tint: i % 2 ? '#f4f0f8' : '#3a6ae8' }); }
       // crates of cubes by the door
-      B.box(MAT.wood, o.X0 + 49, 0, h.zf + 2, o.X0 + 59, 7, h.zf + 10, { uv: [16, 16] });
+      B.box(MAT.wood, o.X0 + 49, 0, h.zf + 2, o.X0 + 59, 7, h.zf + 10, { uv: [14, 14] });
       for (let k = 0; k < 4; k++) B.add(KIT.rbox(3.4, 3.4, 3.4, .7, 2), MAT.vc, [o.X0 + 51.5 + (k % 2) * 4.6, 8.7, h.zf + 4 + Math.floor(k / 2) * 4], [0, k * .4, 0], null, { tint: (v, n) => rgb(v.y > 8.7 ? '#9a6ad8' : '#4a7af0') });
       o.cubeSign = [o.X0 + o.W / 2, h.RH + 13, h.zc + 2];
       return h;
     },
-    inn(B, o) { // Rosa's Inn: half-timbered cream walls, an orange tiled roof, a porch with its own little roof, a hanging sign
+    inn(B, o) { // Rosa's Inn: half-timbered cream walls, an orange tiled roof, a porch with its own little roof, the painted sign
       const h = gableHouse(B, Object.assign(o, { wall: 'plaster', roof: 'roofOrange', roofCol: '#a8441c', WH: 32, windows: [0.3, 2.95] }));
-      const x0 = h.x0, x1 = h.x1, zf = h.zf, beam = '#5a3a22';
-      for (const x of [x0, (x0 + x1) / 2 - 9, (x0 + x1) / 2 + 9, x1]) B.box(MAT.vc, x - 1, 0, zf - .1, x + 1, h.WH, zf + .9, { tint: beam });
-      for (const y of [h.WH - 1.5, 15]) B.box(MAT.vc, x0, y - .8, zf - .1, x1, y + .8, zf + .9, { tint: beam });
-      // the porch: posts, a slanted roof, a bench
+      const x0 = h.x0, x1 = h.x1, zf = h.zf;
+      for (const x of [x0, (x0 + x1) / 2 - 9, (x0 + x1) / 2 + 9, x1]) B.box(MAT.woodDark, x - 1, 0, zf - .1, x + 1, h.WH, zf + .9, { uv: [10, 10] });
+      for (const y of [h.WH - 1.5, 9]) B.box(MAT.woodDark, x0, y - .8, zf - .1, x1, y + .8, zf + .9, { uv: [10, 10] });
+      // the porch: posts, a slanted roof, a deck
       const px0 = o.X0 + (o.door[0] - o.x) * T - 8, px1 = px0 + 30, pz = zf + 9;
       for (const x of [px0, px1]) B.box(MAT.wood, x - 1, 0, pz - 1, x + 1, 20, pz + 1, { uv: [8, 8] });
-      B.add(KIT.BOXG, MAT.roofOrange, [(px0 + px1) / 2, 21.5, zf + 5], [.38, 0, 0], [px1 - px0 + 6, 1.6, 12], { uv: [16, 16] });
-      B.box(MAT.wood, px0 - 2, 0, zf, px1 + 2, 1.2, pz + 2, { uv: [16, 16] });
+      B.add(KIT.BOXG, MAT.roofOrange, [(px0 + px1) / 2, 21.5, zf + 5], [.38, 0, 0], [px1 - px0 + 6, 1.6, 12], { uvf: roofUV(20, 12) });
+      B.box(MAT.wood, px0 - 2, 0, zf, px1 + 2, 1.2, pz + 2, { uv: [14, 14] });
       // the sign, hanging from a bracket at the side
-      const sx = x0 - 3; B.box(MAT.vc, sx - 6, 25, zf + 2, sx + 1, 26, zf + 3, { tint: beam }); B.box(MAT.vc, sx - 6.4, 16, zf + 2.1, sx - .6, 23, zf + 2.9, { tint: '#c89858' });
-      B.add(KIT.lumpy(1.6, 2, .1), MAT.vc, [sx - 3.5, 19.5, zf + 3.2], null, [1, .8, .3], { tint: '#f0e0c0', ink: .4 });
-      // a chimney
+      const sx = x0 - 3; B.box(MAT.woodDark, sx - 8, 26, zf + 2, sx + 1, 27, zf + 3, { uv: [8, 8] });
+      for (const dx of [-6.6, -1.4]) B.box(MAT.vc, sx + dx - .2, 23.5, zf + 2.4, sx + dx + .2, 26, zf + 2.6, { tint: '#3a3448' });
+      sticker(B, 'sign_inn', [sx - 4, 19.5, zf + 2.5], 9.5);
+      sticker(B, 'sign_inn', [sx - 4, 19.5, zf + 2.4], 9.5, null, PI);
+      // a brick chimney
       const c0 = x1 - 14, cz1 = h.zc - 3, yb = h.RH - (h.zc - cz1) * h.slope - 3;
-      B.box(MAT.stone, c0, yb, h.zc - 10, c0 + 7, h.RH + 8, cz1, { uv: [16, 16] });
+      B.box(MAT.brick, c0, yb, h.zc - 10, c0 + 7, h.RH + 8, cz1, { uv: [14, 14] });
       o.smoke = [c0 + 3.5, h.RH + 10, h.zc - 6.5];
       return h;
     },
-    barn(B, o) { // Farmer Bramble's farmhouse: a red barn, white trim, an X on the doors, a cupola with a rooster on top, hay by the door
-      const h = gableHouse(B, Object.assign(o, { wall: 'barn', roof: 'roofRed', roofCol: '#7a2a22', WH: 30, windows: [2.95] }));
+    barn(B, o) { // Farmer Bramble's farmhouse: red boards, white trim, shingles, a cupola with a rooster on top, hay by the door
+      const h = gableHouse(B, Object.assign(o, { wall: 'barn', roof: 'roofBarn', roofCol: '#7a2a22', WH: 30, windows: [2.95] }));
       const x0 = h.x0, x1 = h.x1, zf = h.zf;
-      for (const x of [x0, x1]) B.box(MAT.vc, x - 1, 0, zf - .2, x + 1, h.WH, zf + 1, { tint: '#f4efe4' });
-      B.box(MAT.vc, x0, h.WH - 1.4, zf - .2, x1, h.WH, zf + 1, { tint: '#f4efe4' });
+      for (const x of [x0, x1]) B.box(MAT.cream, x - 1, 0, zf - .2, x + 1, h.WH, zf + 1, { uv: [8, 8] });
+      B.box(MAT.cream, x0, h.WH - 1.4, zf - .2, x1, h.WH, zf + 1, { uv: [8, 8] });
       const cx = (x0 + x1) / 2, cz = h.zc;
       B.box(MAT.barn, cx - 4.5, h.RH - 1, cz - 4.5, cx + 4.5, h.RH + 7, cz + 4.5, { uv: [16, 16] });
-      B.add(new THREE.ConeGeometry(7, 6, 4), MAT.vc, [cx, h.RH + 10, cz], [0, PI / 4, 0], null, { tint: '#8a2a22' });
+      B.add(new THREE.ConeGeometry(7, 6, 4), MAT.roofBarn, [cx, h.RH + 10, cz], [0, PI / 4, 0], null, { uvs: [2, .5] });
       B.add(new THREE.CylinderGeometry(.4, .4, 6, 6), MAT.vc, [cx, h.RH + 15, cz], null, null, { tint: '#3a3448' });
       B.add(KIT.slab([[-3, 0], [2, 0], [3.5, 2.5], [1, 4], [-1, 3], [-3.5, 4.5], [-2.5, 1.5]], .6, .2), MAT.vc, [cx, h.RH + 17, cz], null, null, { tint: '#3a3448' });
-      for (const [hx, hz] of [[x1 + 3, zf + 6], [x1 + 9, zf + 4], [x1 + 5, zf + 12]]) { B.box(MAT.vc, hx - 3.5, 0, hz - 2.5, hx + 3.5, 5, hz + 2.5, { tint: (v, n) => rgb(n.y > .5 ? '#f0d060' : '#d8a838') }); B.box(MAT.vc, hx - 3.6, 2, hz - 2.6, hx + 3.6, 2.8, hz + 2.6, { tint: '#a87a2a', ink: 0 }); }
+      for (const [hx, hz] of [[x1 + 3, zf + 6], [x1 + 9, zf + 4], [x1 + 5, zf + 12]]) hayBale(B, hx, 0, hz, 7, 5, 5);
       return h;
     },
-    hut(B, o) { // the Healing Hut: round, white walls with a wooden band, a striped mint-and-white roof, a heart over the door
+    hut(B, o) { // the Healing Hut: round, white boards with a wooden band, a striped mint-and-white roof, the heart sign over the door
       const cx = o.X0 + (o.door[0] - o.x) * T + 8, cz = o.Z0 + o.D / 2 + 2, r = Math.min(o.W, o.D) / 2 - 1, zf = cz + r;
-      B.add(new THREE.CylinderGeometry(r, r + .5, 30, 28), MAT.plaster, [cx, 15, cz], null, null, { uv: [32, 34] });
-      B.add(new THREE.CylinderGeometry(r + .8, r + .8, 3, 28), MAT.vc, [cx, 1.5, cz], null, null, { tint: '#a8a0a0' });
-      B.add(new THREE.CylinderGeometry(r + .6, r + .6, 2, 28), MAT.vc, [cx, 29, cz], null, null, { tint: '#7a5232' });
-      B.add(new THREE.ConeGeometry(r + 6, 26, 28, 3), MAT.vc, [cx, 43, cz], null, null, { tint: (v) => { const a = Math.atan2(v.x - cx, v.z - cz); return rgb(Math.floor((a + PI) / TAU * 14) % 2 ? '#8ad8b0' : '#f8f4ea'); } });
+      B.add(new THREE.CylinderGeometry(r, r + .5, 30, 28), MAT.hutWall, [cx, 15, cz], null, null, { uvs: [5, 1] });
+      B.add(new THREE.CylinderGeometry(r + .8, r + .8, 3, 28), MAT.stone, [cx, 1.5, cz], null, null, { uvs: [9, .15] });
+      B.add(new THREE.CylinderGeometry(r + .6, r + .6, 2, 28), MAT.woodDark, [cx, 29, cz], null, null, { uvs: [8, .1] });
+      B.add(new THREE.ConeGeometry(r + 6, 26, 28, 3), MAT.roofMint, [cx, 43, cz], null, null, { uvs: [4, 1] });
       B.add(new THREE.SphereGeometry(2.6, 12, 8), MAT.vc, [cx, 57, cz], null, null, { tint: '#e85a8a' });
-      for (const s of [-1, 1]) { const wx = cx + s * 13; B.add(new THREE.CylinderGeometry(4.5, 4.5, 1, 16), MAT.glow, [wx, 17, cz + Math.sqrt(r * r - 169) + .2], [PI / 2, 0, 0], null, { tint: '#bfe4f4', ink: 0 }); B.add(new THREE.TorusGeometry(4.6, .8, 6, 16), MAT.vc, [wx, 17, cz + Math.sqrt(r * r - 169) + .5], null, null, { tint: '#7a5232', ink: .4 }); }
-      const heart = KIT.slab([[0, -5], [4.5, -.5], [5, 2.5], [3, 4.5], [0, 2.8], [-3, 4.5], [-5, 2.5], [-4.5, -.5]], 1.6, .5);
-      B.add(heart, MAT.vc, [o.X0 + (o.door[0] - o.x) * T + 8, 33, zf + 1], null, null, { tint: '#f05a8a' });
+      for (const s of [-1, 1]) { const wx = cx + s * 13, wz = cz + Math.sqrt(r * r - 169); sticker(B, 'window_round', [wx, 17, wz + .4], 10.5, null, Math.atan2(wx - cx, wz - cz)); }
+      sticker(B, 'sign_heart', [cx, 33.5, zf + 1.2], 11);
       return { zf: zf - .3, RH: 56 };
     },
     willow(B, o) { // Elder Willow's: stone footing, plank walls, a deep mossy roof, round windows and a round-topped door
       const x0 = o.X0 + 2, x1 = o.X0 + o.W - 2, zb = o.Z0 + 6, zf = o.Z0 + o.D - 2, zc = (zb + zf) / 2;
-      B.box(MAT.stone, x0 - 1, 0, zb - 1, x1 + 1, 7, zf + 1, { uv: [32, 32] });
-      B.box(MAT.wood, x0, 7, zb, x1, 28, zf, { uv: [32, 32] });
+      B.box(MAT.stone, x0 - 1, 0, zb - 1, x1 + 1, 7, zf + 1, { uv: [20, 20] });
+      B.box(MAT.wood, x0, 7, zb, x1, 28, zf, { uv: [30, 30] });
       // the roof: a long, rounded mound of moss and leaves
       const RH = 46, rise = RH - 26, rr = (zf - zb) / 2 + 7;
-      B.add(new THREE.CylinderGeometry(rr, rr, x1 - x0 + 8, 20, 1, false, -PI / 2, PI), MAT.vc, [(x0 + x1) / 2, 26, zc], [0, 0, PI / 2], [1, 1, rise / rr * 1.05], { tint: (v, n) => rgb(n.y > .7 ? '#5a9a3a' : n.y > .3 ? '#4a8a32' : '#3a6e2a') });
-      for (const sx of [x0 - 4, x1 + 4]) B.add(new THREE.CircleGeometry(rr, 20, -PI / 2, PI), MAT.vc, [sx, 26, zc], [0, sx < x0 ? -PI / 2 : PI / 2, 0], [1, rise / rr * 1.05, 1], { tint: '#3e7a32', ink: 0 });
+      B.add(new THREE.CylinderGeometry(rr, rr, x1 - x0 + 8, 20, 1, false, -PI / 2, PI), MAT.roofMoss, [(x0 + x1) / 2, 26, zc], [0, 0, PI / 2], [1, 1, rise / rr * 1.05], { uvs: [3, 4.5], tint: '#e4ecd4' });
+      for (const sx of [x0 - 4, x1 + 4]) B.add(new THREE.CircleGeometry(rr, 20, -PI / 2, PI), MAT.roofMoss, [sx, 26, zc], [0, sx < x0 ? -PI / 2 : PI / 2, 0], [1, rise / rr * 1.05, 1], { uv: [16, 16], tint: '#d4e0c4' });
       seed = 42;
-      for (let i = 0; i < 26; i++) { const u = rnd(), th = .25 + rnd() * (PI - .5); const x = x0 - 3 + u * (x1 - x0 + 6), zz = zc + Math.cos(th) * rr, y = 26 + Math.sin(th) * rise * 1.05; B.add(KIT.lumpy(4 + rnd() * 3.5, i, .25), MAT.leaf, [x, y, zz], [rnd(), rnd(), 0], [1, .6, 1], { tint: leafCol }); }
-      for (let i = 0; i < 9; i++) { const x = x0 + 2 + i * (x1 - x0 - 4) / 8; B.add(KIT.lumpy(2.2, i, .2), MAT.vc, [x, 25 - (i % 2) * 2, zf + 4], null, [1, 1.4, 1], { tint: i % 3 ? '#4a8a2e' : '#6ab040', ink: .5 }); }
-      for (const [fx, col] of [[x0 + 6, '#f8d040'], [x1 - 6, '#f07ab0'], [x0 + 14, '#ffffff']]) { B.add(KIT.lumpy(1.6, fx, .1), MAT.vc, [fx, 26, zf + 5], null, null, { tint: col, ink: .4 }); }
+      for (let i = 0; i < 18; i++) { const u = rnd(), th = .25 + rnd() * (PI - .5); const x = x0 - 3 + u * (x1 - x0 + 6), zz = zc + Math.cos(th) * rr, y = 26 + Math.sin(th) * rise * 1.05; B.add(KIT.lumpy(3.5 + rnd() * 3, i, .25), MAT.leaves, [x, y, zz], [rnd(), rnd(), 0], [1, .6, 1], { uv: [10, 10] }); }
+      for (let i = 0; i < 9; i++) { const x = x0 + 2 + i * (x1 - x0 - 4) / 8; B.add(KIT.lumpy(2.2, i, .2), MAT.leaves, [x, 25 - (i % 2) * 2, zf + 4], null, [1, 1.4, 1], { uv: [8, 8] }); }
       // round windows, a chimney of stones, flower pots
-      for (const cx of [o.X0 + 14, o.X0 + o.W - 14]) { B.add(new THREE.CylinderGeometry(5, 5, 1, 18), MAT.glow, [cx, 17, zf + .3], [PI / 2, 0, 0], null, { tint: '#ffe8a8', ink: 0 }); B.add(new THREE.TorusGeometry(5.2, 1, 6, 18), MAT.vc, [cx, 17, zf + .6], null, null, { tint: '#5a3a22', ink: .5 }); }
-      B.add(new THREE.CylinderGeometry(4, 4.5, 16, 10), MAT.stone, [x1 - 10, RH + 2, zc - 4], null, null, { uv: [16, 16] });
-      for (const [px, c] of [[o.X0 + 6, '#e84838'], [o.X0 + o.W - 7, '#f8d040']]) { B.add(new THREE.CylinderGeometry(2.6, 2, 4, 10), MAT.vc, [px, 2, zf + 4], null, null, { tint: '#b86a3a' }); B.add(KIT.lumpy(3, px, .2), MAT.vc, [px, 6, zf + 4], null, null, { tint: '#4a8a2e' }); B.add(KIT.lumpy(1.3, px + 1, .1), MAT.vc, [px, 8.5, zf + 5], null, null, { tint: c, ink: .4 }); }
+      for (const cx of [o.X0 + 14, o.X0 + o.W - 14]) sticker(B, 'window_round', [cx, 17, zf + .35], 12);
+      B.add(new THREE.CylinderGeometry(4, 4.5, 16, 10), MAT.stone, [x1 - 10, RH + 2, zc - 4], null, null, { uvs: [1.5, 1] });
+      for (const [px, c] of [[o.X0 + 6, '#e84838'], [o.X0 + o.W - 7, '#f8d040']]) { B.add(new THREE.CylinderGeometry(2.6, 2, 4, 10), MAT.vc, [px, 2, zf + 4], null, null, { tint: '#b86a3a' }); B.add(KIT.lumpy(3, px, .2), MAT.leavesFlowers, [px, 6, zf + 4], null, null, { uv: [6, 6] }); }
       o.smoke = [x1 - 10, RH + 11, zc - 4];
       return { zf, RH, round: true };
     },
   };
+  // a hay bale: painted hay, its painted end showing on the front
+  function hayBale(B, x, y, z, w, h, d) {
+    B.box(MAT.hay, x - w / 2, y, z - d / 2, x + w / 2, y + h, z + d / 2, { uv: [8, 8] });
+    sticker(B, 'hay_bale_end', [x, y + h / 2, z + d / 2 + .08], w * .98, h * .98);
+  }
 
   // ---------- props ----------
   const PROPS = {
-    lamp(B, x, z) { B.add(new THREE.CylinderGeometry(1, 1.3, 22, 8), MAT.vc, [x, 11, z], null, null, { tint: '#3a3448' }); B.add(new THREE.CylinderGeometry(3, 3.4, 2, 8), MAT.vc, [x, 1, z], null, null, { tint: '#3a3448' }); B.box(MAT.vc, x - .5, 21, z - .5, x + 6, 22, z + .5, { tint: '#3a3448' }); B.add(new THREE.CylinderGeometry(2.2, 1.6, 4.5, 6), MAT.glow, [x + 5.5, 18, z], null, null, { tint: '#ffe08a', ink: .6 }); B.add(new THREE.ConeGeometry(2.8, 2.4, 6), MAT.vc, [x + 5.5, 21.4, z], null, null, { tint: '#3a3448' }); },
-    barrel(B, x, z) { B.add(KIT.lathe([[5, 13], [6, 9], [6.2, 6.5], [6, 4], [5, 0]], 14), MAT.wood, [x, 0, z], null, null, { uv: [16, 16] }); for (const y of [2.5, 10.5]) B.add(new THREE.TorusGeometry(5.7, .5, 5, 16), MAT.vc, [x, y, z], [PI / 2, 0, 0], null, { tint: '#4a4048', ink: .3 }); B.add(new THREE.CylinderGeometry(5, 5, .6, 14), MAT.vc, [x, 13, z], null, null, { tint: '#8a6038' }); },
-    crates(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 4, x + 2, 9, z + 5, { uv: [16, 16] }); B.box(MAT.wood, x + 1, 0, z - 2, x + 7, 6, z + 4, { uv: [16, 16] }); B.box(MAT.wood, x - 5, 9, z - 3, x + 1, 15, z + 3, { uv: [16, 16] }); },
-    mailbox(B, x, z) { B.box(MAT.vc, x - .8, 0, z - .8, x + .8, 9, z + .8, { tint: '#7a5232' }); B.add(KIT.rbox(6, 5, 8, 1.6, 2), MAT.vc, [x, 11, z], null, null, { tint: '#d83a3a' }); B.box(MAT.vc, x + 3, 11, z - 1, x + 3.6, 15, z, { tint: '#f8d040', ink: .3 }); },
-    hay(B, x, z) { for (const [dx, dz, y] of [[-4, 0, 0], [4, 0, 0], [0, 1, 7]]) B.add(KIT.rbox(9, 7, 11, 2, 2), MAT.vc, [x + dx, y + 3.5, z + dz], null, null, { tint: (v, n) => rgb(n.y > .5 ? '#f8d878' : '#d8a840') }); },
-    bench(B, x, z) { B.box(MAT.wood, x - 9, 4.5, z - 2.5, x + 9, 6, z + 2.5, { uv: [16, 16] }); B.box(MAT.wood, x - 9, 6, z - 3, x + 9, 11, z - 2, { uv: [16, 16] }); for (const dx of [-7, 7]) B.box(MAT.vc, x + dx - .8, 0, z - 2, x + dx + .8, 4.5, z + 2, { tint: '#5a3a22' }); },
+    lamp(B, x, z) { B.add(new THREE.CylinderGeometry(1, 1.3, 22, 8), MAT.iron, [x, 11, z], null, null, { uvs: [.5, 2] }); B.add(new THREE.CylinderGeometry(3, 3.4, 2, 8), MAT.iron, [x, 1, z], null, null, { uvs: [1, .2] }); B.box(MAT.iron, x - .5, 21, z - .5, x + 6, 22, z + .5, { uv: [8, 8] });
+      B.add(new THREE.CylinderGeometry(1.9, 1.4, 4.2, 6), MAT.glow, [x + 5.5, 18, z], null, null, { tint: '#ffe08a' }); sticker(B, 'lamp_glass', [x + 5.5, 18.3, z + 2.1], 5.2); B.add(new THREE.ConeGeometry(2.8, 2.4, 6), MAT.iron, [x + 5.5, 21.4, z], null, null, { uvs: [1, .3] }); },
+    barrel(B, x, z) { B.add(KIT.lathe([[5, 13], [6, 9], [6.2, 6.5], [6, 4], [5, 0]], 14), MAT.wood, [x, 0, z], null, null, { uvs: [2, 1] }); for (const y of [2.5, 10.5]) B.add(new THREE.TorusGeometry(5.8, .55, 5, 16), MAT.iron, [x, y, z], [PI / 2, 0, 0], null, { uvs: [4, .2] }); sticker(B, 'barrel_top', [x, 13.05, z], 10.2, 10.2, 0, -PI / 2); },
+    crates(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 4, x + 2, 9, z + 5, { uv: [12, 12] }); B.box(MAT.wood, x + 1, 0, z - 2, x + 7, 6, z + 4, { uv: [12, 12] }); B.box(MAT.wood, x - 5, 9, z - 3, x + 1, 15, z + 3, { uv: [12, 12] }); },
+    mailbox(B, x, z) { B.box(MAT.woodDark, x - .8, 0, z - .8, x + .8, 6, z + .8, { uv: [6, 6] }); B.box(MAT.barn, x - 4, 6, z - 2.6, x + 4, 13.5, z + 2.6, { uv: [10, 10] }); sticker(B, 'mailbox', [x, 10.6, z + 2.7], 9.6); },
+    hay(B, x, z) { for (const [dx, dz, y] of [[-4, 0, 0], [4, 0, 0], [0, 1, 7]]) hayBale(B, x + dx, y, z + dz, 8.4, 7, 10); },
+    bench(B, x, z) { B.box(MAT.wood, x - 9, 4.5, z - 2.5, x + 9, 6, z + 2.5, { uv: [12, 12] }); B.box(MAT.wood, x - 9, 6, z - 3, x + 9, 11, z - 2, { uv: [12, 12] }); for (const dx of [-7, 7]) B.box(MAT.iron, x + dx - .8, 0, z - 2, x + dx + .8, 4.5, z + 2, { uv: [6, 6] }); },
     pots(B, x, z) { B.add(KIT.lathe([[2, 9], [3.5, 8], [5, 5], [4.5, 2], [3, 0]], 14), MAT.vc, [x - 3, 0, z], null, null, { tint: '#d8a070' }); B.add(KIT.lathe([[1.5, 6.5], [2.6, 6], [4, 3.5], [3.4, 1.2], [2.2, 0]], 14), MAT.vc, [x + 4, 0, z + 2], null, null, { tint: '#c86a3a' }); },
-    barrow(B, x, z) { B.add(KIT.BOXG, MAT.wood, [x, 6, z], [0, 0, .15], [12, 5, 9], { uv: [16, 16] }); B.add(new THREE.CylinderGeometry(3, 3, 1.5, 12), MAT.vc, [x + 7, 3, z], [PI / 2, 0, 0], null, { tint: '#5a3a22' }); for (const s of [-1, 1]) B.box(MAT.vc, x - 9, 4, z + s * 3 - .5, x - 4, 5, z + s * 3 + .5, { tint: '#7a5232' }); },
-    bush(B, x, z) { B.add(KIT.lumpy(7, x, .2), MAT.leaf, [x, 5, z], null, [1, .8, 1], { tint: leafCol }); B.add(KIT.lumpy(5, x + 1, .2), MAT.leaf, [x - 4, 4, z + 2], null, [1, .8, 1], { tint: leafCol }); },
-    flowerbush(B, x, z) { PROPS.bush(B, x, z); seed = x * 3 + z; for (let i = 0; i < 9; i++) { const a = rnd() * TAU, e = rnd() * 1.2; B.add(new THREE.SphereGeometry(1, 6, 4), MAT.vc, [x + Math.cos(a) * 6.5 * Math.cos(e), 5 + Math.sin(e) * 5, z + Math.sin(a) * 6.5 * Math.cos(e)], null, null, { tint: '#fff8f0', ink: .3 }); } },
-    berrybush(B, x, z) { PROPS.bush(B, x, z); seed = x * 5 + z; for (let i = 0; i < 9; i++) { const a = rnd() * TAU, e = rnd() * 1.2; B.add(new THREE.SphereGeometry(1.1, 6, 4), MAT.vc, [x + Math.cos(a) * 6.5 * Math.cos(e), 5 + Math.sin(e) * 5, z + Math.sin(a) * 6.5 * Math.cos(e)], null, null, { tint: '#e83848', ink: .3 }); } },
-    rock(B, x, z) { B.add(KIT.lumpy(7, x, .25), MAT.vc, [x, 3, z], [0, x, 0], [1, .6, .9], { tint: shadeY('#a8a0b0', '#7a7088', '#4a4252') }); },
-    boulder(B, x, z) { B.add(KIT.lumpy(7.5, x + z, .25), MAT.vc, [x, 4, z], [0, x, 0], [1, .7, .9], { tint: shadeY('#a8a0b0', '#7a7088', '#4a4252') }); },
-    lily(B, x, z) { B.add(new THREE.CylinderGeometry(5, 5, .6, 16, 1, false, .4, TAU - .8), MAT.vc, [x, -1.8, z], null, null, { tint: '#4fa040', ink: .4 }); B.add(KIT.lumpy(1.4, x, .2), MAT.vc, [x + 1, -.8, z], null, null, { tint: '#f8a0c8', ink: .3 }); },
-    sign(B, x, z) { B.box(MAT.vc, x - .8, 0, z - .8, x + .8, 10, z + .8, { tint: '#5a3a22' }); B.box(MAT.wood, x - 6.5, 7, z - .8, x + 6.5, 14.5, z + .8, { uv: [16, 16] }); for (const y of [9.5, 12]) B.box(MAT.vc, x - 4.5, y, z + .8, x + 4.5, y + .7, z + 1, { tint: '#6a4628', ink: 0 }); },
-    flowers(B, x, z, k) { seed = k; for (let i = 0; i < 4; i++) { const fx = x - 5 + rnd() * 10, fz = z - 5 + rnd() * 10, h = 2 + rnd() * 2; B.box(MAT.vc, fx - .25, 0, fz - .25, fx + .25, h, fz + .25, { tint: '#3e8a30', ink: 0 }); B.add(new THREE.SphereGeometry(1.3, 6, 4), MAT.vc, [fx, h + .6, fz], null, [1, .6, 1], { tint: ['#f8f0f8', '#f8d040', '#f07ab0'][i % 3], ink: .3 }); } },
+    barrow(B, x, z) { B.add(KIT.BOXG, MAT.wood, [x, 6, z], [0, 0, .15], [12, 5, 9], { uv: [10, 10] }); B.add(new THREE.CylinderGeometry(3, 3, 1.5, 12), MAT.woodDark, [x + 7, 3, z], [PI / 2, 0, 0], null, { uvs: [1, 1] }); for (const s of [-1, 1]) B.box(MAT.woodDark, x - 9, 4, z + s * 3 - .5, x - 4, 5, z + s * 3 + .5, { uv: [6, 6] }); },
+    bush(B, x, z, k, mat) { B.add(KIT.lumpy(7, x, .2), mat || MAT.leaves, [x, 5, z], null, [1, .8, 1], { uv: [13, 13] }); B.add(KIT.lumpy(5, x + 1, .2), mat || MAT.leaves, [x - 4, 4, z + 2], null, [1, .8, 1], { uv: [13, 13] }); },
+    flowerbush(B, x, z, k) { PROPS.bush(B, x, z, k, MAT.leavesFlowers); },
+    berrybush(B, x, z, k) { PROPS.bush(B, x, z, k, MAT.leavesBerries); },
+    rock(B, x, z) { B.add(KIT.lumpy(7, x, .25), MAT.rock, [x, 3, z], [0, x, 0], [1, .6, .9], { uv: [12, 12] }); },
+    boulder(B, x, z) { B.add(KIT.lumpy(7.5, x + z, .25), MAT.rock, [x, 4, z], [0, x, 0], [1, .7, .9], { uv: [12, 12] }); },
+    lily(B, x, z) { B.add(new THREE.CylinderGeometry(5, 5, .6, 16, 1, false, .4, TAU - .8), MAT.vc, [x, -1.8, z], null, null, { tint: '#4fa040' }); B.add(KIT.lumpy(1.4, x, .2), MAT.vc, [x + 1, -.8, z], null, null, { tint: '#f8a0c8' }); },
+    sign(B, x, z) { B.box(MAT.woodDark, x - .8, 0, z - .8, x + .8, 10, z + .8, { uv: [6, 6] }); B.box(MAT.wood, x - 6.5, 7, z - .8, x + 6.5, 14.5, z + .8, { uv: [12, 12] }); for (const y of [9.5, 12]) B.box(MAT.vc, x - 4.5, y, z + .8, x + 4.5, y + .7, z + 1, { tint: '#6a4628' }); },
+    flowers(B, x, z, k) { seed = k; for (let i = 0; i < 4; i++) { const fx = x - 5 + rnd() * 10, fz = z - 5 + rnd() * 10, h = 2 + rnd() * 2; B.box(MAT.vc, fx - .25, 0, fz - .25, fx + .25, h, fz + .25, { tint: '#3e8a30' }); B.add(new THREE.SphereGeometry(1.3, 6, 4), MAT.vc, [fx, h + .6, fz], null, [1, .6, 1], { tint: ['#f8f0f8', '#f8d040', '#f07ab0'][i % 3] }); } },
   };
 
-  // ---------- furniture for the rooms (h is how tall each stands, as in the game's art) ----------
+  // ---------- furniture for the rooms (h is how tall each stands, as in the game's art); fronts are painted stickers ----------
   const FURN = {
-    bookshelf(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 4, x + 7, 24, z + 3, { uv: [16, 16] }); for (const y of [2, 9, 16]) { B.box(MAT.vc, x - 6, y, z - 3, x + 6, y + .8, z + 3.2, { tint: '#5a3a22', ink: 0 }); for (let i = 0; i < 6; i++) B.box(MAT.vc, x - 5.6 + i * 1.9, y + .8, z - 2, x - 4.2 + i * 1.9, y + 5.5 + (i % 3) * .4, z + 2.4, { tint: ['#3a6ae8', '#c84a3a', '#4fa040', '#f8d040', '#7a5ac8', '#e8e0d0'][(i + y) % 6], ink: .3 }); } },
-    fireplace(B, x, z) { B.box(MAT.stone, x - 9, 0, z - 4, x + 9, 20, z + 3, { uv: [16, 16] }); B.box(MAT.vc, x - 5, 0, z + 2.8, x + 5, 10, z + 3.2, { tint: '#2a1a14', ink: 0 }); B.box(MAT.wood, x - 10, 20, z - 4.5, x + 10, 22, z + 4, { uv: [16, 16] }); B.add(new THREE.ConeGeometry(2.5, 6, 6), MAT.glow, [x - 1.5, 4, z + 2], null, null, { tint: '#ffb040', ink: 0 }); B.add(new THREE.ConeGeometry(1.8, 5, 6), MAT.glow, [x + 2, 3.5, z + 2], null, null, { tint: '#ffe070', ink: 0 }); },
-    clock(B, x, z) { B.box(MAT.wood, x - 4, 0, z - 3, x + 4, 22, z + 3, { uv: [16, 16] }); B.add(new THREE.CylinderGeometry(3, 3, .6, 16), MAT.vc, [x, 18, z + 3.2], [PI / 2, 0, 0], null, { tint: '#f8f0e0', ink: .4 }); B.box(MAT.vc, x - .3, 17.7, z + 3.5, x + .3, 20, z + 3.8, { tint: '#2a2230', ink: 0 }); B.box(MAT.vc, x - 2.5, 3, z + 3, x + 2.5, 13, z + 3.3, { tint: '#3a2418', ink: 0 }); },
-    plant(B, x, z) { B.add(KIT.lathe([[3.2, 6], [3.6, 5], [3, 1], [2.4, 0]], 12), MAT.vc, [x, 0, z], null, null, { tint: '#c86a3a' }); for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; B.add(KIT.slab([[0, 0], [1.6, 3], [0, 9], [-1.6, 3]], .4, .15), MAT.vc, [x + Math.cos(a), 5.5, z + Math.sin(a)], [-.5, -a + PI / 2, 0, 'YXZ'], null, { tint: i % 2 ? '#4fa040' : '#3a8a34', ink: .4 }); } },
-    starterTable(B, x, z) { B.add(new THREE.CylinderGeometry(15, 15, 2, 28), MAT.vc, [x, 11, z], null, [1, 1, .55], { tint: '#4f8a3a' }); B.add(new THREE.CylinderGeometry(15.6, 15.6, 1.2, 28), MAT.vc, [x, 10, z], null, [1, 1, .56], { tint: '#6a4628' }); for (const s of [-1, 1]) B.box(MAT.vc, x + s * 10 - 1, 0, z - 1, x + s * 10 + 1, 10, z + 1, { tint: '#5a3a22' }); },
-    healCounter(B, x, z) { B.add(KIT.rbox(30, 12, 9, 2, 2), MAT.vc, [x, 6, z], null, null, { tint: shadeY('#f8f4ea', '#e8e0d0', '#c8c0b0') }); B.box(MAT.vc, x - 15, 0, z + 2, x + 15, 6, z + 4.8, { tint: '#8ad8b0' }); B.add(KIT.slab([[0, -3], [3, 0], [3, 2], [1.5, 3], [0, 2], [-1.5, 3], [-3, 2], [-3, 0]], 1, .3), MAT.vc, [x, 7, z + 4.8], null, null, { tint: '#f05a8a' }); },
-    healMachine(B, x, z) { B.add(KIT.rbox(14, 14, 8, 2, 2), MAT.vc, [x, 7, z], null, null, { tint: shadeY('#ffffff', '#e8e4f0', '#b8b0c8') }); for (let i = 0; i < 4; i++) B.add(new THREE.SphereGeometry(2, 10, 6, 0, TAU, 0, PI / 2), MAT.glow, [x - 4.5 + i * 3, 14, z - 1 + (i % 2) * 2], null, null, { tint: '#f8a8e0', ink: .4 }); },
-    vault(B, x, z) { B.add(KIT.rbox(12, 24, 8, 2, 2), MAT.vc, [x, 12, z], null, null, { tint: shadeY('#ffffff', '#e8eef4', '#b8c0c8') }); B.box(MAT.glow, x - 4, 13, z + 3.9, x + 4, 20, z + 4.3, { tint: '#8ad0f8', ink: 0 }); for (let i = 0; i < 4; i++) B.add(KIT.rbox(2.2, 2.2, 2.2, .5, 1), MAT.vc, [x - 3 + (i % 2) * 6, 6 + Math.floor(i / 2) * 3, z + 4.4], null, null, { tint: '#b07ae8', ink: .3 }); },
-    herbShelf(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 3, x + 7, 22, z + 3, { uv: [16, 16] }); for (const y of [6, 13, 20]) { B.box(MAT.vc, x - 6.5, y, z - 2.5, x + 6.5, y + .7, z + 3.2, { tint: '#5a3a22', ink: 0 }); for (let i = 0; i < 4; i++) B.add(new THREE.CylinderGeometry(1.2, 1.2, 3.6, 8), MAT.vc, [x - 4.5 + i * 3, y + 2.5, z + 1], null, null, { tint: ['#a8e080', '#f8c0d0', '#f8e080', '#c8a8f0'][(i + y) % 4], ink: .3 }); } },
-    cot(B, x, z) { B.box(MAT.vc, x - 6, 0, z - 9, x + 6, 6, z + 9, { tint: '#8a6038' }); B.add(KIT.rbox(11, 3, 17, 1.2, 2), MAT.vc, [x, 7, z], null, null, { tint: '#f8f4ea' }); B.add(KIT.rbox(8, 2.4, 5, 1, 2), MAT.vc, [x, 9.5, z - 5.5], null, null, { tint: '#ffffff' }); },
-    shopCounter(B, x, z) { B.box(MAT.wood, x - 15, 0, z - 4, x + 15, 11, z + 4, { uv: [16, 16] }); B.box(MAT.vc, x - 15.5, 11, z - 4.5, x + 15.5, 12.5, z + 4.5, { tint: '#c08a58' }); B.add(KIT.rbox(7, 5, 5, 1, 2), MAT.vc, [x + 9, 15, z - 1], null, null, { tint: '#3a3040' }); B.box(MAT.vc, x - 9, 12.5, z - 2, x - 3, 13.3, z + 3, { tint: '#f4ecd8' }); },
-    cubeShelf(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 4, x + 7, 22, z + 3, { uv: [16, 16] }); for (const y of [2, 9, 16]) { B.box(MAT.vc, x - 6.5, y, z - 3, x + 6.5, y + .7, z + 3.2, { tint: '#5a3a22', ink: 0 }); for (let i = 0; i < 3; i++) B.add(KIT.rbox(3.4, 3.4, 3.4, .7, 2), MAT.vc, [x - 4 + i * 4, y + 2.5, z + 1], [0, i * .3, 0], null, { tint: (v) => rgb(v.y > y + 2.5 ? (y === 16 ? '#b07ae8' : '#9a6ad8') : '#4a7af0'), ink: .4 }); } },
-    bed(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 5, x + 7, 7, z + 15, { uv: [16, 16] }); B.box(MAT.wood, x - 7, 0, z - 6, x + 7, 15, z - 4, { uv: [16, 16] }); B.add(KIT.rbox(13, 3, 18, 1.2, 2), MAT.vc, [x, 8, z + 5], null, null, { tint: '#3a6ae8' }); B.add(KIT.rbox(10, 3, 5, 1.2, 2), MAT.vc, [x, 9, z - 1.5], null, null, { tint: '#ffffff' }); },
-    dresser(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 4, x + 7, 16, z + 3, { uv: [16, 16] }); for (const y of [3, 8, 13]) { B.box(MAT.vc, x - 6, y - 1.8, z + 3, x + 6, y + 1.8, z + 3.4, { tint: '#9a6a40', ink: .3 }); B.box(MAT.vc, x - 1, y - .4, z + 3.4, x + 1, y + .4, z + 4, { tint: '#f0c040', ink: 0 }); } },
-    stove(B, x, z) { B.box(MAT.stone, x - 7, 0, z - 4, x + 7, 13, z + 3, { uv: [16, 16] }); B.box(MAT.vc, x - 3.5, 2, z + 2.9, x + 3.5, 8, z + 3.3, { tint: '#2a1a14', ink: 0 }); B.add(KIT.lathe([[3, 5], [3.4, 4], [3.2, 0]], 12), MAT.vc, [x - 2, 13, z], null, null, { tint: '#4a4048' }); B.add(new THREE.CylinderGeometry(1.6, 1.6, 12, 8), MAT.stone, [x + 4, 19, z - 2], null, null, { uv: [16, 16] }); },
-    piano(B, x, z) { B.box(MAT.wood, x - 9, 0, z - 4, x + 9, 18, z + 2, { uv: [16, 16] }); B.box(MAT.vc, x - 9, 9, z + 2, x + 9, 11, z + 6, { tint: '#3a2418' }); for (let i = 0; i < 14; i++) B.box(MAT.vc, x - 8.5 + i * 1.22, 11, z + 3, x - 7.5 + i * 1.22, 11.6, z + 6.2, { tint: i % 3 === 2 ? '#2a2020' : '#f8f4ea', ink: 0 }); B.box(MAT.vc, x - 6, 13, z + 2.1, x + 6, 16, z + 2.5, { tint: '#e8d8b0', ink: .3 }); },
-    stairs(B, x, z) { for (let i = 0; i < 5; i++) B.box(MAT.wood, x - 7, 0, z - 4 + i * 0, x + 7, 4 + i * 4, z + 4 - i * 1.6, { uv: [16, 16] }); B.box(MAT.vc, x + 7, 0, z - 4, x + 8.5, 26, z - 2.5, { tint: '#5a3a22' }); },
-    board(B, x, z) { B.box(MAT.wood, x - 9, 14, z - 4, x + 9, 28, z - 2.6, { uv: [16, 16] }); for (const [dx, dy, c] of [[-5, 24, '#f8f0dc'], [1, 23, '#e8f0ff'], [5, 18, '#fff0c8'], [-3, 18, '#f8e0e0']]) B.box(MAT.vc, x + dx - 2.6, dy - 3, z - 2.6, x + dx + 2.6, dy + 1, z - 2.2, { tint: c, ink: .3 }); },
-    table(B, x, z) { B.box(MAT.wood, x - 13, 9, z - 6, x + 13, 11, z + 6, { uv: [16, 16] }); for (const [dx, dz] of [[-11, -4], [11, -4], [-11, 4], [11, 4]]) B.box(MAT.vc, x + dx - 1, 0, z + dz - 1, x + dx + 1, 9, z + dz + 1, { tint: '#5a3a22' }); for (const s of [-1, 1]) { B.box(MAT.wood, x + s * 8 - 3.5, 5, z + 9, x + s * 8 + 3.5, 6.5, z + 14, { uv: [16, 16] }); for (const [dx, dz] of [[-2.5, 0], [2.5, 0]]) B.box(MAT.vc, x + s * 8 + dx - .6, 0, z + 11.5 + dz - .6, x + s * 8 + dx + .6, 5, z + 11.5 + dz + .6, { tint: '#5a3a22', ink: .5 }); } },
+    bookshelf(B, x, z) { B.box(MAT.polished, x - 7, 0, z - 4, x + 7, 24, z + 3, { uv: [14, 14] }); for (const y of [.8, 12]) sticker(B, 'books', [x, y + 5.6, z + 3.1], 13, 11.2); },
+    fireplace(B, x, z) { B.box(MAT.hearth, x - 9, 0, z - 4, x + 9, 20, z + 3, { uv: [14, 14] }); B.box(MAT.vc, x - 5, 0, z + 2.8, x + 5, 10, z + 3.2, { tint: '#2a1a14' }); B.box(MAT.polished, x - 10, 20, z - 4.5, x + 10, 22, z + 4, { uv: [14, 14] }); B.add(new THREE.ConeGeometry(2.5, 6, 6), MAT.glow, [x - 1.5, 4, z + 2], null, null, { tint: '#ffb040' }); B.add(new THREE.ConeGeometry(1.8, 5, 6), MAT.glow, [x + 2, 3.5, z + 2], null, null, { tint: '#ffe070' }); },
+    clock(B, x, z) { B.box(MAT.polished, x - 4, 0, z - 3, x + 4, 22, z + 3, { uv: [12, 12] }); sticker(B, 'clock_face', [x, 17, z + 3.1], 7.6); B.box(MAT.vc, x - 2.5, 3, z + 3, x + 2.5, 11.5, z + 3.3, { tint: '#3a2418' }); B.add(new THREE.CylinderGeometry(1.3, 1.3, .3, 12), MAT.vc, [x, 5, z + 3.4], [PI / 2, 0, 0], null, { tint: '#e8c050' }); },
+    plant(B, x, z) { B.add(KIT.lathe([[3.2, 6], [3.6, 5], [3, 1], [2.4, 0]], 12), MAT.vc, [x, 0, z], null, null, { tint: '#c86a3a' }); for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; B.add(KIT.slab([[0, 0], [1.6, 3], [0, 9], [-1.6, 3]], .4, .15), MAT.vc, [x + Math.cos(a), 5.5, z + Math.sin(a)], [-.5, -a + PI / 2, 0, 'YXZ'], null, { tint: i % 2 ? '#4fa040' : '#3a8a34' }); } },
+    starterTable(B, x, z) { B.add(new THREE.CylinderGeometry(15, 15, 2, 28), MAT.vc, [x, 11, z], null, [1, 1, .55], { tint: '#4f8a3a' }); B.add(new THREE.CylinderGeometry(15.6, 15.6, 1.2, 28), MAT.polished, [x, 10, z], null, [1, 1, .56], { uvs: [6, .2] }); for (const s of [-1, 1]) B.box(MAT.polished, x + s * 10 - 1, 0, z - 1, x + s * 10 + 1, 10, z + 1, { uv: [6, 6] }); },
+    healCounter(B, x, z) { B.add(KIT.rbox(30, 12, 9, 2, 2), MAT.hutWall, [x, 6, z], null, null, { uv: [16, 16] }); B.box(MAT.vc, x - 15, 0, z + 2, x + 15, 6, z + 4.8, { tint: '#8ad8b0' }); sticker(B, 'sign_heart', [x, 7.5, z + 4.6], 6); },
+    healMachine(B, x, z) { B.box(MAT.hutWall, x - 7, 0, z - 4, x + 7, 14.5, z + 3.6, { uv: [14, 14] }); sticker(B, 'healing_machine', [x, 7.25, z + 3.7], 14); },
+    vault(B, x, z) { B.box(MAT.polished, x - 7, 0, z - 4, x + 7, 15, z + 3.6, { uv: [14, 14] }); sticker(B, 'cube_vault', [x, 7.5, z + 3.7], 14.2); },
+    herbShelf(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 3, x + 7, 22, z + 3, { uv: [14, 14] }); sticker(B, 'herb_shelf', [x, 14.5, z + 3.1], 13, 13); B.box(MAT.woodDark, x - 6.5, 1, z + 3, x + 6.5, 7, z + 3.2, { uv: [8, 8] }); },
+    cot(B, x, z) { B.box(MAT.wood, x - 6, 0, z - 9, x + 6, 6, z + 9, { uv: [12, 12] }); B.add(KIT.rbox(11, 3, 17, 1.2, 2), MAT.vc, [x, 7, z], null, null, { tint: '#f8f4ea' }); B.add(KIT.rbox(8, 2.4, 5, 1, 2), MAT.vc, [x, 9.5, z - 5.5], null, null, { tint: '#ffffff' }); },
+    shopCounter(B, x, z) { B.box(MAT.wood, x - 15, 0, z - 4, x + 15, 11, z + 4, { uv: [14, 14] }); B.box(MAT.polished, x - 15.5, 11, z - 4.5, x + 15.5, 12.5, z + 4.5, { uv: [14, 14] }); B.add(KIT.rbox(7, 5, 5, 1, 2), MAT.iron, [x + 9, 15, z - 1], null, null, { uv: [8, 8] }); B.box(MAT.vc, x - 9, 12.5, z - 2, x - 3, 13.3, z + 3, { tint: '#f4ecd8' }); },
+    cubeShelf(B, x, z) { B.box(MAT.wood, x - 7, 0, z - 4, x + 7, 22, z + 3, { uv: [14, 14] }); for (const y of [2, 9, 16]) { B.box(MAT.woodDark, x - 6.5, y, z - 3, x + 6.5, y + .7, z + 3.2, { uv: [8, 8] }); for (let i = 0; i < 3; i++) B.add(KIT.rbox(3.4, 3.4, 3.4, .7, 2), MAT.vc, [x - 4 + i * 4, y + 2.5, z + 1], [0, i * .3, 0], null, { tint: (v) => rgb(v.y > y + 2.5 ? (y === 16 ? '#b07ae8' : '#9a6ad8') : '#4a7af0') }); } },
+    bed(B, x, z) { B.box(MAT.polished, x - 7, 0, z - 5, x + 7, 7, z + 15, { uv: [14, 14] }); B.box(MAT.polished, x - 7, 0, z - 6, x + 7, 15, z - 4, { uv: [14, 14] }); B.add(KIT.rbox(13, 3, 18, 1.2, 2), MAT.quilt, [x, 8, z + 5], null, null, { uv: [12, 12] }); B.add(KIT.rbox(10, 3, 5, 1.2, 2), MAT.vc, [x, 9, z - 1.5], null, null, { tint: '#ffffff' }); },
+    dresser(B, x, z) { B.box(MAT.polished, x - 7, 0, z - 4, x + 7, 16, z + 3, { uv: [14, 14] }); for (const y of [3, 8, 13]) { B.box(MAT.wood, x - 6, y - 1.8, z + 3, x + 6, y + 1.8, z + 3.4, { uv: [8, 8] }); B.box(MAT.vc, x - 1, y - .4, z + 3.4, x + 1, y + .4, z + 4, { tint: '#f0c040' }); } },
+    stove(B, x, z) { B.box(MAT.iron, x - 7, 0, z - 4, x + 7, 13, z + 3, { uv: [12, 12] }); sticker(B, 'stove_front', [x, 6.6, z + 3.1], 14, 13.2); B.add(KIT.lathe([[3, 5], [3.4, 4], [3.2, 0]], 12), MAT.iron, [x - 2, 13, z], null, null, { uvs: [1, .5] }); B.add(new THREE.CylinderGeometry(1.6, 1.6, 12, 8), MAT.iron, [x + 4, 19, z - 2], null, null, { uvs: [.5, 1] }); },
+    piano(B, x, z) { B.box(MAT.polished, x - 9, 0, z - 4, x + 9, 18, z + 2, { uv: [14, 14] }); sticker(B, 'piano_front', [x, 9, z + 2.1], 18, 18); },
+    stairs(B, x, z) { for (let i = 0; i < 5; i++) B.box(MAT.wood, x - 7, 0, z - 4 + i * 0, x + 7, 4 + i * 4, z + 4 - i * 1.6, { uv: [12, 12] }); B.box(MAT.polished, x + 7, 0, z - 4, x + 8.5, 26, z - 2.5, { uv: [8, 8] }); },
+    board(B, x, z) { B.box(MAT.woodDark, x - 8.5, 13.5, z - 4, x + 8.5, 28.5, z - 2.6, { uv: [12, 12] }); sticker(B, 'notice_board', [x, 21, z - 2.5], 17, 15); },
+    table(B, x, z) { B.box(MAT.polished, x - 13, 9, z - 6, x + 13, 11, z + 6, { uv: [14, 14] }); for (const [dx, dz] of [[-11, -4], [11, -4], [-11, 4], [11, 4]]) B.box(MAT.polished, x + dx - 1, 0, z + dz - 1, x + dx + 1, 9, z + dz + 1, { uv: [6, 6] }); for (const s of [-1, 1]) { B.box(MAT.wood, x + s * 8 - 3.5, 5, z + 9, x + s * 8 + 3.5, 6.5, z + 14, { uv: [10, 10] }); for (const [dx, dz] of [[-2.5, 0], [2.5, 0]]) B.box(MAT.woodDark, x + s * 8 + dx - .6, 0, z + 11.5 + dz - .6, x + s * 8 + dx + .6, 5, z + 11.5 + dz + .6, { uv: [6, 6] }); } },
   };
 
   // ---------- the diorama look: the 2D game's own painted map for the ground, its tree pictures as standing cut-outs ----------
@@ -587,14 +604,14 @@ const PLACES = (() => {
     const xs = tiles.map((t) => t[0]), y = tiles[0][1], x0 = Math.min(...xs) * T - 5, x1 = (Math.max(...xs) + 1) * T + 5, r = 6.5, L = x1 - x0;
     const g = new THREE.Group(); g.position.set((x0 + x1) / 2, r, y * T + 9); group.add(g);
     const B = KIT.builder();
-    B.add(new THREE.CylinderGeometry(r, r * 1.05, L, 16, 1), MAT.wood, [0, 0, 0], [0, 0, PI / 2], null, { uv: [32, 24] });
+    B.add(new THREE.CylinderGeometry(r, r * 1.05, L, 16, 1), MAT.bark, [0, 0, 0], [0, 0, PI / 2], null, { uvs: [1.2, 3] });
     for (const s of [-1, 1]) {
       B.add(new THREE.CylinderGeometry(r - .5, r - .5, .8, 16), MAT.vc, [s * L / 2, 0, 0], [0, 0, PI / 2], null, { tint: '#e8c890' });
       for (const k of [.3, .6]) B.add(new THREE.TorusGeometry(r * k, .3, 4, 16), MAT.vc, [s * (L / 2 + .45), 0, 0], [0, PI / 2, 0], null, { tint: '#b08850', ink: 0 });
     }
-    B.add(new THREE.CylinderGeometry(1.3, 2.1, 8, 8), MAT.wood, [10, 5.5, -1], [-.3, 0, -.55], null, { uv: [8, 8] });
-    for (let i = 0; i < 6; i++) B.add(KIT.lumpy(2.4, i, .2), MAT.leaf, [-24 + i * 9, r - 1.2, (i % 2) * 2.5 - 1.2], null, [1, .55, 1], { tint: i % 2 ? '#4f9a40' : '#62b04c' });
-    B.build(g, INKPX, { cast: true, receive: true });
+    B.add(new THREE.CylinderGeometry(1.3, 2.1, 8, 8), MAT.bark, [10, 5.5, -1], [-.3, 0, -.55], null, { uvs: [.5, .5] });
+    for (let i = 0; i < 6; i++) B.add(KIT.lumpy(2.4, i, .2), MAT.leaves, [-24 + i * 9, r - 1.2, (i % 2) * 2.5 - 1.2], null, [1, .55, 1], { uv: [7, 7] });
+    B.build(g, null, { cast: true, receive: true });
     return { g, tiles, gone: false };
   }
   function clearLog(info, anim) {
@@ -629,10 +646,10 @@ const PLACES = (() => {
         const h = HOUSES[b.kind](B, o);
         for (let j = 0; j < b.h; j++) for (let i = 0; i < b.w; i++) solid[(b.y + j) * map.w + b.x + i] = 1;
         solid[b.door[1] * map.w + b.door[0]] = 0;
-        const dx = b.door[0] * T + 3;
-        B.box(MAT.vc, dx - 1.4, 0, h.zf - .2, dx + 11.4, (h.round ? 20 : 22) + 1.4, h.zf + .7, { tint: '#5a3a22' });
-        B.box(MAT.stone, dx - 2, 0, h.zf, dx + 12, 1.4, h.zf + 4.5, { uv: [16, 16] });
-        info.doors[b.id] = Object.assign(doorPanel(group, dx, h.zf, b.kind === 'hut' ? '#c8e8d8' : b.kind === 'willow' ? '#7a5232' : '#8a5a34', h.round), { tile: b.door, room: DOORS[b.id] });
+        const dx = b.door[0] * T + 8 - DOORW / 2; // the door's left edge (it hinges there)
+        if (!h.round) B.box(MAT.woodDark, dx - 1.3, 0, h.zf - .2, dx + DOORW + 1.3, 22, h.zf + .7, { uv: [12, 12] });
+        B.box(MAT.stone, dx - 1.5, 0, h.zf, dx + DOORW + 1.5, 1.4, h.zf + 4.5, { uv: [14, 14] });
+        info.doors[b.id] = Object.assign(doorPanel(group, dx, h.zf, b.kind, h.round), { tile: b.door, room: DOORS[b.id] });
         if (o.smoke) info.smoke.push(o.smoke);
         if (o.cubeSign) { const cube = makeCube(); cube.root.scale.setScalar(36); cube.root.position.set(...o.cubeSign); group.add(cube.root); info.spin.push(cube.root); }
       }
@@ -642,15 +659,22 @@ const PLACES = (() => {
     } else {
       // a room: floor, the back wall with its windows, side walls, a low front wall with the doorway, and the furniture
       const W = map.w * T, H = map.h * T, z0 = 2 * T, z1 = (map.h - 1) * T, x0 = T, x1 = W - T, WH = 46;
-      const fmat = map.rows[2][1] === 'c' ? MAT.checker : MAT.floor;
-      B.box(fmat, x0, -2, z0, x1, 0, z1 + T, { uv: [32, 32], ink: 0 });
-      B.box(MAT.wallIn, x0, 0, z0 - 4, x1, WH, z0, { uv: [32, 64], ink: .5 });
-      for (const s of [-1, 1]) { const xw = s < 0 ? x0 : x1; B.box(MAT.wallIn, xw - (s < 0 ? 4 : 0), 0, z0 - 4, xw + (s < 0 ? 0 : 4), WH, z1 + T, { uv: [32, 64], ink: .5 }); }
+      // painted: floorboards (or the hut's mint checker), plaster walls over a dark wainscot, painted windows, a rug, a doormat
+      const checker = map.rows[2][1] === 'c', fmat = checker ? MAT.checker : MAT.floor;
+      B.box(fmat, x0, -2, z0, x1, 0, z1 + T, { uv: checker ? [64, 64] : [22, 22] });
+      B.box(MAT.wallIn, x0, 0, z0 - 4, x1, WH, z0, { uv: [36, 36] });
+      for (const s of [-1, 1]) { const xw = s < 0 ? x0 : x1; B.box(MAT.wallIn, xw - (s < 0 ? 4 : 0), 0, z0 - 4, xw + (s < 0 ? 0 : 4), WH, z1 + T, { uv: [36, 36] }); }
+      B.box(MAT.woodDark, x0, 0, z0, x1, 13, z0 + .6, { uv: [20, 20] }); B.box(MAT.polished, x0, 13, z0, x1, 14.2, z0 + 1.2, { uv: [12, 12] });
+      for (const s of [-1, 1]) { const xw = s < 0 ? x0 : x1 - .6; B.box(MAT.woodDark, xw, 0, z0, xw + .6, 13, z1 + T, { uv: [20, 20] }); }
       const mx0 = map.exits[0].x0 * T, mx1 = (map.exits[0].x1 + 1) * T;
-      B.box(MAT.wallIn, x0 - 4, 0, z1 + T - 3, mx0, 8, z1 + T + 1, { uv: [32, 64], ink: .5 }); B.box(MAT.wallIn, mx1, 0, z1 + T - 3, x1 + 4, 8, z1 + T + 1, { uv: [32, 64], ink: .5 });
-      B.box(MAT.vc, mx0 + 2, 0, z1 + 2, mx1 - 2, .4, z1 + T - 2, { tint: '#b84a3a', ink: .3 });
-      [...map.rows[1]].forEach((c, x) => { if (c !== 'w') return; const wx = x * T + 8; B.box(MAT.glow, wx - 6, 18, z0 - .2, wx + 6, 32, z0 + .4, { tint: (v) => rgb(v.y > 25 ? '#d8f0ff' : '#a8d8f4'), ink: 0 }); B.box(MAT.vc, wx - 7, 17, z0, wx + 7, 18, z0 + 1.5, { tint: '#8a5e36', ink: .3 }); B.box(MAT.vc, wx - 7, 32, z0, wx + 7, 33, z0 + 1, { tint: '#8a5e36', ink: .3 }); B.box(MAT.vc, wx - .5, 18, z0, wx + .5, 32, z0 + .9, { tint: '#8a5e36', ink: 0 }); B.box(MAT.vc, wx - 8.5, 15, z0, wx - 6, 34, z0 + 1.2, { tint: '#e86a5a', ink: .3 }); B.box(MAT.vc, wx + 6, 15, z0, wx + 8.5, 34, z0 + 1.2, { tint: '#e86a5a', ink: .3 }); });
-      if (map.rug) { const [rx, ry, rw, rh] = map.rug; B.box(MAT.vc, rx * T + 2, 0, ry * T + 2, (rx + rw) * T - 2, .4, (ry + rh) * T - 2, { tint: '#e8c060', ink: .3 }); B.box(MAT.vc, rx * T + 4, 0, ry * T + 4, (rx + rw) * T - 4, .6, (ry + rh) * T - 4, { tint: '#c84a3a', ink: 0 }); B.box(MAT.vc, rx * T + 7, 0, ry * T + 7, (rx + rw) * T - 7, .7, (ry + rh) * T - 7, { tint: '#b03a32', ink: 0 }); }
+      B.box(MAT.wallIn, x0 - 4, 0, z1 + T - 3, mx0, 8, z1 + T + 1, { uv: [36, 36] }); B.box(MAT.wallIn, mx1, 0, z1 + T - 3, x1 + 4, 8, z1 + T + 1, { uv: [36, 36] });
+      B.box(MAT.doormat, mx0 + 2, 0, z1 + 2, mx1 - 2, .4, z1 + T - 2, { uv: [14, 14] });
+      [...map.rows[1]].forEach((c, x) => { if (c !== 'w') return; const wx = x * T + 8; B.box(MAT.glow, wx - 6, 19, z0 - .2, wx + 6, 31, z0 + .3, { tint: '#bfe4f4' }); sticker(B, 'window', [wx, 25, z0 + .5], 15.5); });
+      if (map.rug) { // the rug's border runs along its long sides: its own uv, the pattern repeating along it
+        const [rx, ry, rw, rh] = map.rug, ax0 = rx * T + 2, ax1 = (rx + rw) * T - 2, az0 = ry * T + 2, az1 = (ry + rh) * T - 2, wide = ax1 - ax0 >= az1 - az0;
+        const rugMat = map.id === 'shop-in' || map.id === 'inn-in' ? MAT.rugBlue : MAT.rugRed;
+        B.box(rugMat, ax0, 0, az0, ax1, .5, az1, { uvf: (v) => (wide ? [(v.x - ax0) / (az1 - az0) * .9, (v.z - az0) / (az1 - az0)] : [(v.z - az0) / (ax1 - ax0) * .9, (v.x - ax0) / (ax1 - ax0)]) });
+      }
       for (const d of map.decor) {
         const fx = d.x * T + 8 + (d.dx || 0), fz = d.y * T + (d.y === 2 ? 5 : 8);
         if (d.k) FURN[d.k](B, fx, fz);
@@ -659,8 +683,8 @@ const PLACES = (() => {
         if (d.k === 'starterTable') info.starterTable = { x: fx, z: fz, y: 12 };
       }
     }
-    B.build(group, INKPX, { cast: true, receive: true });
-    group.traverse((o) => { if (o.isMesh && o.material === MAT.glow) o.castShadow = false; });
+    B.build(group, null, { cast: true, receive: true }); // no ink outlines: painted, as our models
+    group.traverse((o) => { if (o.isMesh && (o.material === MAT.glow || o.material.userData.sticker)) o.castShadow = false; });
     info.solid = solid;
     info.tileAt = (x, y) => (x >= 0 && y >= 0 && x < map.w && y < map.h ? map.rows[y][x] : 'T');
     info.solidAt = (x, y) => x < 0 || y < 0 || x >= map.w || y >= map.h || !!solid[y * map.w + x];

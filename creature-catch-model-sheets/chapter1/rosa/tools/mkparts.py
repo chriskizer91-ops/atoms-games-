@@ -19,6 +19,7 @@ def band(rows):  # rows of (x, y_front, y_back) -> top outline of a band running
 # ---- head ------------------------------------------------------------------------------------
 add(name="head", kind="c", axis="z", n=2.2, relief="none", smooth=5, lo_weight=4.0, nomask=["front", "side"],
     round_ends={"start": 0.02, "end": 0.05}, paint_skip=["top", "back"],
+    paint_box_skip={"front": [[320, 150, 421, 305], [614, 150, 700, 292]], "side": [[312, 108, 377, 265]]},
     views={"front": P("512,125 565,132 600,160 617,205 621,255 621,300 616,340 600,375 578,398 548,411 512,416 476,411 446,398 424,375 408,340 403,300 403,255 407,205 424,160 459,132"),
            "side": P("420,128 480,112 530,118 562,145 578,190 582,250 577,310 562,355 538,385 505,402 470,406 440,404 410,404 390,400 375,386 366,362 361,342 356,326 351,312 353,295 357,270 362,235 366,200 375,165 393,142")})
 add(name="ear", kind="m", axis="z", n=2.2, relief="none", smooth=2, lo_weight=2.0, k_scale=1.6, n_scale=1.6,
@@ -46,7 +47,7 @@ add(name="bun", kind="c", paint_color_skip=["skin"], axis="z", n=2.1, relief="gr
     views={"front": P("512,27 560,32 595,52 615,85 626,125 628,165 618,205 595,235 560,252 512,258 464,252 429,235 406,205 396,165 398,125 409,85 429,52 464,32"),
            "side": P("640,36 690,46 728,78 746,122 748,172 730,218 692,250 640,262 590,252 555,222 535,180 533,125 550,80 588,48")})
 # the ringlets hanging beside each cheek, in front of the ears (a mirrored pair)
-add(name="hair_curl", kind="m", paint_color_skip=["skin"], axis="z", n=2.0, relief="grain", smooth=3, lo_weight=1.6, nomask=["front", "side"],
+add(name="hair_curl", kind="m", paint_color_skip=["skin"], axis="z", n=2.0, relief="grain", smooth=3, lo_weight=2.2, nomask=["front", "side"],
     round_ends={"start": 0.014, "end": 0.004}, paint_skip=["top"],
     views={"front": P("610,292 640,292 655,318 660,350 657,385 655,410 657,430 645,445 628,442 622,425 624,400 617,375 610,350 606,322"),
            "side": P("455,272 492,270 502,300 500,340 494,380 494,410 488,432 474,438 462,428 462,398 455,360 448,322 447,290")})
@@ -62,6 +63,7 @@ add(name="torso", kind="c", axis="z", n=2.6, relief="grain", smooth=6, lo_weight
 # ---- arms (puffed sleeve + cuff + forearm in one part) and hands -----------------------------
 add(name="arm", kind="m", axis="z", n=2.2, relief="grain", smooth=4, lo_weight=2.0, nomask=["front", "side"],
     round_ends={"start": 0.015, "end": 0.0}, paint_skip=["top"],
+    paint_box_skip={"front": [[560, 425, 615, 482], [409, 425, 464, 482]], "back": [[560, 425, 626, 585], [398, 425, 464, 585]], "side": [[425, 418, 492, 476]]},
     views={"front": P("600,446 650,452 690,470 722,500 732,535 730,562 742,582 748,605 745,622 765,650 790,688 815,722 836,752 836,762 782,776 760,746 725,712 695,680 675,656 655,646 640,630 625,602 610,560 600,510"),
            "side": P("470,438 540,430 576,445 598,480 602,530 596,575 579,605 576,640 563,662 560,750 558,775 478,775 476,700 472,652 456,632 455,582 430,560 415,520 418,478 440,450")})
 add(name="hand", kind="m", axis="z", n=2.3, relief="none", smooth=3, lo_weight=2.4, nomask=["front", "side"],
@@ -71,7 +73,7 @@ add(name="hand", kind="m", axis="z", n=2.3, relief="none", smooth=3, lo_weight=2
 # ---- below the waist: skirt (dress + apron), the apron's bow, legs, shoes ---------------------
 add(name="skirt", kind="c", axis="z", n=2.2, relief="grain", smooth=6, lo_weight=1.1, nomask=["front", "side"],
     round_ends={"start": 0.012, "end": 0.0}, paint_skip=["top"],
-    paint_box_skip={"side": [[448, 555, 592, 942], [555, 595, 690, 845]]},
+    paint_box_skip={"side": [[448, 555, 592, 942], [555, 595, 690, 845], [260, 650, 425, 1100]]},
     views={"front": P("418,645 606,645 632,690 669,750 706,820 742,900 772,980 797,1060 817,1130 832,1190 835,1225 815,1250 700,1258 512,1260 324,1258 209,1250 189,1225 192,1190 207,1130 227,1060 252,980 282,900 318,820 355,750 392,690"),
            "side": P("378,645 575,645 592,700 612,770 635,850 655,930 675,1010 695,1090 715,1150 730,1182 733,1205 715,1232 600,1242 450,1243 320,1238 290,1225 283,1185 282,1120 272,1092 272,1072 285,1020 305,950 325,870 345,790 360,720 372,670")})
 # the apron's bow at the back of the waist (loops and knot), and its two tails hanging over the skirt
@@ -84,8 +86,9 @@ add(name="skirt_bow_tail", kind="m", axis="z", n=2.4, relief="grain", smooth=3, 
     paint_box_skip={"side": [[590, 828, 700, 905]]},
     views={"back": P("487,660 505,660 500,720 482,780 472,840 467,898 452,898 378,846 380,832 410,772 448,708"),
            "side": P("566,664 598,664 642,745 668,808 676,898 652,898 640,832 610,770 578,718")})
-add(name="leg", kind="m", axis="z", n=2.2, relief="none", smooth=5, lo_weight=0.45, nomask=["front", "side"],
+add(name="leg", kind="m", axis="z", n=2.2, relief="none", smooth=5, lo_weight=0.3, nomask=["front", "side"],
     round_ends={"start": 0.0, "end": 0.0}, paint_skip=["top"],
+    paint_box_skip={"front": [[300, 1225, 724, 1272]], "back": [[300, 1225, 724, 1272]]},
     views={"front": P("515,760 612,760 640,900 668,1050 685,1200 688,1322 588,1322 580,1200 560,1050 535,900"),
            "side": P("452,760 590,760 588,900 582,1050 580,1200 580,1322 478,1322 476,1200 470,1050 460,900")})
 add(name="shoe", kind="m", axis="z", n=2.6, relief="grain", smooth=3, lo_weight=1.0,

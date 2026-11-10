@@ -49,11 +49,11 @@ add(name="head", kind="c", axis="z", n=2.2, relief="none", smooth=5, lo_weight=4
     views={"front": P("512,130 560,134 600,152 625,188 636,240 640,290 642,340 638,385 625,420 600,450 565,470 512,478 459,470 424,450 399,420 386,385 382,340 384,290 388,240 399,188 424,152 464,134"),
            "side": P("440,128 505,126 545,138 570,165 582,215 584,280 578,340 562,390 534,430 495,462 455,476 400,478 368,470 350,454 343,430 342,400 338,375 333,345 331,310 332,270 336,230 345,195 362,163 395,140")})
 add(name="ear", kind="m", axis="z", n=2.2, relief="none", smooth=2, lo_weight=4.0, k_scale=1.6, n_scale=1.6,
-    round_ends={"start": 0.008, "end": 0.01}, paint_skip=["top", "back", "side_far"], paint_color_skip=["dark"],
+    round_ends={"start": 0.008, "end": 0.01}, paint_skip=["top", "back", "side_far"],
     views={"front": P("634,318 660,312 680,320 690,345 688,375 676,400 655,410 634,400"),
            "side": P("497,308 520,305 538,318 546,345 543,380 530,402 510,410 495,400 491,360")})
 # the round button nose
-add(name="nose", kind="c", axis="z", n=2.0, relief="none", smooth=2, lo_weight=2.0,
+add(name="nose", kind="c", axis="z", n=2.0, relief="none", smooth=2, lo_weight=4.0,
     round_ends={"start": 0.008, "end": 0.008}, paint_skip=["top", "back"],
     views={"front": P("512,322 530,326 541,340 543,356 535,370 512,376 489,370 481,356 483,340 494,326"),
            "side": P("318,324 330,322 340,326 345,345 342,368 330,377 312,376 300,366 298,348 305,332")})
@@ -65,19 +65,20 @@ add(name="glasses", kind="c", axis="x", n=4.0, relief="none", smooth=1.5, lo_wei
     round_ends={"start": 0.0, "end": 0.0}, paint_skip=["top", "back", "side"],
     views={"front": glasses_front(),
            "top": top(band(-0.146, 0.146, glass_y, 0.009, n=17))})
-# The main hair is sliced upward; its front edge (side picture) steps back from the forehead to behind the
+# No "paint_color_skip" on the hair: Pip's lavender hair has peach highlights that pass the skin test, and
+# skipping them left dark blotches. The main hair is sliced upward; its front edge (side picture) steps back from the forehead to behind the
 # ear, so it frames the face with no brim. The outline is a smooth hull through the curls' bases.
 add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.4, nomask=["front", "side"],
-    round_ends={"start": 0.02, "end": 0.05}, paint_color_skip=["skin"],
+    round_ends={"start": 0.02, "end": 0.05},
     views={"front": P("512,95 580,100 632,120 672,150 702,188 730,226 748,265 755,302 750,342 735,382 715,418 690,450 334,450 309,418 289,382 274,342 269,302 276,265 294,226 322,188 352,150 392,120 444,100"),
            "side": P("470,95 560,98 620,112 680,140 725,175 752,215 768,260 772,300 768,345 752,390 725,428 690,455 640,470 590,468 562,450 550,420 545,390 543,340 538,310 505,288 470,262 430,245 392,228 360,212 346,190 350,160 372,130 412,108")})
 # the fringe: a pad of curls in front of the forehead, sliced front-to-back so its lower edge arcs up at the temples
 add(name="hair_bangs", kind="c", axis="y", n=2.2, relief="grain", smooth=3, lo_weight=2.5, nomask=["side", "top"],
-    round_ends={"start": 0.012, "end": 0.0}, paint_skip=["back"], paint_color_skip=["skin"],
+    round_ends={"start": 0.012, "end": 0.0}, paint_skip=["back"],
     views={"side": P("330,175 336,150 352,128 378,112 420,104 450,104 450,196 400,198 355,198 335,192 329,184"),
            "top": top(sym([(-0.192, 0.05), (-0.186, 0.08), (-0.175, 0.105), (-0.158, 0.122), (-0.135, 0.13), (-0.08, 0.13)]))})
 # the big hooked curl on top of the head
-add(name="hair_curl", kind="c", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=2.2, nomask=["front", "side"],
+add(name="hair_curl", kind="c", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=6.0, nomask=["front", "side"],
     round_ends={"start": 0.01, "end": 0.012}, paint_skip=["back"],
     views={"front": P("446,40 470,30 500,28 520,38 505,52 492,72 488,100 492,125 432,125 428,95 432,65"),
            "side": P("392,52 420,34 455,28 486,40 480,62 466,72 452,95 455,122 395,122 386,95 386,72")})

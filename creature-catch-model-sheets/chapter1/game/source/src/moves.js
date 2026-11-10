@@ -116,7 +116,8 @@ const MOVES3D = (() => {
     }
     // ghost copies of a creature, left where it was
     function ghost(s, color) {
-      const c = s.model.root.clone(true), mat = own(new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .45, blending: THREE.AdditiveBlending, depthWrite: false }));
+      // (our GLB models: a copy with its own bones, frozen in the pose it was in, drawn with a skinning material)
+      const c = s.model.ghost ? s.model.ghost() : s.model.root.clone(true), mat = own(new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .45, blending: THREE.AdditiveBlending, depthWrite: false, skinning: !!s.model.ghost }));
       const kill = []; c.traverse((o) => { if (o.isLight || o.isSprite) kill.push(o); else if (o.isMesh) { if (o.material.side === THREE.BackSide) o.visible = false; else o.material = mat; } });
       kill.forEach((o) => o.parent && o.parent.remove(o)); add(c);
       return G.tween(.45, (k) => { mat.opacity = .45 * (1 - k); }).then(() => S.remove(c));

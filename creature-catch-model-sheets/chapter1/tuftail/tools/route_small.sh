@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Chapter 1 copy (second batch): round 3 Puffmunk's route_small.sh, unchanged apart from this line. It uses this folder's tools.
+# Chapter 1 copy (second batch): round 3 Puffmunk's route_small.sh; LIT_SAMPLES (default 24) sets the lit board's render samples, for quicker test runs. It uses this folder's tools.
 # Changes: uses this folder's build.py + parts.py (n_scale/k_scale, "slab"), print_tex.py, board.py
 # (frames the three-quarter views by size) and emissive.py (all-black glow map unless
 # EMISSIVE_ARGS is set); the PIL step runs with $PY instead of the system python3.
@@ -20,7 +20,7 @@ $PY "$(pick emissive.py)" "$OUT/print/albedo.png" "$OUT/emissive.png" --size 102
 if [ -z "${SKIP_BLANK:-}" ]; then
 $PY "$(pick board.py)" "$OUT/model.blend" "$VIEWS" "$OUT/board_blank.jpg" "$NAME · shape only ($TRIS triangles)" --samples 16 --three-quarter
 fi
-$PY "$(pick board.py)" "$OUT/model.blend" "$VIEWS" "$OUT/board_printed.jpg" "$NAME · printed and lit" --mode lit --tex "$OUT/print/albedo.png" --normal "$OUT/normal.png" --emit "$OUT/emissive.png" --samples 24 --three-quarter
+$PY "$(pick board.py)" "$OUT/model.blend" "$VIEWS" "$OUT/board_printed.jpg" "$NAME · printed and lit" --mode lit --tex "$OUT/print/albedo.png" --normal "$OUT/normal.png" --emit "$OUT/emissive.png" --samples ${LIT_SAMPLES:-24} --three-quarter
 $PY -c "from PIL import Image; import sys; o=sys.argv[1]; Image.open(o+'/print/albedo.png').convert('RGB').save(o+'/albedo.jpg', quality=90); Image.open(o+'/emissive.png').convert('RGB').save(o+'/emissive.jpg', quality=88)" "$OUT"
 $PY "$(pick export.py)" "$OUT/model.blend" "$OUT/$NAME.glb" --albedo "$OUT/albedo.jpg" --normal "$OUT/normal.png" --emit "$OUT/emissive.jpg"
 echo "done: $OUT/$NAME.glb, boards in $OUT/board_*.jpg"

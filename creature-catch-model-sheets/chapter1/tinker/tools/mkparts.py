@@ -15,7 +15,7 @@ def top(pts):
     return P(" ".join(f"{round(TUC - x * TSX)},{round(TVC + y * TSY)}" for x, y in pts))
 def sym(rows):  # rows of (y, half-width) -> symmetric top outline
     return [(-h, y) for y, h in rows] + [(h, y) for y, h in rows[::-1]]
-HAIR_SKIP = ["skin_pale"]  # blond hair is close to skin; this skin test leaves the pale yellow hair alone
+HAIR_SKIP = []  # no colour skip at first: the blond hair is close to skin ("skin" catches 25% of the hair, "skin_pale" 2%)
 
 # ---- head ------------------------------------------------------------------------------------
 add(name="head", kind="c", axis="z", n=2.2, relief="none", smooth=5, lo_weight=4.0, nomask=["front", "side"],
@@ -32,24 +32,38 @@ add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=
     round_ends={"start": 0.02, "end": 0.04}, paint_color_skip=HAIR_SKIP,
     views={"front": P("510,160 570,165 625,185 655,220 675,260 692,300 697,345 685,390 665,430 640,460 610,475 410,475 380,460 355,430 330,390 312,345 310,300 322,255 345,215 390,183 450,165"),
            "side": P("450,165 520,160 580,170 630,195 672,230 700,270 715,315 712,360 695,400 665,435 630,462 590,470 560,457 550,430 545,400 540,365 505,335 470,312 440,290 410,262 385,240 380,215 395,190 420,173")})
-# the fringe: a pad of spikes in front of the forehead, sliced front-to-back so its lower edge arcs up at the temples
+# the fringe: a pad of spikes in front of the forehead, sliced front-to-back so its lower edge arcs up at the
+# temples. It stands only 1 cm in front of the forehead and its lower edge slopes up toward the front, so its
+# underside faces forward and takes the fringe's paint; at first it stood 2 cm out with a flat underside, which
+# looked like a cap's brim and printed a pale line of forehead skin along its lower edge. It also skips skin
+# colours ("skin_pale").
 add(name="hair_bangs", kind="c", axis="y", n=2.2, relief="grain", smooth=3, lo_weight=2.5, nomask=["side", "top"],
-    round_ends={"start": 0.012, "end": 0.0}, paint_skip=["back"], paint_color_skip=HAIR_SKIP,
-    views={"side": P("350,235 356,210 370,190 395,176 440,170 470,170 470,272 420,276 380,278 360,272 351,258"),
-           "top": top(sym([(-0.143, 0.04), (-0.137, 0.065), (-0.125, 0.09), (-0.105, 0.104), (-0.08, 0.108), (-0.04, 0.108)]))})
+    round_ends={"start": 0.01, "end": 0.0}, paint_skip=["back"], paint_color_skip=["skin_pale"],
+    views={"side": P("362,244 366,215 378,192 400,177 440,170 472,170 472,282 440,280 405,272 380,262 366,254"),
+           "top": top(sym([(-0.133, 0.045), (-0.127, 0.07), (-0.115, 0.092), (-0.095, 0.104), (-0.07, 0.108), (-0.04, 0.108)]))})
 # the tuft tied on top (its own part so it can sway): the brown tie and the fountain of spikes above it
 add(name="ponytail", kind="c", axis="z", n=2.0, relief="grain", smooth=5, lo_weight=2.4, nomask=["front", "side"],
-    round_ends={"start": 0.0, "end": 0.02}, paint_color_skip=HAIR_SKIP,
-    views={"front": P("432,190 558,190 572,155 605,125 648,112 686,128 690,100 660,70 612,45 562,26 520,30 482,55 442,62 416,78 424,112 434,145"),
-           "side": P("478,198 563,203 590,172 640,152 700,142 735,150 736,112 700,88 652,60 602,40 560,50 520,80 482,110 470,150")})
+    round_ends={"start": 0.0, "end": 0.05}, paint_color_skip=HAIR_SKIP,
+    views={"front": P("440,190 552,190 568,158 600,125 640,100 668,80 650,58 612,38 565,20 522,32 488,52 450,64 428,82 434,120 442,160"),
+           "side": P("480,198 563,203 585,170 625,140 680,118 712,105 690,82 650,58 605,36 565,40 530,68 498,105 480,150")})
+# the biggest spikes as flat parts of their own: one sticking out sideways above each ear (a mirrored pair,
+# sliced sideways with a drawn top outline) and the one rising up and out over the forehead on the right
+add(name="hair_spike_side", kind="m", axis="x", n=2.0, relief="grain", smooth=2, lo_weight=2.2, nomask=["front", "top"],
+    round_ends={"start": 0.0, "end": 0.004}, paint_skip=["top"], paint_color_skip=HAIR_SKIP,
+    views={"front": P("648,290 690,301 726,322 690,346 648,360"),
+           "top": top([(0.11, -0.025), (0.19, 0.0), (0.19, 0.008), (0.11, 0.04)])})
+add(name="hair_spike", kind="one", axis="z", n=2.0, relief="grain", smooth=2, lo_weight=2.2, nomask=["front", "side"],
+    round_ends={"start": 0.0, "end": 0.006}, paint_skip=["back"], paint_color_skip=HAIR_SKIP,
+    views={"front": P("350,192 340,158 370,166 400,138 418,192"),
+           "side": P("384,192 376,160 402,124 440,168 450,192")})
 # ---- neck, torso (t-shirt), hips (shorts) -------------------------------------------------------
 add(name="neck", kind="c", axis="z", n=2.0, relief="none", smooth=3, lo_weight=0.5, paint_skip=["top"],
     views={"front": P("474,440 546,440 548,530 472,530"),
            "side": P("430,450 515,450 518,530 428,530")})
 add(name="torso", kind="c", axis="z", n=2.6, relief="grain", smooth=6, lo_weight=1.1, nomask=["front", "side"],
     round_ends={"start": 0.0, "end": 0.03}, paint_skip=["top"],
-    views={"front": P("510,512 560,515 610,530 640,555 650,600 646,660 643,720 648,780 656,830 655,858 365,858 363,830 372,780 377,720 374,660 370,600 380,555 410,530 460,515"),
-           "side": P("430,512 490,508 530,515 552,540 560,600 565,660 570,720 576,780 580,830 575,852 352,852 350,820 356,780 362,720 370,660 382,600 400,555 418,530")})
+    views={"front": P("510,512 560,515 605,530 628,555 630,600 620,650 612,700 622,760 640,800 654,840 655,858 365,858 366,840 380,800 396,760 407,700 400,650 390,600 392,555 415,530 460,515"),
+           "side": P("430,512 490,508 528,515 542,540 550,570 555,600 560,640 563,680 562,720 570,760 576,800 580,830 574,852 352,852 348,822 353,800 356,760 366,720 372,680 383,640 395,600 410,560 420,535")})
 add(name="hips", kind="c", axis="z", n=2.5, relief="grain", smooth=4, lo_weight=0.8,
     round_ends={"start": 0.03, "end": 0.0}, paint_skip=["top"],
     paint_box_skip={"side": [[455, 800, 565, 950]]},
@@ -58,8 +72,9 @@ add(name="hips", kind="c", axis="z", n=2.5, relief="grain", smooth=4, lo_weight=
 # ---- arms and hands ---------------------------------------------------------------------------
 add(name="arm", kind="m", axis="z", n=2.2, relief="grain", smooth=4, lo_weight=2.2, nomask=["front", "side"],
     round_ends={"start": 0.012, "end": 0.0}, paint_skip=["top"],
-    views={"front": P("598,522 630,528 668,560 700,595 715,625 712,640 722,665 740,700 760,735 780,765 800,804 742,810 722,780 700,752 680,728 662,705 640,700 628,660 622,600 610,560"),
-           "side": P("470,515 530,512 562,535 575,580 577,640 572,690 540,700 538,750 540,806 472,806 472,750 474,700 445,690 438,640 440,580 450,540")})
+    paint_box_skip={"side": [[430, 615, 570, 705]]},  # the side picture's sleeve hem is level; the front's slants
+    views={"front": P("598,522 625,535 642,560 660,580 682,600 702,620 712,640 706,662 722,682 737,700 750,720 762,740 776,760 794,780 808,804 740,810 728,780 709,760 688,740 671,720 658,702 640,700 628,660 622,600 610,560"),
+           "side": P("470,515 525,512 548,535 558,580 562,640 560,690 540,700 538,750 540,806 472,806 472,750 474,700 445,690 438,640 440,580 450,540")})
 add(name="hand", kind="m", axis="z", n=2.3, relief="none", smooth=3, lo_weight=2.5, nomask=["front", "side"],
     round_ends={"start": 0.008, "end": 0.018}, paint_skip=["top"],
     views={"front": P("742,796 802,792 815,830 830,860 840,895 838,920 822,928 805,915 790,895 770,870 752,840 744,815"),

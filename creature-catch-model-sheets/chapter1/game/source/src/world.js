@@ -57,7 +57,9 @@ const WORLD = (() => {
 
   // ---------- people and creatures in the world ----------
   function person(key, height) {
-    const L = LOOKS[key], m = makePerson({ look: L.look, ready: L.ready, detail: key.startsWith('player') ? 1 : .8 });
+    const L = LOOKS[key] || LOOKS['player-a'];
+    // our painted GLB person when one is packed (models.js), otherwise the one built in code
+    const m = (typeof MODELS !== 'undefined' && MODELS.has(key) && MODELS.person(key)) || makePerson({ look: L.look, ready: L.ready, detail: key.startsWith('player') ? 1 : .8 });
     m.root.scale.setScalar(MS * (height || L.height || 1)); m.root.traverse((o) => { if (o.isMesh) o.castShadow = true; });
     return m;
   }
