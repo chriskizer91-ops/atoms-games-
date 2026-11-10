@@ -1,0 +1,65 @@
+{
+ "plan": "biped",
+ "wings": false,
+ "gait": null,
+ "scale": 1.3447,
+ "anchors": {
+  "mouth": {
+   "bone": "head",
+   "pos": [
+    0.0,
+    1.001,
+    0.1902
+   ]
+  },
+  "chest": {
+   "bone": "chest",
+   "pos": [
+    0.0,
+    0.7694,
+    0.1893
+   ]
+  },
+  "head_top": {
+   "bone": "head",
+   "pos": [
+    0.0,
+    1.3447,
+    0.0707
+   ]
+  },
+  "hand_L": {
+   "bone": "hand_L",
+   "pos": [
+    0.3422,
+    0.5271,
+    0.0189
+   ]
+  },
+  "hand_R": {
+   "bone": "hand_R",
+   "pos": [
+    -0.3422,
+    0.5271,
+    0.0189
+   ]
+  }
+ },
+ "clips": {
+  "idle": 3.0,
+  "walk": 1.0,
+  "run": 0.66,
+  "talk": 2.0,
+  "wave": 1.8,
+  "throw": 1.3,
+  "cheer": 1.5,
+  "lose": 2.0,
+  "point": 1.2
+ },
+ "events": {
+  "throw": {
+   "release": 0.5,
+   "anchor": "hand_R"
+  }
+ }
+}

@@ -4,7 +4,7 @@
 
 ![close views](closeups.jpg)
 
-**Result:** a TRIS-triangle game model (`bramble.glb`, SIZE MB) with one colour texture (2048), a normal
+**Result:** a 6,990-triangle game model (`bramble.glb`, 3.2 MB) with one colour texture (2048), a normal
 map (gentle grain on the cloth, straw, hair, moustache and boots, nothing on the skin) and an all-black
 glow map (nothing glows). From the front and the front three-quarter view he reads as the farmer on the
 sheet: brown eyes and thick brows, the big round nose and rosy cheeks, the bushy handlebar moustache,
@@ -13,16 +13,16 @@ cream shirt with rolled sleeves, the blue overalls with gold buttons, bib pocket
 the big brown boots. From behind: the hat, the bandana's point, the overall straps and back pockets.
 
 The final game model's Blender file (the lead animates from it):
-`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/chapter1/bramble/OUT/model.blend`
+`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/chapter1/bramble/out2/model.blend`
 
 ## Numbers
 
 | | Front | Side | Back | Top |
 | --- | --- | --- | --- | --- |
-| Blockout (60,000 triangles), outline overlap (`blockout.jpg`) | BF% | BS% | BB% | BT% |
-| Game model (TRIS triangles), outline overlap | OVF% | OVS% | OVB% | OVT% |
+| Blockout (60,000 triangles), outline overlap (`blockout.jpg`, before the fixes in 4 and 6) | 93.9% | 92.9% | 93.2% | 59.4% |
+| Game model (6,990 triangles), outline overlap | 94.1% | 93.7% | 93.6% | 59.1% |
 
-- **Texture seen by a picture:** SEEN%. The rest (the inner sides of the arms and legs, the soles,
+- **Texture seen by a picture:** 51.7%. The rest (the inner sides of the arms and legs, the soles,
   the underside of the brim, hidden ends) is coloured from the nearest painted spot of the same part.
 - **Why the top number is low:** the top picture is another pose (arms out, boots far in front). It
   paints only the hat: its scale is set so its round brim matches the brim in the front and side
@@ -42,10 +42,14 @@ The final game model's Blender file (the lead animates from it):
   | foot | `boot_L`, `boot_R` |
 
   Arms, hands, legs and boots are mirrored pairs. Each arm starts inside the torso at the shoulder and
-  each leg 14 cm up inside the hips. The elbow is just under the rolled sleeve and the knee where the
+  each leg 16 cm up inside the hips. The elbow is just under the rolled sleeve and the knee where the
   overalls bunch, as the pictures put them.
-- **Triangle budget:** BUDGET
-- **Time:** about TIME minutes by the clock: 1 blockout and RUNS route runs.
+- **Triangle budget:** head, hair and hat 3,336 (48%: head 1,188, brim 832, hair 432, crown 368,
+  moustache 256, ears 100 each, nose 60); torso 648, legs 456 each, arms 384 each, boots 266 each,
+  hips 260, hands 144 each, bandana 126, knot 60, neck 60. (The first run gave the brim 1,216 and the
+  moustache 84; I moved triangles to the head and the moustache.)
+- **Time:** about 40 minutes of my own work (01:24 to 03:00 by the clock, interleaved with Oakley while
+  the shared machine ran each job): 1 blockout and 2 route runs.
 
 ## What I did and the problems I hit
 
@@ -69,15 +73,21 @@ The final game model's Blender file (the lead animates from it):
 6. **Broad build:** the torso's side outline follows his round belly, the hips are their own part (the
    overalls below the waist) and the legs are wide baggy tubes. The first blockout's sleeves were too
    wide at the shoulder; they now follow the picture.
-7. **The side picture's hand** hangs in front of the side pocket. The side picture is switched off on
+7. **Red on the brim, blue on the sleeves.** The top picture's red hat band is a ring at the crown's
+   base; the model's crown sits a little further back (the side picture tips it back), so the ring
+   printed a red arc on the brim. And the side picture's overall strap runs over the shoulder where
+   the model's sleeve is, so it printed blue smears on the sleeves. My copy of `print_tex.py` adds two
+   colours to the girl's `paint_color_skip`: `red` (the brim skips it) and `blue` (the arms skip it).
+8. **The side picture's hand** hangs in front of the side pocket. The side picture is switched off on
    the torso, hips and legs behind the arm (`paint_box_skip`), so the fingers don't print onto the
    overalls.
-8. **Relief:** none on the face, nose, ears and hands; a gentle `grain` on everything else.
-9. **Glow map:** all black. Checked: the exported glow texture is black.
+9. **Relief:** none on the face, nose, ears and hands; a gentle `grain` on everything else.
+10. **Glow map:** all black. Checked: the exported glow texture is black.
 
 ## Changed tool copies (in `tools/`)
 
-The heroes' set (see `../player-b/NOTES.md`), unchanged. New for Bramble: `mkparts.py` writes this
+The heroes' set (see `../player-b/NOTES.md`), unchanged except `print_tex.py`, which adds the `red` and
+`blue` colours to `paint_color_skip` (see 7). New for Bramble: `mkparts.py` writes this
 `parts.json`; `redo_views.sh` rebuilds the views, sets the top picture's scale and makes the repaired
 side picture.
 
@@ -86,11 +96,22 @@ then `PY=... bash tools/route_small.sh parts.json views/views.json OUT 7000 bram
 
 ## What still looks wrong
 
-WRONG
+- **The moustache's curled tips stick out sideways** a little from the three-quarter view, as thin
+  points past the cheeks; from the front it matches the picture.
+- **The hair is a smooth mass** under the brim with the curls painted on; the brim hides most of it.
+- **A faint blue smudge** on the bandana's left edge where the strap meets it, and dark patches on the
+  brim's edge where the hair's colour reached it.
+- **A thin pale line at each wrist** where the hand's rounded top shows out of the forearm.
+- **The hands are mittens** with painted fingers, as the brief asks.
+- The top view doesn't match the top picture (a different pose).
 
 ## Compared with the heroes
 
-COMPARE
+About as good. The face is clean (no ghost features; from the front three-quarter view it reads like
+the sheet, nose and moustache included), the overalls, buttons, pockets and bandana print cleanly, and
+the outline match is better than the heroes' (94.1 / 93.7 / 93.6% against about 92 / 89 / 89%) because
+his clothes are simple, round shapes and the pictures agree closely. The hat hides the hair, which was
+the heroes' weak spot; the moustache tips are his.
 
 ## What the next people should know
 

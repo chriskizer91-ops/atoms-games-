@@ -9973,6 +9973,8 @@ const MODELS = (() => {
     // the thing this person carries (Elder Willow's staff, Rosa's tray...), in a hand
     const props = [], propMats = [];
     const held = HELD[key];
+    // props are placed on the standing (idle) pose, so they sit level while the person stands
+    const idleT = acts.idle ? acts.idle.time : 0; if (held && acts.idle) { acts.idle.time = 0; mixer.update(0); body.updateMatrixWorld(true); }
     if (held) for (const h of [].concat(held)) {
       const p = h.make(); const hand = bones[(E.anchors[h.hand] || {}).bone] || bones[h.hand];
       if (!hand) continue;
@@ -9980,6 +9982,7 @@ const MODELS = (() => {
       attach(E, body, hand, h.hand, p.group, h);
       props.push(p);
     }
+    if (held && acts.idle) acts.idle.time = idleT;
     animate(0, 0, 0, 0);
     return {
       root, fx: new THREE.Group(), bones, animate, play, PHASE_PER_M: PHK, glb: true, throwAt: ev.release,
@@ -9995,12 +9998,13 @@ const MODELS = (() => {
   function attach(E, body, hand, anchorName, group, h) {
     body.updateMatrixWorld(true);
     const a = E.anchors[anchorName];
-    const gripScene = a ? a.rest.clone() : hand.getWorldPosition(new THREE.Vector3()); // scene space of the GLB, at rest
+    // the grip in the GLB scene's space, in the pose the bones are in now (the idle pose: see person())
+    const gripScene = body.worldToLocal(a ? hand.localToWorld(a.local.clone()) : hand.getWorldPosition(new THREE.Vector3()));
     const s = body.scale.x; // GLB units per game metre = 1 / s
     const holder = new THREE.Group();
     // where the grip is and how the props stand, in the GLB scene's space
     const want = new THREE.Matrix4().compose(gripScene.clone().add(new THREE.Vector3(...(h.off || [0, 0, 0])).divideScalar(s)), new THREE.Quaternion().setFromEuler(new THREE.Euler(...(h.rot || [0, 0, 0]))), new THREE.Vector3(1 / s, 1 / s, 1 / s));
-    // hand's rest matrix in the scene's space (the body's own transform taken out)
+    // the hand's matrix (in that pose) in the scene's space, the body's own transform taken out
     const handRest = new THREE.Matrix4().copy(body.matrixWorld).invert().multiply(hand.matrixWorld);
     holder.matrix.copy(handRest.invert().multiply(want)); holder.matrix.decompose(holder.position, holder.quaternion, holder.scale);
     holder.add(group); hand.add(holder);

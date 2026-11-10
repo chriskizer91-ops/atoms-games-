@@ -58,7 +58,8 @@ The final game model's Blender file (the lead animates from it):
   I moved triangles from the cloak and the brim to the head and hair.)
 - **Time:** about 45 minutes of my own work (01:17 to 02:48 by the clock, interleaved with Willow and
   Bramble while the shared machine ran each job, which took 10 to 15 minutes): 1 blockout and 3 route
-  runs (the third only fixed the backs of the hands).
+  runs (the third only fixed the backs of the hands). `board_blank.jpg` is from run 2: run 3 changed only the
+  hands' paint, so the shape is the same.
 
 ## What I did and the problems I hit
 

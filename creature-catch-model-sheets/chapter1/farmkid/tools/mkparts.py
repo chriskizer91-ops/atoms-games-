@@ -2,7 +2,7 @@
 kind: c centred, m mirrored pair (traced on the kid's left, +X: image right in the front picture, image left in the
 back picture), one = single off-centre. Part names carry the two-legged skeleton's words (BRIEF_PEOPLE.md and
 BRIEF_PEOPLE_2.md). Built the heroes' way (../player-a/NOTES.md, ../player-b/NOTES.md): smooth hand-drawn outlines
-(nomask) for the head, hair, torso, arms and legs; one upward-sliced hair mass plus a fringe and the biggest spike.
+(nomask) for the head, hair, torso, arms and legs; one upward-sliced hair mass plus a fringe; the spikes are paint.
 
 The front picture draws the face about 13 pixels (1.2 cm) to the kid's left of the body's centre line (the hair,
 neck and body are centred). The head and ears are traced centred and read the front picture 13 pixels to the
@@ -31,11 +31,12 @@ add(name="ear", kind="m", axis="z", n=2.2, relief="none", smooth=2, lo_weight=4.
     views={"front": P("605,302 625,294 640,302 645,328 638,352 622,366 608,360 603,330"),
            "side": P("528,282 548,278 565,290 572,315 568,340 552,352 535,350 527,320")})
 # The main hair is sliced upward; its front edge (side picture) steps back from the forehead to behind the
-# ear, so it frames the face with no brim. The outline is a smooth hull through the spikes' bases.
+# ear, so it frames the face with no brim. The outline is a smooth hull through the spikes' bases; its lower
+# sides narrow toward the bottom so the hair doesn't flare out like a mushroom's cap below the ears.
 add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.4, nomask=["front", "side"],
     round_ends={"start": 0.02, "end": 0.04},
-    views={"front": P("511,105 570,108 620,120 655,145 685,175 700,210 705,250 698,290 680,325 660,350 630,374 392,374 362,350 342,325 324,290 318,250 322,210 338,175 368,145 405,120 455,108"),
-           "side": P("470,95 560,92 630,105 680,130 715,165 735,210 740,255 733,300 715,335 690,365 650,386 600,390 578,372 573,345 570,315 552,282 512,262 475,248 440,232 410,215 392,195 388,165 400,135 430,110")})
+    views={"front": P("520,88 560,95 610,112 652,140 685,175 700,210 705,250 698,290 676,322 650,346 620,368 404,368 374,346 348,322 324,290 318,250 322,210 340,172 372,140 420,112 480,95"),
+           "side": P("470,100 520,82 570,70 615,75 650,100 690,135 718,170 735,210 740,255 733,300 715,335 690,365 650,384 600,388 578,372 573,345 570,315 552,282 512,262 475,248 440,232 410,215 392,195 388,165 400,135 430,112")})
 # the fringe: a pad of locks in front of the forehead, sliced front-to-back so its lower edge arcs up at the
 # temples. As learned on Tinker: only about 1 cm in front of the forehead, its lower edge sloping up toward the
 # front (so its underside takes the fringe's paint, not a pale line of forehead skin), and it skips skin colours.
@@ -43,11 +44,8 @@ add(name="hair_bangs", kind="c", axis="y", n=2.2, relief="grain", smooth=3, lo_w
     round_ends={"start": 0.01, "end": 0.0}, paint_skip=["back"], paint_color_skip=["skin_pale"],
     views={"side": P("384,222 388,195 400,170 420,150 450,138 482,135 482,242 450,240 415,234 395,229 386,226"),
            "top": top(sym([(-0.136, 0.04), (-0.13, 0.07), (-0.118, 0.092), (-0.10, 0.104), (-0.075, 0.108), (-0.04, 0.108)]))})
-# the big swept spike on top
-add(name="hair_spike", kind="c", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=4.0, nomask=["front", "side"],
-    round_ends={"start": 0.0, "end": 0.03}, paint_skip=["back"],
-    views={"front": P("470,140 478,100 492,75 515,60 545,58 562,72 568,100 575,140"),
-           "side": P("480,140 495,95 525,65 565,47 605,48 630,72 636,110 630,140")})
+# (the big swept spike on top was its own part in the first two runs; it read as a tied topknot, so the
+# hair mass's own top now rises to a gentle peak there instead, and the spike is paint)
 # ---- neck, collar, torso (tunic and the cream shirt hem below it), hips ---------------------------
 add(name="neck", kind="c", axis="z", n=2.0, relief="none", smooth=3, lo_weight=0.5, paint_skip=["top"],
     views={"front": P("480,390 545,390 548,455 478,455"),

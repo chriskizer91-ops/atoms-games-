@@ -57,7 +57,7 @@ add(name="hair_lock_low", kind="m", paint_color_skip=HAIR_SKIP, axis="z", n=2.0,
 # the curl standing up on top of her head (curving forward and to her right): a flat curved lock, sliced side to side
 add(name="hair_curl_top", kind="one", paint_color_skip=HAIR_SKIP, axis="x", n=2.0, relief="grain", smooth=2, lo_weight=1.0,
     nomask=["front", "top"], round_ends={"start": 0.008, "end": 0.0}, paint_skip=["top"],
-    views={"front": P("520,108 548,102 552,80 540,58 515,45 485,42 458,48 440,62 437,80 446,95 452,86 466,72 490,65 514,73 527,92"),
+    views={"front": P("508,128 556,128 556,80 540,58 515,45 485,42 458,48 440,62 437,80 446,98 452,92 466,80 490,74 506,86"),
            "top": top([(0.05, 0.005), (-0.02, -0.05), (-0.085, -0.095), (-0.085, -0.13), (-0.02, -0.085), (0.05, -0.03)])})
 # the leaf clip on her left side, above the ear (the side and back pictures agree on its height; the front draws it lower)
 add(name="hair_leaf", kind="one", axis="z", n=2.2, relief="none", smooth=2, lo_weight=0.8, nomask=["front", "side"],
@@ -65,7 +65,7 @@ add(name="hair_leaf", kind="one", axis="z", n=2.2, relief="none", smooth=2, lo_w
     views={"front": P("690,208 712,204 728,220 730,250 720,272 698,272 688,240"),
            "side": P("536,222 560,210 600,204 630,212 618,236 608,270 590,272 560,250 540,240")})
 # ---- neck, torso (blouse + pinafore bib) -----------------------------------------------------
-add(name="neck", kind="c", axis="z", n=2.0, relief="none", smooth=3, lo_weight=0.5, paint_skip=["top", "back"], paint_color_skip=["hairbrown"],
+add(name="neck", kind="c", axis="z", n=2.0, relief="none", smooth=3, lo_weight=0.5, paint_skip=["top", "back"], paint_color_skip=["hairbrown", "green"],
     views={"front": P("475,340 548,340 552,445 471,445"),
            "side": P("440,340 520,340 525,445 438,445")})
 add(name="torso", kind="c", axis="z", n=2.6, relief="grain", smooth=6, lo_weight=1.1, nomask=["front", "side"],

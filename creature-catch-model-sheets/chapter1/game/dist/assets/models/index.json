@@ -1,24 +1,44 @@
 {
  "creatures": [
   "clovermouse",
+  "dandylion",
+  "dewt",
   "drizzlon",
   "embroak",
   "fleecling",
   "mossback",
-  "puffmunk"
+  "pebblepup",
+  "puffmunk",
+  "tuftail"
  ],
  "people": [
+  "hazel",
+  "oakley",
+  "pip",
   "player-a",
-  "player-b"
+  "player-b",
+  "rosa",
+  "tinker",
+  "willow"
  ],
  "bytes": {
   "clovermouse": 766537,
+  "dandylion": 828013,
+  "dewt": 634561,
   "drizzlon": 739641,
   "embroak": 609830,
   "fleecling": 622190,
+  "hazel": 871190,
   "mossback": 910895,
+  "oakley": 805283,
+  "pebblepup": 1002489,
+  "pip": 876080,
   "player-a": 899563,
   "player-b": 926623,
-  "puffmunk": 893281
+  "puffmunk": 893281,
+  "rosa": 826679,
+  "tinker": 908885,
+  "tuftail": 829522,
+  "willow": 814522
  }
 }

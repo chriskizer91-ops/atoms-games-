@@ -55,8 +55,9 @@ The final game model's Blender file (the lead animates from it):
   locks 140 each, hair-bow tails 100 each, ears 80 each, hair bow 66); skirt 992, torso 270, arms 242
   each, satchel 224, legs 220 each, shoes 160 each, hands 120 each, apron-bow tails 120 each, apron bow
   60, neck 60.
-- **Time:** about TIME minutes by the clock (01:40 to END), 3 route runs, plus the final blockout board.
-  Each route run took about 10 to 13 minutes on the shared machine.
+- **Time:** about 60 minutes by the clock (01:40 to 02:41, partly overlapping Rosa's last board), 3 route
+  runs, plus the final blockout board (made later, after a pause). Each route run took about 10 to 13 minutes on
+  the shared machine, most of it rendering the boards. Over the 30 to 40 minute budget for that reason.
 
 ## What I did and the problems I hit
 

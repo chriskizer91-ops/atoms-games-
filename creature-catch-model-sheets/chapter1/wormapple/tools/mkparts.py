@@ -33,7 +33,9 @@ parts.append(dict(name="body", kind="c", axis="z", n=2.0, relief="none", smooth=
                   # apple's top in front of, beside and behind the stem
                   paint_box_skip={"side": [[130, 500, 415, 925], [480, 350, 720, 420]],
                                   "top": [[780, 840, 1190, 1080]],
-                                  "front": [[520, 370, 760, 450]], "back": [[500, 370, 720, 455]]},
+                                  # (and where the leaf hangs over the apple's shoulder in the front and back pictures)
+                                  "front": [[520, 370, 760, 450], [370, 285, 615, 348]],
+                                  "back": [[500, 370, 720, 455], [620, 285, 960, 352]]},
                   views={"front": apple_front, "side": apple_side}))
 # ---- the stem (leans to the creature's left in the front and back pictures, upright from the side)
 parts.append(dict(name="body_stem", kind="one", axis="z", n=2.0, relief="grain", relief_gain=0.6, smooth=3,
