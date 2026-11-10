@@ -41,6 +41,17 @@ prompts are in `chapter1/picture-request-chapter1.html`.
 
 Build them in that order.
 
+**Second batch** (a second builder):
+
+| id | Creature | H for make_views | Notes | Skeleton plan |
+| --- | --- | --- | --- | --- |
+| `tuftail` | Tuftail | 0.55 m (to the ear tips; 0.9 m long with its tail) | Orange fox, a big tail of chunky grass clumps curving up behind | four-legged |
+| `pebblepup` | Pebblepup | 0.45 m (0.65 m long) | Grey-brown puppy, stone patches, floppy ears, tongue out, pebble on its nose, curled tail | four-legged |
+| `bumblop` | Bumblop | 0.5 m (to the antenna tips) | Round striped bee-bunny ball, long floppy ears at its sides, antennae with yellow balls, two solid wings, tiny feet. Its views are square. | round, with wings |
+| `hopsprout` | Hopsprout | 0.45 m (to the antenna tips; 0.65 m long) | Lime grasshopper, a two-leaf sprout on its head, thick antennae, wings folded along its back, six chunky legs (big back legs folded, knees up) | bug (new) |
+
+Build them in that order.
+
 **Glow:**
 - **Scarecrowl's orange eyes** may glow softly.
 - **Everything else:** nothing glows. Dandylion's yellow fur and Scarecrowl's orange scarf must stay dark
@@ -57,6 +68,24 @@ Build them in that order.
 - **The apple:** `body`.
 - **The worm:** `head`. It's what moves and looks around, and the face is on it.
 - **The stem and leaf:** `body_stem` and `body_leaf`, so they stay with the apple.
+
+**Four-legged (Tuftail, Pebblepup):**
+- **Ears:** `ear` pairs, which ride on the head.
+- **Pebblepup's tongue:** `head_tongue`. **Its pebble:** `head_pebble`.
+- **The tails:** `tail` pieces. Split Pebblepup's curl into two or three pieces.
+
+**Round with wings (Bumblop):**
+- **The ball:** `body`. Its face is on the body, as on Mushling.
+- **Ears and antennae:** `ear` pairs and `head_antenna` pairs. They ride on the "head" bone, which bobs
+  on top of the ball.
+- **Wings:** a `wing` pair, which the lead will make flutter.
+- **Feet:** a `foot` pair.
+
+**Bug (Hopsprout)**, a new skeleton the lead is adding:
+- **Head:** `head`, `head_sprout`, and a `head_antenna` pair.
+- **Body:** `body` (one piece, or `body_front` and `body_back`).
+- **Folded wings:** `body_wing`. They stay with the body.
+- **Legs, as mirrored pairs:** `front_leg`, `mid_leg` and `rear_leg`. The big back legs are `rear_leg`.
 
 **Bird (Scarecrowl)**, a new skeleton the lead is adding:
 - **The trunk and head:** `body`, `body_scarf`, `head`, `head_hat`, `head_beak`.
