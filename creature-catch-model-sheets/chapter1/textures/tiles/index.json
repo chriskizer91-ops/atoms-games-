@@ -1,0 +1,579 @@
+[
+ {
+  "name": "planks_light",
+  "sheet": "woods",
+  "file": "woods/planks_light.png",
+  "kind": "tile",
+  "use": "floors, crates, signs",
+  "seam_after": [
+   1.8,
+   4.7
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "planks_dark",
+  "sheet": "woods",
+  "file": "woods/planks_dark.png",
+  "kind": "tile",
+  "use": "dark boards",
+  "seam_after": [
+   1.4,
+   3.2
+  ],
+  "period_crop": [
+   500,
+   431
+  ]
+ },
+ {
+  "name": "wood_polished",
+  "sheet": "woods",
+  "file": "woods/wood_polished.png",
+  "kind": "tile",
+  "use": "tables, dressers, the piano",
+  "seam_after": [
+   1.3,
+   2.6
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "bark",
+  "sheet": "woods",
+  "file": "woods/bark.png",
+  "kind": "tile",
+  "use": "tree trunks, the fallen log, staffs",
+  "seam_after": [
+   4.8,
+   2.4
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "boards_grey",
+  "sheet": "woods",
+  "file": "woods/boards_grey.png",
+  "kind": "tile",
+  "use": "fences",
+  "seam_after": [
+   8.5,
+   2.8
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "wood_cream",
+  "sheet": "woods",
+  "file": "woods/wood_cream.png",
+  "kind": "tile",
+  "use": "window and door frames, trim",
+  "seam_after": [
+   1.5,
+   3.6
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "roof_red",
+  "sheet": "roofs",
+  "file": "roofs/roof_red.png",
+  "kind": "tile",
+  "use": "your house",
+  "seam_after": [
+   3.6,
+   2.1
+  ],
+  "period_crop": [
+   500,
+   419
+  ]
+ },
+ {
+  "name": "roof_purple",
+  "sheet": "roofs",
+  "file": "roofs/roof_purple.png",
+  "kind": "tile",
+  "use": "Pip's Cube Shop",
+  "seam_after": [
+   2.4,
+   2.6
+  ],
+  "period_crop": [
+   454,
+   421
+  ]
+ },
+ {
+  "name": "roof_orange",
+  "sheet": "roofs",
+  "file": "roofs/roof_orange.png",
+  "kind": "tile",
+  "use": "Rosa's Inn",
+  "seam_after": [
+   3.1,
+   2.2
+  ],
+  "period_crop": [
+   500,
+   420
+  ]
+ },
+ {
+  "name": "shingles_barn",
+  "sheet": "roofs",
+  "file": "roofs/shingles_barn.png",
+  "kind": "tile",
+  "use": "Farmer Bramble's barn",
+  "seam_after": [
+   3.8,
+   1.9
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "roof_moss",
+  "sheet": "roofs",
+  "file": "roofs/roof_moss.png",
+  "kind": "tile",
+  "use": "Elder Willow's house",
+  "seam_after": [
+   3.4,
+   3.3
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "stripes_mint",
+  "sheet": "roofs",
+  "file": "roofs/stripes_mint.png",
+  "kind": "tile",
+  "use": "the Healing Hut's roof",
+  "seam_after": [
+   2.2,
+   2.0
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "plaster_cream",
+  "sheet": "walls",
+  "file": "walls/plaster_cream.png",
+  "kind": "tile",
+  "use": "plaster walls",
+  "seam_after": [
+   2.5,
+   2.7
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "boards_white",
+  "sheet": "walls",
+  "file": "walls/boards_white.png",
+  "kind": "tile",
+  "use": "the Healing Hut's walls",
+  "seam_after": [
+   4.1,
+   1.7
+  ],
+  "period_crop": [
+   436,
+   500
+  ]
+ },
+ {
+  "name": "boards_red",
+  "sheet": "walls",
+  "file": "walls/boards_red.png",
+  "kind": "tile",
+  "use": "the barn's walls",
+  "seam_after": [
+   4.0,
+   1.3
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "cobblestone",
+  "sheet": "walls",
+  "file": "walls/cobblestone.png",
+  "kind": "tile",
+  "use": "footings",
+  "seam_after": [
+   4.5,
+   4.5
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "brick_red",
+  "sheet": "walls",
+  "file": "walls/brick_red.png",
+  "kind": "tile",
+  "use": "chimneys",
+  "seam_after": [
+   2.3,
+   9.8
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "stone_sandy",
+  "sheet": "walls",
+  "file": "walls/stone_sandy.png",
+  "kind": "tile",
+  "use": "fireplaces and hearths",
+  "seam_after": [
+   2.3,
+   2.4
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "floorboards",
+  "sheet": "floors",
+  "file": "floors/floorboards.png",
+  "kind": "tile",
+  "use": "room floors",
+  "seam_after": [
+   1.9,
+   3.7
+  ],
+  "period_crop": [
+   500,
+   388
+  ]
+ },
+ {
+  "name": "checker_mint",
+  "sheet": "floors",
+  "file": "floors/checker_mint.png",
+  "kind": "tile",
+  "use": "the Healing Hut's floor",
+  "seam_after": [
+   1.7,
+   1.7
+  ],
+  "period_crop": [
+   500,
+   467
+  ],
+  "note": "rebuilt as an exact checker in the painting's two colours, with its brush texture on top"
+ },
+ {
+  "name": "rug_red",
+  "sheet": "floors",
+  "file": "floors/rug_red.png",
+  "kind": "tile_x",
+  "use": "rugs",
+  "seam_after": [
+   7.9,
+   14.1
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "rug_blue",
+  "sheet": "floors",
+  "file": "floors/rug_blue.png",
+  "kind": "tile_x",
+  "use": "rugs",
+  "seam_after": [
+   6.4,
+   8.6
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "quilt",
+  "sheet": "floors",
+  "file": "floors/quilt.png",
+  "kind": "tile",
+  "use": "bed covers",
+  "seam_after": [
+   21.0,
+   27.4
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "doormat",
+  "sheet": "floors",
+  "file": "floors/doormat.png",
+  "kind": "tile",
+  "use": "doormats",
+  "seam_after": [
+   11.1,
+   6.6
+  ],
+  "period_crop": [
+   500,
+   380
+  ]
+ },
+ {
+  "name": "hay",
+  "sheet": "nature",
+  "file": "nature/hay.png",
+  "kind": "tile",
+  "use": "hay bales, the barn",
+  "seam_after": [
+   5.8,
+   5.9
+  ],
+  "period_crop": [
+   500,
+   471
+  ]
+ },
+ {
+  "name": "leaves",
+  "sheet": "nature",
+  "file": "nature/leaves.png",
+  "kind": "tile",
+  "use": "bushes and trees",
+  "seam_after": [
+   3.1,
+   3.1
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "leaves_berries",
+  "sheet": "nature",
+  "file": "nature/leaves_berries.png",
+  "kind": "tile",
+  "use": "berry bushes",
+  "seam_after": [
+   3.5,
+   4.2
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "leaves_flowers",
+  "sheet": "nature",
+  "file": "nature/leaves_flowers.png",
+  "kind": "tile",
+  "use": "flower bushes",
+  "seam_after": [
+   5.2,
+   4.3
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "rock",
+  "sheet": "nature",
+  "file": "nature/rock.png",
+  "kind": "tile",
+  "use": "rocks and boulders",
+  "seam_after": [
+   4.2,
+   3.6
+  ],
+  "period_crop": [
+   500,
+   500
+  ]
+ },
+ {
+  "name": "iron_rivets",
+  "sheet": "nature",
+  "file": "nature/iron_rivets.png",
+  "kind": "tile",
+  "use": "the stove, lamps, barrel hoops",
+  "seam_after": [
+   1.3,
+   4.7
+  ],
+  "period_crop": [
+   500,
+   470
+  ]
+ },
+ {
+  "name": "books",
+  "sheet": "furniture-details",
+  "file": "furniture-details/books.png",
+  "kind": "decal",
+  "use": "the bookshelf"
+ },
+ {
+  "name": "herb_shelf",
+  "sheet": "furniture-details",
+  "file": "furniture-details/herb_shelf.png",
+  "kind": "decal",
+  "use": "the herb shelf"
+ },
+ {
+  "name": "clock_face",
+  "sheet": "furniture-details",
+  "file": "furniture-details/clock_face.png",
+  "kind": "decal",
+  "use": "the grandfather clock"
+ },
+ {
+  "name": "notice_board",
+  "sheet": "furniture-details",
+  "file": "furniture-details/notice_board.png",
+  "kind": "decal",
+  "use": "Rosa's notice board"
+ },
+ {
+  "name": "piano_front",
+  "sheet": "furniture-details",
+  "file": "furniture-details/piano_front.png",
+  "kind": "decal",
+  "use": "the piano"
+ },
+ {
+  "name": "stove_front",
+  "sheet": "furniture-details",
+  "file": "furniture-details/stove_front.png",
+  "kind": "decal",
+  "use": "the stove"
+ },
+ {
+  "name": "door",
+  "sheet": "building-details",
+  "file": "building-details/door.png",
+  "kind": "decal",
+  "use": "front doors"
+ },
+ {
+  "name": "door_round",
+  "sheet": "building-details",
+  "file": "building-details/door_round.png",
+  "kind": "decal",
+  "use": "Elder Willow's door"
+ },
+ {
+  "name": "window",
+  "sheet": "building-details",
+  "file": "building-details/window.png",
+  "kind": "decal",
+  "use": "windows"
+ },
+ {
+  "name": "window_round",
+  "sheet": "building-details",
+  "file": "building-details/window_round.png",
+  "kind": "decal",
+  "use": "Elder Willow's windows"
+ },
+ {
+  "name": "sign_heart",
+  "sheet": "building-details",
+  "file": "building-details/sign_heart.png",
+  "kind": "decal",
+  "use": "the Healing Hut's sign"
+ },
+ {
+  "name": "sign_inn",
+  "sheet": "building-details",
+  "file": "building-details/sign_inn.png",
+  "kind": "decal",
+  "use": "Rosa's Inn sign"
+ },
+ {
+  "name": "healing_machine",
+  "sheet": "machines",
+  "file": "machines/healing_machine.png",
+  "kind": "decal",
+  "use": "the healing machine"
+ },
+ {
+  "name": "cube_vault",
+  "sheet": "machines",
+  "file": "machines/cube_vault.png",
+  "kind": "decal",
+  "use": "the Cube Vault"
+ },
+ {
+  "name": "mailbox",
+  "sheet": "machines",
+  "file": "machines/mailbox.png",
+  "kind": "decal",
+  "use": "the mailbox"
+ },
+ {
+  "name": "lamp_glass",
+  "sheet": "machines",
+  "file": "machines/lamp_glass.png",
+  "kind": "decal",
+  "use": "street lamps"
+ },
+ {
+  "name": "hay_bale_end",
+  "sheet": "machines",
+  "file": "machines/hay_bale_end.png",
+  "kind": "decal",
+  "use": "hay bale ends"
+ },
+ {
+  "name": "barrel_top",
+  "sheet": "machines",
+  "file": "machines/barrel_top.png",
+  "kind": "decal",
+  "use": "barrel tops"
+ }
+]
