@@ -1,11 +1,13 @@
 {
  "creatures": [
+  "bumblop",
   "clovermouse",
   "dandylion",
   "dewt",
   "drizzlon",
   "embroak",
   "fleecling",
+  "hopsprout",
   "mossback",
   "pebblepup",
   "puffmunk",
@@ -27,6 +29,7 @@
  ],
  "bytes": {
   "bramble": 853849,
+  "bumblop": 815059,
   "clovermouse": 766537,
   "dandylion": 828013,
   "dewt": 634561,
@@ -36,6 +39,7 @@
   "fern": 835384,
   "fleecling": 622190,
   "hazel": 871190,
+  "hopsprout": 623404,
   "juniper": 858726,
   "mossback": 910895,
   "oakley": 805283,

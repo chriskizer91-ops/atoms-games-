@@ -1,0 +1,19 @@
+{
+ "texels": 3208133,
+ "seen_by_a_picture": 86.2,
+ "painted_by": {
+  "front": 709619,
+  "back": 719262,
+  "side+x": 571179,
+  "side-x": 609250,
+  "top": 182042
+ },
+ "parts": [
+  "body",
+  "body_stem",
+  "body_leaf",
+  "head",
+  "head_worm",
+  "head_nub"
+ ]
+}

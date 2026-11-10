@@ -28,12 +28,13 @@ apple_side = P("500,322 600,316 700,312 800,325 880,370 950,450 1000,550 1020,68
 parts.append(dict(name="body", kind="c", axis="z", n=2.0, relief="none", smooth=12, lo_weight=1.3,
                   round_ends={"start": 0.012, "end": 0.03}, paint_skip=[], nomask=["front", "side"],
                   # the side picture's worm and its slanted view of the hole would print a second hole and a
-                  # green smear on the apple's flank; the top picture's stem and leaf are drawn elsewhere
+                  # green smear on the apple's flank; the top picture's stem and leaf (seen from above, the leaf
+                  # lying flatter than the model's) would print green and brown on the apple's top
                   # and the front, side and back pictures' dark stem dimple would print ghost dimples on the
                   # apple's top in front of, beside and behind the stem
                   paint_box_skip={"side": [[130, 500, 415, 925], [480, 350, 720, 420], [650, 280, 1000, 348]],
                                   # the top picture draws the worm peeking over the apple's front edge
-                                  "top": [[780, 840, 1190, 1080], [470, 30, 800, 280]],
+                                  "top": [[390, 470, 1080, 850], [470, 30, 800, 280]],
                                   # (and where the leaf hangs over the apple's shoulder in the front and back pictures)
                                   "front": [[520, 370, 760, 450], [370, 285, 615, 348]],
                                   "back": [[500, 370, 720, 455], [620, 285, 960, 352]]},

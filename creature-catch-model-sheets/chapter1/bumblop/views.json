@@ -1,0 +1,100 @@
+{
+ "H": 0.5,
+ "width_m": 0.45181255526083114,
+ "length_m": 0.3424778761061947,
+ "views": {
+  "front": {
+   "file": "front.png",
+   "mask": "front_mask.png",
+   "original": "front_original.png",
+   "size": [
+    1254,
+    1254
+   ],
+   "bg": [
+    192,
+    193,
+    197
+   ],
+   "bbox": [
+    113,
+    51,
+    1135,
+    1182
+   ],
+   "s": 2262.0,
+   "uc": 624.0,
+   "vg": 1182.0
+  },
+  "side": {
+   "file": "side.png",
+   "mask": "side_mask.png",
+   "original": "side_original.png",
+   "size": [
+    1254,
+    1254
+   ],
+   "bg": [
+    193,
+    194,
+    196
+   ],
+   "bbox": [
+    226,
+    41,
+    1000,
+    1171
+   ],
+   "s": 2260.0,
+   "uc": 613.0,
+   "vg": 1171.0
+  },
+  "back": {
+   "file": "back.png",
+   "mask": "back_mask.png",
+   "original": "back_original.png",
+   "size": [
+    1254,
+    1254
+   ],
+   "bg": [
+    194,
+    193,
+    196
+   ],
+   "bbox": [
+    131,
+    51,
+    1122,
+    1179
+   ],
+   "s": 2256.0,
+   "uc": 626.5,
+   "vg": 1179.0
+  },
+  "top": {
+   "file": "top.png",
+   "mask": "top_mask.png",
+   "original": "top_original.png",
+   "size": [
+    1254,
+    1254
+   ],
+   "bg": [
+    195,
+    194,
+    196
+   ],
+   "bbox": [
+    136,
+    140,
+    1119,
+    1131
+   ],
+   "sx": 2175.6810176125246,
+   "sy": 2893.6175710594316,
+   "uc": 627.5,
+   "vc": 635.5
+  }
+ }
+}

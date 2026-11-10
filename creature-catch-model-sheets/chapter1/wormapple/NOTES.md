@@ -35,16 +35,17 @@ The final game model's Blender file (the lead animates from it):
 
 ## Why top is lower
 
-- **Top (85%):** the top picture puts the apple about 2 cm further back than the side picture, and its
-  stem and leaf somewhere else entirely (the stem leaning back and to the right, the leaf lying flat).
-  The side picture wins for depths; the stem and leaf follow the front, side and back pictures, which agree.
+- **Top (85%):** the top picture puts the apple about 2 cm further back than the side picture and draws
+  the worm's head sticking up over the apple's front edge (it is drawn a little from the front). The side
+  picture wins for depths.
 
 ## What I did and the problems I hit
 
 1. **Pictures checked.** Side faces left, top has the head at the top; the front and back agree with the
    side (the leaf is on the creature's right in all three, the stem leans to its left). What the generator
    got wrong:
-   - the top picture's stem and leaf (above);
+   - the top picture is drawn a little from the front (above), and its leaf lies flatter than the front
+     and side pictures' leaf, which shows its face to both;
    - the side picture is drawn a little from the front: it shows the inside of the hole, which a dead-side
      view couldn't.
 2. **The hole is paint.** The apple is one round solid; the worm's body comes out of it 2 cm, and the
@@ -56,9 +57,13 @@ The final game model's Blender file (the lead animates from it):
 4. **Ghost stem dimples.** The front, side and back pictures each draw the dark dimple round the stem
    lower than where the model's stem goes into the apple, so each printed a dark hole on the apple's top
    in front of, beside or behind the stem. Those areas are switched off on the apple; the top picture
-   paints the top. The top picture's own stem and leaf are switched off too.
-5. **Leaf paint on the apple.** The front and back pictures draw the leaf hanging over the apple's
-   shoulder; that green printed onto the apple's top. Switched off on the apple there.
+   paints the top.
+5. **A green patch on the apple's top** (the one fix that took several runs). The front, side and back
+   pictures draw the leaf hanging over the apple's shoulder, and the top picture draws the stem and leaf
+   (and the worm's head, at the front edge) over the apple's top; all of that green printed onto the
+   apple. Those areas are switched off on the apple. I first boxed the top picture's leaf in the wrong
+   place, which cost two extra runs before I found it by tracing the green texels back to the picture
+   they came from.
 6. **The leaf is a thin blade standing on edge, turned 45 degrees** (`slab`), because the front and the
    side pictures both show its full face. The stem is a single off-centre part (`kind: one`) that leans
    as the front picture draws it.

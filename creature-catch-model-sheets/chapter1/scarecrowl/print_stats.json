@@ -1,0 +1,28 @@
+{
+ "texels": 2996337,
+ "seen_by_a_picture": 70.5,
+ "painted_by": {
+  "front": 684587,
+  "back": 726233,
+  "side+x": 292539,
+  "side-x": 294361,
+  "top": 126426
+ },
+ "parts": [
+  "body",
+  "body_scarf",
+  "body_scarf_flap",
+  "head",
+  "head_beak",
+  "head_hat",
+  "head_hat_tip",
+  "head_hat_fringe_L",
+  "head_hat_fringe_R",
+  "wing_L",
+  "wing_R",
+  "leg_L",
+  "leg_R",
+  "foot_L",
+  "foot_R"
+ ]
+}

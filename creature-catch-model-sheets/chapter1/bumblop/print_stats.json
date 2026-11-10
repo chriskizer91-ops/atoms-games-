@@ -1,0 +1,24 @@
+{
+ "texels": 3077630,
+ "seen_by_a_picture": 76.1,
+ "painted_by": {
+  "front": 561821,
+  "back": 522783,
+  "side+x": 469364,
+  "side-x": 469428,
+  "top": 341925
+ },
+ "parts": [
+  "body",
+  "ear_L",
+  "ear_R",
+  "head_antenna_L",
+  "head_antenna_R",
+  "head_antenna_tip_L",
+  "head_antenna_tip_R",
+  "wing_L",
+  "wing_R",
+  "foot_L",
+  "foot_R"
+ ]
+}

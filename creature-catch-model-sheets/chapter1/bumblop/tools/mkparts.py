@@ -58,8 +58,9 @@ parts.append(dict(
     # dir -1: each wing runs from its root high on the back out and a little forward to its tip beside
     # the ear, so the back picture sees the whole wing standing off the round back (with dir 1 the root
     # half sank into the ball) and the front picture sees the tips beside the ears, as both draw them
-    # the front picture's ears and head tufts overlap the wings, so it is not printed on them
-    slab={"thick": 0.03, "dir": -1}, round_ends={"start": 0.02, "end": 0.02}, paint_skip=["side_far", "front"],
+    # the front picture's ears and head tufts overlap the wings, and the top picture draws the wings
+    # elsewhere (over the ears and fur), so neither is printed on them
+    slab={"thick": 0.03, "dir": -1}, round_ends={"start": 0.02, "end": 0.02}, paint_skip=["side_far", "front", "top"],
     paint_power=4,
     # moved back a little; the side picture is read shifted the same amount so its wing paint stays on the wing
     offset=[0, WING_BACKSET, 0], paint_shift={"side": [-WING_BACKSET * 2260, 0]},
