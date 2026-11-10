@@ -319,6 +319,99 @@ def round_(gait="waddle"):
     return M
 
 
+# ---------------------------------------------------------------- birds (two legs, wings spread)
+def bird():
+    """Two-legged birds with wings held out (Scarecrowl). The same clip names as every creature.
+    Locations are per 1.0 of height. Wings use the same poses as the four-legged plan's wings."""
+    W = lambda p: _wings(p, True)  # noqa: E731
+    M = {}
+    M["idle"] = (2.4, [
+        (0.0, W(3)),
+        (0.6, _merge({"chest": {"r": (-1.5, 0, 0)}, "head": {"r": (0, 0, 6)}}, _tail(0, 0, 6), W(-5))),
+        (1.2, _merge({"root": {"l": (0, 0, -0.006)}, "head": {"r": (4, 0, 0)}}, W(3))),
+        (1.8, _merge({"chest": {"r": (-1.5, 0, 0)}, "head": {"r": (0, 0, -6)}}, _tail(0, 0, -6), W(-5))),
+        (2.4, W(3)),
+    ])
+    keys = []
+    for i in range(9):  # a waddling walk: legs step in turn, the body rolls, the head bobs
+        t = i / 8.0
+        p = 2 * math.pi * t
+        sw_l, sw_r = max(0.0, math.cos(p)), max(0.0, -math.cos(p))
+        keys.append((t * 0.8, _merge({
+            "thigh_L": {"r": (-20 * math.sin(p), 0, 0)}, "thigh_R": {"r": (20 * math.sin(p), 0, 0)},
+            "shin_L": {"r": (30 * sw_l, 0, 0)}, "shin_R": {"r": (30 * sw_r, 0, 0)},
+            "foot_L": {"r": (-15 * sw_l, 0, 0)}, "foot_R": {"r": (-15 * sw_r, 0, 0)},
+            "hips": {"r": (0, 6 * math.sin(p), 0)}, "root": {"l": (0, 0, 0.012 * math.cos(2 * p))},
+            "head": {"r": (6 * math.sin(2 * p), 0, 0)}}, _tail(0, 0, 8 * math.sin(p)), W(8 * math.sin(2 * p)))))
+    M["walk"] = (0.8, keys)
+    M["physical"] = (1.1, [
+        (0.0, {}),
+        (0.28, _merge({"root": {"l": (0, 0.1, -0.05)}, "chest": {"r": (-8, 0, 0)}, "head": {"r": (-6, 0, 0)},
+                       "thigh_L": {"r": (-10, 0, 0)}, "thigh_R": {"r": (-10, 0, 0)}, "shin_L": {"r": (25, 0, 0)}, "shin_R": {"r": (25, 0, 0)}}, W("up"))),
+        (0.45, _merge({"root": {"l": (0, -0.5, 0.08)}, "chest": {"r": (14, 0, 0)}, "head": {"r": (14, 0, 0)}}, W("back"))),
+        (0.62, _merge({"root": {"l": (0, -0.45, 0.02)}, "chest": {"r": (10, 0, 0)}}, W("back"))),
+        (1.1, {}),
+    ])
+    M["special"] = (1.1, [
+        (0.0, {}),
+        (0.2, _merge({"chest": {"r": (-6, 0, 0)}, "head": {"r": (-12, 0, 0)}, "neck": {"r": (-6, 0, 0)}}, W("half"))),
+        (0.36, _merge({"root": {"l": (0, -0.08, 0)}, "chest": {"r": (8, 0, 0)}, "head": {"r": (16, 0, 0)}, "neck": {"r": (8, 0, 0)}}, W("up"))),
+        (0.7, _merge({"root": {"l": (0, -0.06, 0)}, "head": {"r": (12, 0, 0)}}, W("half"))),
+        (1.1, {}),
+    ])
+    crouch = {"thigh_L": {"r": (-25, 0, 0)}, "thigh_R": {"r": (-25, 0, 0)}, "shin_L": {"r": (45, 0, 0)}, "shin_R": {"r": (45, 0, 0)},
+              "foot_L": {"r": (-20, 0, 0)}, "foot_R": {"r": (-20, 0, 0)}, "root": {"l": (0, 0, -0.06)}}
+    M["strong_physical"] = (1.9, [  # leap up flapping, then dive forward onto the foe
+        (0.0, {}),
+        (0.3, _merge(crouch, W("up"))),
+        (0.55, _merge({"root": {"l": (0, 0.05, 0.45)}}, W("down"))),
+        (0.75, _merge({"root": {"l": (0, 0.05, 0.6)}}, W("up"))),
+        (0.95, _merge({"root": {"l": (0, 0, 0.55)}, "chest": {"r": (20, 0, 0)}}, W("down"))),
+        (1.15, _merge({"root": {"l": (0, -0.6, 0.0)}, "chest": {"r": (24, 0, 0)}, "head": {"r": (10, 0, 0)}}, W("back"))),
+        (1.35, _merge(crouch, {"root": {"l": (0, -0.5, -0.04)}}, W("half"))),
+        (1.9, {}),
+    ])
+    M["strong_special"] = (2.0, [  # wings spread high, swell, then burst forward
+        (0.0, {}),
+        (0.55, _merge({"root": {"s": (1.06, 1.06, 1.06)}, "chest": {"r": (-12, 0, 0)}, "head": {"r": (-16, 0, 0)}}, W("up"))),
+        (0.8, _merge({"root": {"s": (1.1, 1.1, 1.1), "l": (0, 0.06, 0)}, "chest": {"r": (-16, 0, 0)}, "head": {"r": (-20, 0, 0)}}, W(-40))),
+        (0.95, _merge({"root": {"s": (1, 1, 1), "l": (0, -0.3, 0.02)}, "chest": {"r": (16, 0, 0)}, "head": {"r": (14, 0, 0)}}, W("down"))),
+        (1.35, _merge({"root": {"l": (0, -0.22, 0)}, "chest": {"r": (8, 0, 0)}}, W("half"))),
+        (2.0, {}),
+    ])
+    M["boost"] = (1.5, [
+        (0.0, {}),
+        (0.35, _merge({"chest": {"r": (-12, 0, 0)}, "head": {"r": (-22, 0, 0)}, "root": {"l": (0, 0, 0.03)}}, _tail(-10), W("up"))),
+        (0.6, _merge({"chest": {"r": (-12, 0, 0)}, "head": {"r": (-22, 0, 4)}, "root": {"l": (0, 0, 0.03)}}, W(-38))),
+        (0.85, _merge({"chest": {"r": (-12, 0, 0)}, "head": {"r": (-22, 0, -4)}, "root": {"l": (0, 0, 0.03)}}, W("up"))),
+        (1.5, {}),
+    ])
+    wrap = {"wing_in_*": {"r": (0, 12, -55)}, "wing_out_*": {"r": (0, 8, -35)}}
+    M["boost_guard"] = (1.4, [(0.0, {}), (0.35, _merge(crouch, wrap, {"head": {"r": (14, 0, 0)}})), (1.0, _merge(crouch, wrap, {"head": {"r": (14, 0, 0)}})), (1.4, {})])
+    keys = [(0.0, {})]
+    for i in range(8):
+        sgn = 1 if i % 2 else -1
+        keys.append((0.18 + i * 0.09, _merge({"root": {"l": (0.03 * sgn, 0, 0)}, "chest": {"r": (0, 4 * sgn, 0)}, "head": {"r": (0, 0, 8 * sgn)}}, W(14 * sgn))))
+    keys += [(1.0, _merge({"chest": {"r": (8, 0, 0)}, "head": {"r": (12, 0, 0)}}, W("up"))), (1.5, {})]
+    M["status"] = (1.5, keys)
+    M["hit"] = (0.7, [
+        (0.0, {}),
+        (0.08, _merge({"root": {"l": (0, 0.1, 0.01)}, "chest": {"r": (-10, 0, 0)}, "head": {"r": (-12, 0, 0)}}, W("up"))),
+        (0.18, {"root": {"l": (0.04, 0.08, 0)}}), (0.28, _merge({"root": {"l": (-0.04, 0.06, 0)}}, W("half"))),
+        (0.38, {"root": {"l": (0.03, 0.04, 0)}}), (0.7, {}),
+    ])
+    fallen = _merge({"root": {"r": (0, 70, 0), "l": (0.1, 0, -0.1)}, "head": {"r": (20, 0, 0)}}, crouch, W("droop"))
+    M["faint"] = (1.8, [(0.0, {}), (0.45, _merge(crouch, {"head": {"r": (24, 0, 0)}}, W("droop"))), (1.1, fallen), (1.8, _merge(fallen, {"head": {"r": (26, 0, 0)}}))])
+    M["send_out"] = (0.9, [
+        (0.0, _merge({"root": {"s": (0.02, 0.02, 0.02), "l": (0, 0, 0.7)}}, W("up"))),
+        (0.32, {"root": {"s": (1.08, 1.08, 1.08), "l": (0, 0, 0)}}),
+        (0.45, _merge({"root": {"s": (1.12, 1.12, 0.84)}}, W("down"))),
+        (0.62, _merge({"root": {"s": (0.95, 0.95, 1.08), "l": (0, 0, 0.06)}}, W("up"))),
+        (0.9, {}),
+    ])
+    return M
+
+
 # ---------------------------------------------------------------- people (biped)
 def biped():
     """Two-legged clips for people. Locations are per 1.0 of height. The pictures' A-pose is the rest pose;
@@ -423,7 +516,7 @@ def biped():
     return M
 
 
-PLANS = {"quad": quad, "round": round_, "biped": biped}
+PLANS = {"quad": quad, "round": round_, "biped": biped, "bird": bird}
 EVENTS = {"biped": {"throw": {"release": 0.5, "anchor": "hand_R"}}}  # timed moments the viewer or game hooks into
 
 

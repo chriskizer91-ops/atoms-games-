@@ -29,7 +29,7 @@ import motions  # noqa: E402
 FPS = 30
 ROLE_WORDS = [  # first match wins
     ("wing", "wing"), ("droplet", "tail"), ("tail", "tail"),
-    ("front_leg", "leg_front"), ("fleg", "leg_front"), ("rear_leg", "leg_rear"), ("rleg", "leg_rear"),
+    ("front_leg", "leg_front"), ("fleg", "leg_front"), ("rear_leg", "leg_rear"), ("rleg", "leg_rear"), ("mid_leg", "leg_mid"),
     ("foot", "foot"), ("arm", "arm"), ("neck", "neck"), ("mane", "chest"), ("ruff", "chest"),
     ("head", "head"), ("muzzle", "head"), ("snout", "head"), ("ear", "head"), ("horn", "head"),
     ("tuft", "head"), ("cap", "head"), ("crest", "head"),
@@ -45,6 +45,12 @@ BIPED_WORDS = [  # people (plan "biped"); first match wins
     ("neck", "neck"), ("head", "head"), ("hair", "head"), ("face", "head"), ("nose", "head"), ("ear", "head"), ("hat", "head"),
     ("beard", "head"), ("moustache", "head"), ("glasses", "head"), ("bun", "head"),
     ("backpack", "chest"), ("collar", "chest"), ("torso", "torso"), ("jacket", "torso"), ("vest", "torso"), ("shirt", "torso"),
+]
+
+
+BIRD_WORDS = [  # birds (plan "bird"); first match wins
+    ("wing", "wing"), ("tail", "tail"), ("foot", "foot"), ("leg", "leg"), ("beak", "head"), ("hat", "head"),
+    ("head", "head"), ("neck", "neck"), ("scarf", "chest"), ("body", "body"),
 ]
 
 
@@ -76,6 +82,9 @@ def role_of(name, roles, words=None):
         if word in b.lower():
             return role
     return "torso" if words is BIPED_WORDS else "body"
+
+
+WORDS = {"biped": BIPED_WORDS, "bird": BIRD_WORDS}
 
 
 def side_of(name, v):
@@ -120,7 +129,7 @@ def fit_quad(P, wings):
     """P: {role: [(name, side, verts)]}. Returns joints {bone: (head, tail, parent)}, anchors, scale."""
     J = {"root": ((0, 0, 0), (0, 0, 0.3), None)}
     legs = {}
-    for role, key in (("leg_front", "fl"), ("leg_rear", "rl")):
+    for role, key in (("leg_front", "fl"), ("leg_rear", "rl"), ("leg_mid", "ml")):
         for name, side, v in P.get(role, []):
             top = float(v[:, 2].max())
             m = (v[:, 2] > 0.3 * top) & (v[:, 2] < 0.6 * top)
@@ -137,7 +146,8 @@ def fit_quad(P, wings):
     J["neck"] = ((0, fy - 0.02 * ftop, 1.0 * ftop), hj, "spine")
     J["head"] = (hj, (0, hy0, (hz0 + hz1) / 2), "neck")
     for side, sx in (("L", 1), ("R", -1)):
-        for key, (lx, ly, top, toe), par in (("fl", (fx, fy, ftop, ftoe), "spine"), ("rl", (rx, ry, rtop, rtoe), "hips")):
+        mids = (("ml", legs[("ml", "L")], "spine"),) if ("ml", "L") in legs else ()
+        for key, (lx, ly, top, toe), par in (("fl", (fx, fy, ftop, ftoe), "spine"), ("rl", (rx, ry, rtop, rtoe), "hips")) + mids:
             J[f"{key}_up_{side}"] = ((sx * lx, ly, 0.92 * top), (sx * lx, ly - 0.02 * top, 0.5 * top), par)
             J[f"{key}_low_{side}"] = ((sx * lx, ly - 0.02 * top, 0.5 * top), (sx * lx, ly - 0.03 * top, 0.15 * top), f"{key}_up_{side}")
             J[f"{key}_paw_{side}"] = ((sx * lx, ly - 0.03 * top, 0.15 * top), (sx * lx, toe + 0.1 * top, 0.06 * top), f"{key}_low_{side}")
@@ -172,7 +182,8 @@ def fit_quad(P, wings):
         anchors["tail_tip"] = ("tail3", tuple(tail_pts[-1]))
     for side, (root, mid, tip, lo, hi) in wing_fit.items():
         anchors[f"wing_tip_{side}"] = (f"wing_out_{side}", tuple(tip))
-    fit = dict(fx=fx, fy=fy, ftop=ftop, rx=rx, ry=ry, rtop=rtop, tail_pts=tail_pts, wing_fit=wing_fit)
+    fit = dict(fx=fx, fy=fy, ftop=ftop, rx=rx, ry=ry, rtop=rtop, tail_pts=tail_pts, wing_fit=wing_fit,
+               mtop=legs[("ml", "L")][2] if ("ml", "L") in legs else None)
     return J, anchors, ftop, fit
 
 
@@ -199,6 +210,13 @@ def fit_round(P, mouth_on="body"):
         c = v.mean(axis=0)
         top = float(v[:, 2].max())
         J[f"foot_{side}"] = ((float(c[0]), float(v[:, 1].max()), 0.6 * top), (float(c[0]), float(v[:, 1].min()), 0.4 * top), "root")
+    wing_pts = {}
+    for name, side, v in P.get("wing", []):  # little wings on a round body (Bumblop): one bone each, root to tip
+        c = bv.mean(axis=0)
+        root = v[np.argsort(np.linalg.norm(v - c, axis=1))[:max(4, len(v) // 20)]].mean(axis=0)
+        tip = v[np.argmax(np.linalg.norm(v - root, axis=1))]
+        wing_pts[side] = (root, tip)
+        J[f"wing_{side}"] = (tuple(root), tuple(tip), "body")
     tail_pts = None
     if P.get("tail"):  # a tail chain from the back of the body (Clovermouse, Puffmunk)
         tv = np.concatenate([v for n, s, v in P["tail"]])
@@ -222,7 +240,7 @@ def fit_round(P, mouth_on="body"):
             anchors[f"paw_{side}"] = (f"foot_{side}", J[f"foot_{side}"][1])
     if tail_pts is not None:
         anchors["tail_tip"] = ("tail3", tuple(tail_pts[-1]))
-    return J, anchors, H, dict(arm_pts=arm_pts, bz0=bz0, bz1=bz1, tail_pts=tail_pts)
+    return J, anchors, H, dict(arm_pts=arm_pts, bz0=bz0, bz1=bz1, tail_pts=tail_pts, wing_pts=wing_pts)
 
 
 def _band(v, z, half):
@@ -298,6 +316,114 @@ def fit_biped(P):
         anchors[f"hand_{side}"] = (f"hand_{side}", tuple((w + tip) / 2))
     fit = dict(H=H, hip_z=hip_z, waist_z=waist_z, chest_z=chest_z, shoulder_z=shoulder_z, legs=legs, feet=feet, arm_pts=arm_pts, pony=pony)
     return J, anchors, H, fit
+
+
+def fit_bird(P):
+    """Two-legged birds (Scarecrowl): legs and feet like a person's, an upright body, neck and head,
+    wings spread to the sides (two bones each, like the four-legged plan's wings), and a tail chain."""
+    J = {"root": ((0, 0, 0), (0, 0, 0.2), None)}
+    allv = np.concatenate([v for lst in P.values() for n, s, v in lst])
+    H = float(allv[:, 2].max())
+    legs, feet = {}, {}
+    for name, side, v in P.get("leg", []):
+        top, bot = float(v[:, 2].max()), float(v[:, 2].min())
+        L = top - bot
+        hb, kb = _band(v, top - 0.08 * L, 0.06 * L), _band(v, bot + 0.5 * L, 0.05 * L)
+        legs[side] = dict(hip=np.array([np.median(hb[:, 0]), np.median(hb[:, 1]), top - 0.08 * L]),
+                          knee=np.array([np.median(kb[:, 0]), np.median(kb[:, 1]), bot + 0.5 * L]), top=top, bot=bot)
+    for name, side, v in P.get("foot", []):
+        z0, z1 = float(v[:, 2].min()), float(v[:, 2].max())
+        ab = _band(v, z1 - 0.2 * (z1 - z0), 0.2 * (z1 - z0) + 1e-3)
+        ankle = np.array([np.median(ab[:, 0]), np.median(ab[:, 1]), z1 - 0.2 * (z1 - z0)])
+        toe = np.array([np.median(v[:, 0]), float(v[:, 1].min()), z0 + 0.3 * (z1 - z0)])
+        feet[side] = dict(ankle=ankle, toe=toe)
+    bv = np.concatenate([v for n, s, v in P.get("body", [])] + [v for n, s, v in P.get("chest", [])] or [allv])
+    hv = np.concatenate([v for n, s, v in P.get("head", []) if base_name(n) == "head"] or [v for n, s, v in P.get("head", [])])
+    head_all = np.concatenate([v for n, s, v in P.get("head", [])])
+    bz0, bz1 = float(bv[:, 2].min()), float(bv[:, 2].max())
+    hip_z = float(np.mean([l["hip"][2] for l in legs.values()])) if legs else bz0
+    yc = float(np.median(bv[:, 1]))
+    hz0 = float(hv[:, 2].min())
+    chest_z = bz0 + 0.55 * (bz1 - bz0)
+    J["hips"] = ((0, yc, hip_z), (0, yc, chest_z), "root")
+    J["chest"] = ((0, yc, chest_z), (0, yc, bz1), "hips")
+    hyc = float(np.median(hv[:, 1]))
+    J["neck"] = ((0, yc, bz1), (0, hyc, hz0 + 0.2 * (float(hv[:, 2].max()) - hz0)), "chest")
+    J["head"] = (J["neck"][1], (0, hyc, float(head_all[:, 2].max())), "neck")
+    for side, l in legs.items():
+        ankle = feet[side]["ankle"] if side in feet else np.array([l["knee"][0], l["knee"][1], l["bot"]])
+        J[f"thigh_{side}"] = (tuple(l["hip"]), tuple(l["knee"]), "hips")
+        J[f"shin_{side}"] = (tuple(l["knee"]), tuple(ankle), f"thigh_{side}")
+        if side in feet:
+            J[f"foot_{side}"] = (tuple(ankle), tuple(feet[side]["toe"]), f"shin_{side}")
+    wing_fit = {}
+    for name, side, v in P.get("wing", []):
+        ax = np.abs(v[:, 0])
+        lo, hi = np.percentile(ax, 4), np.percentile(ax, 96)
+        root = v[ax <= lo + 0.06 * (hi - lo)].mean(axis=0)
+        tip = v[ax >= np.percentile(ax, 92)].mean(axis=0)
+        mid_m = np.abs(ax - (lo + hi) / 2) < 0.06 * (hi - lo)
+        mid = v[mid_m].mean(axis=0) if mid_m.sum() > 3 else (root + tip) / 2
+        wing_fit[side] = (root, mid, tip, lo, hi)
+        J[f"wing_in_{side}"] = (tuple(root), tuple(mid), "chest")
+        J[f"wing_out_{side}"] = (tuple(mid), tuple(tip), f"wing_in_{side}")
+    tail_pts = None
+    if P.get("tail"):
+        tv = np.concatenate([v for n, s, v in P["tail"]])
+        tail_pts = chain_points(tv, np.array(J["hips"][0]))
+        par = "hips"
+        for k in range(3):
+            J[f"tail{k + 1}"] = (tuple(tail_pts[k]), tuple(tail_pts[k + 1]), par)
+            par = f"tail{k + 1}"
+    hz1 = float(hv[:, 2].max())
+    anchors = {"mouth": ("head", (0, float(head_all[:, 1].min()), hz0 + 0.35 * (hz1 - hz0))),
+               "chest": ("chest", (0, float(bv[:, 1].min()), chest_z))}
+    for side, (root, mid, tip, lo, hi) in wing_fit.items():
+        anchors[f"wing_tip_{side}"] = (f"wing_out_{side}", tuple(tip))
+    for side, f in feet.items():
+        anchors[f"paw_{side}"] = (f"foot_{side}", tuple(f["toe"]))
+    fit = dict(H=H, hip_z=hip_z, chest_z=chest_z, bz1=bz1, legs=legs, feet=feet, wing_fit=wing_fit, tail_pts=tail_pts)
+    return J, anchors, H, fit
+
+
+def weights_bird(name, role, side, v, fit):
+    z, H = v[:, 2], fit["H"]
+    W = {}
+    if role == "head":
+        W["head"] = np.ones(len(v))
+    elif role == "neck":
+        t = smooth((z - fit["bz1"]) / (0.05 * H))
+        W["head"], W["chest"] = t, 1 - t
+    elif role in ("body", "chest"):
+        t = smooth((z - (fit["chest_z"] - 0.08 * H)) / (0.16 * H))
+        W["chest"], W["hips"] = t, 1 - t
+    elif role == "wing" and side in fit["wing_fit"]:
+        root, mid, tip, lo, hi = fit["wing_fit"][side]
+        t = (np.abs(v[:, 0]) - lo) / max(hi - lo, 1e-6)
+        w_out = smooth((t - 0.35) / 0.3)
+        attach = 1 - smooth(t / 0.12)
+        W[f"wing_out_{side}"] = w_out * (1 - attach)
+        W[f"wing_in_{side}"] = (1 - w_out) * (1 - attach)
+        W["chest"] = attach
+    elif role == "leg" and side in fit["legs"]:
+        l = fit["legs"][side]
+        L = l["top"] - l["bot"]
+        th = smooth((z - (l["knee"][2] - 0.05 * L)) / (0.1 * L))
+        topb = smooth((z - (l["hip"][2] - 0.02 * L)) / (0.08 * L)) * 0.8
+        W[f"thigh_{side}"] = th * (1 - topb)
+        W["hips"] = th * topb
+        W[f"shin_{side}"] = 1 - th
+    elif role == "foot" and side in fit["feet"]:
+        W[f"foot_{side}"] = np.ones(len(v))
+    elif role == "tail" and fit["tail_pts"] is not None:
+        sw = seg_weights(v, fit["tail_pts"])
+        base = smooth(np.linalg.norm(v - fit["tail_pts"][0], axis=1) / (0.25 * np.linalg.norm(fit["tail_pts"][1] - fit["tail_pts"][0]) + 1e-6))
+        for k in range(3):
+            W[f"tail{k + 1}"] = sw[:, k] * (base if k == 0 else 1)
+        W["hips"] = 1 - base
+    else:
+        W["hips"] = np.ones(len(v))
+    return W
 
 
 def weights_biped(name, role, side, v, fit):
@@ -391,9 +517,9 @@ def weights_quad(name, role, side, v, fit):
         for k in range(3):
             W[f"tail{k + 1}"] = sw[:, k] * (base if k == 0 else 1)
         W["hips"] = 1 - base
-    elif role in ("leg_front", "leg_rear"):
-        key = "fl" if role == "leg_front" else "rl"
-        top = fit["ftop"] if key == "fl" else fit["rtop"]
+    elif role in ("leg_front", "leg_rear", "leg_mid"):
+        key = {"leg_front": "fl", "leg_rear": "rl", "leg_mid": "ml"}[role]
+        top = {"fl": fit["ftop"], "rl": fit["rtop"], "ml": fit.get("mtop") or fit["ftop"]}[key]
         up = smooth((z - 0.43 * top) / (0.21 * top))
         paw = 1 - smooth((z - 0.095 * top) / (0.14 * top))
         topb = smooth((z - 0.88 * top) / (0.19 * top)) * 0.7
@@ -427,6 +553,11 @@ def weights_round(name, role, side, v, fit):
         W["body"] = attach
     elif role == "foot":
         W[f"foot_{side}"] = np.ones(len(v))
+    elif role == "wing" and side in fit.get("wing_pts", {}):
+        root, tip = fit["wing_pts"][side]
+        t = np.linalg.norm(v - root, axis=1) / (np.linalg.norm(tip - root) + 1e-6)
+        att = 1 - smooth(t / 0.2)
+        W[f"wing_{side}"], W["body"] = 1 - att, att
     elif role == "tail" and fit.get("tail_pts") is not None:
         pts = fit["tail_pts"]
         sw = seg_weights(v, pts)
@@ -474,13 +605,15 @@ def main():
     info = {}
     for n, o in parts.items():
         v = verts(o)
-        r, s = role_of(n, roles, BIPED_WORDS if plan == "biped" else None), side_of(n, verts(o))
+        r, s = role_of(n, roles, WORDS.get(plan)), side_of(n, verts(o))
         P.setdefault(r, []).append((n, s, v))
         info[n] = (r, s, v)
     if plan == "quad":
         J, anchors, scale, fit = fit_quad(P, wings)
     elif plan == "biped":
         J, anchors, scale, fit = fit_biped(P)
+    elif plan == "bird":
+        J, anchors, scale, fit = fit_bird(P)
     else:
         J, anchors, scale, fit = fit_round(P, cfg.get("mouth", "body"))
     print("roles:", {n: info[n][0] + ("" if info[n][1] is None else "/" + info[n][1]) for n in info})
@@ -502,7 +635,7 @@ def main():
     main_bone = {}
     for n, o in parts.items():
         r, s, v = info[n]
-        W = {"quad": weights_quad, "biped": weights_biped}.get(plan, weights_round)(n, r, s, v, fit)
+        W = {"quad": weights_quad, "biped": weights_biped, "bird": weights_bird}.get(plan, weights_round)(n, r, s, v, fit)
         tot = sum(W.values())
         main_bone[n] = max((b for b in W if b in J), key=lambda b: float(np.mean(W[b] / np.maximum(tot, 1e-6))), default="root")
         for bone, w in W.items():
@@ -567,7 +700,7 @@ def main():
             pose = expand(pose)
             f = int(round(t * FPS)) + 1
             for pb in arm.pose.bones:
-                spec = pose.get(pb.name, {})
+                spec = pose.get(pb.name) or (pose.get("fl_" + pb.name[3:], {}) if pb.name.startswith("ml_") else {})  # middle legs follow the front legs
                 R = rest[pb.name]
                 rx, ry, rz = spec.get("r", (0, 0, 0))
                 qa = Euler((math.radians(rx), math.radians(ry), math.radians(rz)), "XYZ").to_quaternion()
@@ -578,6 +711,16 @@ def main():
                 pb.scale = [s[max(range(3), key=lambda j: abs(Rm[j][i]))] for i in range(3)]
                 for path in ("rotation_quaternion", "location", "scale"):
                     pb.keyframe_insert(path, frame=f, group=pb.name)
+        buzz = [pb for pb in arm.pose.bones if pb.name in ("wing_L", "wing_R")] if plan == "round" else []
+        if buzz and cname != "faint":  # little wings buzz fast on top of every clip (Bumblop)
+            for f in range(1, int(round(dur * FPS)) + 2, 2):
+                a = 16 + 16 * math.sin(2 * math.pi * 6 * (f - 1) / FPS)
+                for pb in buzz:
+                    sgn = -1 if pb.name.endswith("_L") else 1
+                    qa = Euler((0, math.radians(sgn * a), 0), "XYZ").to_quaternion()
+                    R = rest[pb.name]
+                    pb.rotation_quaternion = R.inverted() @ qa @ R
+                    pb.keyframe_insert("rotation_quaternion", frame=f, group=pb.name)
     arm.animation_data.action = bpy.data.actions["idle"]
     bpy.context.scene.render.fps = FPS
     if arg("--preview"):

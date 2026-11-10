@@ -66,9 +66,9 @@ The game tags every one of its 172 creatures with a body type (`look.body`):
 | Body type | Creatures | Status |
 | --- | --- | --- |
 | `quad` (four-legged) | 47 | **Done**, with optional wings (Drizzlon, Lunarion, Coalossus) |
-| `round` | 23 | **Done** (Mushling) |
-| `bird` | 22 | To do |
-| `bug` | 19 | To do |
+| `round` | 23 | **Done** (Mushling). Optional `wing` pairs buzz on top of every clip (Bumblop). |
+| `bird` | 22 | **Done** (`"plan": "bird"`): two legs, wings spread like Scarecrowl's. Waddle, flap and lunge, leap and dive, wing wrap for guard. |
+| `bug` | 19 | Uses `quad` with `mid_leg` pairs (they follow the front legs) and `"gait": "hop"` (Hopsprout) |
 | `serpent` | 19 | To do |
 | `ghost` | 13 | To do |
 | `biped` (two-legged) | 12 | Skeleton **done** (built for people, below); two-legged creatures can use it too |
