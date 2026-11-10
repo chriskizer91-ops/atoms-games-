@@ -19,10 +19,10 @@ The final game model's Blender file (the lead animates from it):
 
 | | Front | Side | Back | Top |
 | --- | --- | --- | --- | --- |
-| Blockout (60,000 triangles), outline overlap (`blockout.jpg`, final parts) | BF | BS | BB | BT |
-| Game model (6,984 triangles), outline overlap | GF | GS | GB | GT |
+| Blockout (60,000 triangles), outline overlap (`blockout.jpg`, final parts) | 89.0% | 90.6% | 86.2% | 52.9% |
+| Game model (6,984 triangles), outline overlap | 88.6% | 89.8% | 85.8% | 52.8% |
 
-- **Texture seen by a picture:** SEEN. The rest (the legs inside the skirt and boots, the inner sides of
+- **Texture seen by a picture:** 60.2%. The rest (the legs inside the skirt and boots, the inner sides of
   the arms, the underside of the hair and the skirt, hidden ends) is coloured from the nearest painted spot
   of the same part.
 - **Why the front and back numbers are low:** the curly hair. Its outline is all flicks and curl tips
@@ -51,7 +51,7 @@ The final game model's Blender file (the lead animates from it):
 - **Triangle budget:** head and hair 3,508 (50%: hair 1,326, head 1,054, fringe 468, low curls 100
   each, cheek curls 80 each, ears 80 each, top curl 80, leaf 60); skirt 930, arms 384 each, torso 256,
   boots 252 each, legs 240 each, hands 120 each, bow tails 80 each, bow 78, neck 60.
-- **Time:** about TIME minutes of clock time in all (about 15 minutes of tracing while Rosa's and Hazel's
+- **Time:** about 50 minutes of clock time in all (about 15 minutes of tracing while Rosa's and Hazel's
   runs rendered, then 3 route runs, the close views and the blockout board), not counting a long pause
   between the second and third run while the usage limit reset.
 

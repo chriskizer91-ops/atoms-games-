@@ -41,8 +41,8 @@ def rule_mask(a, rule):
     if rule == "eye_orange":
         # chapter 1 (Scarecrowl): bright saturated orange / amber eye paint only: not the straw (green too
         # high), not the brown feathers (red too low), not the tan beak (blue too high)
-        return (np.clip((R - 225) / 20, 0, 1) * np.clip((215 - G) / 30, 0, 1) * np.clip((G - 80) / 30, 0, 1)
-                * np.clip((50 - B) / 20, 0, 1))
+        return (np.clip((R - 205) / 25, 0, 1) * np.clip((215 - G) / 30, 0, 1) * np.clip((G - 70) / 30, 0, 1)
+                * np.clip((60 - B) / 25, 0, 1))
     if rule == "bright":
         L = 0.299 * R + 0.587 * G + 0.114 * B
         return np.clip((L - 170) / 50, 0, 1)

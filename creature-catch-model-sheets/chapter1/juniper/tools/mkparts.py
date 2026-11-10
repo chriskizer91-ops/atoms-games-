@@ -33,10 +33,10 @@ add(name="ear", kind="m", axis="z", n=2.2, relief="none", smooth=2, lo_weight=3.
            "side": P("518,280 538,274 556,282 566,302 564,326 552,342 532,346 518,334 514,308")})
 # ---- spiky red hair: one mass sliced upward through the spikes' bases, its front edge (side picture)
 # stepping back from the forehead to behind the ears; a fringe; the big top spike; a lock at each temple
-add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.4, nomask=["front", "side"],
+add(name="hair", kind="c", axis="z", n=2.2, relief="grain", smooth=8, lo_weight=2.0, nomask=["front", "side"],
     round_ends={"start": 0.02, "end": 0.05},
-    views={"front": mir("509,70 570,78 615,98 648,125 672,158 688,195 692,235 686,270 670,305 645,335 618,360 509,368"),
-           "side": P("430,90 500,66 575,68 640,92 680,128 705,170 720,215 718,260 702,300 675,338 640,364 600,382 572,380 570,345 572,300 568,276 530,262 485,252 455,232 430,200 415,160 418,120")})
+    views={"front": mir("509,72 568,80 610,100 640,127 662,160 676,195 680,235 674,270 660,305 640,335 616,360 509,368"),
+           "side": P("430,90 500,68 572,70 635,93 674,129 698,170 710,215 708,260 694,300 670,337 637,363 600,382 572,380 570,345 572,300 568,276 530,262 485,252 455,232 430,200 415,160 418,120")})
 add(name="hair_bangs", kind="c", axis="z", n=2.0, relief="grain", smooth=4, lo_weight=2.4, nomask=["front", "side"],
     round_ends={"start": 0.02, "end": 0.0}, paint_skip=["back"],
     views={"front": mir("509,140 560,145 588,162 596,200 592,232 578,252 556,262 530,280 509,284"),
@@ -45,6 +45,17 @@ add(name="hair_spike", kind="one", axis="z", n=2.0, relief="grain", smooth=3, lo
     round_ends={"start": 0.0, "end": 0.012}, paint_skip=["back"],
     views={"front": P("440,28 475,32 510,45 540,62 558,85 565,115 478,115 482,90 472,62 455,42"),
            "side": P("452,22 485,26 520,42 548,62 565,85 575,115 495,115 498,90 488,62 470,38")})
+# the two biggest spikes at each side, sticking out sideways past the mass (mirrored pairs), so the
+# outline breaks into points instead of a round bowl; flat fins facing forward (`cap` keeps them 5 cm
+# thick front to back), so they read as locks, not horns
+add(name="hair_spike_side", kind="m", axis="z", n=2.0, relief="grain", smooth=2, lo_weight=2.0, nomask=["front", "side"],
+    round_ends={"start": 0.004, "end": 0.004}, paint_skip=["back"], cap={"y": 0.05},
+    views={"front": P("640,162 672,170 700,180 724,192 702,205 674,217 640,230"),
+           "side": P("540,162 600,160 606,195 600,230 540,232")})
+add(name="hair_spike_low", kind="m", axis="z", n=2.0, relief="grain", smooth=2, lo_weight=1.8, nomask=["front", "side"],
+    round_ends={"start": 0.004, "end": 0.004}, cap={"y": 0.05},
+    views={"front": P("632,232 668,240 698,250 722,258 700,268 668,280 632,294"),
+           "side": P("560,232 620,232 626,262 620,294 560,296")})
 add(name="hair_lock", kind="m", axis="z", n=2.0, relief="grain", smooth=3, lo_weight=1.8, nomask=["front", "side"],
     round_ends={"start": 0.004, "end": 0.0},
     views={"front": P("586,258 616,258 623,300 619,340 610,372 600,350 591,310"),
@@ -53,8 +64,8 @@ add(name="neck", kind="c", axis="z", n=2.0, relief="none", smooth=3, lo_weight=0
     views={"front": P("468,365 550,365 552,432 466,432"),
            "side": P("448,365 530,365 532,432 452,432")})
 # ---- scarf, jacket (torso), belt cube, arms -----------------------------------------------------
-add(name="collar_scarf", kind="c", axis="z", n=2.2, relief="grain", smooth=4, lo_weight=1.0, nomask=["front", "side"],
-    round_ends={"start": 0.012, "end": 0.01},
+add(name="collar_scarf", kind="c", axis="z", n=2.2, relief="grain", smooth=4, lo_weight=1.4, n_scale=3.0, nomask=["front", "side"],
+    round_ends={"start": 0.006, "end": 0.005},
     views={"front": mir("509,376 580,378 625,390 640,414 633,450 509,458"),
            "side": P("410,394 470,380 560,378 620,386 640,410 632,442 600,470 500,472 420,466 400,440")})
 # the tail hanging down his back on the right; a thin turned blade (slab) so it lies out from the back

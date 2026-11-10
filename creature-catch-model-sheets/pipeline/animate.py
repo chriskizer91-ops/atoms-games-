@@ -771,7 +771,10 @@ def preview(bpy, arm, clips, outdir, mesh):
     sc.collection.objects.link(sun)
     w = bpy.data.worlds.new("w")
     w.use_nodes = True
-    w.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.45
+    # a light grey sky light, so the parts the sun can't reach (and the arms' cast shadows) stay readable, not black
+    w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.7, 0.7, 0.72, 1)
+    w.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.6
+    sun.data.angle = 0.25  # softer shadow edges
     sc.world = w
     for cname, (dur, keys) in clips:
         arm.animation_data.action = bpy.data.actions[cname]

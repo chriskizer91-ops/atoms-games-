@@ -6,4 +6,4 @@ D=$R/chapter1/juniper/tools
 S=$R/chapter1/source/juniper
 $PY -I $R/pipeline/make_views.py views 1.55 $S/juniper_front.png $S/juniper_side.png $S/juniper_back.png $S/juniper_top.png
 # side picture: paint out the eye, eyebrow and grin with skin colour (the front picture paints the face)
-$PY -I $D/inpaint_skin.py views/views.json side "438,288,18,28" "437,246,26,10" "422,355,18,15" --sigma 10
+$PY -I $D/inpaint_skin.py views/views.json side "442,286,24,32" "437,246,28,12" "425,352,22,18" --sigma 10

@@ -20,7 +20,7 @@ The final game model's Blender file (the lead animates from it):
 
 | | Front | Side | Back | Top |
 | --- | --- | --- | --- | --- |
-| Blockout (60,000 triangles), outline overlap (`blockout.jpg`, final parts) | BF | BS | BB | BT |
+| Blockout (60,000 triangles), outline overlap (`blockout.jpg`, final parts) | 90.7% | 89.1% | 89.0% | 47.2% |
 | Game model (6,992 triangles), outline overlap | 90.3% | 88.6% | 88.9% | 47.0% |
 
 - **Texture seen by a picture:** 54.0%. The rest (the legs under the skirt, the inner sides of the arms,

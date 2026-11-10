@@ -53,8 +53,9 @@ parts.append(dict(name="head_hat", kind="c", axis="z", n=2.0, relief="grain", re
                   paint_box_skip={"top": [[760, 150, 960, 330]]},
                   views={"front": sym(P("768,85 815,90 860,140 885,195 960,212 1030,240 1055,275 1050,310 "
                                         "1010,330 900,336 768,338")),
+                         # the brim is higher in front (over the eyes) than at the back, as in the side picture
                          "side": P("790,82 860,78 905,130 935,190 990,215 1025,265 1030,320 960,334 800,338 "
-                                   "660,330 575,300 548,262 580,222 660,205 735,190 760,130")}))
+                                   "722,334 702,300 640,292 575,292 548,262 580,222 660,205 735,190 760,130")}))
 # the tip runs sideways (to the creature's right) and back, so it is sliced along its run: the front picture
 # gives its thickness, and a drawn band from above (following the side picture: it bends back 21 cm) its place
 parts.append(dict(name="head_hat_tip", kind="one", axis="x", n=2.0, relief="grain", relief_gain=0.7, smooth=3,

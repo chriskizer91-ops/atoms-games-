@@ -121,6 +121,19 @@ Copied unchanged from `../player-b/tools/`: `route_small.sh`, `build.py`, `parts
 Rebuild (from the work folder): `bash tools/redo_views.sh`, then `python -I tools/mkparts.py parts.json`,
 then `PY=... bash tools/route_small.sh parts.json views/views.json OUT 7000 rosa`.
 
+## The dark stripe in the animated poses (checked after the build)
+
+The lead saw a dark brown-black stripe down her right side, from the armpit towards the apron hem, when
+the right arm comes forward (point, throw, talk). **It is a cast shadow, not paint.** The colour texture
+has no dark paint there: with the arm raised, the side of the bodice and skirt under it is plain red dress
+and apron (rendered unlit, texture only). The stripe is the forward arm's shadow from the preview's single
+sun. The preview's world light is the default near-black colour (strength 0.45), so shadows come out
+almost black. That is also why the legs look black under the skirt in those renders. `shadow_check.jpg`
+shows the same pose and light with the sun's shadow on (the stripe appears) and off (the dress is
+clean). Repainting can't remove it, so the model is unchanged. A lighter fill (a grey world colour or a
+second soft light) in the preview or in the game removes it. Hazel's preview frames show the same shadow
+(plus her real satchel strap, which is paint).
+
 ## What still looks wrong
 
 - **The hair is smoother and rounder than the picture's** coils and waves, which are paint. Over the

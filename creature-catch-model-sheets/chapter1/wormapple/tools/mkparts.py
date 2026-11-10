@@ -48,6 +48,7 @@ parts.append(dict(name="body_stem", kind="one", axis="z", n=2.0, relief="grain",
 # the side), running from the stem out to the creature's right and back
 parts.append(dict(name="body_leaf", kind="one", axis="z", n=2.0, relief="grain", relief_gain=0.5, smooth=3,
                   lo_weight=1.5, slab={"thick": 0.024, "dir": -1}, round_ends={"start": 0.006, "end": 0.006},
+                  crange=[0.347, 1.0],  # starts just above the apple's top, so no green sliver lies on the apple
                   paint_skip=["top"],
                   views={"front": P("190,180 240,140 330,90 420,60 500,58 570,80 615,130 630,190 615,260 590,300 "
                                     "520,330 420,340 330,310 260,250 215,205"),

@@ -50,15 +50,21 @@ parts.append(dict(
 parts.append(dict(
     name="head_antenna_tip", kind="m", axis="z", n=2.0, relief="none", smooth=2, lo_weight=4.0,
     round_ends={"start": 0.025, "end": 0.025}, paint_skip=["side_far"],
+    # one yellow, lightly shaded: each picture's white highlight sat in a different place (lumpy-looking balls)
+    paint_solid={"color": "#fcc010", "shade": 0.3},
     views={"front": circle(903, 117, 67), "side": circle(386, 113, 70)}))
 parts.append(dict(
     name="wing", kind="m", axis="z", n=2.0, relief="none", smooth=4, lo_weight=1.4,
     # dir -1: each wing runs from its root high on the back out and a little forward to its tip beside
     # the ear, so the back picture sees the whole wing standing off the round back (with dir 1 the root
     # half sank into the ball) and the front picture sees the tips beside the ears, as both draw them
-    slab={"thick": 0.03, "dir": -1}, round_ends={"start": 0.02, "end": 0.02}, paint_skip=["side_far"], paint_power=4,
+    # the front picture's ears and head tufts overlap the wings, so it is not printed on them
+    slab={"thick": 0.03, "dir": -1}, round_ends={"start": 0.02, "end": 0.02}, paint_skip=["side_far", "front"],
+    paint_power=4,
     # moved back a little; the side picture is read shifted the same amount so its wing paint stays on the wing
     offset=[0, WING_BACKSET, 0], paint_shift={"side": [-WING_BACKSET * 2260, 0]},
+    # the wing tips reach down beside the ears, where the back picture draws ear fur
+    paint_box_skip={"back": [[0, 590, 262, 1254], [991, 590, 1254, 1254]]},
     views={"back": P("142,380 186,318 255,300 330,306 400,338 450,390 485,460 490,530 470,592 420,628 350,634 "
                      "262,605 186,545 142,472 128,420"),
            "side": P("650,560 660,480 700,400 760,330 830,290 900,290 950,320 970,380 965,450 930,520 870,575 "
