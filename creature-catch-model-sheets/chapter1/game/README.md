@@ -98,30 +98,19 @@ The person ids match the game's names: `player-a`, `player-b`, `juniper`, `willo
 
 ## What's still the old model
 
-These have no painted model yet, so they keep the earlier demo's model built in code. Each one switches over by
-itself once its model is packed.
+Every creature and person you meet in Chapter 1 now has a painted model: all 12 people (both player looks,
+Juniper, Elder Willow, Tinker, Rosa, Hazel, Pip, Fern, Ranger Oakley, Farmer Bramble and the Farm Kid) and all 14
+creatures (Drizzlon, Mossback, Embroak, Clovermouse, Puffmunk, Fleecling, Hopsprout, Tuftail, Pebblepup, Bumblop,
+Dewt, Dandylion, Wormapple and Scarecrowl).
 
-- **People:**
-  - Juniper
-  - Elder Willow
-  - Tinker
-  - Rosa
-  - Hazel
-  - Pip
-  - Fern
-  - Ranger Oakley
-  - Farmer Bramble
-  - the Farm Kid
-- **Creatures:** Hopsprout (Meadow Path), and the Grassland creatures: Tuftail, Pebblepup, Bumblop, Dewt and Dandylion.
-  Farmer Bramble's team is Hopsprout, Pebblepup and Tuftail. All the evolved forms are old models too.
-- **Painted models already in:** Drizzlon, Mossback, Embroak, Clovermouse, Puffmunk, Fleecling and the player (both
-  looks).
+Only the **evolved forms** keep the earlier demo's model built in code. Chapter 1 has evolving switched off, so you
+only see them with `?evolve`.
 
 ## What doesn't work yet, or could be better
 
-- **No people models except the player.** The carried things have only been tried on the player's models as
-  stand-ins (`screenshots/wide_08_carried_things_on_stand_in_models.png`). They may need small position changes once
-  each person's own model arrives.
+- **The carried things** (Willow's staff, Bramble's pitchfork, Tinker's net, Rosa's tray, Fern's basket, Pip's cubes)
+  are placed on each person's standing pose, so they sit level while the person stands. They swing with the hand
+  when the person walks or waves.
 - **Rosa's tray is held at hip height.** Our people have no carrying pose, so the tray sits where the hand hangs.
 - **Shared clips.** Our creatures share clips by body type, so a spin, roll or shake is still the old whole-body
   motion over the idle clip. It reads fine but isn't hand-made.

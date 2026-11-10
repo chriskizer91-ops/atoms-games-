@@ -1,0 +1,47 @@
+{
+ "plan": "round",
+ "wings": false,
+ "gait": null,
+ "scale": 0.4481,
+ "anchors": {
+  "mouth": {
+   "bone": "head",
+   "pos": [
+    0.0,
+    0.1935,
+    0.1943
+   ]
+  },
+  "chest": {
+   "bone": "body",
+   "pos": [
+    0.0,
+    0.2022,
+    0.1501
+   ]
+  },
+  "cap_top": {
+   "bone": "head",
+   "pos": [
+    0.0,
+    0.2582,
+    0.146
+   ]
+  }
+ },
+ "clips": {
+  "idle": 2.4,
+  "walk": 0.9,
+  "physical": 1.1,
+  "special": 1.1,
+  "strong_physical": 1.8,
+  "strong_special": 2.0,
+  "boost": 1.4,
+  "boost_guard": 1.4,
+  "status": 1.4,
+  "hit": 0.7,
+  "faint": 1.6,
+  "send_out": 0.9
+ },
+ "events": {}
+}

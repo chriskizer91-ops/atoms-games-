@@ -1,0 +1,71 @@
+{
+ "plan": "bird",
+ "wings": false,
+ "gait": null,
+ "scale": 0.7422,
+ "anchors": {
+  "mouth": {
+   "bone": "head",
+   "pos": [
+    0.0,
+    0.4562,
+    0.2114
+   ]
+  },
+  "chest": {
+   "bone": "chest",
+   "pos": [
+    0.0,
+    0.2901,
+    0.1649
+   ]
+  },
+  "wing_tip_L": {
+   "bone": "wing_out_L",
+   "pos": [
+    0.3878,
+    0.3996,
+    0.0118
+   ]
+  },
+  "wing_tip_R": {
+   "bone": "wing_out_R",
+   "pos": [
+    -0.3878,
+    0.3996,
+    0.0118
+   ]
+  },
+  "paw_L": {
+   "bone": "foot_L",
+   "pos": [
+    0.1146,
+    0.0204,
+    0.1471
+   ]
+  },
+  "paw_R": {
+   "bone": "foot_R",
+   "pos": [
+    -0.1146,
+    0.0204,
+    0.1471
+   ]
+  }
+ },
+ "clips": {
+  "idle": 2.4,
+  "walk": 0.8,
+  "physical": 1.1,
+  "special": 1.1,
+  "strong_physical": 1.9,
+  "strong_special": 2.0,
+  "boost": 1.5,
+  "boost_guard": 1.4,
+  "status": 1.5,
+  "hit": 0.7,
+  "faint": 1.8,
+  "send_out": 0.9
+ },
+ "events": {}
+}

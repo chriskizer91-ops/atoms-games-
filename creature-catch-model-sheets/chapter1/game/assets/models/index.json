@@ -11,7 +11,9 @@
   "mossback",
   "pebblepup",
   "puffmunk",
-  "tuftail"
+  "scarecrowl",
+  "tuftail",
+  "wormapple"
  ],
  "people": [
   "bramble",
@@ -49,8 +51,10 @@
   "player-b": 926623,
   "puffmunk": 893281,
   "rosa": 826679,
+  "scarecrowl": 930885,
   "tinker": 908885,
   "tuftail": 829522,
-  "willow": 814522
+  "willow": 814522,
+  "wormapple": 475790
  }
 }
