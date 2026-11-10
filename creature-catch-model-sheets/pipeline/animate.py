@@ -40,8 +40,10 @@ ROLE_WORDS = [  # first match wins
 
 BIPED_WORDS = [  # people (plan "biped"); first match wins
     ("ponytail", "hair_tail"), ("hand", "hand"), ("glove", "hand"), ("foot", "foot"), ("boot", "foot"), ("shoe", "foot"),
-    ("arm", "arm"), ("leg", "leg"), ("hips", "hips"), ("belt", "hips"), ("cube", "hips"), ("neck", "neck"),
-    ("head", "head"), ("hair", "head"), ("face", "head"), ("nose", "head"), ("ear", "head"), ("hat", "head"),
+    ("skirt", "skirt"), ("dress", "skirt"), ("robe", "skirt"), ("cloak", "cloak"), ("cape", "cloak"),
+    ("arm", "arm"), ("leg", "leg"), ("hips", "hips"), ("belt", "hips"), ("cube", "hips"), ("satchel", "hips"), ("bag", "hips"),
+    ("neck", "neck"), ("head", "head"), ("hair", "head"), ("face", "head"), ("nose", "head"), ("ear", "head"), ("hat", "head"),
+    ("beard", "head"), ("moustache", "head"), ("glasses", "head"), ("bun", "head"),
     ("backpack", "chest"), ("collar", "chest"), ("torso", "torso"), ("jacket", "torso"), ("vest", "torso"), ("shirt", "torso"),
 ]
 
@@ -332,6 +334,22 @@ def weights_biped(name, role, side, v, fit):
         W["chest"] = attach
     elif role == "hand":
         W[f"hand_{side}"] = np.ones(len(v))
+    elif role == "skirt" and fit["legs"]:
+        # hangs from the hips and swings with the thighs: the lower it is, the more it follows the leg on its side
+        L = float(np.mean([l["top"] - l["bot"] for l in fit["legs"].values()]))
+        t = smooth((fit["hip_z"] - z) / (0.5 * L)) * 0.7
+        left = np.clip(0.5 + v[:, 0] / (0.12 * H), 0, 1)
+        W["hips"] = 1 - t
+        if "L" in fit["legs"]:
+            W["thigh_L"] = t * left
+        if "R" in fit["legs"]:
+            W["thigh_R"] = t * (1 - left)
+    elif role == "cloak":
+        d = fit["shoulder_z"] - fit["hip_z"]
+        wc = smooth((z - (fit["chest_z"] - 0.2 * d)) / (0.3 * d))
+        wh = 1 - smooth((z - (fit["hip_z"] + 0.1 * d)) / (0.4 * d))
+        W["chest"], W["hips"] = wc, wh * (1 - wc)
+        W["spine"] = np.clip(1 - wc - wh * (1 - wc), 0, 1)
     elif role == "leg" and side in fit["legs"]:
         l = fit["legs"][side]
         L = l["top"] - l["bot"]
