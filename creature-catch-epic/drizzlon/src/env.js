@@ -90,11 +90,11 @@ export function makeEnvironment(renderer, scene, shared, opts = {}) {
   // ---- grass blades (thin out toward the sparring ground)
   const R = rng(11);
   const blade = new THREE.BufferGeometry();
-  const bw = 0.012;
+  const bw = 0.008;
   blade.setAttribute('position', new THREE.Float32BufferAttribute([-bw, 0, 0, bw, 0, 0, -bw * 0.7, 0.5, 0, bw * 0.7, 0.5, 0, 0, 1, 0], 3));
   blade.setIndex([0, 1, 2, 2, 1, 3, 2, 3, 4]);
   blade.setAttribute('normal', new THREE.Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 3));
-  const N = opts.grass ?? 16000;
+  const N = opts.grass ?? 22000;
   const gm = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, side: THREE.DoubleSide });
   gm.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = shared.uTime;
@@ -105,6 +105,8 @@ export function makeEnvironment(renderer, scene, shared, opts = {}) {
         float hh = position.y; vH = hh; vTint = fract(ip.x * 12.9898 + ip.z * 78.233);
         float w = sin(uTime * 1.7 + ip.x * 1.3 + ip.z * 0.9) * 0.10 + sin(uTime * 3.1 + ip.x * 3.7) * 0.04;
         transformed.x += w * hh * hh; transformed.z += w * 0.5 * hh * hh;
+        // blades right in front of the lens lie down so they never block the view
+        transformed.y *= smoothstep(0.7, 2.0, distance(ip.xyz, cameraPosition));
         // shockwaves flatten the grass outward
         vec2 dp = ip.xz - uPush.xy; float dl = length(dp);
         float push = uPush.w * exp(-pow((dl - uPush.z) / 0.5, 2.0));
@@ -124,7 +126,7 @@ export function makeEnvironment(renderer, scene, shared, opts = {}) {
     const keep = rr < 1.5 ? 0.02 : rr < 2.4 ? (rr - 1.5) / 0.9 * 0.8 : 1;
     if (R() > keep) continue;
     p.set(x, 0, z); e.set((R() - 0.5) * 0.5, R() * Math.PI, (R() - 0.5) * 0.5); q.setFromEuler(e);
-    const h = 0.07 + R() * 0.13 + (rr > 4 ? R() * 0.12 : 0);
+    const h = 0.05 + R() * 0.10 + (rr > 4 ? R() * 0.12 : 0);
     s.set(1 + R(), h, 1);
     grass.setMatrixAt(placed++, m4.compose(p, q, s));
   }

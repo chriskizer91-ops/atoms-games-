@@ -1,0 +1,74 @@
+<title>Drizzlon 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: the clearing fills the screen; a low dock of move buttons sits under it, like a trainer's command panel. */
+:root {
+  color-scheme: dark;
+  --deep: #07121f;          /* night-lake navy: page ground and dock */
+  --dock: #0c1c2e;
+  --raise: #132a44;         /* button face */
+  --line: #24415f;
+  --fg: #eef6ff;
+  --muted: #9bb3cc;
+  --water: #49b8ff;         /* Water-type moves, Drizzlon's own blue */
+  --mint: #86ecd6;          /* its belly plates: used for the signature move and active states */
+  --normal: #d2c8b4;        /* Normal-type moves */
+  --display: "Bricolage Grotesque", "Trebuchet MS", "Segoe UI", sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--deep); color: var(--fg); font-family: var(--body); overflow: hidden; -webkit-tap-highlight-color: transparent; }
+.app { height: 100%; display: flex; flex-direction: column; }
+.stage { position: relative; flex: 1 1 auto; min-height: 0; background: #7fb6ee; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#view:active { cursor: grabbing; }
+
+.hud { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+  padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.hud-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.plate { background: color-mix(in srgb, var(--deep) 72%, transparent); border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius: 14px; padding: 8px 14px 9px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.plate h1 { margin: 0; font: 800 clamp(1.35rem, 4.5vw, 1.9rem)/1 var(--display); letter-spacing: -0.01em; }
+.plate p { margin: 5px 0 0; font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+@media (max-width: 520px) { .plate .sub { display: none; } }
+.chip { display: inline-block; font: 700 0.66rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--deep); background: var(--water); padding: 4px 7px; border-radius: 999px; }
+.toggles { display: flex; gap: 8px; pointer-events: auto; }
+.toggle { font: 600 0.78rem/1 var(--body); color: var(--fg); background: color-mix(in srgb, var(--deep) 72%, transparent); border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.toggle { white-space: nowrap; }
+.toggle b { font-weight: 600; color: var(--mint); }
+.toggle[aria-pressed="true"] { border-color: var(--mint); }
+.toggle:focus-visible, .move:focus-visible, .ghost:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+
+.caption { align-self: center; max-width: min(34rem, 100%); text-align: center; opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s; }
+.caption.on { opacity: 1; transform: none; }
+.caption .cap-row { display: inline-flex; align-items: center; gap: 8px; }
+.caption strong { font: 800 clamp(1.2rem, 4.2vw, 1.7rem)/1.05 var(--display); text-shadow: 0 2px 10px rgba(4, 12, 24, .75); }
+.caption span { display: block; margin-top: 4px; font-size: 0.86rem; color: var(--fg); text-shadow: 0 1px 6px rgba(4, 12, 24, .9); text-wrap: balance; }
+.caption.t-normal .chip { background: var(--normal); }
+.caption.t-motion .chip { background: var(--mint); }
+
+.dock { flex: 0 0 auto; background: var(--dock); border-top: 1px solid var(--line);
+  padding-block: 10px 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.dock-in { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; }
+.row2 .ghost { order: 3; min-height: 44px; }
+.move { appearance: none; text-align: left; color: var(--fg); background: var(--raise); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px 8px; cursor: pointer; min-width: 0;
+  display: flex; flex-direction: column; gap: 4px; transition: transform .08s, border-color .15s, background .15s; }
+.move:active { transform: translateY(1px) scale(.985); }
+.mv-name { font: 700 0.92rem/1.1 var(--display); overflow-wrap: anywhere; }
+.mv-meta { font-size: 0.68rem; color: var(--muted); display: flex; align-items: baseline; gap: 5px; min-width: 0; }
+.mv-meta i { width: 7px; height: 7px; border-radius: 50%; background: var(--normal); flex: none; }
+.t-water .mv-meta i { background: var(--water); }
+.t-motion .mv-meta i { background: var(--mint); }
+.move.sig { border-color: color-mix(in srgb, var(--mint) 55%, var(--line)); }
+.move.playing { background: color-mix(in srgb, var(--water) 30%, var(--raise)); border-color: var(--water); }
+.move.queued { border-style: dashed; border-color: var(--mint); }
+.ghost { appearance: none; font: 600 0.82rem/1 var(--body); color: var(--mint); background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; cursor: pointer; }
+.hint { margin: 0; font-size: 0.7rem; color: var(--muted); text-align: center; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--deep); color: var(--fg); font: 700 1.1rem var(--display); text-align: center; padding: 24px; z-index: 5; }
+@media (min-width: 760px) { .grid { grid-template-columns: repeat(9, 1fr); } .row2 { grid-template-columns: 1fr 1fr 1fr; max-width: 30rem; margin: 0 auto; width: 100%; } }
+@media (max-height: 520px) { .mv-meta, .hint { display: none; } .dock { padding-block: 6px; } }
+@media (prefers-reduced-motion: reduce) { .caption, .move { transition: none; } }
+</style>

@@ -1,0 +1,29 @@
+<div class="app">
+  <div class="stage" id="stage">
+    <canvas id="view" aria-label="Drizzlon, a blue water dragon, facing a wooden training dummy in a meadow"></canvas>
+    <div class="hud">
+      <div class="hud-top">
+        <div class="plate">
+          <h1>Drizzlon</h1>
+          <p><span class="chip">Water</span> <span class="sub">the little water dragon</span></p>
+        </div>
+        <div class="toggles">
+          <button class="toggle" id="slow" type="button" aria-pressed="false">Slow-mo</button>
+          <button class="toggle" id="cam" type="button" aria-pressed="true">Camera <b>Auto</b></button>
+        </div>
+      </div>
+      <div class="caption" id="caption">
+        <div class="cap-row"><span class="chip" id="cap-type">Water</span><strong id="cap-name"></strong></div>
+        <span id="cap-blurb"></span>
+      </div>
+    </div>
+    <div class="loading" id="loading">Waking Drizzlon…</div>
+  </div>
+  <div class="dock">
+    <div class="dock-in">
+      <div class="grid" id="moves"></div>
+      <div class="row2" id="gaits"><button class="ghost" id="play-all" type="button">Play all nine</button></div>
+      <p class="hint">Drag to look around · pinch or scroll to zoom</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+{
+  "name": "drizzlon-3d",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sculpt": "python3 tools/sculpt.py --h 0.0016 --tris 150000",
+    "build": "node tools/build.mjs",
+    "dev": "python3 dev/serve.py 8766"
+  },
+  "dependencies": { "three": "0.169.0" },
+  "devDependencies": { "esbuild": "^0.24.0" }
+}

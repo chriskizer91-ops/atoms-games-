@@ -84,6 +84,16 @@ export class Stage {
     s.w += ((s.active ? 1 : 0) - s.w) * (1 - Math.exp(-dt * (s.active ? 5 : 3.2)));
     let fov = 30;
     if (s.w > 0.001) { const k = s.w * s.w * (3 - 2 * s.w); _a.lerp(s.pos, k); _b.lerp(s.look, k); fov = 30 + (s.fov - 30) * k; }
+    // a tall, narrow screen: widen the lens first, then step back, and lift the camera clear of the grass
+    const fit = Math.max(1, 1.5 / cam.aspect);
+    if (fit > 1) {
+      const wide = Math.min(1.5, Math.sqrt(fit));
+      const back = fit / (Math.tan(fov * wide * Math.PI / 360) / Math.tan(fov * Math.PI / 360));
+      fov *= wide;
+      _a.sub(_b).multiplyScalar(Math.max(1, back)).add(_b);
+      _a.y = Math.max(_a.y, 0.3 + 0.12 * (fit - 1));
+    }
+    _a.y = Math.max(_a.y, 0.1);
     if (!this.camInit || dt === 0) { this.camPos.copy(_a); this.camLook.copy(_b); this.camInit = true; }
     const kk = 1 - Math.exp(-dt * 14);
     this.camPos.lerp(_a, kk); this.camLook.lerp(_b, kk);
