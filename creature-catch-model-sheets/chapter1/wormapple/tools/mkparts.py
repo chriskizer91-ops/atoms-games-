@@ -31,7 +31,7 @@ parts.append(dict(name="body", kind="c", axis="z", n=2.0, relief="none", smooth=
                   # green smear on the apple's flank; the top picture's stem and leaf are drawn elsewhere
                   # and the front, side and back pictures' dark stem dimple would print ghost dimples on the
                   # apple's top in front of, beside and behind the stem
-                  paint_box_skip={"side": [[130, 500, 415, 925], [480, 350, 720, 420]],
+                  paint_box_skip={"side": [[130, 500, 415, 925], [480, 350, 720, 420], [650, 280, 1000, 348]],
                                   "top": [[780, 840, 1190, 1080]],
                                   # (and where the leaf hangs over the apple's shoulder in the front and back pictures)
                                   "front": [[520, 370, 760, 450], [370, 285, 615, 348]],

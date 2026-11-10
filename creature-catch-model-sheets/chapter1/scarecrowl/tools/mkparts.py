@@ -20,8 +20,8 @@ def P(s):
 
 parts = []
 # ---- body: the feathered trunk, sliced upward
-parts.append(dict(name="body", kind="c", axis="z", n=2.2, relief="fur_soft", smooth=6, lo_weight=1.2,
-                  round_ends={"start": 0.03, "end": 0.03}, paint_skip=["top"],
+parts.append(dict(name="body", kind="c", axis="z", n=2.2, relief="fur_soft", smooth=12, lo_weight=1.2,
+                  round_ends={"start": 0.03, "end": 0.03}, paint_skip=["top"], nomask=["front", "side"],
                   views={"front": sym(P("768,425 860,432 912,470 935,540 942,620 935,700 905,760 860,800 "
                                         "800,822 768,826")),
                          "side": P("700,430 800,438 870,470 912,540 928,620 922,700 900,760 860,805 800,815 "

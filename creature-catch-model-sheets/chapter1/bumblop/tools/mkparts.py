@@ -19,7 +19,7 @@ WING_SIDE = [[808, 456, 165, 172]]
 WING_TOP = [[296, 760, 160, 128], [958, 760, 160, 128]]
 # where the top picture draws the antennae over the body
 ANT_TOP = [[450, 410, 115, 110], [805, 410, 115, 110]]
-WING_BACKSET = 0.04  # metres: the wings sit this much further back than the side picture draws them
+WING_BACKSET = 0.03  # metres: the wings sit this much further back than the side picture draws them
 
 parts = []
 parts.append(dict(
@@ -53,9 +53,11 @@ parts.append(dict(
     views={"front": circle(903, 117, 67), "side": circle(386, 113, 70)}))
 parts.append(dict(
     name="wing", kind="m", axis="z", n=2.0, relief="none", smooth=4, lo_weight=1.4,
-    slab={"thick": 0.03, "dir": 1}, round_ends={"start": 0.02, "end": 0.02}, paint_skip=["side_far", "front"], paint_power=4,
-    # moved back so the wing stands behind the round back instead of sinking into it; the side picture is
-    # read shifted the same amount so its wing paint still lands on the wing
+    # dir -1: each wing runs from its root high on the back out and a little forward to its tip beside
+    # the ear, so the back picture sees the whole wing standing off the round back (with dir 1 the root
+    # half sank into the ball) and the front picture sees the tips beside the ears, as both draw them
+    slab={"thick": 0.03, "dir": -1}, round_ends={"start": 0.02, "end": 0.02}, paint_skip=["side_far"], paint_power=4,
+    # moved back a little; the side picture is read shifted the same amount so its wing paint stays on the wing
     offset=[0, WING_BACKSET, 0], paint_shift={"side": [-WING_BACKSET * 2260, 0]},
     views={"back": P("142,380 186,318 255,300 330,306 400,338 450,390 485,460 490,530 470,592 420,628 350,634 "
                      "262,605 186,545 142,472 128,420"),
