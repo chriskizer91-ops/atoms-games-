@@ -1,0 +1,33 @@
+{
+ "texels": 3039489,
+ "seen_by_a_picture": 54.4,
+ "painted_by": {
+  "front": 533504,
+  "back": 463433,
+  "side+x": 289190,
+  "side-x": 261008,
+  "top": 113369
+ },
+ "parts": [
+  "head",
+  "ear_L",
+  "ear_R",
+  "hair",
+  "neck",
+  "hat",
+  "hat_brim",
+  "hat_feather",
+  "cloak",
+  "torso",
+  "belt_compass",
+  "belt_pouch",
+  "arm_L",
+  "arm_R",
+  "hand_L",
+  "hand_R",
+  "leg_L",
+  "leg_R",
+  "boot_L",
+  "boot_R"
+ ]
+}

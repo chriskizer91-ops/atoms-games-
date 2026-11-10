@@ -4,7 +4,7 @@
 
 ![close views](closeups.jpg)
 
-**Result:** a TRIS-triangle game model (`oakley.glb`, SIZE MB) with one colour texture (2048), a normal
+**Result:** a 7,000-triangle game model (`oakley.glb`, 2.8 MB) with one colour texture (2048), a normal
 map (gentle grain on the cloth, leather, hair and hat, nothing on the skin) and an all-black glow map
 (nothing glows). From the front and the front three-quarter view he reads as the ranger on the sheet:
 brown eyes and strong brows, the short beard and smile, messy brown hair under the wide green hat with
@@ -15,16 +15,16 @@ khaki trousers and tall cuffed boots. From behind: the hood's point on the cloak
 with the feather.
 
 The final game model's Blender file (the lead animates from it):
-`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/chapter1/oakley/out2/model.blend`
+`/tmp/claude-0/-home-user-atoms-games-/95c47fc1-cd5e-5362-b776-c463cbad3789/scratchpad/chapter1/oakley/out3/model.blend`
 
 ## Numbers
 
 | | Front | Side | Back | Top |
 | --- | --- | --- | --- | --- |
 | Blockout (60,000 triangles), outline overlap (`blockout.jpg`) | 93.0% | 91.0% | 87.1% | 63.3% |
-| Game model (TRIS triangles), outline overlap | OVF% | OVS% | OVB% | OVT% |
+| Game model (7,000 triangles), outline overlap | 93.1% | 89.6% | 88.3% | 63.1% |
 
-- **Texture seen by a picture:** SEEN%. The rest (the inside of the cloak, the hat brim's underside at
+- **Texture seen by a picture:** 54.4%. The rest (the inside of the cloak, the hat brim's underside at
   the back, the soles, the inner sides of the arms and legs) is coloured from the nearest painted spot
   of the same part.
 - **Why the top number is low:** the top picture is another pose (arms out, boots far in front, the
@@ -50,10 +50,15 @@ The final game model's Blender file (the lead animates from it):
   | foot | `boot_L`, `boot_R` (the tall boots with their cuffs) |
 
   Arms, hands, legs and boots are mirrored pairs. Each arm starts inside the cape at the shoulder and
-  each leg 10 cm up inside the tunic. The elbow is at the rolled cream cuff and the knee where the
+  each leg about 9 cm up inside the tunic. The elbow is at the rolled cream cuff and the knee where the
   trousers bunch, as the pictures put them.
-- **Triangle budget:** BUDGET
-- **Time:** about TIME minutes by the clock: 1 blockout and 2 route runs.
+- **Triangle budget:** head, hair and hat 2,888 (41%: head 1,116, brim 736, hair 504, crown 252,
+  feather 120, ears 80 each); cloak 1,040, torso 736, arms 364 each, boots 330 each, legs 234 each,
+  hands 140 each, compass 80, pouch 60, neck 60. (The first run gave the cloak 1,820 and the head 780;
+  I moved triangles from the cloak and the brim to the head and hair.)
+- **Time:** about 45 minutes of my own work (01:17 to 02:48 by the clock, interleaved with Willow and
+  Bramble while the shared machine ran each job, which took 10 to 15 minutes): 1 blockout and 3 route
+  runs (the third only fixed the backs of the hands).
 
 ## What I did and the problems I hit
 
@@ -90,8 +95,11 @@ The final game model's Blender file (the lead animates from it):
    second compass on his right hip. The pouch is a small boxy part on the right hip, printed from the
    front and back pictures only (the side picture shows the other hip).
 8. **Dark hands from behind.** The back picture's hands are a little further out than the model's, so
-   it printed the bracer and cloak colours onto the backs of the hands. The back picture is now
-   switched off on the hands; they're painted from the front and side pictures.
+   it printed the bracer and cloak colours onto the backs of the hands. Switching the back picture off
+   made it worse (the backs were then filled from the dark cloak green the front picture prints round
+   the hands' edges, since the hands hang in front of the cloak there). Now the hands use round 3's
+   `paint_solid`: one skin colour, `#f2b076`, lit and shaded by the front and side pictures, so the
+   finger lines still show and nothing dark can reach them.
 9. **Relief:** none on the face, ears, hands, compass and feather; a gentle `grain` on everything else.
 10. **Glow map:** all black. Checked: the exported glow texture is black.
 
@@ -106,11 +114,25 @@ then `PY=... bash tools/route_small.sh parts.json views/views.json OUT 7000 oakl
 
 ## What still looks wrong
 
-WRONG
+- **The hair is a smooth bob** under the hat with the messy strands painted on; from the side and
+  behind it reads a little like a helmet, as the heroes' hair did.
+- **The feather is a thin blade**, so from the front three-quarter view it's edge-on and reads as a
+  spike; from the front, the side and behind it reads as a feather.
+- **The brim's top at the back left has a few dark green blocky patches** where the feather was
+  switched off in the top and back pictures and the gap was filled.
+- **The cloak is solid**: it can't show the far front edge the side picture draws in front of the
+  legs, and the space under it behind the legs is filled.
+- **The hands are mittens** with painted fingers, as the brief asks.
+- The top view doesn't match the top picture (a different pose).
 
 ## Compared with the heroes
 
-COMPARE
+Close to them. The face is as clean as the heroes' (no ghost features; from the front three-quarter
+view it reads like the sheet), and the outfit (brooch, strap, buckles, belt, compass, pouch, bracers,
+boot cuffs) prints cleanly. The hat with its tilted brim and feather is the best part of the model.
+The outline match is about the heroes' (93.1 / 89.6 / 88.3% against about 92 / 89 / 89%); side and back
+are held down by the open cloak and the bigger back picture, not by mistakes in the model. Like the
+heroes, the hair is the weak spot, but the hat hides most of it.
 
 ## What the next people should know
 

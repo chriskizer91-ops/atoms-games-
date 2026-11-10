@@ -4,7 +4,8 @@ picture), one = single part. Part names carry the two-legged skeleton's words (B
 Built like Rosa and Hazel (../rosa/tools/mkparts.py, ../hazel/tools/mkparts.py) and the heroes: smooth hand-drawn
 outlines (nomask). The pinafore dress is split at the waist: `torso` above (blouse + bib), `skirt` below (dress +
 petticoat ruffle); the sash's bow at the back is `skirt_bow` + `skirt_bow_tail`. The curly hair is one mass + a
-fringe band + the curl on top (`hair_curl_top`); the leaf clip is `hair_leaf`."""
+fringe band + the curl on top (`hair_curl_top`) + two curl masses per side (`hair_lock`, `hair_lock_low`); the leaf
+clip is `hair_leaf`."""
 import json, sys
 P = lambda s: [[int(a) for a in p.split(",")] for p in s.split()]
 parts = []
@@ -43,6 +44,16 @@ add(name="hair_bangs", kind="one", paint_color_skip=HAIR_SKIP, axis="x", n=2.0, 
            "top": top(band([(-0.205, -0.01, 0.05), (-0.17, -0.035, 0.03), (-0.14, -0.06, 0.01), (-0.11, -0.09, -0.02), (-0.09, -0.12, -0.05),
                              (-0.07, -0.145, -0.075), (-0.04, -0.165, -0.095), (0.0, -0.172, -0.10), (0.04, -0.165, -0.095), (0.07, -0.145, -0.075),
                              (0.09, -0.12, -0.05), (0.11, -0.09, -0.02), (0.14, -0.06, 0.01), (0.17, -0.035, 0.03), (0.205, -0.01, 0.05)]))})
+# two curl masses per side break the hair's lower edge into curls (a mushroom-cap edge otherwise): one beside each
+# cheek in front of the ear, one hanging behind each ear (mirrored pairs)
+add(name="hair_lock", kind="m", paint_color_skip=HAIR_SKIP, axis="z", n=2.0, relief="grain", smooth=3, lo_weight=1.6, nomask=["front", "side"],
+    round_ends={"start": 0.012, "end": 0.0}, paint_skip=["top", "back"],
+    views={"front": P("598,316 640,314 654,348 650,385 632,407 612,402 602,370"),
+           "side": P("468,316 526,314 534,350 527,390 506,407 486,402 472,365")})
+add(name="hair_lock_low", kind="m", paint_color_skip=HAIR_SKIP, axis="z", n=2.0, relief="grain", smooth=3, lo_weight=1.6, nomask=["front", "side"],
+    round_ends={"start": 0.012, "end": 0.0}, paint_skip=["top"],
+    views={"front": P("640,296 690,296 707,330 707,366 692,396 666,410 648,392 640,350"),
+           "side": P("540,296 625,296 632,340 616,386 584,422 552,422 538,380")})
 # the curl standing up on top of her head (curving forward and to her right): a flat curved lock, sliced side to side
 add(name="hair_curl_top", kind="one", paint_color_skip=HAIR_SKIP, axis="x", n=2.0, relief="grain", smooth=2, lo_weight=1.0,
     nomask=["front", "top"], round_ends={"start": 0.008, "end": 0.0}, paint_skip=["top"],
@@ -65,11 +76,11 @@ add(name="torso", kind="c", axis="z", n=2.6, relief="grain", smooth=6, lo_weight
 # ---- arms (puffed sleeve + cuff + forearm in one part) and hands -----------------------------
 add(name="arm", kind="m", axis="z", n=2.2, relief="grain", smooth=4, lo_weight=2.0, nomask=["front", "side"],
     round_ends={"start": 0.015, "end": 0.0}, paint_skip=["top"],
-    views={"front": P("590,430 630,432 670,448 705,475 722,515 722,560 726,595 745,640 770,690 790,730 802,758 762,768 745,735 715,690 690,650 662,610 640,600 618,580 605,540 595,490"),
-           "side": P("455,425 520,422 555,440 570,480 570,530 560,570 548,600 548,630 525,640 525,742 455,742 456,640 445,628 430,590 422,540 425,480 435,445")})
+    views={"front": P("590,430 630,432 670,448 705,475 722,515 722,560 726,595 745,640 770,690 790,730 806,770 760,780 745,735 715,690 690,650 662,610 640,600 618,580 605,540 595,490"),
+           "side": P("455,425 520,422 555,440 570,480 570,530 560,570 548,600 548,630 525,640 525,776 455,776 456,640 445,628 430,590 422,540 425,480 435,445")})
 add(name="hand", kind="m", axis="z", n=2.3, relief="none", smooth=3, lo_weight=2.2, nomask=["front", "side"],
     round_ends={"start": 0.008, "end": 0.02}, paint_skip=["top"],
-    views={"front": P("750,758 802,750 815,790 835,820 843,845 832,853 815,840 800,815 782,800 765,785"),
+    views={"front": P("745,742 798,736 815,790 835,820 843,845 832,853 815,840 800,815 782,800 765,785 750,765"),
            "side": P("430,724 512,724 512,780 508,830 495,860 470,866 448,852 425,810 420,760")})
 # ---- below the waist: skirt (dress + petticoat), the sash's bow, legs, boots --------------------
 add(name="skirt", kind="c", axis="z", n=2.2, relief="grain", smooth=6, lo_weight=1.1, nomask=["front", "side"],
@@ -85,7 +96,7 @@ add(name="skirt_bow_tail", kind="m", axis="z", n=2.4, relief="grain", smooth=3, 
     round_ends={"start": 0.0, "end": 0.0}, paint_skip=["front", "top"], order=["back", "side"],
     views={"back": P("496,640 512,640 508,700 498,760 492,800 478,800 430,778 455,720 480,670"),
            "side": P("560,650 592,650 620,700 648,750 656,795 636,800 618,760 590,710")})
-add(name="leg", kind="m", axis="z", n=2.2, relief="none", smooth=5, lo_weight=0.7, nomask=["front", "side"],
+add(name="leg", kind="m", axis="z", n=2.2, relief="none", smooth=5, lo_weight=0.35, nomask=["front", "side"],
     round_ends={"start": 0.0, "end": 0.0}, paint_skip=["top"],
     paint_box_skip={"front": [[540, 1040, 670, 1086], [349, 1040, 479, 1086]], "back": [[540, 1040, 670, 1086], [349, 1040, 479, 1086]]},
     views={"front": P("518,765 612,765 640,900 652,1000 650,1100 648,1200 645,1300 640,1395 575,1395 572,1300 570,1200 562,1100 550,1000 532,900"),
