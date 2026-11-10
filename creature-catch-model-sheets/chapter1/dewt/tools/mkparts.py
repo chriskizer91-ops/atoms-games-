@@ -37,7 +37,7 @@ head_front = sym(P("768,196 850,200 905,214 955,238 995,268 1025,302 1047,345 10
 head_side = P("57,500 62,478 85,466 108,452 118,415 135,360 165,315 205,285 250,268 300,262 360,262 420,275 "
               "470,305 505,345 520,390 527,440 528,490 520,540 495,590 450,625 380,640 300,640 230,640 165,630 "
               "115,612 80,585 62,555 55,530")
-parts.append(dict(name="head", kind="c", axis="z", n=2.2, relief="none", smooth=6, lo_weight=2.6,
+parts.append(dict(name="head", kind="c", axis="z", n=2.2, relief="none", smooth=10, lo_weight=2.6,
                   round_ends={"start": 0.012, "end": 0.008}, paint_skip=["top"], order=["side", "front"], remap=True,
                   views={"front": head_front, "side": head_side}))
 # ---- bubbles on the head: one on top, a pair at the upper back corners
@@ -78,6 +78,7 @@ parts.append(back_bubble("body_bubble_c", 978, 560, 52, 42))
 parts.append(back_bubble("tail_bubble", 1130, 577, 43, 15))
 # ---- tail in three pieces: lying back (sliced front to back), rising (sliced upward), the curl (front to back)
 parts.append(dict(name="tail_a", kind="c", axis="y", n=2.1, relief="none", smooth=5, lo_weight=1.0,
+                  round_ends={"end": 0.025},
                   paint_skip=["back", "front"], order=["side", "top"], nomask=["top"],
                   paint_box_skip={"top": [[700, 330, 836, 820]]},
                   views={"side": P("985,588 1100,590 1170,590 1220,580 1260,565 1295,545 1320,520 1340,490 "

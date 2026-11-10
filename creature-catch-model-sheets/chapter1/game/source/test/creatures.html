@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset=utf8><style>html,body{margin:0;background:#9fc6e8}canvas{display:block}</style></head><body>
+<script src="../vendor/three.min.js"></script><script src="../src/kit.js"></script><script src="../src/creatures.js"></script><script>for (const f of (new URLSearchParams(location.search).get('lines') || '').split(',').filter(Boolean)) document.write('<script src="../src/lines/' + f + '.js"><\/script>');</script>
+<script>
+const q = new URLSearchParams(location.search), names = (q.get('who') || 'drizzlon,mossback,embroak,clovermouse,hopsprout,cube').split(','), yaw = +(q.get('yaw') || 0), zoom = +(q.get('zoom') || 1);
+const W = 1400, H = 700, r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); r.shadowMap.enabled = true; document.body.appendChild(r.domElement);
+r.setClearColor('#a8cce8');
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, W / H, .1, 100);
+scene.add(new THREE.AmbientLight('#ffffff', .36), new THREE.HemisphereLight('#e4eeff', '#6a7a4a', .34));
+const sun = new THREE.DirectionalLight('#fff0d8', .68); sun.position.set(-3, 6, 5); sun.castShadow = true; scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshToonMaterial({ color: '#6cbc48' })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const sp = .8, models = names.map((n, i) => { let m; if (n === 'cube') { m = makeCube(); m.root.position.y = .15; m.open = +(q.get('open') || 0); m.update = () => {}; } else m = makeCreature(n); m.root.position.x = (i - (names.length - 1) / 2) * sp; m.root.rotation.y = yaw; scene.add(m.root); return m; });
+const span = names.length * sp;
+cam.position.set(0, .5 + .5 / zoom, (span * 1.1 + .6) / zoom); cam.lookAt(0, .28, 0);
+let t = 0; const act = q.get('act');
+setTimeout(() => { for (let i = 0; i < 40; i++) { t += 1 / 60; models.forEach((m) => m.update(t, 1 / 60, 0)); }
+ if (act) { models.forEach((m) => m.play && m.play(act)); const k = +(q.get('at') || .3); for (let i = 0; i < 60 * k; i++) { t += 1 / 60; models.forEach((m) => m.update(t, 1 / 60, 0)); } }
+ r.render(scene, cam); console.log('[t] done'); }, 50);
+</script></body></html>
