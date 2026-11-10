@@ -144,14 +144,16 @@ wider window.
 | `phone_11_bramble_asks` | Bramble's trial (he asks) |
 | `phone_12_bramble_trial` | Bramble's trial (the battle) |
 | `phone_13_log_cleared` | the log cleared |
+| `phone_14_end_of_chapter` | the end of Chapter 1 |
+| `phone_07_juniper_battle_move` | a move in Juniper's battle |
 | `wide_01_village` | the village |
 | `wide_02_interior_inn` | inside Rosa's Inn |
 | `wide_03_juniper_battle` | Juniper's battle |
 | `wide_04_wild_battle` | a wild battle |
 | `wide_05_meadow_path` | the Meadow Path |
 | `wide_06_grassland` | the Grassland |
-| `wide_07_our_models_close_up` | all our models up close |
-| `wide_08_carried_things_on_stand_in_models` | the carried things, tried on the player models |
+| `wide_07_all_people` | all 12 people in the game's light, with their carried things |
+| `wide_08_all_creatures` | all 14 Chapter 1 creatures in the game's light |
 
 ## For testing (dev links)
 
