@@ -42,8 +42,8 @@ export const SAILING = {
   hoistTime: 2.6,
   // A raft with a patched sail points badly: the edge of the no-go zone, and
   // where the sail is fully drawing.
-  noGo: 50 * DEG,
-  closeHauled: 64 * DEG,
+  noGo: 46 * DEG,
+  closeHauled: 60 * DEG,
   // Usual trade-wind strength (m/s, about 13 knots), blowing from the south-east.
   windSpeed: 6.5,
   windFrom: Math.PI / 4,
@@ -53,7 +53,9 @@ export const SAILING = {
   maxHeel: 0.7,
   heelShown: 0.2,
   // Surfing: extra speed (m/s) per unit of downhill slope under the raft.
-  surf: 26,
+  // It takes a real swell: slopes under surfFrom don't count.
+  surf: 40,
+  surfFrom: 0.032,
   surfMax: 2.0,
   // Sculling with the steering oar: enough to creep the last few metres to a beach.
   scull: 0.9,
@@ -69,16 +71,16 @@ export function sailPower(push) {
 export function drive(twa) {
   const a = Math.abs(twa);
   if (a < SAILING.noGo) return 0;
-  if (a < SAILING.closeHauled) return 0.7 * smoothstep(SAILING.noGo, SAILING.closeHauled, a);
-  if (a < 95 * DEG) return 0.7 + 0.3 * smoothstep(SAILING.closeHauled, 95 * DEG, a);
+  if (a < SAILING.closeHauled) return 0.8 * smoothstep(SAILING.noGo, SAILING.closeHauled, a);
+  if (a < 95 * DEG) return 0.8 + 0.2 * smoothstep(SAILING.closeHauled, 95 * DEG, a);
   if (a < 150 * DEG) return 1 - 0.12 * smoothstep(95 * DEG, 150 * DEG, a);
   return 0.88 - 0.1 * smoothstep(150 * DEG, Math.PI, a);
 }
 
 export function pointOfSail(twa) {
   const a = Math.abs(twa) / DEG;
-  if (a < 44) return 'in irons';
-  if (a < 62) return 'close-hauled';
+  if (a < 42) return 'in irons';
+  if (a < 60) return 'close-hauled';
   if (a < 80) return 'close reach';
   if (a < 115) return 'beam reach';
   if (a < 155) return 'broad reach';
@@ -150,7 +152,7 @@ export function stepBoat(b, w, helm, dt) {
   let target = Math.min(sailTarget, SAILING.topSpeed * 1.3) + SAILING.scull * b.scull * (1 - 0.6 * Math.min(1, sailTarget / SAILING.topSpeed));
   // Surfing: running or reaching fast, a wave lifting the stern sends it racing down the face.
   const downwind = smoothstep(100 * DEG, 135 * DEG, Math.abs(twa));
-  const surf = Math.min(SAILING.surfMax, SAILING.surf * Math.max(0, helm.slope || 0)) * downwind * smoothstep(1.6, 2.6, b.speed) * Math.min(1, b.sail * 2);
+  const surf = Math.min(SAILING.surfMax, SAILING.surf * Math.max(0, (helm.slope || 0) - SAILING.surfFrom)) * downwind * smoothstep(1.6, 2.6, b.speed) * Math.min(1, b.sail * 2);
   target += surf;
   ev.surfing = surf;
   // Way carries it through a tack: it coasts when the sail is only flapping.
@@ -209,6 +211,7 @@ export function autopilot(b, w, bearing, dist, course) {
     return pilot;
   }
   let want = bearing;
+  let beating = false;
   const off = wrap(bearing - w.from);
   const tackAngle = SAILING.closeHauled + 2 * DEG;
   if (Math.abs(off) < tackAngle) {
@@ -219,12 +222,16 @@ export function autopilot(b, w, bearing, dist, course) {
     const other = course.tack > 0 ? hB : hA;
     if (Math.abs(wrap(bearing - other)) + 25 * DEG < Math.abs(wrap(bearing - cur))) course.tack = -course.tack;
     want = course.tack > 0 ? hA : hB;
+    beating = true;
   }
   // Stalled head to wind (in irons)? A few strokes of the oar get it moving again.
   const stalled = Math.abs(b.speed) < 0.4 && Math.abs(wrap(w.from - b.heading)) < SAILING.noGo;
   // Ease off near the mark, and take in sail when it blows hard.
   pilot.sailSet = dist < 90 || w.speed > SAILING.windSpeed * 1.35 ? 0.5 : 1;
   pilot.steer = steerTo(want);
-  pilot.scull = stalled ? 0.7 : 0;
+  // Sweep the oar to bring the bow round when there's no way on to steer with.
+  const swinging = Math.abs(b.speed) < 1 && Math.abs(wrap(want - b.heading)) > 0.6;
+  // Beating to windward the oar is kept working too, to keep way on through the tacks.
+  pilot.scull = stalled ? 0.7 : swinging ? 0.8 : beating ? 0.45 : 0;
   return pilot;
 }

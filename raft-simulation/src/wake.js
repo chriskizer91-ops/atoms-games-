@@ -55,11 +55,18 @@ export function createWake(scene) {
       varying vec2 vWorld;
       void main() {
         float n = texture2D(tDetail, vWorld * 0.35).a * 0.6 + texture2D(tDetail, vWorld * 0.9).a * 0.4;
-        // Streaks along the trail, broken up by the ripple pattern; soft at both edges.
-        float across = 1.0 - pow(abs(vUv.x * 2.0 - 1.0), 1.6);
-        float a = vFoam * across * smoothstep(0.32, 0.62, n + vFoam * 0.25);
-        vec3 col = mix(vec3(0.92, 0.97, 1.0) * (0.25 + 0.75 * uDay), vec3(0.2, 1.4, 1.6), uGlow);
-        gl_FragColor = vec4(col, a * 0.7);
+        // Two lines of white water streaming off the corners of the stern,
+        // and broken, churned patches between them. Soft at the very edge.
+        float u = abs(vUv.x * 2.0 - 1.0);
+        float lines = smoothstep(0.55, 0.86, u) * (1.0 - smoothstep(0.9, 1.0, u));
+        float churn = (1.0 - u * u) * 0.4;
+        // Only the crests of the ripple pattern carry foam, so it reads as streaks and patches, never a sheet.
+        float fine = texture2D(tDetail, vWorld * 2.3).a;
+        float a = vFoam * (lines + churn) * smoothstep(0.54, 0.82, n * 0.68 + fine * 0.32);
+        // By night it only glimmers where the water is most stirred.
+        vec3 col = mix(vec3(0.92, 0.97, 1.0) * (0.25 + 0.75 * uDay), vec3(0.12, 0.85, 1.0), uGlow);
+        a *= mix(0.72, 0.5, uGlow);
+        gl_FragColor = vec4(col, a);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,
@@ -113,7 +120,7 @@ export function createWake(scene) {
         const l = Math.hypot(dx, dz);
         if (l > 0.001) { dx /= l; dz /= l; } else { dx = 0; dz = 1; }
         const life = Math.min(1, age / (STEP * (N - 1)));
-        const hw = width * (0.75 + 1.4 * life) + 2.2 * life;
+        const hw = width * (0.8 + 0.9 * life) + 1.4 * life;
         const y = waveHeight(x, z, t) + 0.035;
         const o = i * 6;
         pos[o] = x - dz * hw; pos[o + 1] = y; pos[o + 2] = z + dx * hw;

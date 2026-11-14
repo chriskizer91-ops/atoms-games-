@@ -518,6 +518,7 @@ rails.onBuiltOver(() => {
 const map = createMap({
   islands, audio,
   hasSail: () => !!stations.has('sail'),
+  windFrom: () => weather.wind.from,
   onCourse: () => hud.toast('Course set. The raft will sail itself there, tacking if the wind is against it.', 'gain'),
 });
 
@@ -564,7 +565,8 @@ async function applyBody(id, remember = true) {
   if (bodyId !== id) { body.dispose(); return; }   // another was picked meanwhile
   scene.add(body.root);
   view.setBody(body, makeHeldModels());
-  tools.setSkin(new THREE.Color(body.skin));
+  // The painted skin is pale under the fair's lamps; out here in the sun it is warmed a little.
+  tools.setSkin(new THREE.Color(body.skin).lerp(new THREE.Color(0xb07452), 0.5));
   if (old) { scene.remove(old.root); old.dispose(); }
 }
 document.querySelectorAll('.castaway button').forEach((b) => b.addEventListener('click', () => applyBody(b.dataset.b)));
@@ -1152,7 +1154,7 @@ function updatePlay(dt) {
     hasSail: !!stations.has('sail'), onTower: !!ps.tower, night: wx.night,
     wind: wx.wind, steer: helmIn.steer,
     // downhill ahead when a wave lifts the stern
-    slope: (waveHeight(0, 3, game.time) - waveHeight(0, -3, game.time)) / 6,
+    slope: (waveHeight(0, 6, game.time) - waveHeight(0, -6, game.time)) / 12,
   });
   updateSailing(dt, wx, isl, ps);
   keepOffIsland(dt);

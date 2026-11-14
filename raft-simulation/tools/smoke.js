@@ -596,7 +596,9 @@ fs.mkdirSync(outDir, { recursive: true });
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
     const ashore = p.onLand;
     const rock = isl.built.resources.find((r) => r.kind === 'rock');
-    const wp = { x: rock.mesh.position.x + isl.x, z: rock.mesh.position.z + isl.z };
+    // where the rock is in the scene (the island may sit at any angle to the raft)
+    rock.mesh.updateWorldMatrix(true, false);
+    const wp = { x: rock.mesh.matrixWorld.elements[12], z: rock.mesh.matrixWorld.elements[14] };
     p.pos.set(wp.x + 1.5, G.islands.heightAt(wp.x + 1.5, wp.z), wp.z); p.grounded = true; p.inWater = false;
     G.step(0.2);
     G.aimAt(wp.x, G.islands.heightAt(wp.x, wp.z) + 0.3, wp.z); G.step(0.05);
@@ -963,13 +965,13 @@ fs.mkdirSync(outDir, { recursive: true });
     const rec = st.chart.get(id);
     const d0 = Math.hypot(rec.x - st.rw.x, rec.z - st.rw.z);
     let moved = 0, px = st.rw.x, pz = st.rw.z;
-    for (let k = 0; k < 30; k++) { G.step(1); moved += Math.hypot(st.rw.x - px, st.rw.z - pz); px = st.rw.x; pz = st.rw.z; }
+    for (let k = 0; k < 45; k++) { G.step(1); moved += Math.hypot(st.rw.x - px, st.rw.z - pz); px = st.rw.x; pz = st.rw.z; }
     const d1 = Math.hypot(rec.x - st.rw.x, rec.z - st.rw.z);
     return { d0: Math.round(d0), d1: Math.round(d1), moved: Math.round(moved), sailing: G.islands.state.dest === id };
   }, sail.target);
-  // Under sail the raft covers about twice what the current alone would (1.3 m/s x 30 s = 39 m).
+  // Under sail the raft soon outruns the current (1.3 m/s), once the sail is up and the bow has come round.
   check('E at the sail takes the steering oar, W raises the sail, E lets go', sail.built && sail.prompt === 'Take the steering oar' && sail.helm && sail.sailSet === 0.5 && sail.letGo, JSON.stringify(sail));
-  check('a course set on the map sails you to the island', sail.mapOpen && sailing.moved > 55 && sailing.d1 < sailing.d0 - 20, JSON.stringify({ sail, sailing }));
+  check('a course set on the map sails you to the island', sail.mapOpen && sailing.moved > 70 && sailing.d1 < sailing.d0 - 40, JSON.stringify({ sail, sailing }));
   await page.evaluate(() => { const G = window.__game; const p = G.player.state; p.yaw = 0.9; p.pitch = 0.12; G.step(0.3); });
   await shot('23-under-sail');
 
@@ -1068,6 +1070,74 @@ fs.mkdirSync(outDir, { recursive: true });
   // The raft drifts a little during the 0.1 s step after loading.
   const same = (a, b) => JSON.stringify({ ...a, rw: 0 }) === JSON.stringify({ ...b, rw: 0 }) && Math.abs(a.rw - b.rw) <= 2;
   check('Stage 4 state survives saving and loading', snap4.ok && same(snap4.before, snap4.after), JSON.stringify(snap4));
+
+  // ---------- Stage 5: wind and sail ----------
+  // 44. Sailing by hand: across the wind is fast, into it stalls, and the oar turns the raft
+  const hand = await page.evaluate(() => {
+    const G = window.__game;
+    G.newGame(); G.game.mode = 'play'; G.applyDifficulty('peaceful', false);
+    const st = G.stations.add(G.raft.tileAt(0, -1), 'sail');
+    const isl = G.islands.state, b = G.islands.boat;
+    G.islands.setSail(1);
+    G.step(25);
+    const reach = b.speed, h0 = isl.heading;       // heading north, wind from the south-east: a broad reach
+    G.game.helm = st; G.player.state.helm = true; G.player.state.pos.set(0.6, 0.42, -1.2);
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD' })); G.step(5); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyD' }));
+    const turned = Math.abs(Math.atan2(Math.sin(isl.heading - h0), Math.cos(isl.heading - h0)));
+    G.leaveHelm();
+    // point it straight into the wind and wait
+    const wind = G.weather.wind.from;
+    isl.heading = Math.PI / 2 - wind; b.heading = wind; G.step(25);
+    const irons = b.speed;
+    const lean = Math.abs(b.heel);
+    return { reach: +reach.toFixed(2), turned: +turned.toFixed(2), irons: +irons.toFixed(2), wind: +G.weather.wind.speed.toFixed(1), lean: +lean.toFixed(2) };
+  });
+  check('under sail: quick across the wind, stalled head to wind, the oar turns the raft', hand.reach > 2.2 && hand.irons < 0.7 && hand.turned > 0.8 && hand.wind > 3, JSON.stringify(hand));
+
+  // 45. The sea turns with the raft: an island stays where the chart says, whichever way the bow points
+  const frame = await page.evaluate(() => {
+    const G = window.__game;
+    G.newGame(); G.game.mode = 'play'; G.applyDifficulty('peaceful', false);
+    const isl = G.islands.state;
+    const rec = G.islands.summon(G.raft.center(), G.raft.radius(), 'medium');
+    G.step(0.6);
+    // the island's middle as the game sees it (terrain height there), before and after turning the raft a quarter turn
+    const mid = () => { const c = G.islands.center(); return { x: +c.x.toFixed(1), z: +c.z.toFixed(1), h: +G.islands.heightAt(c.x, c.z).toFixed(2) }; };
+    const a = mid();
+    isl.heading += Math.PI / 2;
+    G.step(0.1);
+    const b = mid();
+    const dist = (m) => Math.hypot(m.x, m.z);
+    return { a, b, same: Math.abs(dist(a) - dist(b)) < 3, swung: Math.abs(a.x - b.x) + Math.abs(a.z - b.z) > 10 };
+  });
+  check('turning the raft swings the island round it without moving it on the chart', frame.same && frame.swung && frame.a.h > 0.5 && frame.b.h > 0.5, JSON.stringify(frame));
+
+  // 46. Third person: V shows the castaway, who keeps up with you; the tools still work from your eyes
+  const third = await page.evaluate(async () => {
+    const G = window.__game;
+    G.newGame(); G.game.mode = 'play'; G.applyDifficulty('peaceful', false);
+    for (let i = 0; i < 40 && !G.view.state.body; i++) await new Promise((r) => setTimeout(r, 100));
+    const body = G.view.state.body;
+    if (!body) return { body: false };
+    G.key('KeyV'); G.step(1);
+    const p = G.player.state;
+    const behind = G.camera.position.distanceTo(p.pos) > 2.5;
+    const at = Math.hypot(body.root.position.x - p.pos.x, body.root.position.z - p.pos.z) < 0.05 && body.root.visible;
+    // the hammer still finds an outline to build on
+    G.inventory.add({ wood: 8, fiber: 4 });
+    G.tools.setSlot(2, G.player); G.step(0.3);
+    const tiles0 = G.raft.tiles.size;
+    p.pos.set(0, 0.42, 0.9); G.step(0.1); G.aimAt(0, 0.42, 3.0); G.step(0.1);
+    G.click(0, 1); G.step(0.8);
+    const built = [...G.raft.tiles.values()].filter((t) => !t.broken).length;
+    G.key('KeyV'); G.step(1);
+    const eyes = G.camera.position.distanceTo(p.pos) < 2 && !body.root.visible;
+    return { body: true, id: body.id, tris: body.triangles, behind, at, eyes, built, tiles0 };
+  });
+  check('V switches to a view from behind with the castaway in it, and back', third.body && third.behind && third.at && third.eyes, JSON.stringify(third));
+  await page.evaluate(() => { const G = window.__game; G.view.set(true); const p = G.player.state; p.yaw = 0.6; p.pitch = -0.15; G.tools.setSlot(1, G.player); G.step(1.2); });
+  await shot('27-third-person');
+  await page.evaluate(() => { const G = window.__game; G.view.set(false); G.step(0.5); });
 
   // 10. A wider look for the README
   await page.evaluate(() => {

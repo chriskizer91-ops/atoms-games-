@@ -73,6 +73,15 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
     vmPass.clearDepth = true;
     composer.addPass(vmPass);
     bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.22, 0.45, 1.0);
+    // A stray broken pixel (not-a-number or absurdly bright, which bump
+    // shading can produce on a triangle's edge) would be smeared by the glow
+    // into a white glare across the picture. Keep such pixels out of it.
+    const hp = bloom.materialHighPassFilter;
+    hp.fragmentShader = hp.fragmentShader.replace(
+      'vec4 texel = texture2D( tDiffuse, vUv );',
+      'vec4 texel = texture2D( tDiffuse, vUv );\n\t\t\tif ( any( isnan( texel.rgb ) ) || any( isinf( texel.rgb ) ) ) texel.rgb = vec3( 0.0 );\n\t\t\ttexel.rgb = clamp( texel.rgb, 0.0, 24.0 );',
+    );
+    hp.needsUpdate = true;
     bloom.enabled = q.bloom;
     composer.addPass(bloom);
     composer.addPass(new OutputPass());

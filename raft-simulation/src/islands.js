@@ -893,7 +893,7 @@ export function createIslands(scene, { fx, audio }) {
         st.heading = Math.PI / 2 - b.heading;
         // A little of the current still carries a raft under sail.
         vx = b.vx;
-        vz = b.vz - WORLD.drift * 0.3;
+        vz = b.vz - WORLD.drift * 0.15;
         speed = Math.hypot(vx, vz);
         // Come to rest alongside any island you sail up to.
         // (On a set course, only the island you're bound for.)

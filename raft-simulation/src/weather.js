@@ -77,6 +77,7 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
     mesh: rainMesh,
     envInterval: 2.5, // seconds between sky-lighting refreshes
     get state() { return st; },
+    get wind() { return wind; },
 
     setTime(hour) { st.hour = hour; st.envTimer = 0; st.envAge = 1e9; },
     setWeather(kind, instant = false) {

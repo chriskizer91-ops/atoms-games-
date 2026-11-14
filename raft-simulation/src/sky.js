@@ -50,7 +50,9 @@ const FRAG = /* glsl */ `
 
     float t = pow(1.0 - clamp(h, 0.0, 1.0), 4.5);
     vec3 col = mix(uZenith, uHorizon, t);
-    col += uSunColor * (pow(sd, 5.0) * 0.22 * (0.35 + t) + pow(sd, 90.0) * 0.5 + pow(sd, 900.0) * 1.8);
+    // The sun's glow is smothered by storm cloud and dulled by overcast.
+    float sunVis = clamp(1.0 - 0.85 * uStorm - 0.3 * uCover, 0.08, 1.0);
+    col += uSunColor * sunVis * (pow(sd, 5.0) * 0.22 * (0.35 + t) + pow(sd, 90.0) * 0.5 + pow(sd, 900.0) * 1.8);
 
     if (h < 0.0) col = mix(uHorizon, uGround, clamp(-h * 5.0, 0.0, 1.0));
 
@@ -77,7 +79,7 @@ const FRAG = /* glsl */ `
       vec3 top = mix(vec3(1.06, 1.03, 0.98), vec3(0.27, 0.3, 0.34), uStorm);
       top = mix(top, vec3(0.16, 0.2, 0.28), uNight);
       vec3 cloud = mix(shadowCol * (1.0 - uStorm * 0.6), top, lit);
-      cloud += uSunColor * pow(sd, 10.0) * 0.8 * (1.0 - cover * 0.6) * (1.0 - uNight); // silver lining
+      cloud += uSunColor * pow(sd, 10.0) * 0.8 * (1.0 - cover * 0.6) * (1.0 - uNight) * (1.0 - 0.9 * uStorm); // silver lining
       cloud += vec3(0.7, 0.75, 1.0) * uFlash * 2.5 * lit;
       float fade = smoothstep(0.0, 0.2, h);
       cloud = mix(uHorizon, cloud, smoothstep(0.0, 0.35, h));

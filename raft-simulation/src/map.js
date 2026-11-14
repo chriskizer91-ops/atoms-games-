@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 const DOT = { small: 5, medium: 8, large: 12 };
 const ZOOMS = [700, 1400, 2800];
 
-export function createMap({ islands, hasSail, audio, onCourse }) {
+export function createMap({ islands, hasSail, audio, onCourse, windFrom }) {
   const el = {
     root: $('map'),
     canvas: $('map-canvas'),
@@ -135,6 +135,17 @@ export function createMap({ islands, hasSail, audio, onCourse }) {
     ctx.font = '700 15px "Barlow Semi Condensed", system-ui, sans-serif';
     ctx.fillText('N', W - 30, 28);
     ctx.beginPath(); ctx.moveTo(W - 30, 34); ctx.lineTo(W - 25, 52); ctx.lineTo(W - 35, 52); ctx.closePath(); ctx.fill();
+    if (windFrom) {
+      // the wind: an arrow pointing the way it blows
+      const wf = windFrom();
+      const wx = -Math.cos(wf), wz = -Math.sin(wf);
+      const ox = W - 30, oy = 96;
+      ctx.strokeStyle = '#28597f'; ctx.fillStyle = '#28597f'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(ox - wx * 16, oy - wz * 16); ctx.lineTo(ox + wx * 12, oy + wz * 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ox + wx * 18, oy + wz * 18); ctx.lineTo(ox + wx * 8 - wz * 6, oy + wz * 8 + wx * 6); ctx.lineTo(ox + wx * 8 + wz * 6, oy + wz * 8 - wx * 6); ctx.closePath(); ctx.fill();
+      ctx.font = '600 11px "Barlow Semi Condensed", system-ui, sans-serif';
+      ctx.fillText('wind', ox, oy + 34);
+    }
     const bar = 200 * scale;
     ctx.fillRect(20, H - 24, bar, 3);
     ctx.font = '600 12px "Barlow Semi Condensed", system-ui, sans-serif';
@@ -150,9 +161,12 @@ export function createMap({ islands, hasSail, audio, onCourse }) {
     if (islands.resting) lines.push('Resting alongside an island.');
     if (dest) {
       const d = Math.round(Math.hypot(dest.x - st.rw.x, dest.z - st.rw.z));
-      lines.push(`Sailing to the ${sizeName(dest).toLowerCase()}: ${d} m, about ${Math.max(1, Math.round(d / WORLD.sail / 60))} min.`);
+      // Into the wind the raft has to zig-zag, which takes two or three times as long.
+      const upwind = windFrom ? Math.abs(Math.atan2(Math.sin(Math.atan2(dest.z - st.rw.z, dest.x - st.rw.x) - windFrom()), Math.cos(Math.atan2(dest.z - st.rw.z, dest.x - st.rw.x) - windFrom()))) < 1.1 : false;
+      const mins = Math.max(1, Math.round(d / (upwind ? 1.0 : WORLD.sail) / 60));
+      lines.push(`Sailing to the ${sizeName(dest).toLowerCase()}: ${d} m, about ${mins} min${upwind ? ', tacking against the wind' : ''}.`);
     } else if (sail) {
-      lines.push('Sail up. Click an island to set a course for it.');
+      lines.push('You have a sail. Click an island and the raft sails itself there, or take the steering oar (E at the sail) and sail by hand. The arrow shows the wind: islands downwind or across it are quick, islands upwind are slow.');
     } else {
       lines.push('No sail: the current carries you north and pulls you to islands close to your line. Build a sail to steer.');
     }

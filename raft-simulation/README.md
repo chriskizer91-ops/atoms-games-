@@ -1,6 +1,6 @@
 # Raft Simulation (working title)
 
-A first-person ocean survival game for laptops. You're stranded on a small raft. You hook materials floating past, keep a shark from eating your floor, and stay fed and watered. Everything is made in code with Three.js, with no image or sound files: textures such as wood grain, bark, rope and shark skin are painted pixel by pixel at startup, and the sky, clouds and water are shaders.
+A first-person ocean survival game for laptops. You're stranded on a small raft. You hook materials floating past, keep a shark from eating your floor, and stay fed and watered. Almost everything is made in code with Three.js: textures such as wood grain, bark, rope and shark skin are painted pixel by pixel at startup, and the sky, clouds and water are shaders. The one exception is the castaway's painted clothes and face, which come from Moon Faire and are stored inside the game file.
 
 **To play:** open `index.html` in Chrome, Edge or Firefox. You can double-click it. It's one self-contained file and works offline.
 
@@ -17,7 +17,9 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 | `R` (food slot) | Switch to the next food you have: coconut, cooked fish, potato, watermelon |
 | `E` | Grab something within reach; empty a net; use what you built; climb the lookout tower; gather on islands |
 | `C` or `Tab` | Crafting and wardrobe |
-| `M` | Map. With a sail built, click an island to sail there |
+| `M` | Map. With a sail built, click an island and the raft sails itself there |
+| `E` at the sail | Take the steering oar. Then `A` `D` steer, `W` `S` raise and lower the sail a notch, `E` or `Space` lets go |
+| `V` | Switch between your own eyes and a view from behind |
 | `Space` | Jump, or climb back aboard from the water |
 | `Shift` | Run or swim faster |
 | `Esc` | Pause |
@@ -30,8 +32,9 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 - **Shark:** a smooth body that bends as it swims, with countershaded skin, gill slits, curved fins and a jaw that opens to bite.
 - **Your hands:** fingers wrapped around each tool and a rolled sleeve that takes the colour of your top.
 - **Lighting:** sun shadows, bloom on bright highlights, and filmic tone mapping.
+- **Wind:** whitecaps, a long swell, a wake and spray (Stage 5, below).
 
-**Graphics quality:** choose Low, Medium (the default) or High on the title screen or in the pause menu. If the first few seconds of play run slowly, the game drops one level on its own and tells you. Your choice is remembered in this browser.
+**Graphics quality:** choose Low, Medium (the default) or High on the title screen or in the pause menu. While you play, the game watches how smoothly it is running and makes the picture a little softer or sharper to keep it smooth. If that isn't enough early on, it drops one level on its own and tells you. Your choice is remembered in this browser.
 
 **Difficulty:** choose Easy, Normal, Hard or Peaceful on the title screen or in the pause menu (remembered in this browser, and saved with a game).
 
@@ -42,7 +45,40 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 | Time between shark attacks | 1.5× | 1× | 0.7× | never attacks |
 | Spear hits to drive a shark off | 1 fewer | as listed | 1 more | — |
 
-## Stage 4 (this build)
+## Stage 5 (this build): wind and sail
+
+The sailing rules and the sea come from the sailing game, *Sandcastle Cays* (the `sand` repo), reworked for a raft. The body you see in third person is the Farm lad (or the Pie seller) from *Moon Faire*.
+
+- **Real wind.** A trade wind blows from the south-east at about 13 knots. It shifts a few degrees, gusts, and blows harder in rain and storms (up to a near gale).
+- **Sailing by hand.** Press `E` at the sail to take the steering oar. `W` raises the sail (half, then full), `S` lowers it, `A` and `D` steer. `E` or `Space` lets go, and the oar stays lashed so the raft holds its line while you hook things.
+  - You can't sail closer than about 46 degrees to the wind: the sail flaps and the raft stops ("in irons"). To get upwind you zig-zag.
+  - You're fastest with the wind from the side or behind: a little over 6 knots.
+  - Too much sail in a blow overpowers the raft: it slows and fights to turn up into the wind. Take the sail down to half.
+  - Running before a big swell in a strong wind, a wave can pick the raft up and surf it.
+  - The raft leans a little with the wind, the boom swings out to the side away from it, and the sail bellies or shivers.
+  - Sail up to any island and the raft comes to rest alongside it. Hoisting the sail there casts off.
+- **Sailing by map.** As before, `M` and a click on an island sets a course. The raft now really sails there: it tacks when the island is upwind (two or three times slower) and sculls the last few metres. The map shows the wind with an arrow. Steering by hand clears the course.
+- **Without a sail** nothing changes: the current carries you north and pulls you to islands near your line.
+- **The sailing dial** (bottom right, once you have a sail): the wind's direction across the raft, the zone you can't sail into (red), north, your speed in knots, the point of sail, and how the sail is set.
+- **The sea:**
+  - a long ocean swell under the small waves, bigger in bad weather;
+  - whitecaps that spread across the sea as the wind rises;
+  - calm water in the lee of an island, so beaches aren't washed over;
+  - the water streams past as the raft travels and swings round as it turns, and so do the sun, the clouds and the islands;
+  - a wake of foam astern under sail (it glimmers at night), spray off the bow at speed, rain that slants with the wind and pocks the water;
+  - shallows round islands read turquoise.
+- **Your hands.** Jointed fingers with knuckles and nails, a wrist, a shaped forearm and a rolled sleeve. A second hand steadies the spear and holds the hook's coiled line. Food sits in a cupped palm.
+- **Third person (`V`).** A camera over your shoulder. The castaway walks, runs, swims, steers, and stabs, swings, throws and eats along with you. Choose the Farm lad or the Pie seller on the title screen or in the pause menu. The castaway also stands on the raft on the title screen. Their clothes are their own painted ones: they don't change with the wardrobe.
+- **Smoother on a laptop:**
+  - a fresh game now takes about 230 drawing commands a frame instead of about 920 (a large raft beside a big island: about 630 instead of over 2,000). Trees are merged into a few pieces, far islands are drawn as a skyline or not at all, and the pass that draws what's under the water skips everything above it;
+  - the game watches the frame rate the whole time and trims or restores sharpness a step at a time, instead of checking once at the start;
+  - sun shadows are redrawn every other frame on Low and Medium; the sky's lighting is recaptured only when the light has changed;
+  - the blur behind the HUD panels is gone (it was costly over a 3D view).
+- **Fixes:** a rare white glare (a broken pixel on a plank edge smeared by the glow effect) can no longer happen; storm clouds now smother the sun's glow.
+
+The file is bigger (about 1.3 MB, was 0.9 MB): the two castaways and their painted skins are inside it.
+
+## Stage 4
 
 - **Saving.** The game saves itself every 30 seconds, when you pause, and when you close or switch away from the tab. The title screen shows **Continue** with the day and time afloat of your saved raft. **New raft** asks once more before replacing it. Dying clears the save. It lives in this browser only.
 - **Peaceful mode.** A fourth difficulty. The shark still swims laps around the raft, but it never bites the raft or you, even when you swim.
@@ -172,9 +208,11 @@ npm install                 # three.js and esbuild (pinned)
 node tools/build.js         # src/ -> index.html (one file, three.js bundled in)
 node tools/build.js --dev   # same, unminified
 NODE_PATH=/opt/node-tools/node_modules node tools/smoke.js   # headless playthrough + screenshots in tools/out/
+NODE_PATH=/opt/node-tools/node_modules node tools/look.js <outDir> [steps.js]        # a few named screenshots, for looking at one thing
+NODE_PATH=/opt/node-tools/node_modules node tools/person-look.js <outDir>            # the castaway on their own: standing, walking, swimming, each move
 ```
 
-`tools/smoke.js` simulates input to play through everything (57 checks): hook, shark bite, spear and scar, repair, rebuild, swim, shark chase, climb, coconut, building a floor piece, putting up a net, a net catching material and a fish, emptying it, eating fish, bait luring the shark, a net torn off, opening the build menu with Q and picking from it, night with no cold meter, recipes locked until their materials are found, clothing made and worn for looks, the crafting table, spear and hook upgrades, the grill and its stone-oven upgrade, a reinforced floor, the rain catcher, drifting up to an island, wading ashore and gathering stone, the raft waiting for you, the anchor, difficulty, the reef shark leaving for good, the hammerhead ramming you off the raft, save/restore, and for Stage 4: island sizes, gathering the new materials on a large island, rope, the smelter (bars and glass), planting and harvesting (and rain speeding it up), the food slot, the solar still, a railing stopping you, climbing the tower and spotting a far island, the sail and map taking you to an island, messages in bottles and the lighthouse reveal, the ending and keeping on playing, peaceful mode, and saving Stage 4 state. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
+`tools/smoke.js` simulates input to play through everything (61 checks): hook, shark bite, spear and scar, repair, rebuild, swim, shark chase, climb, coconut, building a floor piece, putting up a net, a net catching material and a fish, emptying it, eating fish, bait luring the shark, a net torn off, opening the build menu with Q and picking from it, night with no cold meter, recipes locked until their materials are found, clothing made and worn for looks, the crafting table, spear and hook upgrades, the grill and its stone-oven upgrade, a reinforced floor, the rain catcher, drifting up to an island, wading ashore and gathering stone, the raft waiting for you, the anchor, difficulty, the reef shark leaving for good, the hammerhead ramming you off the raft, save/restore, and for Stage 4: island sizes, gathering the new materials on a large island, rope, the smelter (bars and glass), planting and harvesting (and rain speeding it up), the food slot, the solar still, a railing stopping you, climbing the tower and spotting a far island, the sail and map taking you to an island, messages in bottles and the lighthouse reveal, the ending and keeping on playing, peaceful mode, and saving Stage 4 state; and for Stage 5: taking the steering oar and raising the sail, sailing fast across the wind and stalling head to wind, an island swinging round the raft as it turns, and switching to third person and back. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
 
 | File | What it does |
 |---|---|

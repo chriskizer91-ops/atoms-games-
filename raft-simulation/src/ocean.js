@@ -260,7 +260,7 @@ const FRAG = /* glsl */ `
     float cover = clamp((uWind - 7.5) / 13.0, 0.0, 0.34);
     float whitecap = 0.0;
     if (cover > 0.0) {
-      vec2 wuv = vChart * 0.045 + vec2(-uTime * 0.026, -uTime * 0.024);
+      vec2 wuv = vChart * 0.045 + vec2(uTime * 0.026, uTime * 0.024);
       float wn = texture2D(tDetail, wuv).a * 0.65 + texture2D(tDetail, wuv * 2.7 + 0.3).a * 0.35;
       whitecap = smoothstep(1.0 - cover, 1.06 - cover * 0.6, wn) * (0.4 + 0.6 * smoothstep(-0.15, 0.4, vHo + vH * 2.0));
       whitecap *= 1.0 - smoothstep(120.0, 600.0, dist) * 0.6;
