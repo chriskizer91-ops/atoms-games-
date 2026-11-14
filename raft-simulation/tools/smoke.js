@@ -932,14 +932,26 @@ fs.mkdirSync(outDir, { recursive: true });
     p.pos.set(free.i * T - Math.sign(free.i) * 1.0, p.pos.y, free.j * T - Math.sign(free.j) * 1.0); G.step(0.3);
     G.aimAt(free.i * T, 1.4, free.j * T); G.step(0.05);
     const prompt = G.tools.state.prompt && G.tools.state.prompt.text;
+    // E takes the steering oar; W raises the sail a notch; E lets go again
     G.key('KeyE'); G.step(0.1);
+    const helm = !!G.game.helm;
+    G.key('KeyW');
+    const sailSet = G.islands.boat.sailSet;
+    const why = { anchored: G.stations.anchored(), resting: G.islands.resting, onLand: p.onLand, helm: !!G.game.helm, dest: G.islands.dest, enabled: G.input.state.enabled, menu: G.game.menu };
+    G.step(0.1);
+    G.key('KeyE'); G.step(0.1);
+    const letGo = !G.game.helm;
+    G.islands.setSail(0);
+    G.openMap(); G.step(0.1);
     const mapOpen = !document.getElementById('map').hidden;
     // set course for a charted island off to the side
     const st = G.islands.state;
-    const target = [...st.chart.values()].filter((r) => r.kind === 'island' && r.id !== st.resting && Math.hypot(r.x - st.rw.x, r.z - st.rw.z) > 300).sort((a, b) => Math.hypot(a.x - st.rw.x, a.z - st.rw.z) - Math.hypot(b.x - st.rw.x, b.z - st.rw.z))[0];
+    // (the wind blows from the south-east, so pick one that isn't a beat to windward)
+    const offWind = (r) => { const b = Math.atan2(r.z - st.rw.z, r.x - st.rw.x) - Math.PI / 4; return Math.abs(Math.atan2(Math.sin(b), Math.cos(b))) > 1.5; };
+    const target = [...st.chart.values()].filter((r) => r.kind === 'island' && r.id !== st.resting && offWind(r) && Math.hypot(r.x - st.rw.x, r.z - st.rw.z) > 300).sort((a, b) => Math.hypot(a.x - st.rw.x, a.z - st.rw.z) - Math.hypot(b.x - st.rw.x, b.z - st.rw.z))[0];
     target.seen = true;
     G.map.tick();
-    return { built, buildPrompt, prompt, mapOpen, target: target.id, tile: [free.i, free.j] };
+    return { built, buildPrompt, prompt, helm, sailSet, why, letGo, mapOpen, target: target.id, tile: [free.i, free.j] };
   });
   await page.waitForTimeout(200);
   await shot('22-map');
@@ -956,7 +968,8 @@ fs.mkdirSync(outDir, { recursive: true });
     return { d0: Math.round(d0), d1: Math.round(d1), moved: Math.round(moved), sailing: G.islands.state.dest === id };
   }, sail.target);
   // Under sail the raft covers about twice what the current alone would (1.3 m/s x 30 s = 39 m).
-  check('the sail opens the map; a course set there sails you to the island', sail.built && sail.mapOpen && sailing.moved > 55 && sailing.d1 < sailing.d0 - 20, JSON.stringify({ sail, sailing }));
+  check('E at the sail takes the steering oar, W raises the sail, E lets go', sail.built && sail.prompt === 'Take the steering oar' && sail.helm && sail.sailSet === 0.5 && sail.letGo, JSON.stringify(sail));
+  check('a course set on the map sails you to the island', sail.mapOpen && sailing.moved > 55 && sailing.d1 < sailing.d0 - 20, JSON.stringify({ sail, sailing }));
   await page.evaluate(() => { const G = window.__game; const p = G.player.state; p.yaw = 0.9; p.pitch = 0.12; G.step(0.3); });
   await shot('23-under-sail');
 

@@ -305,30 +305,50 @@ function buildStill() {
   return { group: g, water, jug };
 }
 
-// Mast, boom and a patched sail that fills with wind.
+// Mast, boom and a patched sail. The boom and cloth hang on a rig that swings
+// round the mast: out to the side away from the wind, further the more
+// downwind you sail. The cloth is hoisted from the boom up.
+const SAIL_W = 1.4, SAIL_H = 3.1;
 function buildSail() {
   const g = new THREE.Group();
   const mast = mesh(G.mast, M.bamboo);
   mast.position.y = DECK_Y;
   g.add(mast);
+  const rig = new THREE.Group();
+  rig.rotation.y = -Math.PI / 2; // boom pointing aft
+  g.add(rig);
   const boom = mesh(G.boom, M.bamboo);
   boom.position.set(0.7, DECK_Y + 1.0, 0);
-  g.add(boom);
-  const W = 1.4, H = 3.1;
-  const geo = new THREE.PlaneGeometry(W, H, 8, 10).translate(W / 2 + 0.05, H / 2, 0);
+  rig.add(boom);
+  const geo = new THREE.PlaneGeometry(SAIL_W, SAIL_H, 8, 12).translate(SAIL_W / 2 + 0.05, SAIL_H / 2, 0);
   const base = geo.attributes.position.array.slice();
   const cloth = mesh(geo, M.sail);
   cloth.position.y = DECK_Y + 1.05;
-  g.add(cloth);
+  rig.add(cloth);
   const patch = mesh(new THREE.PlaneGeometry(0.45, 0.5).translate(0.75, 1.9, 0.012), M.sailPatch, false);
   cloth.add(patch);
+  // A yard along the head of the sail: it comes down with the cloth.
+  const yard = mesh(G.boom, M.bamboo);
+  yard.scale.set(0.8, 1, 0.8);
+  rig.add(yard);
   for (let k = 0; k < 3; k++) {
     const lash = mesh(G.lash, M.rope, false);
     lash.position.set(0, DECK_Y + 1.3 + k * 1.0, 0);
     lash.rotation.x = Math.PI / 2;
     g.add(lash);
   }
-  return { group: g, cloth, base };
+  // The steering oar: a long sweep lashed to a crutch, trailing aft.
+  const oar = new THREE.Group();
+  oar.position.set(-0.42, DECK_Y + 0.62, 0.3);
+  const shaft = mesh(new THREE.CylinderGeometry(0.022, 0.026, 2.5, 8).rotateX(Math.PI / 2).translate(0, 0, 0.75), M.bamboo);
+  const blade = mesh(new THREE.BoxGeometry(0.03, 0.26, 0.6).translate(0, 0, 2.0), M.bamboo);
+  oar.add(shaft, blade);
+  oar.rotation.x = 0.36;
+  g.add(oar);
+  const crutch = mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.62, 8).translate(0, 0.31, 0), M.bamboo);
+  crutch.position.set(-0.42, DECK_Y, 0.3);
+  g.add(crutch);
+  return { group: g, rig, cloth, base, yard, oar, hoist: 0, swing: 0, belly: 0 };
 }
 
 // Four posts, a ladder and a railed platform to stand on.
@@ -377,6 +397,7 @@ function buildTower() {
   return { group: g };
 }
 
+const IDLE_SAIL = { hoist: 0, boom: 0.14, fill: 0, rudder: 0 };
 const STATION_KINDS = ['grill', 'catcher', 'table', 'anchor', 'planter', 'smelter', 'still', 'sail', 'tower'];
 const isStationMode = (m) => STATION_KINDS.includes(m);
 
@@ -400,6 +421,7 @@ export function createStations(raft, fx, audio) {
       grill: buildGrill, catcher: buildCatcher, table: buildTable, anchor: buildAnchor,
       planter: buildPlanter, smelter: buildSmelter, still: buildStill, sail: buildSail, tower: buildTower,
     }[kind]();
+    built.group.userData.above = true;
     tile.group.add(built.group);
     const hit = mesh(kind === 'tower' ? G.hitTall : kind === 'sail' ? G.hitMast : G.hit, M.hit, false);
     built.group.add(hit);
@@ -539,7 +561,7 @@ export function createStations(raft, fx, audio) {
     // What pressing E on this station would do, as { text, action } or a dim note.
     describe(st, inv) {
       if (st.kind === 'table') return { key: 'E', text: 'Use the crafting table', act: 'craft' };
-      if (st.kind === 'sail') return { key: 'E', text: 'Take the tiller: open the map and set a course', act: 'map' };
+      if (st.kind === 'sail') return { key: 'E', text: 'Take the steering oar', act: 'helm' };
       if (st.kind === 'tower') return { key: 'E', text: 'Climb the lookout tower', act: 'climb' };
       if (st.kind === 'planter') {
         if (st.crop && st.grow >= 1) return { key: 'E', text: `Harvest the ${ITEMS[CROPS[st.crop].food].name.toLowerCase()}`, act: 'harvest' };
@@ -586,6 +608,7 @@ export function createStations(raft, fx, audio) {
     use(st, act, inv) {
       if (act === 'craft') return { craft: true };
       if (act === 'map') return { map: true };
+      if (act === 'helm') return { helm: true };
       if (act === 'climb') return { climb: true };
       if (act === 'plant') {
         const c = nextSeed(st, inv);
@@ -680,7 +703,8 @@ export function createStations(raft, fx, audio) {
       return null;
     },
 
-    update(t, dt, weatherKind, playerPos, wind = 0) {
+    // sail: { hoist 0..1, boom (radians, + to starboard), fill 0..1, rudder } from the sailing.
+    update(t, dt, weatherKind, playerPos, wind = 0, sail = null) {
       if (dirty && mode) refreshGhosts();
       let nearest = null, nearestD = Infinity;
       const wet = weatherKind === 'rain' || weatherKind === 'storm';
@@ -728,16 +752,33 @@ export function createStations(raft, fx, audio) {
           continue;
         }
         if (st.kind === 'sail') {
-          // billow: the cloth bows out more with more wind
+          // The rig follows the sailing: how far the sail is hoisted, where
+          // the boom has swung, and whether the cloth is drawing or flapping.
+          const sv = sail || IDLE_SAIL;
+          st.hoist = sv.hoist;
+          st.swing += (sv.boom - st.swing) * (1 - Math.exp(-dt * 2.5));
+          st.rig.rotation.y = st.swing - Math.PI / 2;
+          const up = Math.max(0.07, st.hoist);
+          st.cloth.scale.y = up;
+          st.yard.position.set(0.7, DECK_Y + 1.07 + SAIL_H * up, 0);
+          st.oar.rotation.y = -(sv.rudder || 0) * 0.9;
+          // Belly out to leeward when drawing; shiver when it luffs or is bundled on the boom.
+          const side = st.swing > 0 ? -1 : 1;
+          const want = side * (0.12 + wind * 0.4) * sv.fill * (0.25 + 0.75 * st.hoist);
+          st.belly += (want - st.belly) * (1 - Math.exp(-dt * 3));
+          const flap = (1 - sv.fill) * st.hoist * (0.05 + wind * 0.09);
           const arr = st.cloth.geometry.attributes.position.array;
-          const bow = 0.18 + wind * 0.35;
           for (let v = 0; v < arr.length; v += 3) {
             const x = st.base[v], y = st.base[v + 1];
-            const u = (x - 0.05) / 1.4, w = y / 3.1;
-            arr[v + 2] = Math.sin(Math.PI * u) * Math.sin(Math.PI * Math.min(1, w * 1.1)) * bow * (1 + Math.sin(t * 2.3 + w * 3) * 0.12);
+            const u = (x - 0.05) / SAIL_W, w = y / SAIL_H;
+            const shape = Math.sin(Math.PI * u) * Math.sin(Math.PI * Math.min(1, w * 1.1));
+            arr[v + 2] = shape * st.belly * (1 + Math.sin(t * 2.3 + w * 3) * 0.1)
+              + Math.sin(t * 17 + u * 9 + w * 5) * flap * u;
           }
           st.cloth.geometry.attributes.position.needsUpdate = true;
-          st.cloth.geometry.computeVertexNormals();
+          // Shading only needs refreshing a few times a second.
+          st.normT = (st.normT || 0) - dt;
+          if (st.normT <= 0) { st.normT = 0.12; st.cloth.geometry.computeVertexNormals(); }
           continue;
         }
         if (st.kind === 'tower' || st.kind === 'table') continue;

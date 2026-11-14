@@ -126,6 +126,8 @@ export function createRaft(scene) {
   let outsideDirty = true;
   let buildMode = null; // null, 'floor' or 'net' while the hammer is out
   const tilt = { y: 0, rx: 0, rz: 0 };
+  let heel = 0;            // lean from the wind in the sail (radians, + = starboard side down)
+  const extent = { cx: 0, cz: 0, hx: 1, hz: 1 };
   const listeners = { added: [], broken: [], reset: [] };
   const emit = (name, arg) => listeners[name].forEach((f) => f(arg));
 
@@ -144,12 +146,12 @@ export function createRaft(scene) {
       const log = new THREE.Mesh(geo.log, mat.log);
       log.position.set(lx * TILE, DECK_Y - 0.22, 0);
       log.rotation.z = rand(0, Math.PI * 2);
-      log.castShadow = log.receiveShadow = true;
+      // Under the deck: nothing sees a log's shadow.
+      log.receiveShadow = true;
       g.add(log);
       logs.push(log);
     }
     const lash = new THREE.Mesh(geo.lashing, mat.rope);
-    lash.castShadow = true;
     g.add(lash);
     logs.push(lash);
 
@@ -164,6 +166,7 @@ export function createRaft(scene) {
       m.rotation.x = rand(-0.012, 0.012);
       m.castShadow = m.receiveShadow = true;
       m.userData.base = { x, z, y: m.position.y, ry: m.rotation.y, variant };
+      m.userData.above = true; // out of the water: skipped by the under-the-sea pass
       g.add(m);
       boards.push(m);
     }
@@ -186,6 +189,7 @@ export function createRaft(scene) {
     }
     brackets.traverse((o) => { if (o.isMesh) o.receiveShadow = true; });
     brackets.visible = false;
+    brackets.userData.above = true;
     g.add(brackets);
 
     const ghost = new THREE.Mesh(geo.ghost, mat.ghost);
@@ -555,6 +559,10 @@ export function createRaft(scene) {
       return out.set(x, deckHeightAt(x, z), z);
     },
 
+    setHeel(h) { heel = h; },
+    // The middle and half-sizes of the deck, as of the last update.
+    get extent() { return extent; },
+
     update(t, dt) {
       if (buildDirty && buildMode) refreshBuildGhosts();
       // Ride the swell: average a few samples across the raft, tilt gently.
@@ -572,7 +580,8 @@ export function createRaft(scene) {
       const slopeX = (hE - hW) / (2 * hx);
       const slopeZ = (hN - hS) / (2 * hz);
       tilt.y = damp(tilt.y, targetY, 3, dt);
-      tilt.rz = damp(tilt.rz, Math.atan(slopeX) * 0.45, 2.5, dt);
+      tilt.rz = damp(tilt.rz, Math.atan(slopeX) * 0.45 - heel, 2.5, dt);
+      extent.cx = cx; extent.cz = cz; extent.hx = hx; extent.hz = hz;
       tilt.rx = damp(tilt.rx, -Math.atan(slopeZ) * 0.45, 2.5, dt);
       group.position.y = tilt.y;
       group.rotation.set(tilt.rx, 0, tilt.rz);

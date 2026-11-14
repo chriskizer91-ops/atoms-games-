@@ -1,6 +1,10 @@
 import * as THREE from 'three';
-import { STATS, SHARK_TIERS, ITEMS, TILE, DECK_Y, GRUDGE, CLOTHING, GEAR, STATIONS, UPGRADES, CATCHER, STILL, CROPS, ISLAND_SIZES, NEXT_PREDATOR_DELAY, DIFFICULTY } from './config.js';
-import { createOcean } from './ocean.js';
+import { CURRENT_SPEED, STATS, SHARK_TIERS, ITEMS, TILE, DECK_Y, GRUDGE, CLOTHING, GEAR, STATIONS, UPGRADES, CATCHER, STILL, CROPS, ISLAND_SIZES, NEXT_PREDATOR_DELAY, DIFFICULTY } from './config.js';
+import { createOcean, setShelters, waveHeight } from './ocean.js';
+import { createWake } from './wake.js';
+import { createSailHud } from './sailhud.js';
+import { SAILING, boomAngle, sailFill, wrap } from './sailing.js';
+import { toScene } from './frame.js';
 import { createSky, SKY } from './sky.js';
 import { createPipeline, QUALITY } from './render.js';
 import { setAnisotropy } from './textures.js';
@@ -17,7 +21,9 @@ import { createRails } from './rails.js';
 import { createStory } from './story.js';
 import { createMap } from './map.js';
 import { createPlayer } from './player.js';
-import { createTools, SLOTS, BUILD_MODES } from './tools.js';
+import { createTools, makeHeldModels, SLOTS, BUILD_MODES } from './tools.js';
+import { createView } from './view.js';
+import { createCastaway, CASTAWAYS } from './people/castaway.js';
 import { createInput } from './input.js';
 import { createHud, icon } from './hud.js';
 import { createFx } from './fx.js';
@@ -43,6 +49,7 @@ const ocean = createOcean(scene, { sky: SKY, fog: scene.fog });
 const raft = createRaft(scene);
 const debris = createDebris(scene);
 const fx = createFx(scene);
+const wake = createWake(scene);
 const shark = createShark(scene, SHARK_TIERS);
 const nets = createNets(raft, debris, fx, audio);
 const bait = createBait(scene, fx, audio);
@@ -58,9 +65,11 @@ const weather = createWeather({
   onEnvironment: (env) => { if (tools) tools.vmScene.environment = env; },
 });
 const player = createPlayer(camera);
+const view = createView(camera);
 player.setRails(rails);
 const input = createInput(canvas);
 const hud = createHud();
+const sailHud = createSailHud();
 
 // ---------- game state ----------
 // Goals come in groups; the next group shows once the current one is done.
@@ -351,7 +360,7 @@ const events = {
     hud.toast(`Built: ${STATIONS[kind].name}`, 'gain');
     if (kind === 'sail') {
       progress('sail');
-      hud.toast('Press E at the sail, or M anywhere, to open the map and pick an island', 'gain');
+      hud.alert('Sail built. Press E at it to take the steering oar: W raises the sail, A and D steer. Or press M and click an island to be sailed there.', { kind: 'good', duration: 9 });
     }
     if (kind === 'tower') hud.toast('Press E at the tower to climb up and look out', 'gain');
     if (kind === 'table') {
@@ -369,6 +378,7 @@ const events = {
   onStationUse(station, act, r) {
     if (r.craft) openMenu('craft', true);
     if (r.map) openMap();
+    if (r.helm) takeHelm(station);
     if (r.climb) {
       player.climbTower({ x: station.tile.i * TILE, z: station.tile.j * TILE, h: TOWER_TOP - DECK_Y, tile: station.tile });
       audio.climb?.();
@@ -471,7 +481,7 @@ const events = {
 tools = createTools({ scene, camera, raft, nets, rails, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats: game.stats, events });
 
 const islandName = (rec) => (rec.kind === 'lighthouse' ? 'the lighthouse island' : `a ${ISLAND_SIZES[rec.size].label.toLowerCase()} island`);
-const chartPoint = (rec) => { const st = islands.state; return tmpV.set(rec.x - st.rw.x, 2, rec.z - st.rw.z); };
+const chartPoint = (rec) => { const p = toScene(rec.x, rec.z); return tmpV.set(p.x, 2, p.z); };
 islands.on({
   onSighted(rec) {
     progress('chart');
@@ -508,7 +518,7 @@ rails.onBuiltOver(() => {
 const map = createMap({
   islands, audio,
   hasSail: () => !!stations.has('sail'),
-  onCourse: () => hud.toast('Course set. The sail will take you there.', 'gain'),
+  onCourse: () => hud.toast('Course set. The raft will sail itself there, tacking if the wind is against it.', 'gain'),
 });
 
 stations.onLost((st) => hud.toast(`The ${STATIONS[st.kind].name.toLowerCase()} went overboard with its floor piece`, 'warn'));
@@ -526,10 +536,39 @@ bait.onReturn(() => {
   hud.toast('Bait needs to land in the water', 'warn');
 });
 
-const pipeline = createPipeline({ renderer, scene, camera, vmScene: tools.vmScene, vmCamera: tools.vmCamera, ocean, sun, sky: SKY, aboveWaterOnly: [sky.mesh, fx.sprites, weather.mesh] });
+const pipeline = createPipeline({ renderer, scene, camera, vmScene: tools.vmScene, vmCamera: tools.vmCamera, ocean, sun, sky: SKY, aboveWaterOnly: [sky.mesh, fx.sprites, weather.mesh, wake.mesh] });
+sky.follow(tools.vmScene);
 sky.capture(0);
 tools.vmScene.environment = sky.environment;
 setAnisotropy(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+
+// ---------- first or third person ----------
+const VIEW_KEY = 'raft-sim-view';
+try { view.set(localStorage.getItem(VIEW_KEY) === 'third'); } catch { /* storage blocked */ }
+
+// ---------- who you are ----------
+// The body seen in third person (and on the title screen) is one of the fair
+// folk from Moon Faire. Your own arms take its skin colour.
+const BODY_KEY = 'raft-sim-body';
+let bodyId = null;
+async function applyBody(id, remember = true) {
+  if (!CASTAWAYS.includes(id)) id = CASTAWAYS[0];
+  document.querySelectorAll('.castaway button').forEach((b) => b.classList.toggle('on', b.dataset.b === id));
+  if (remember) {
+    try { localStorage.setItem(BODY_KEY, id); } catch { /* storage blocked */ }
+  }
+  if (id === bodyId) return;
+  bodyId = id;
+  const old = view.state.body;
+  const body = await createCastaway({ id });
+  if (bodyId !== id) { body.dispose(); return; }   // another was picked meanwhile
+  scene.add(body.root);
+  view.setBody(body, makeHeldModels());
+  tools.setSkin(new THREE.Color(body.skin));
+  if (old) { scene.remove(old.root); old.dispose(); }
+}
+document.querySelectorAll('.castaway button').forEach((b) => b.addEventListener('click', () => applyBody(b.dataset.b)));
+try { applyBody(localStorage.getItem(BODY_KEY) || CASTAWAYS[0], false); } catch { applyBody(CASTAWAYS[0], false); }
 
 // ---------- difficulty ----------
 const DIFF_KEY = 'raft-sim-difficulty';
@@ -556,24 +595,47 @@ function applyQuality(name, remember = true) {
     try { localStorage.setItem(QUALITY_KEY, pipeline.quality); } catch { /* storage blocked */ }
   }
 }
-document.querySelectorAll('.quality button').forEach((b) => b.addEventListener('click', () => applyQuality(b.dataset.q)));
-// Watch the first seconds of play; if frames are slow, step down once.
-const perfWatch = { t: 0, n: 0, sum: 0, done: false };
-function watchPerf(dt) {
-  if (perfWatch.done) return;
-  perfWatch.t += dt;
-  if (perfWatch.t < 3) return;
-  perfWatch.n++;
-  perfWatch.sum += dt;
-  if (perfWatch.t > 8) {
-    perfWatch.done = true;
-    const avg = perfWatch.sum / perfWatch.n;
-    const order = ['high', 'medium', 'low'];
-    const i = order.indexOf(pipeline.quality);
-    if (avg > 1 / 38 && i < order.length - 1) {
-      applyQuality(order[i + 1]);
-      hud.toast(`Graphics set to ${QUALITY[pipeline.quality].label} to keep it smooth. Change it in the pause menu.`, 'warn');
+// A level you pick yourself is yours: the watch still trims sharpness, but won't change the level.
+document.querySelectorAll('.quality button').forEach((b) => b.addEventListener('click', () => { applyQuality(b.dataset.q); perf.dropped = true; }));
+// Keep it smooth: watch the real frame rate all the time. When frames run
+// slow for a couple of seconds, trim the sharpness a step; when there has
+// been headroom for a good while, give it back. If trimming isn't enough in
+// the first seconds of a game, drop a whole graphics level (once) and say so.
+const perf = { t: 0, n: 0, slowFor: 0, fastFor: 0, hold: 3, dropped: false, last: 0, fps: 60 };
+function watchPerf(now) {
+  const raw = (now - perf.last) / 1000;
+  perf.last = now;
+  if (!(raw > 0) || raw > 0.25) return;   // a stall or a hidden tab says nothing about the graphics
+  perf.t += raw;
+  perf.n++;
+  if (perf.t < 1) return;
+  const avg = perf.t / perf.n;
+  perf.fps = 1 / avg;
+  perf.t = 0;
+  perf.n = 0;
+  if (perf.hold > 0) { perf.hold--; return; }
+  if (avg > 1 / 48) { perf.slowFor++; perf.fastFor = 0; } else if (avg < 1 / 57) { perf.fastFor++; perf.slowFor = 0; } else { perf.slowFor = 0; perf.fastFor = 0; }
+  if (perf.slowFor >= 2) {
+    perf.slowFor = 0;
+    perf.hold = 2;
+    if (pipeline.scale > 0.71) {
+      pipeline.setScale(pipeline.scale - (avg > 1 / 30 ? 0.2 : 0.1));
+      resize();
+    } else if (!perf.dropped) {
+      perf.dropped = true;
+      const order = ['high', 'medium', 'low'];
+      const i = order.indexOf(pipeline.quality);
+      if (i < order.length - 1) {
+        applyQuality(order[i + 1]);
+        hud.toast(`Graphics set to ${QUALITY[pipeline.quality].label} to keep it smooth. Change it in the pause menu.`, 'warn');
+      }
     }
+  } else if (perf.fastFor >= 12 && pipeline.scale < 1) {
+    // Only give sharpness back slowly, so it never hunts up and down.
+    perf.fastFor = 0;
+    perf.hold = 2;
+    pipeline.setScale(pipeline.scale + 0.05);
+    resize();
   }
 }
 
@@ -593,6 +655,10 @@ function newGame() {
   inventory.set({ coconut: 1 });
   Object.assign(game.stats, { health: 100, hunger: 100, thirst: 100 });
   game.landed = false;
+  game.helm = null;
+  game.sailTip = {};
+  wake.reset();
+  debris.setFlow(CURRENT_SPEED);
   game.nextPredatorIn = 0;
   game.lastHour = 8;
   game.menu = false;
@@ -877,6 +943,12 @@ window.addEventListener('keydown', (e) => {
     closeMenu();
     return;
   }
+  if (e.code === 'KeyV' && !game.menu) {
+    const third = view.toggle();
+    try { localStorage.setItem(VIEW_KEY, third ? 'third' : 'first'); } catch { /* storage blocked */ }
+    hud.toast(third ? 'Looking from behind. V: back to your own eyes.' : 'Through your own eyes. V: look from behind.', 'gain');
+    return;
+  }
   if (e.code === 'KeyM') {
     e.preventDefault();
     if (game.menu === 'map') closeMenu();
@@ -902,6 +974,102 @@ canvas.addEventListener('click', () => {
 });
 
 document.addEventListener('click', (e) => { if (e.target.closest('button')) audio.click(); });
+
+// ---------- sailing ----------
+// At the steering oar the movement keys go to the raft: A and D steer, W and
+// S raise and lower the sail a notch. E, Space or walking off lets go; the oar
+// stays lashed where you left it, so the raft holds its line.
+function takeHelm(station) {
+  if (game.helm) { leaveHelm(); return; }
+  game.helm = station;
+  player.state.helm = true;
+  audio.pickup();
+  const b = islands.boat;
+  if (stations.anchored()) hud.toast('The anchor is down. Raise it before you set sail.', 'warn');
+  else if (b.sailSet === 0) hud.toast('At the oar. W raises the sail.', 'gain');
+}
+function leaveHelm(note) {
+  if (!game.helm) return;
+  game.helm = null;
+  player.state.helm = false;
+  if (note) hud.toast(note, 'gain');
+}
+function sailTip(id, text, kind = 'good', every = 45) {
+  const last = game.sailTip[id];
+  if (last !== undefined && game.time - last < every) return;
+  game.sailTip[id] = game.time;
+  hud.alert(text, { kind, duration: 6 });
+}
+const helmIn = { steer: 0 };
+function updateHelm(dt, ps) {
+  helmIn.steer = 0;
+  const st = game.helm;
+  if (!st) return;
+  const gone = st.tile.broken || !stations.hasStation(st.tile);
+  const far = Math.hypot(ps.pos.x - st.tile.i * TILE, ps.pos.z - st.tile.j * TILE) > 2.6;
+  if (gone || far || ps.inWater || ps.tower) { leaveHelm(); return; }
+  if (input.wasPressed('KeyE') || input.movePressed('jump')) {
+    input.consume('KeyE');
+    leaveHelm(islands.boat.sailSet > 0 ? 'Oar lashed. The raft holds its line.' : null);
+    return;
+  }
+  helmIn.steer = (input.move('right') ? 1 : 0) - (input.move('left') ? 1 : 0);
+  const b = islands.boat;
+  if (helmIn.steer !== 0 && islands.dest != null) {
+    islands.setDestination(null);
+    hud.toast('You take the oar: course cleared.', 'gain');
+  }
+  const up = input.movePressed('forward'), down = input.movePressed('back');
+  if (up || down) {
+    if (stations.anchored()) { audio.error(); hud.toast('The anchor is down. Raise it first.', 'warn'); return; }
+    if (islands.dest != null) islands.setDestination(null);
+    const next = clamp(Math.round(b.sailSet * 2) + (up ? 1 : -1), 0, 2) / 2;
+    if (next !== b.sailSet) {
+      islands.setSail(next);
+      audio.pickup();
+      hud.toast(next === 0 ? 'Sail down' : next === 0.5 ? 'Sail half up' : 'Full sail', 'gain');
+    }
+  }
+}
+
+const shelterList = [];
+const sailView = { hoist: 0, boom: 0.14, fill: 0, rudder: 0 };
+let twaNow = 0;
+function updateSailing(dt, wx, isl, ps) {
+  const b = islands.boat;
+  const c = raft.center();
+  const ext = raft.extent;
+  // Things afloat stream past faster under sail and swing round as the raft turns.
+  debris.turn(isl.turned);
+  debris.setFlow(CURRENT_SPEED + 0.45 * isl.through);
+  setShelters(islands.shelters(shelterList));
+  raft.setHeel(b.heel * SAILING.heelShown);
+  wake.update(game.time, dt, ext.cx, ext.cz + ext.hz, ext.hx, isl.through, wx.night, wx.daylight);
+
+  twaNow = wrap(wx.wind.from - (Math.PI / 2 - isl.heading));
+  sailView.hoist = b.sail;
+  sailView.boom = boomAngle(twaNow);
+  sailView.fill = sailFill(twaNow);
+  sailView.rudder = b.rudder;
+
+  // Spray off the bow when driving hard.
+  game.sprayT = (game.sprayT || 0) - dt * Math.max(0, isl.through - 1.6);
+  if (game.sprayT < 0) {
+    game.sprayT = rand(0.5, 1.1);
+    fx.splash(tmpV.set(ext.cx + rand(-ext.hx, ext.hx), waveHeight(ext.cx, ext.cz - ext.hz, game.time) + 0.1, ext.cz - ext.hz - 0.15), 0.45 + 0.12 * isl.through);
+  }
+
+  const hasSail = !!stations.has('sail');
+  if (isl.sailing && b.sail > 0.3 && islands.dest == null) {
+    if (isl.over > 0.03) sailTip('over', 'Too much sail for this wind: the raft is fighting you. Press S at the oar to take some in.', 'danger', 25);
+    else if (Math.abs(twaNow) < SAILING.noGo && Math.abs(b.speed) < 0.5) sailTip('irons', 'Head to wind: the sail only flaps. Steer away from the wind with A or D until it fills.', 'danger', 30);
+  }
+  if (isl.surfing > 0.6) sailTip('surf', 'A wave has the raft: you are surfing!', 'good', 60);
+  sailHud.update({
+    show: hasSail, dt, wind: wx.wind, heading: isl.heading, speed: isl.speed, sail: b.sail, sailSet: b.sailSet,
+    boom: sailView.boom, helm: !!game.helm, course: islands.dest != null && !isl.resting, over: isl.over, surfing: isl.surfing,
+  });
+}
 
 // ---------- per-frame ----------
 function survival(dt) {
@@ -955,7 +1123,9 @@ function updatePlay(dt) {
   // Hammer and net rays this frame need the raft's current pose, not last frame's.
   raft.group.updateMatrixWorld(true);
   const wx = weather.update(dt, game.time, camera.position, true);
+  updateHelm(dt, player.state);
   player.update(game.time, dt, input, raft, events, 0, islands);
+  view.aim(player.state, game.time, dt);
   const ui = tools.update(game.time, dt, input, player, SKY.sunDir);
   // Footsteps on the deck or sand, strokes when swimming.
   const ps0 = player.state;
@@ -980,7 +1150,11 @@ function updatePlay(dt) {
     raftCenter: raft.center(), raftRadius: raft.radius(),
     aboard: !ps.inWater && !ps.onLand, onLand: ps.onLand, anchored: stations.anchored(),
     hasSail: !!stations.has('sail'), onTower: !!ps.tower, night: wx.night,
+    wind: wx.wind, steer: helmIn.steer,
+    // downhill ahead when a wave lifts the stern
+    slope: (waveHeight(0, 3, game.time) - waveHeight(0, -3, game.time)) / 6,
   });
+  updateSailing(dt, wx, isl, ps);
   keepOffIsland(dt);
   // Gulls when land is close.
   const ic = islands.center();
@@ -997,7 +1171,7 @@ function updatePlay(dt) {
   if (!isl.resting && !ps.onLand) game.landed = false;
   nets.update(game.time, dt);
   rails.update();
-  stations.update(game.time, dt, wx.kind, ps.pos, wx.kind === 'storm' ? 1 : wx.kind === 'rain' ? 0.6 : 0.25);
+  stations.update(game.time, dt, wx.kind, ps.pos, clamp((wx.wind.speed - 3) / 11, 0.1, 1), sailView);
   if (story.tick(dt)) {
     const c = raft.center();
     const d = debris.spawn('bottle', c.x - debris.flow.x * 60 + rand(-5, 5), c.z - debris.flow.z * 60);
@@ -1041,6 +1215,13 @@ function updatePlay(dt) {
     }
   }
 
+  // Third person: the body follows you, and the picture moves out behind.
+  view.updateBody(dt, ps, {
+    slot: SLOTS[ui.slot].id, sprint: input.move('sprint'), anim: tools.state.anim, daylight: wx.daylight,
+    inHand: SLOTS[ui.slot].id === 'food' ? inventory.get(ui.food) > 0 : SLOTS[ui.slot].id === 'fish' ? inventory.get('fish') > 0 : !ui.hookOut,
+  });
+  view.apply(ps, game.time);
+
   if (game.shake > 0) {
     game.shake = Math.max(0, game.shake - dt);
     camera.position.x += (Math.random() - 0.5) * game.shake * 0.12;
@@ -1059,10 +1240,10 @@ function updatePlay(dt) {
   hud.setSlot(ui.slot, hintFor(SLOTS[ui.slot].id, ui));
   hud.setPrompt(ui.prompt);
   hud.setCharge(ui.charge);
-  hud.setSwimming(ps.inWater);
+  hud.setSwimming(ps.inWater && view.eyes);
   const islandNote = isl.resting
     ? (stations.anchored() ? 'Island: anchored' : `Island: ${formatTime(isl.visitLeft)}`)
-    : stations.anchored() ? 'Anchored' : isl.sailing ? 'Under sail' : '';
+    : stations.anchored() ? 'Anchored' : isl.sailing ? (islands.dest != null ? 'Sailing a course' : 'Under sail') : '';
   hud.setClock(wx.day, wx.hour, wx.kind, wx.night, islandNote);
   hud.setBuildBar(SLOTS[ui.slot].id === 'hammer' ? BUILD_MODES : null, ui.hammerMode);
   hud.update(dt, camera);
@@ -1076,6 +1257,7 @@ function updateTitle(dt) {
   shark.update(game.time, dt, { raft, nets, player: { pos: new THREE.Vector3(0, 0.4, 0), inWater: false }, fx, events: {} });
   shark.holdOff(30);
   const c = raft.center();
+  view.pose(dt, c.x + 0.3, raft.deckHeightAt(c.x + 0.3, c.z + 0.2), c.z + 0.2, 2.6);
   camera.position.set(c.x + Math.sin(titleAngle) * 7.5, 3.1, c.z + Math.cos(titleAngle) * 7.5);
   camera.lookAt(c.x + Math.sin(titleAngle + 2.4) * 6, 0.2, c.z + Math.cos(titleAngle + 2.4) * 6);
 }
@@ -1106,9 +1288,11 @@ function frame(now) {
 
   ocean.update(game.time, camera.position);
   sky.update(game.time, camera.position);
-  if (game.mode === 'play') watchPerf(dt);
+  if (game.mode === 'play') watchPerf(now);
+  else perf.last = now;
 
-  pipeline.render(game.mode === 'play' || game.mode === 'paused', camera.position);
+  const playing = game.mode === 'play' || game.mode === 'paused';
+  pipeline.render(playing && view.eyes, playing ? player.state.pos : camera.position);
   input.endFrame(dt);
   requestAnimationFrame(frame);
 }
@@ -1133,14 +1317,15 @@ else start(window.claude?.hot?.data ?? {});
 // Handles for automated checks (tools/smoke.js).
 window.__game = {
   game, raft, shark, debris, nets, rails, bait, stations, weather, crafting, islands, story, map, player, tools, inventory, input, camera, events,
-  applyDifficulty,
+  applyDifficulty, takeHelm, leaveHelm, wake, ocean, sky, renderer, scene, view,
   openMenu, closeMenu, openMap, openNote,
   newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline, saveGame, readSave, clearSave,
   hold: false,
   draw() {
     ocean.update(game.time, camera.position);
     sky.update(game.time, camera.position);
-    pipeline.render(game.mode === 'play' || game.mode === 'paused', camera.position);
+    const playing = game.mode === 'play' || game.mode === 'paused';
+    pipeline.render(playing && view.eyes, playing ? player.state.pos : camera.position);
   },
   step(sec, fn, draw = true) {
     const n = Math.round(sec / (1 / 60));

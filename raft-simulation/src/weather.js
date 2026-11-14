@@ -3,6 +3,8 @@ import { DAY, WEATHER } from './config.js';
 import { SKY } from './sky.js';
 import { setSwell } from './ocean.js';
 import { clamp, damp, rand, smoothstep, weightedPick } from './util.js';
+import { FRAME, dirToScene, frameYaw } from './frame.js';
+import { windAt, wrap } from './sailing.js';
 
 // Clock and weather. Every frame this rewrites the shared SKY state, the sun
 // light, the fog and the swell, and reports how hot, cold and wet it is.
@@ -64,14 +66,19 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
   }
 
   const tmpC = new THREE.Color();
-  const info = { day: 1, hour: 8, kind: 'clear', daylight: 1, night: 0, rain: 0, storm: 0, heat: 0, cold: 0, wet: 0 };
+  // wind: where it blows from on the chart and how hard (m/s); windScene: the
+  // direction it blows toward in the scene, for rain, spray and the sail.
+  const wind = { from: 0, speed: 6, gust: 0 };
+  const info = { day: 1, hour: 8, kind: 'clear', daylight: 1, night: 0, rain: 0, storm: 0, heat: 0, cold: 0, wet: 0, wind, windX: 0, windZ: 0 };
+  const tmpD = { x: 0, z: 0 };
+  let lastYaw = 0, lastSunY = -9, lastCover = -9;
 
   const api = {
     mesh: rainMesh,
     envInterval: 2.5, // seconds between sky-lighting refreshes
     get state() { return st; },
 
-    setTime(hour) { st.hour = hour; st.envTimer = 0; },
+    setTime(hour) { st.hour = hour; st.envTimer = 0; st.envAge = 1e9; },
     setWeather(kind, instant = false) {
       st.kind = kind;
       st.timer = rand(...WEATHER.kinds[kind].dur);
@@ -79,7 +86,7 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
         const k = WEATHER.kinds[kind];
         Object.assign(st, { cover: k.cover, rain: k.rain, storm: k.storm, swell: k.swell, fog: k.fog });
       }
-      st.envTimer = 0;
+      st.envTimer = 0; st.envAge = 1e9;
     },
 
     reset() {
@@ -95,7 +102,7 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
     restore(d) {
       if (!d) return;
       Object.assign(st, d);
-      st.envTimer = 0;
+      st.envTimer = 0; st.envAge = 1e9;
     },
 
     update(dt, time, camPos, live) {
@@ -129,12 +136,18 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
       SKY.cover = st.cover;
       SKY.storm = st.storm;
 
+      // The sky keeps chart directions (its dome turns with the chart); the
+      // light itself is wanted in the raft's frame.
+      const lightFrom = (v) => {
+        dirToScene(v.x, v.z, tmpD);
+        SKY.sunDir.set(tmpD.x, v.y, tmpD.z);
+      };
       if (sy > 0.02) {
-        SKY.sunDir.copy(SKY.trueSun);
+        lightFrom(SKY.trueSun);
         if (SKY.sunDir.y < 0.08) { SKY.sunDir.y = 0.08; SKY.sunDir.normalize(); }
         SKY.sunColor.copy(PAL.sunLow).lerp(PAL.sunNoon, smoothstep(0.05, 0.45, sy));
       } else {
-        SKY.sunDir.copy(SKY.moonDir);
+        lightFrom(SKY.moonDir);
         if (SKY.sunDir.y < 0.1) { SKY.sunDir.y = 0.1; SKY.sunDir.normalize(); }
         SKY.sunColor.copy(PAL.moon).multiplyScalar(0.55);
       }
@@ -157,7 +170,13 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
       ocean.uniforms.uFogDensity.value = scene.fog.density;
       ocean.uniforms.uGlow.value = night;
       ocean.uniforms.uDay.value = daylight * (1 - 0.45 * st.cover);
-      setSwell(st.swell);
+      // The long ocean swell grows with the weather; so does the wind.
+      setSwell(st.swell, 0.62 + (st.swell - 1) * 1.35);
+      windAt(time, clamp(0.12 * st.cover + 0.3 * st.rain + 0.58 * st.storm, 0, 1), wind);
+      dirToScene(-Math.cos(wind.from), -Math.sin(wind.from), tmpD);
+      info.windX = tmpD.x;
+      info.windZ = tmpD.z;
+      ocean.setWeather(wind.speed, st.rain);
       fx.setGlow(night);
 
       // ---- lightning ----
@@ -186,27 +205,43 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
       rainMesh.visible = st.rain > 0.02;
       rainMat.opacity = clamp(st.rain * 0.55, 0, 0.55) * (1 - night * 0.4);
       if (rainMesh.visible) {
-        const wind = 2 + st.storm * 5;
+        // Rain slants with the wind.
+        const lean = wind.speed * 0.035;
+        const lx = info.windX * lean, lz = info.windZ * lean;
         for (let i = 0; i < RAIN_DROPS; i++) {
           const d = drops[i];
           d.y -= d.v * dt;
-          d.x += wind * 0.3 * dt;
+          d.x += lx * d.v * dt;
+          d.z += lz * d.v * dt;
           if (d.y < -1) { d.y += RAIN_BOX.y; d.x = rand(-1, 1) * RAIN_BOX.x / 2; d.z = rand(-1, 1) * RAIN_BOX.z / 2; }
           const x = camPos.x + d.x, y = camPos.y - 4 + d.y, z = camPos.z + d.z;
           const j = i * 6;
           pos[j] = x; pos[j + 1] = y; pos[j + 2] = z;
-          pos[j + 3] = x + wind * 0.02; pos[j + 4] = y + 0.45; pos[j + 5] = z;
+          pos[j + 3] = x - lx * 0.45; pos[j + 4] = y + 0.45; pos[j + 5] = z - lz * 0.45;
         }
         rainGeo.attributes.position.needsUpdate = true;
       }
       audio.setRain?.(st.rain);
-      audio.setWind?.(st.storm || 0);
+      audio.setWind?.(clamp(st.storm + Math.max(0, wind.speed - 8) * 0.05 + wind.gust * 0.15, 0, 1));
 
       // ---- sky lighting for everything else, refreshed every few seconds ----
+      // Capturing the sky costs a few milliseconds, so it waits until the
+      // light has changed enough to see (or the clouds have drifted a while).
       st.envTimer -= dt;
-      if (st.envTimer <= 0) {
+      st.envAge = (st.envAge || 0) + dt;
+      const changed = Math.abs(sy - lastSunY) > 0.012 || Math.abs(st.cover - lastCover) > 0.03 || st.flash > 0.5;
+      if (st.envTimer <= 0 && (changed || st.envAge > api.envInterval * 6)) {
         st.envTimer = api.envInterval;
+        st.envAge = 0;
+        lastSunY = sy;
+        lastCover = st.cover;
         onEnvironment(sky.capture(time));
+      }
+      // The sky dome and the captured light keep north where the chart has it.
+      const yaw = frameYaw();
+      if (yaw !== lastYaw || sky.mesh.rotation.y !== yaw) {
+        lastYaw = yaw;
+        sky.setYaw(yaw);
       }
 
       Object.assign(info, {

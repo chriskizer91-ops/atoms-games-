@@ -74,6 +74,7 @@ export function createRails(raft) {
     const built = buildRail();
     built.group.position.set(side[0] * HALF, 0, side[1] * HALF);
     built.group.rotation.y = Math.atan2(side[0], side[1]);
+    built.group.userData.above = true;
     tile.group.add(built.group);
     const rail = { tile, side, group: built.group, hit: built.hit };
     built.hit.userData.rail = rail;

@@ -5,6 +5,7 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { HOOK, SPEAR, HAMMER, COSTS, FISH, FOODS, ITEMS, STATIONS, UPGRADES, SPEAR_POWER, HOOK_LEVELS, PLAYER } from './config.js';
 import { makeFish } from './nets.js';
 import { waveHeight } from './ocean.js';
+import { makeArm, handMaterials, CUP } from './hands.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { materials } from './materials.js';
 import { clamp, damp, lerp } from './util.js';
@@ -124,41 +125,39 @@ function makeCoconut() {
   return g;
 }
 
-// A closed right hand: four curled fingers around the grip axis, the back
-// of the hand on +x, thumb over the top.
-function makeHand() {
-  const g = new THREE.Group();
-  const back = new THREE.Mesh(new RoundedBoxGeometry(0.036, 0.094, 0.082, 3, 0.015), MAT.skin);
-  back.position.set(0.033, -0.002, 0.024);
-  g.add(back);
-  const fingers = [[0.032, 0.0235], [0.0105, 0.024], [-0.011, 0.0232], [-0.031, 0.021]];
-  for (const [y, r] of fingers) {
-    const f = new THREE.Mesh(new THREE.TorusGeometry(r, 0.0128, 8, 14, Math.PI * 1.42).rotateX(-Math.PI / 2), MAT.skin);
-    f.position.y = y;
-    g.add(f);
-    const tipA = -Math.PI * 1.42;
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.0128, 8, 6), MAT.skin);
-    tip.position.set(Math.cos(tipA) * r, y, Math.sin(-tipA) * -r);
-    g.add(tip);
-  }
-  const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.0128, 0.046, 4, 10), MAT.skin);
-  thumb.rotation.set(0.25, 0.5, Math.PI / 2);
-  thumb.position.set(0.004, 0.051, -0.01);
-  g.add(thumb);
-  return g;
-}
-
 const easeOut = (x) => 1 - (1 - x) * (1 - x);
 const easeInOut = (x) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
 
-// Arm position/rotation in view space, and how the hand turns to hold each tool.
+// How each thing is held, in view space (x right, y up, the view looks down
+// -z): where the grip is, which way the forearm runs back from the hand to
+// the elbow, and which way the tool's own +Y points. `flip` holds it
+// overhand: the hand's thumb end toward the tool's butt, so the back of the
+// hand shows. `cup` is an open hand under something round.
 const POSE = {
-  hook: { arm: [0.25, -0.2, -0.44, 0.1, 0.22, 0], hand: [Math.PI / 2 - 0.35, 0, 0] },
-  spear: { arm: [0.24, -0.215, -0.4, 0.02, 0.12, -0.1], hand: [-Math.PI / 2 + 0.1, 0.13, 0] },
-  hammer: { arm: [0.28, -0.25, -0.5, 0.15, 0.2, 0], hand: [-0.35, 0.1, 0.15] },
-  food: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.35, 0, 0] },
-  fish: { arm: [0.24, -0.2, -0.44, 0.1, 0.22, 0], hand: [0.2, 0.3, 0] },
+  hook: { pos: V(0.27, -0.17, -0.46), fore: V(0.45, -0.1, 0.89), grip: V(-0.05, 0.85, -0.5) },
+  spear: { pos: V(0.22, -0.22, -0.44), fore: V(0.78, -0.55, 0.3), grip: V(-0.22, 0.2, -0.95), flip: true },
+  hammer: { pos: V(0.29, -0.2, -0.5), fore: V(0.4, -0.12, 0.9), grip: V(-0.08, 0.9, -0.42) },
+  food: { pos: V(0.17, -0.21, -0.56), fore: V(0.5, -0.45, 0.74), grip: V(0.85, 0.35, -0.36), cup: true },
+  fish: { pos: V(0.17, -0.21, -0.56), fore: V(0.5, -0.45, 0.74), grip: V(0.85, 0.35, -0.36), cup: true },
 };
+// The other hand: forward on the spear's shaft, or holding the hook's coiled line.
+const LEFT_SHOULDER = V(-0.5, -0.62, 0.12);
+const LEFT_COIL = { pos: V(-0.27, -0.27, -0.47), fore: V(-0.42, -0.2, 0.88), grip: V(0.12, 0.88, -0.45) };
+
+// The same things for the body's hand in the third-person view, keyed by slot.
+export function makeHeldModels() {
+  initMaterials();
+  const hook = makeGrapple();
+  hook.position.y = -0.08;
+  const wrap = (m) => { const g = new THREE.Group(); g.add(m); g.traverse((o) => { if (o.isMesh) o.castShadow = true; }); return g; };
+  const food = makeCoconut();
+  food.scale.setScalar(0.76);
+  food.position.set(CUP.x, 0, CUP.z);
+  const fish = makeFish();
+  fish.scale.setScalar(0.9);
+  fish.rotation.z = Math.PI / 2;
+  return { hook: wrap(hook), spear: wrap(makeSpear()), hammer: wrap(makeHammer()), food: wrap(food), fish: wrap(fish) };
+}
 
 export function createTools({ scene, camera, raft, nets, rails, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats, events }) {
   initMaterials();
@@ -171,25 +170,40 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
   const vmSun = new THREE.DirectionalLight(0xfff1d6, 1.7);
   vmScene.add(vmSun, vmSun.target);
 
-  // Forearm reaching in from the lower right, sleeve rolled to the elbow;
-  // the sleeve is what clothing will recolour later.
-  const arm = new THREE.Group();
-  const along = (g) => g.rotateX(Math.PI / 2);
-  const forearm = new THREE.Mesh(along(new THREE.CylinderGeometry(0.033, 0.046, 0.44, 14)), MAT.skin);
-  forearm.position.set(0.022, 0, 0.27);
+  // Both arms: bare forearms, sleeves rolled to the elbow. The sleeves are
+  // what clothing recolours. The right hand holds the tool; the left comes in
+  // to steady the spear and to hold the hook's coiled line.
+  const HM = handMaterials(MAT);
   const sleeveMat = MAT.sleeve.clone();
   const sleeveBase = sleeveMat.color.clone();
-  const sleeve = new THREE.Mesh(along(new THREE.CylinderGeometry(0.06, 0.066, 0.24, 14)), sleeveMat);
-  sleeve.position.set(0.022, 0, 0.52);
-  const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.017, 8, 18), MAT.cuff);
-  cuff.position.set(0.022, 0, 0.405);
-  const coil = new THREE.Mesh(new THREE.TorusGeometry(0.049, 0.012, 6, 18), MAT.rope);
-  coil.position.set(0.022, 0, 0.13);
-  coil.scale.z = 1.6;
-  const hand = new THREE.Group();
-  hand.add(makeHand());
-  arm.add(forearm, sleeve, cuff, coil, hand);
-  vmScene.add(arm);
+  const armMats = { skin: HM.skin, nail: HM.nail, sleeve: sleeveMat, cuff: MAT.cuff };
+  const R = makeArm(armMats);
+  const L = makeArm(armMats, { left: true });
+  const arm = R.arm;
+  const hand = R.hand;
+  // What the right hand holds hangs in here, so it can be turned over for an overhand grip.
+  const held = new THREE.Group();
+  hand.add(held);
+  // A turn of line round the right wrist while the hook is out.
+  const coil = new THREE.Mesh(new THREE.TorusGeometry(0.041, 0.0085, 6, 18), MAT.rope);
+  coil.position.set(0.031, 0, 0.205);
+  coil.scale.set(0.9, 1, 2.1);
+  arm.add(coil);
+  // The coiled line in the left hand.
+  const leftCoil = new THREE.Group();
+  for (let k = 0; k < 5; k++) {
+    const loop = new THREE.Mesh(new THREE.TorusGeometry(0.085 + (k % 2) * 0.007, 0.0065, 6, 22), MAT.rope);
+    loop.rotation.set(0.12 * (k - 2), Math.PI / 2 + 0.08 * (k - 2), 0);
+    loop.position.set(-0.004 * k, -0.085, 0.004 * (k - 2));
+    leftCoil.add(loop);
+  }
+  L.hand.add(leftCoil);
+  vmScene.add(R.arm, L.arm);
+  L.arm.visible = false;
+  const leftSt = { k: 0 };
+  const qAnim = new THREE.Quaternion();
+  const eAnim = new THREE.Euler();
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
 
   const models = {
     hook: new THREE.Group(),
@@ -201,9 +215,11 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
     potato: makePotato(),
     melon: makeMelon(),
   };
-  models.potato.position.set(-0.005, 0.0, -0.06);
-  models.melon.position.set(-0.01, 0.0, -0.07);
-  models.melon.rotation.set(0.3, 0.2, 0);
+  // Food sits in the cupped hand.
+  models.potato.position.set(CUP.x + 0.012, 0.0, CUP.z + 0.004);
+  models.potato.rotation.z = Math.PI / 2;
+  models.melon.position.set(CUP.x + 0.02, 0.0, CUP.z + 0.005);
+  models.melon.rotation.set(0.3, 0.2, Math.PI / 2);
   models.cooked.traverse((o) => { if (o.isMesh) o.material = new THREE.MeshStandardMaterial({ color: 0x8a5a2e, roughness: 0.6 }); });
   // Grappling hook gripped by the shank, prongs forward.
   const heldGrapple = makeGrapple();
@@ -212,16 +228,17 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
   const danglingLine = rod(V(0, 0.115, 0), V(0.0, 0.16, 0.03), 0.005, MAT.rope);
   models.hook.add(danglingLine);
   models.hammer.scale.setScalar(0.85);
-  models.coconut.position.set(-0.005, 0.0, -0.08);
-  models.fish.scale.setScalar(1.25);
-  models.fish.position.set(-0.02, 0.0, -0.05);
-  models.fish.rotation.set(0.2, 0.4, Math.PI / 2);
-  models.cooked.scale.setScalar(1.25);
+  models.coconut.position.set(CUP.x, 0.0, CUP.z);
+  models.coconut.scale.setScalar(0.76);
+  models.fish.scale.setScalar(0.9);
+  models.fish.position.set(CUP.x + 0.03, 0.0, CUP.z + 0.005);
+  models.fish.rotation.set(0.0, 0.25, Math.PI / 2);
+  models.cooked.scale.setScalar(0.9);
   models.cooked.position.copy(models.fish.position);
   models.cooked.rotation.copy(models.fish.rotation);
   // The spear's tip becomes metal once the upgrade is made.
   const spearBlade = models.spear.children.find((c) => c.geometry?.type === 'OctahedronGeometry');
-  for (const k in models) hand.add(models[k]);
+  for (const k in models) held.add(models[k]);
 
   // ----- the thrown hook and its rope, out in the world -----
   const worldHook = new THREE.Group();
@@ -542,6 +559,12 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
       vmSun.intensity = sunIntensity * 0.55;
       vmSun.color.copy(sunColor);
       vmHemi.intensity = hemi * 0.9;
+    },
+
+    // Match your arms to the body seen from outside.
+    setSkin(color) {
+      HM.skin.color.copy(color);
+      HM.nail.color.copy(color).lerp(new THREE.Color(0xf2d6cc), 0.55);
     },
 
     setSleeve(hex) {
@@ -876,10 +899,37 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
       if (p.inWater) oy -= 0.06 + Math.sin(t * 2) * 0.01;
 
       const pose = POSE[id];
-      const base = pose.arm;
-      hand.rotation.set(pose.hand[0], pose.hand[1], pose.hand[2]);
-      arm.position.set(base[0] + ox, base[1] + oy, base[2] + oz);
-      arm.rotation.set(base[3] + rx, base[4] + ry, base[5] + rz);
+      R.pose(vA.set(pose.pos.x + ox, pose.pos.y + oy, pose.pos.z + oz), pose.fore, pose.flip ? vB.copy(pose.grip).negate() : pose.grip);
+      // The swing and the wind-up turn the whole arm about the grip.
+      if (rx || ry || rz) arm.quaternion.premultiply(qAnim.setFromEuler(eAnim.set(rx, ry, rz)));
+      held.rotation.x = pose.flip ? Math.PI : 0;
+      R.setCup(!!pose.cup);
+
+      // The left hand: on the spear's shaft ahead of the right, or holding the coiled line.
+      const wantLeft = (id === 'spear' || id === 'hook') && !p.inWater ? 1 : 0;
+      leftSt.k = damp(leftSt.k, wantLeft * easeOut(st.swap), 9, dt);
+      L.arm.visible = leftSt.k > 0.02;
+      if (L.arm.visible) {
+        const drop = (1 - leftSt.k) * 0.4;
+        if (id === 'spear') {
+          // A point on the shaft, 34 cm toward the tip from the right hand.
+          arm.updateMatrixWorld(true);
+          held.localToWorld(vA.set(0, 0.34, 0));
+          vA.y -= drop;
+          vC.copy(pose.grip).applyQuaternion(qAnim.setFromEuler(eAnim.set(rx, ry, rz)));
+          L.pose(vA, vB.copy(LEFT_SHOULDER).sub(vA), vC.negate());
+          leftCoil.visible = false;
+        } else {
+          // Hauling in: the left hand takes up line in time with the right.
+          const haul = h.mode === 'water' && m0 ? Math.sin(t * 16 + 2.2) : 0;
+          vA.copy(LEFT_COIL.pos);
+          vA.x += st.sway.x * 0.6;
+          vA.y += st.sway.y * 0.6 - drop + Math.sin(p.walkPhase + 1.7) * 0.012 * walk + haul * 0.02;
+          vA.z += haul * 0.05;
+          L.pose(vA, LEFT_COIL.fore, LEFT_COIL.grip);
+          leftCoil.visible = true;
+        }
+      }
       const shown = id === 'food' ? st.food : id;
       for (const k in models) models[k].visible = k === shown;
       heldGrapple.visible = h.mode === 'held' || h.mode === 'charging';

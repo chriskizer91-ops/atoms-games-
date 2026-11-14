@@ -6,7 +6,9 @@ import { materials } from './materials.js';
 import { rand, randInt, randn, pick, weightedPick } from './util.js';
 
 const cl = Math.hypot(CURRENT.x, CURRENT.z);
-const FLOW = { x: (CURRENT.x / cl) * CURRENT_SPEED, z: (CURRENT.z / cl) * CURRENT_SPEED };
+// How fast things stream past the raft. The current alone at first; a raft
+// under sail drives through the water, so they come by faster.
+const FLOW = { x: (CURRENT.x / cl) * CURRENT_SPEED, z: (CURRENT.z / cl) * CURRENT_SPEED, speed: CURRENT_SPEED };
 
 const TYPES = {
   plank: { weight: 34 },
@@ -331,7 +333,7 @@ export function createDebris(scene) {
     const type = weightedPick(TYPES);
     // Spread across the current, concentrated near the raft's line.
     const side = randn() * 13;
-    const fx = FLOW.x / CURRENT_SPEED, fz = FLOW.z / CURRENT_SPEED;
+    const fx = CURRENT.x / cl, fz = CURRENT.z / cl;
     spawn(type, cx - fx * along + fz * side, cz - fz * along - fx * side);
   }
 
@@ -346,6 +348,29 @@ export function createDebris(scene) {
     },
 
     spawn,
+
+    // The water's speed past the raft (m/s), from the sailing.
+    setFlow(speed) {
+      FLOW.speed = speed;
+      FLOW.x = (CURRENT.x / cl) * speed;
+      FLOW.z = (CURRENT.z / cl) * speed;
+    },
+
+    // The raft turned by `a` radians: everything afloat swings round it.
+    turn(a) {
+      if (!a) return;
+      const c = Math.cos(a), s = Math.sin(a);
+      for (const d of items) {
+        if (d.hooked || d.stuck) continue;
+        const x = d.x, z = d.z;
+        d.x = x * c - z * s;
+        d.z = x * s + z * c;
+        const vx = d.vx, vz = d.vz;
+        d.vx = vx * c - vz * s;
+        d.vz = vx * s + vz * c;
+        d.mesh.rotation.y -= a;
+      }
+    },
 
     // Something stuck in the deck at a raft point (a shark tooth).
     stick(type, x, z, tile, raft) {
@@ -381,7 +406,8 @@ export function createDebris(scene) {
     },
 
     update(t, dt, raftCenter) {
-      spawnTimer -= dt;
+      // Faster water brings things by more often, so the sea stays as full.
+      spawnTimer -= dt * (FLOW.speed / CURRENT_SPEED);
       if (spawnTimer <= 0) {
         spawnTimer = rand(0.8, 1.5);
         if (items.length < 42) spawnUpstream(raftCenter.x, raftCenter.z, rand(70, 80));

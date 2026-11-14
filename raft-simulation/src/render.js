@@ -8,10 +8,13 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 // the water samples to show what is beneath it; (2) the full scene, then the
 // first-person arm in its own depth layer; (3) bloom; (4) tone map to screen.
 
+// refract: size of the under-the-sea picture next to the screen. shadowEvery:
+// redraw the sun's shadows every this many frames. grid: how finely the sea
+// is meshed.
 export const QUALITY = {
-  high: { label: 'High', pixelRatio: 1.5, shadows: 2048, bloom: true, refract: 1, msaa: 4 },
-  medium: { label: 'Medium', pixelRatio: 1.15, shadows: 1024, bloom: true, refract: 0.75, msaa: 4 },
-  low: { label: 'Low', pixelRatio: 0.85, shadows: 0, bloom: false, refract: 0.5, msaa: 0 },
+  high: { label: 'High', pixelRatio: 1.5, shadows: 2048, bloom: true, refract: 0.85, msaa: 4, shadowEvery: 1, grid: 240 },
+  medium: { label: 'Medium', pixelRatio: 1.15, shadows: 1024, bloom: true, refract: 0.6, msaa: 2, shadowEvery: 2, grid: 200 },
+  low: { label: 'Low', pixelRatio: 0.85, shadows: 0, bloom: false, refract: 0.45, msaa: 0, shadowEvery: 2, grid: 150 },
 };
 
 const SHADOW_SPAN = 13;
@@ -44,6 +47,18 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
   let vmPass = null;
   let bloom = null;
   let size = { w: 1, h: 1 };
+  let scale = 1;        // extra resolution scale from the frame-rate watch (1 = as the level says)
+  let frameNo = 0;
+  const hidden = [];
+  // Hide whatever is marked as wholly above the water (userData.above), for
+  // the pass that only needs what lies under it. Stops at the first marked
+  // object on each branch, so the walk is short.
+  function hideAbove(o) {
+    if (!o.visible) return;
+    if (o.userData.above) { o.visible = false; hidden.push(o); return; }
+    const ch = o.children;
+    for (let i = 0; i < ch.length; i++) hideAbove(ch[i]);
+  }
 
   function build() {
     if (composer) {
@@ -65,7 +80,7 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
 
   function resize(w, h) {
     size = { w, h };
-    const pr = Math.min(window.devicePixelRatio || 1, q.pixelRatio);
+    const pr = Math.max(0.5, Math.min(window.devicePixelRatio || 1, q.pixelRatio) * scale);
     renderer.setPixelRatio(pr);
     renderer.setSize(w, h);
     composer.setPixelRatio(pr);
@@ -91,27 +106,50 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
       }
       if (rebuild) build();
       bloom.enabled = q.bloom;
+      ocean.setDetail(q.grid);
+      scale = 1;
+      resize(size.w, size.h);
+    },
+
+    // The frame-rate watch trims or restores sharpness a step at a time.
+    get scale() { return scale; },
+    setScale(k) {
+      k = Math.max(0.55, Math.min(1, k));
+      if (k === scale) return;
+      scale = k;
       resize(size.w, size.h);
     },
 
     resize,
 
     render(showArm, around) {
-      // Shadow box follows the player, snapped so shadows don't crawl.
-      focus.set(Math.round(around.x * 4) / 4, 0, Math.round(around.z * 4) / 4);
-      sun.target.position.copy(focus);
-      sun.position.copy(focus).addScaledVector(sky.sunDir, 45);
-      renderer.shadowMap.needsUpdate = true;
+      // Shadow box follows the player, snapped so shadows don't crawl. It only
+      // moves on the frames the shadows are redrawn, so the two always agree.
+      const shadowFrame = frameNo++ % q.shadowEvery === 0;
+      if (shadowFrame) {
+        focus.set(Math.round(around.x * 4) / 4, 0, Math.round(around.z * 4) / 4);
+        sun.target.position.copy(focus);
+        sun.position.copy(focus).addScaledVector(sky.sunDir, 45);
+      }
 
-      // The water only needs what is under it.
+      // The water only needs what is under it: the sky, the deck, the trees
+      // and everything else above the surface sit this pass out. (Shadows are
+      // redrawn in the main pass, where everything is there to cast them.)
+      // (Except the very first time, when the shadow map doesn't exist yet.)
+      renderer.shadowMap.needsUpdate = sun.castShadow && !sun.shadow.map;
       ocean.mesh.visible = false;
       for (const o of aboveWaterOnly) o.visible = false;
+      hidden.length = 0;
+      hideAbove(scene);
       renderer.setRenderTarget(refractRT);
       renderer.clear();
       renderer.render(scene, camera);
       renderer.setRenderTarget(null);
       ocean.mesh.visible = true;
       for (const o of aboveWaterOnly) o.visible = true;
+      for (let i = 0; i < hidden.length; i++) hidden[i].visible = true;
+
+      renderer.shadowMap.needsUpdate = shadowFrame;
 
       vmPass.enabled = showArm;
       composer.render();

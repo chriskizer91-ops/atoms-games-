@@ -1,8 +1,11 @@
 import * as THREE from 'three';
 import { ISLAND, ISLAND_SIZES, WORLD } from './config.js';
 import { materials } from './materials.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { frondGeometry } from './debris.js';
 import { smoothstep } from './util.js';
+import { FRAME, setFrame, toScene, toWorld, frameYaw } from './frame.js';
+import { SAILING, newBoat, stepBoat, autopilot, wrap } from './sailing.js';
 
 // The sea is a chart of islands at fixed spots, generated square by square
 // as you travel. The raft drifts north on its own (or sails toward an island
@@ -106,6 +109,32 @@ function init() {
   };
 }
 
+// Things small enough to leave out when an island is a long way off.
+const SMALL = new Set(['bush', 'rock', 'sand', 'clay', 'shells', 'potato', 'melon', 'log', 'crate', 'bottle']);
+
+// A tree built from twenty parts costs twenty draw calls, three times a frame.
+// Merge everything in a group that shares a material into one mesh (anything
+// marked userData.keep stays its own: coconuts come and go).
+function bake(g) {
+  g.updateMatrixWorld(true);
+  const buckets = new Map();
+  const drop = [];
+  g.traverse((o) => {
+    if (!o.isMesh || o.userData.keep) return;
+    const names = Object.keys(o.geometry.attributes).sort().join(',');
+    const k = `${o.material.uuid}|${names}`;
+    if (!buckets.has(k)) buckets.set(k, { material: o.material, parts: [] });
+    const part = o.geometry.clone().applyMatrix4(o.matrixWorld);
+    buckets.get(k).parts.push(part.index ? part.toNonIndexed() : part);
+  });
+  for (const c of [...g.children]) if (!c.userData.keep) drop.push(c);
+  for (const c of drop) g.remove(c);
+  for (const b of buckets.values()) {
+    const geo = b.parts.length > 1 ? mergeGeometries(b.parts) : b.parts[0];
+    if (geo) g.add(new THREE.Mesh(geo, b.material));
+  }
+}
+
 const KINDS = ['palm', 'bush', 'rock', 'bamboo', 'sand', 'clay', 'shells', 'potato', 'melon', 'log', 'crate'];
 
 function buildIsland(rec) {
@@ -154,6 +183,13 @@ function buildIsland(rec) {
   ground.castShadow = true;
   const group = new THREE.Group();
   group.add(ground);
+  // Everything that stands on the island is above the water, so the pass
+  // that draws what lies under the sea can leave it out.
+  const tall = new THREE.Group();     // palms, bamboo, the lighthouse: the skyline
+  const detail = new THREE.Group();   // the small things, only drawn close up
+  tall.userData.above = true;
+  detail.userData.above = true;
+  group.add(tall, detail);
 
   // A spot on land in a band of the island (t: 0 coast .. 1 middle).
   function spot(tMin, tMax) {
@@ -170,11 +206,12 @@ function buildIsland(rec) {
 
   const resources = [];
   function addRes(kind, s, meshGroup, hitGeo, amount, regrow) {
+    if (kind !== 'lamp') bake(meshGroup);
     meshGroup.position.set(s.x, s.h, s.z);
     meshGroup.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     const hit = new THREE.Mesh(hitGeo, M.hit);
     meshGroup.add(hit);
-    group.add(meshGroup);
+    (SMALL.has(kind) ? detail : tall).add(meshGroup);
     const res = { kind, mesh: meshGroup, hit, amount, max: amount, regrow, t: 0 };
     hit.userData.res = res;
     resources.push(res);
@@ -202,6 +239,7 @@ function buildIsland(rec) {
     const nuts = [];
     for (let n = 0; n < 3; n++) {
       const nut = new THREE.Mesh(G.coconut, M.coconut);
+      nut.userData.keep = true;
       nut.position.copy(top).add(new THREE.Vector3(Math.cos(n * 2.1) * 0.22, -0.25, Math.sin(n * 2.1) * 0.22));
       g.add(nut);
       nuts.push(nut);
@@ -385,7 +423,7 @@ function buildIsland(rec) {
     lh.add(roof);
     lh.position.set(s.x, s.h - 0.2, s.z);
     lh.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-    group.add(lh);
+    tall.add(lh);
     // the door: E here lights the lamp
     const door = new THREE.Group();
     const dm = new THREE.Mesh(G.door, M.doorWood);
@@ -398,7 +436,7 @@ function buildIsland(rec) {
     addRes('lamp', ds, door, G.hitSmall, 1, 0);
   }
 
-  return { group, R, heightLocal, shapeR, resources, size: S, lamp };
+  return { group, R, heightLocal, shapeR, resources, size: S, lamp, detail, lod: -1 };
 }
 
 const LABEL = {
@@ -431,6 +469,8 @@ export function createIslands(scene, { fx, audio }) {
     lock: null,           // the island just left: no stopping there again until clear
     trail: [],
     seed: 1,
+    boat: newBoat(),      // the sailing: speed, sail, steering oar, heel
+    course: { tack: 1 },  // which tack the autopilot is beating on
   };
   // Islands close enough to have a mesh in the scene (up to MAX_ACTIVE), by chart id.
   const actives = new Map();
@@ -507,6 +547,7 @@ export function createIslands(scene, { fx, audio }) {
   function place(a) {
     local(a.rec, tmpL);
     a.built.group.position.set(tmpL.x, 0, tmpL.z);
+    a.built.group.rotation.y = frameYaw();
     a.built.group.updateMatrixWorld(true);
   }
 
@@ -527,7 +568,8 @@ export function createIslands(scene, { fx, audio }) {
     const a = actives.get(rec.id);
     return a ? a.built.shapeR(Math.atan2(az, ax)) : rec.R * 1.3;
   }
-  const local = (rec, out = { x: 0, z: 0 }) => { out.x = rec.x - st.rw.x; out.z = rec.z - st.rw.z; return out; };
+  // Where a chart point is in the scene (the raft's frame).
+  const local = (rec, out = { x: 0, z: 0 }) => toScene(rec.x, rec.z, out);
   const tmpL = { x: 0, z: 0 };
 
   // Which islands should have meshes: the one you're resting at, then the nearest.
@@ -543,6 +585,54 @@ export function createIslands(scene, { fx, audio }) {
     for (const id of [...actives.keys()]) if (!keep.has(id)) despawn(id);
     for (const id of keep) if (!actives.has(id)) spawn(st.chart.get(id));
     primary = (st.resting != null && actives.get(st.resting)) || (want.length ? actives.get(want[0][1].id) : null) || null;
+  }
+
+  const helm = { steer: 0, slope: 0, scull: 0 };
+
+  // Out of sail mode: the sail comes down, way falls off, the raft sits level.
+  function idleBoat(b, dt) {
+    b.sailSet = 0;
+    b.sail = Math.max(0, b.sail - dt / SAILING.hoistTime);
+    b.speed += (0 - b.speed) * (1 - Math.exp(-dt * 0.6));
+    b.rudder += (0 - b.rudder) * (1 - Math.exp(-dt * 3));
+    b.heelV += (6 * (0 - b.heel) - 1.6 * b.heelV) * dt;
+    b.heel += b.heelV * dt;
+    b.heading = Math.PI / 2 - st.heading;
+  }
+
+  function arrive(rec) {
+    st.resting = rec.id;
+    st.visitLeft = ISLAND.visit;
+    st.held = false;
+    st.warned = false;
+    rec.visited = true;
+    st.boat.sailSet = 0;
+    st.boat.speed = 0;
+    if (st.dest === rec.id) st.dest = null;
+    events.onArrive?.(rec);
+  }
+
+  // Steer round any other island on the way: if one sits across the line we
+  // want to take, aim for the edge of it on whichever side is closer.
+  // `want` and the result are chart headings (bow along sin, cos).
+  function roundIslands(want, target, goal, cwx, cwz, raftR) {
+    const wx = Math.sin(want), wz = Math.cos(want);
+    for (const rec of st.chart.values()) {
+      if (rec === target) continue;
+      const dx = rec.x - st.rw.x - cwx, dz = rec.z - st.rw.z - cwz;
+      if (Math.abs(dx) > 260 || Math.abs(dz) > 260) continue;
+      const d = Math.hypot(dx, dz) || 1;
+      const clear = shoreOf(rec, -dx, -dz) + raftR + 8;
+      const along = dx * wx + dz * wz;
+      const side = dx * wz - dz * wx;
+      if (along <= 0 || along > goal || Math.abs(side) >= clear || d > clear + 160) continue;
+      const toIsland = Math.atan2(dx, dz);
+      const off = d > clear ? Math.asin(clear / d) : Math.PI / 2 + 0.2;
+      const a1 = toIsland + off, a2 = toIsland - off;
+      const gap = (a) => Math.abs(wrap(a - want));
+      return gap(a1) < gap(a2) ? a1 : a2;
+    }
+    return want;
   }
 
   const api = {
@@ -562,7 +652,8 @@ export function createIslands(scene, { fx, audio }) {
 
     reset(seed = Math.floor(Math.random() * 1e6)) {
       despawnAll();
-      Object.assign(st, { rw: { x: 0, z: 0 }, heading: Math.PI, dest: null, resting: null, visitLeft: 0, held: false, warned: false, lock: null, trail: [], seed });
+      Object.assign(st, { rw: { x: 0, z: 0 }, heading: Math.PI, dest: null, resting: null, visitLeft: 0, held: false, warned: false, lock: null, trail: [], seed, boat: newBoat(), course: { tack: 1 } });
+      setFrame(0, 0, 0);
       st.chart = new Map();
       st.chunks = new Set();
       lastChunk = '';
@@ -580,8 +671,8 @@ export function createIslands(scene, { fx, audio }) {
     heightAt(x, z) {
       let h = -Infinity;
       for (const a of actives.values()) {
-        local(a.rec, tmpL);
-        const lx = x - tmpL.x, lz = z - tmpL.z;
+        toWorld(x, z, tmpL);
+        const lx = tmpL.x - a.rec.x, lz = tmpL.z - a.rec.z;
         if (Math.abs(lx) > a.built.size / 2 || Math.abs(lz) > a.built.size / 2) continue;
         h = Math.max(h, a.built.heightLocal(lx, lz));
       }
@@ -592,6 +683,16 @@ export function createIslands(scene, { fx, audio }) {
       if (!primary) return null;
       local(primary.rec, tmpL);
       return { x: tmpL.x, z: tmpL.z, r: primary.rec.R };
+    },
+
+    // Islands with a mesh, as scene x, z and radius: the sea calms in their lee.
+    shelters(out) {
+      out.length = 0;
+      for (const a of actives.values()) {
+        local(a.rec, tmpL);
+        out.push({ x: tmpL.x, z: tmpL.z, r: a.rec.R });
+      }
+      return out;
     },
 
     hitTargets() {
@@ -645,8 +746,9 @@ export function createIslands(scene, { fx, audio }) {
     summon(raftCenter, raftRadius, sizeKey = 'medium') {
       const id = st.chart.size + 1;
       const rec = makeRecord(id, 0, 0, sizeKey);
-      rec.x = st.rw.x + raftCenter.x + 4;
-      rec.z = st.rw.z + raftCenter.z - (rec.R * 0.95 + raftRadius + 8 + 40);
+      toWorld(raftCenter.x + 4, raftCenter.z - (rec.R * 0.95 + raftRadius + 8 + 40), tmpL);
+      rec.x = tmpL.x;
+      rec.z = tmpL.z;
       rec.seen = true;
       st.chart.set(id, rec);
       events.onSighted?.(rec);
@@ -673,8 +775,21 @@ export function createIslands(scene, { fx, audio }) {
       for (const rec of st.chart.values()) if (rec.kind === 'lighthouse') return rec;
       return null;
     },
+    get boat() { return st.boat; },
+    // Sail setting asked for: 0 down, 0.5 half, 1 full. Hoisting it beside an
+    // island casts off.
+    setSail(level) {
+      st.boat.sailSet = Math.max(0, Math.min(1, level));
+      if (level > 0 && st.resting != null) {
+        st.lock = st.resting;
+        st.resting = null;
+        events.onDepart?.(st.chart.get(st.lock));
+      }
+    },
     setDestination(id) {
       st.dest = id;
+      st.course.tack = 1;
+      if (id != null && st.lock === id) st.lock = null;
       if (id != null && st.resting != null && st.resting !== id) {
         // leaving a visit for somewhere else
         st.lock = st.resting;
@@ -686,7 +801,7 @@ export function createIslands(scene, { fx, audio }) {
       despawnKeep();
       return {
         rw: { ...st.rw }, heading: st.heading, dest: st.dest, resting: st.resting, visitLeft: st.visitLeft, lock: st.lock,
-        trail: st.trail.slice(-400), seed: st.seed, chunks: [...st.chunks],
+        trail: st.trail.slice(-400), seed: st.seed, chunks: [...st.chunks], sailSet: st.boat.sailSet, speed: st.boat.speed,
         chart: [...st.chart.values()].map((r) => ({ ...r })),
       };
     },
@@ -697,6 +812,11 @@ export function createIslands(scene, { fx, audio }) {
         rw: d.rw, heading: d.heading, dest: d.dest, resting: d.resting, visitLeft: d.visitLeft, lock: d.lock,
         trail: d.trail || [], seed: d.seed, held: false, warned: false,
       });
+      st.boat = newBoat(Math.PI / 2 - st.heading);
+      st.boat.sailSet = st.boat.sail = d.sailSet || 0;
+      st.boat.speed = d.speed || 0;
+      st.course = { tack: 1 };
+      setFrame(st.rw.x, st.rw.z, st.heading - Math.PI);
       st.chunks = new Set(d.chunks);
       st.chart = new Map(d.chart.map((r) => [r.id, r]));
       lastChunk = '';
@@ -706,6 +826,7 @@ export function createIslands(scene, { fx, audio }) {
 
     // ctx: { aboard, anchored, hasSail, onTower, raftRadius }
     update(dt, ctx) {
+      setFrame(st.rw.x, st.rw.z, st.heading - Math.PI);
       ensureChart();
       const raftR = ctx.raftRadius;
       const rc = ctx.raftCenter || { x: 0, z: 0 };
@@ -721,7 +842,17 @@ export function createIslands(scene, { fx, audio }) {
       }
 
       // ---- movement ----
-      let speed = 0;
+      // The raft's middle on the chart (the scene origin is its first plank).
+      const fr = st.heading - Math.PI, fc = Math.cos(fr), fs = Math.sin(fr);
+      const cwx = rc.x * fc + rc.z * fs, cwz = -rc.x * fs + rc.z * fc;
+      const b = st.boat;
+      const wind = ctx.wind;
+      const heading0 = st.heading;
+      let speed = 0, vx = 0, vz = 0, over = 0, surfing = 0;
+      const canSail = ctx.hasSail && wind && !ctx.anchored;
+      if (!ctx.hasSail) { b.sailSet = 0; st.dest = null; }
+      // Under sail: the sail is up (or going up), or a course is set.
+      const sailing = canSail && st.resting == null && !ctx.onLand && (b.sailSet > 0 || b.sail > 0.02 || st.dest != null);
       if (st.resting != null) {
         const rec = st.chart.get(st.resting);
         if (!ctx.anchored) st.visitLeft = Math.max(0, st.visitLeft - dt);
@@ -740,81 +871,92 @@ export function createIslands(scene, { fx, audio }) {
             events.onWaiting?.();
           }
         }
-      } else if (!ctx.anchored && !ctx.onLand) {
-        const sailing = ctx.hasSail && st.dest != null;
-        speed = sailing ? WORLD.sail : WORLD.drift;
-        let want = Math.PI; // the current runs north
-        let target = sailing ? st.chart.get(st.dest) : null;
-        if (!target) {
-          // The current carries you to an island close to your line ahead.
-          let best = null, bestD = Infinity;
-          for (const rec of st.chart.values()) {
-            if (rec.id === st.lock || rec.kind === 'lighthouse') continue;
-            const dx = rec.x - st.rw.x - rc.x, dz = rec.z - st.rw.z - rc.z;
-            if (dz > -10 || dz < -380) continue; // ahead (north) and not too far
-            if (Math.abs(dx) > WORLD.pullLateral + rec.R) continue;
-            const d = Math.hypot(dx, dz);
-            if (d < bestD) { bestD = d; best = rec; }
-          }
-          target = best;
+      } else if (sailing) {
+        b.heading = Math.PI / 2 - st.heading;
+        helm.steer = ctx.steer || 0;
+        helm.slope = ctx.slope || 0;
+        helm.scull = 0;
+        const target = st.dest != null ? st.chart.get(st.dest) : null;
+        if (target) {
+          const dx = target.x - st.rw.x - cwx, dz = target.z - st.rw.z - cwz;
+          const d = Math.hypot(dx, dz) || 1;
+          const stopAt = shoreOf(target, -dx, -dz) * 0.92 + raftR + 5;
+          const want = roundIslands(Math.atan2(dx, dz), target, d, cwx, cwz, raftR);
+          const ap = autopilot(b, wind, Math.PI / 2 - want, d - stopAt, st.course);
+          helm.steer = ap.steer;
+          helm.scull = ap.scull;
+          b.sailSet = ap.sailSet;
         }
+        const ev = stepBoat(b, wind, helm, dt);
+        over = ev.over;
+        surfing = ev.surfing;
+        st.heading = Math.PI / 2 - b.heading;
+        // A little of the current still carries a raft under sail.
+        vx = b.vx;
+        vz = b.vz - WORLD.drift * 0.3;
+        speed = Math.hypot(vx, vz);
+        // Come to rest alongside any island you sail up to.
+        // (On a set course, only the island you're bound for.)
+        for (const rec of st.chart.values()) {
+          if (rec.id === st.lock || (target && rec !== target)) continue;
+          const dx = rec.x - st.rw.x - cwx, dz = rec.z - st.rw.z - cwz;
+          if (Math.abs(dx) > 150 || Math.abs(dz) > 150) continue;
+          const d = Math.hypot(dx, dz) || 1;
+          if (d <= shoreOf(rec, -dx, -dz) * 0.92 + raftR + 5.5) {
+            arrive(rec);
+            vx = vz = speed = 0;
+            break;
+          }
+        }
+      } else if (!ctx.anchored && !ctx.onLand) {
+        // Adrift: the current runs north and the raft turns to follow it.
+        idleBoat(b, dt);
+        speed = WORLD.drift;
+        let want = Math.PI;
+        // The current carries you to an island close to your line ahead.
+        let target = null, bestD = Infinity;
+        for (const rec of st.chart.values()) {
+          if (rec.id === st.lock || rec.kind === 'lighthouse') continue;
+          const dx = rec.x - st.rw.x - cwx, dz = rec.z - st.rw.z - cwz;
+          if (dz > -10 || dz < -380) continue; // ahead (north) and not too far
+          if (Math.abs(dx) > WORLD.pullLateral + rec.R) continue;
+          const d = Math.hypot(dx, dz);
+          if (d < bestD) { bestD = d; target = rec; }
+        }
+        let goal = Infinity;
         if (target) {
           // Head for the point just off its shore facing you.
-          const dx = target.x - st.rw.x - rc.x, dz = target.z - st.rw.z - rc.z;
+          const dx = target.x - st.rw.x - cwx, dz = target.z - st.rw.z - cwz;
           const d = Math.hypot(dx, dz) || 1;
+          goal = d;
           // Stop with a short swim between the raft's edge and the beach.
           const stopAt = shoreOf(target, -dx, -dz) * 0.92 + raftR + 5;
           if (d <= stopAt + 0.5) {
-            st.resting = target.id;
-            st.visitLeft = ISLAND.visit;
-            st.held = false;
-            st.warned = false;
-            target.visited = true;
+            arrive(target);
             speed = 0;
-            events.onArrive?.(target);
           } else {
             want = Math.atan2(dx, dz);
             speed *= Math.min(1, (d - stopAt) / 30 + 0.25);
           }
         }
-        // Steer round any other island on the way: if one sits across the line
-        // we want to take, aim for the edge of it on whichever side is closer.
-        {
-          const wx = Math.sin(want), wz = Math.cos(want);
-          const goal = target ? Math.hypot(target.x - st.rw.x - rc.x, target.z - st.rw.z - rc.z) : Infinity;
-          for (const rec of st.chart.values()) {
-            if (rec === target) continue;
-            const dx = rec.x - st.rw.x - rc.x, dz = rec.z - st.rw.z - rc.z;
-            if (Math.abs(dx) > 260 || Math.abs(dz) > 260) continue;
-            const d = Math.hypot(dx, dz) || 1;
-            const clear = shoreOf(rec, -dx, -dz) + raftR + 8;
-            const along = dx * wx + dz * wz;
-            const side = dx * wz - dz * wx;
-            if (along <= 0 || along > goal || Math.abs(side) >= clear || d > clear + 160) continue;
-            const toIsland = Math.atan2(dx, dz);
-            const off = d > clear ? Math.asin(clear / d) : Math.PI / 2 + 0.2;
-            const a1 = toIsland + off, a2 = toIsland - off;
-            const gap = (a) => Math.abs(Math.atan2(Math.sin(a - want), Math.cos(a - want)));
-            want = gap(a1) < gap(a2) ? a1 : a2;
-            break;
-          }
-        }
+        want = roundIslands(want, target, goal, cwx, cwz, raftR);
         // turn gently toward the wanted heading
-        let diff = want - st.heading;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        const turn = (sailing ? 0.6 : 0.3) * dt;   // a sail swings the raft round faster
-        st.heading += Math.max(-turn, Math.min(turn, diff));
+        st.heading += Math.max(-0.3 * dt, Math.min(0.3 * dt, wrap(want - st.heading)));
+        vx = Math.sin(st.heading) * speed;
+        vz = Math.cos(st.heading) * speed;
+      } else {
+        idleBoat(b, dt);
       }
+      if (st.resting != null) idleBoat(b, dt);
       if (st.lock != null) {
         const rec = st.chart.get(st.lock);
         if (!rec || distTo(rec) > rec.R + 250) st.lock = null;
       }
-      st.rw.x += Math.sin(st.heading) * speed * dt;
-      st.rw.z += Math.cos(st.heading) * speed * dt;
+      st.rw.x += vx * dt;
+      st.rw.z += vz * dt;
       // Never end up inside an island: push back out past its beach.
       for (const rec of st.chart.values()) {
-        const dx = st.rw.x + rc.x - rec.x, dz = st.rw.z + rc.z - rec.z;
+        const dx = st.rw.x + cwx - rec.x, dz = st.rw.z + cwz - rec.z;
         if (Math.abs(dx) > 120 || Math.abs(dz) > 120) continue;
         const d = Math.hypot(dx, dz) || 1;
         const min = shoreOf(rec, dx, dz) * 0.88 + raftR + 2;
@@ -823,6 +965,8 @@ export function createIslands(scene, { fx, audio }) {
           st.rw.z += (dz / d) * (min - d);
         }
       }
+      st.heading = wrap(st.heading);
+      setFrame(st.rw.x, st.rw.z, st.heading - Math.PI);
       const last = st.trail[st.trail.length - 1];
       if (!last || Math.hypot(last[0] - st.rw.x, last[1] - st.rw.z) > 25) st.trail.push([Math.round(st.rw.x), Math.round(st.rw.z)]);
 
@@ -839,12 +983,24 @@ export function createIslands(scene, { fx, audio }) {
           }
         }
         place(a);
+        // Far off in the haze an island is a skyline; further still, nothing at all.
+        const far = distTo(a.rec) - a.rec.R;
+        const lod = far > 345 && a.rec.kind !== 'lighthouse' ? 2 : far > 130 ? 1 : 0;
+        if (lod !== a.built.lod) {
+          a.built.lod = lod;
+          a.built.group.visible = lod < 2;
+          a.built.detail.visible = lod === 0;
+        }
         if (a.built.lamp) a.built.lamp.material.emissiveIntensity = a.rec.lit ? (ctx.night > 0.3 ? 6 : 1.5) : 0;
       }
       return {
         speed, heading: st.heading,
         resting: st.resting != null, visitLeft: st.visitLeft,
-        sailing: ctx.hasSail && st.dest != null && st.resting == null,
+        sailing,
+        // how fast the water streams past, how hard the raft turned this frame, and the sailing's own news
+        through: sailing ? Math.max(0, b.speed) : 0,
+        turned: wrap(st.heading - heading0),
+        over, surfing,
         active: primary && primary.rec,
       };
     },

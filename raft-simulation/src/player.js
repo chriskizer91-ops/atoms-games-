@@ -20,6 +20,7 @@ export function createPlayer(camera) {
     eyeBob: 0,
     shove: { x: 0, z: 0, t: 0 },
     tower: null,          // { x, z, h } while standing on a lookout tower
+    helm: false,          // steering: movement keys go to the raft
     onLand: false,
   };
   let rails = null;
@@ -49,6 +50,7 @@ export function createPlayer(camera) {
 
     reset() {
       p.tower = null;
+      p.helm = false;
       p.onLand = false;
       p.pos.set(0, DECK_Y, 0.4);
       p.velY = 0;
@@ -99,6 +101,8 @@ export function createPlayer(camera) {
       if (input.move('back')) wish.sub(fwd);
       if (input.move('right')) wish.add(right);
       if (input.move('left')) wish.sub(right);
+      // Hands on the steering oar: the keys steer the raft instead.
+      if (p.helm) wish.set(0, 0, 0);
       const moving = wish.lengthSq() > 0;
       if (moving) wish.normalize();
       const sprint = input.move('sprint');
@@ -141,7 +145,7 @@ export function createPlayer(camera) {
         p.onLand = onLand && !onDeck;
         if (p.grounded && supported) {
           p.pos.y = ground;
-          if (input.movePressed('jump')) {
+          if (input.movePressed('jump') && !p.helm) {
             p.velY = PLAYER.jump;
             p.grounded = false;
           }

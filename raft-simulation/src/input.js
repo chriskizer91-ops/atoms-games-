@@ -85,6 +85,8 @@ export function createInput(canvas) {
     movePressed(name) {
       return MOVE_KEYS[name].some((k) => pressed.has(k));
     },
+    // Use up a key press so nothing else acts on it this frame.
+    consume(code) { pressed.delete(code); },
     onLockChange(f) {
       listeners.lockChange.push(f);
     },

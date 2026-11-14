@@ -330,15 +330,15 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 #dead-stats dt { color: var(--sail-dim); }
 #dead-stats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.quality, .difficulty { display: flex; align-items: center; gap: 4px; margin-top: 18px; flex-wrap: wrap; }
-.difficulty + .quality { margin-top: 10px; }
-.quality .label, .difficulty .label { margin: 0 10px 0 0; min-width: 6.5em; }
-.quality button, .difficulty button {
+.quality, .difficulty, .castaway { display: flex; align-items: center; gap: 4px; margin-top: 18px; flex-wrap: wrap; }
+.difficulty + .quality, .castaway + .difficulty { margin-top: 10px; }
+.quality .label, .difficulty .label, .castaway .label { margin: 0 10px 0 0; min-width: 6.5em; }
+.quality button, .difficulty button, .castaway button {
   font-size: 13px; padding: 7px 12px; box-shadow: none; border-radius: 3px;
   background: transparent; color: var(--sail-dim); box-shadow: inset 0 0 0 1px var(--edge);
 }
-.quality button:hover, .difficulty button:hover { background: rgba(241, 232, 212, 0.08); color: var(--sail); }
-.quality button.on, .difficulty button.on { background: var(--rope); color: var(--ink); box-shadow: none; }
+.quality button:hover, .difficulty button:hover, .castaway button:hover { background: rgba(241, 232, 212, 0.08); color: var(--sail); }
+.quality button.on, .difficulty button.on, .castaway button.on { background: var(--rope); color: var(--ink); box-shadow: none; }
 
 @media (max-width: 860px) {
   #title { grid-template-columns: minmax(0, 1fr); align-items: start; }
@@ -382,3 +382,34 @@ button.ghost:hover { background: rgba(241, 232, 212, 0.08); }
 .craft-tip { margin: 2px 6px 10px; font-size: 13px; line-height: 1.35; color: var(--sail-dim); }
 .craft-tip b { color: var(--sail); }
 .craft-tip kbd { font-size: 11px; padding: 0 4px; }
+
+/* The blur behind HUD panels is costly over a live 3D view on laptop graphics. */
+#hud .panel { backdrop-filter: none; background: rgba(9, 22, 30, 0.68); }
+
+/* Sailing dial, bottom right. */
+#sailhud {
+  position: fixed; right: var(--gap); bottom: var(--gap);
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px 8px 8px;
+  max-width: 330px;
+}
+#sailhud.helm { border-color: rgba(217, 169, 95, 0.75); }
+#sail-dial { width: 116px; height: 116px; flex: none; }
+.sail-text { display: flex; flex-direction: column; gap: 2px; font-size: 14px; line-height: 1.25; color: var(--sail-dim); }
+#sail-speed { font: 700 24px/1 var(--font-ui); color: var(--sail); }
+#sail-point { color: var(--sail); }
+#sail-state.warn { color: var(--danger); font-weight: 700; }
+#sail-keys { color: var(--rope); font-weight: 600; min-height: 1.25em; }
+
+/* The controls panel has grown: keep it inside a laptop screen. */
+#title { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); }
+.controls { padding: 14px 18px; max-height: calc(100vh - 2 * var(--gap)); overflow-y: auto; }
+.controls dl { gap: 4px; }
+.controls dl div { grid-template-columns: 132px 1fr; font-size: 14px; line-height: 1.25; }
+.controls .label { margin-bottom: 6px; }
+#title .quality, #title .difficulty, #title .castaway { margin-top: 10px; }
+#title .castaway + .difficulty, #title .difficulty + .quality { margin-top: 6px; }
+@media (max-height: 760px) {
+  .controls dl div { font-size: 13px; }
+  .controls kbd { font-size: 11px; padding: 1px 5px; }
+}

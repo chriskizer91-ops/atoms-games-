@@ -134,6 +134,7 @@ export function createSky(scene, renderer) {
   const cubeCam = new THREE.CubeCamera(1, 1000, cubeRT);
   const pmrem = new THREE.PMREMGenerator(renderer);
   let envRT = null;
+  const extraScenes = [];
 
   function capture(time) {
     envMat.uniforms.uTime.value = time;
@@ -149,6 +150,14 @@ export function createSky(scene, renderer) {
     reflection: cubeRT.texture,
     capture,
     get environment() { return envRT?.texture; },
+    // Turn the dome (and the light captured from it) with the chart.
+    setYaw(yaw) {
+      sky.rotation.y = yaw;
+      scene.environmentRotation.y = yaw;
+      for (const sc of extraScenes) sc.environmentRotation.y = yaw;
+    },
+    // Other scenes lit by the same captured sky (the first-person arm).
+    follow(sc) { extraScenes.push(sc); },
     update(time, camPos) {
       for (const u of [mat.uniforms, envMat.uniforms]) {
         u.uNight.value = SKY.night;
