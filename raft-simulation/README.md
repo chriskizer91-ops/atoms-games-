@@ -4,6 +4,8 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 
 **To play:** open `index.html` in Chrome, Edge or Firefox. You can double-click it. It's one self-contained file and works offline.
 
+Or open the private link for this build (Stage 5): https://claude.ai/artifact/9XeTdgwmeQyFmbi5bX8Zra. (For Claude sessions: build it with `node tools/build.js --artifact <file>` and republish to that link. The older link, https://claude.ai/artifact/588Ef85T4WQtWmVuQw8hVP, still holds Stage 4.)
+
 ## Controls
 
 | Key | Action |
