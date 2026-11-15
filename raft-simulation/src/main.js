@@ -23,6 +23,9 @@ import { createMap } from './map.js';
 import { createPlayer } from './player.js';
 import { createTools, makeHeldModels, SLOTS, BUILD_MODES } from './tools.js';
 import { createView } from './view.js';
+import { createLife } from './life.js';
+import { materials } from './materials.js';
+import { lerp } from './util.js';
 import { createCastaway, CASTAWAYS } from './people/castaway.js';
 import { createInput } from './input.js';
 import { createHud, icon } from './hud.js';
@@ -50,6 +53,7 @@ const raft = createRaft(scene);
 const debris = createDebris(scene);
 const fx = createFx(scene);
 const wake = createWake(scene);
+const life = createLife(scene, { fx, audio });
 const shark = createShark(scene, SHARK_TIERS);
 const nets = createNets(raft, debris, fx, audio);
 const bait = createBait(scene, fx, audio);
@@ -659,6 +663,7 @@ function newGame() {
   game.landed = false;
   game.helm = null;
   game.sailTip = {};
+  life.reset();
   wake.reset();
   debris.setFlow(CURRENT_SPEED);
   game.nextPredatorIn = 0;
@@ -1073,6 +1078,56 @@ function updateSailing(dt, wx, isl, ps) {
   });
 }
 
+// ---------- the living sea, and the feel of it ----------
+const lifeCtx = { camera, raft: null, land: null, through: 0, day: 1, night: 0, storm: 0, sunColor: SKY.sunColor, sunLevel: 1, fog: scene.fog, live: false };
+function updateLife(dt, wx, through, live) {
+  lifeCtx.raft = raft.center();
+  lifeCtx.land = islands.center();
+  lifeCtx.through = through;
+  lifeCtx.day = wx.daylight;
+  lifeCtx.night = wx.night;
+  lifeCtx.storm = wx.storm;
+  lifeCtx.sunLevel = sun.intensity / 3.2;
+  lifeCtx.live = live;
+  life.update(game.time, dt, lifeCtx);
+}
+const side = (x) => (x < 0 ? 'port' : 'starboard');
+life.on({
+  onDolphins(s, where) {
+    hud.alert(`Dolphins! Coming up on the ${side(s)} side.`, { kind: 'good', duration: 6, follow: where });
+  },
+  onWhale(where, dx) {
+    hud.alert('A whale is breaching!', { kind: 'good', duration: 6, follow: where });
+  },
+  onWhaleSplash(p) {
+    const s = placeSound(p);
+    audio.splash(s.pan, true);
+    audio.thunder?.();
+  },
+});
+
+// Rain soaks the deck: darker and glossy, so it mirrors the sky and the lightning.
+let deckWet = -1;
+function wetDeck(rain) {
+  const k = Math.round(clamp(rain * 1.3, 0, 1) * 20) / 20;
+  if (k === deckWet) return;
+  deckWet = k;
+  const M = materials();
+  for (const m of M.planks) { m.roughness = lerp(0.86, 0.38, k); m.color.setScalar(lerp(1, 0.7, k)); }
+  for (const m of M.chewed) { m.roughness = lerp(0.86, 0.45, k); m.color.setRGB(0.62 * lerp(1, 0.75, k), 0.52 * lerp(1, 0.75, k), 0.44 * lerp(1, 0.75, k)); }
+}
+
+// Speed widens the view a little; surfing a wave widens it more.
+let fovNow = 72;
+function speedView(dt, isl) {
+  const want = 72 + 4 * clamp((isl.through - 1.2) / 2, 0, 1) + 7 * clamp(isl.surfing / 1.5, 0, 1);
+  fovNow = lerp(fovNow, want, 1 - Math.exp(-dt * 1.6));
+  if (Math.abs(camera.fov - fovNow) > 0.05) {
+    camera.fov = fovNow;
+    camera.updateProjectionMatrix();
+  }
+}
+
 // ---------- per-frame ----------
 function survival(dt) {
   const s = game.stats;
@@ -1112,7 +1167,8 @@ function keepOffIsland(dt) {
 }
 
 function updateWorld(dt) {
-  weather.update(dt, game.time, camera.position, false);
+  const wx = weather.update(dt, game.time, camera.position, false, camera);
+  updateLife(dt, wx, 0, false);
   raft.update(game.time, dt);
   debris.update(game.time, dt, raft.center());
   fx.update(dt);
@@ -1124,7 +1180,7 @@ function updatePlay(dt) {
   raft.update(game.time, dt);
   // Hammer and net rays this frame need the raft's current pose, not last frame's.
   raft.group.updateMatrixWorld(true);
-  const wx = weather.update(dt, game.time, camera.position, true);
+  const wx = weather.update(dt, game.time, camera.position, true, camera);
   updateHelm(dt, player.state);
   player.update(game.time, dt, input, raft, events, 0, islands);
   view.aim(player.state, game.time, dt);
@@ -1157,6 +1213,9 @@ function updatePlay(dt) {
     slope: (waveHeight(0, 6, game.time) - waveHeight(0, -6, game.time)) / 12,
   });
   updateSailing(dt, wx, isl, ps);
+  updateLife(dt, wx, isl.through, true);
+  wetDeck(wx.rain);
+  speedView(dt, isl);
   keepOffIsland(dt);
   // Gulls when land is close.
   const ic = islands.center();
@@ -1271,6 +1330,7 @@ function resize() {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   tools.resize(w, h);
+  weather.setViewport(w, h);
 }
 window.addEventListener('resize', resize);
 applyQuality(loadQuality(), false);
@@ -1306,6 +1366,8 @@ function start(data) {
     game.mode = 'paused';
     showScreen('pause');
   } else {
+    // The title screen sits at sunrise.
+    weather.setTime(6.55);
     showScreen('title');
     refreshTitle();
   }
@@ -1319,7 +1381,7 @@ else start(window.claude?.hot?.data ?? {});
 // Handles for automated checks (tools/smoke.js).
 window.__game = {
   game, raft, shark, debris, nets, rails, bait, stations, weather, crafting, islands, story, map, player, tools, inventory, input, camera, events,
-  applyDifficulty, takeHelm, leaveHelm, wake, ocean, sky, renderer, scene, view,
+  applyDifficulty, takeHelm, leaveHelm, wake, ocean, sky, renderer, scene, view, life, SKY,
   openMenu, closeMenu, openMap, openNote,
   newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline, saveGame, readSave, clearSave,
   hold: false,

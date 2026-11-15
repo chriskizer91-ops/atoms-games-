@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { createFinalPass } from './finalpass.js';
 
 // Frame: (1) the scene without water into a small colour+depth target, which
 // the water samples to show what is beneath it; (2) the full scene, then the
@@ -12,9 +12,9 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 // redraw the sun's shadows every this many frames. grid: how finely the sea
 // is meshed.
 export const QUALITY = {
-  high: { label: 'High', pixelRatio: 1.5, shadows: 2048, bloom: true, refract: 0.85, msaa: 4, shadowEvery: 1, grid: 240 },
-  medium: { label: 'Medium', pixelRatio: 1.15, shadows: 1024, bloom: true, refract: 0.6, msaa: 2, shadowEvery: 2, grid: 200 },
-  low: { label: 'Low', pixelRatio: 0.85, shadows: 0, bloom: false, refract: 0.45, msaa: 0, shadowEvery: 2, grid: 150 },
+  high: { label: 'High', pixelRatio: 1.5, shadows: 2048, bloom: true, refract: 0.85, msaa: 4, shadowEvery: 1, grid: 240, rays: true },
+  medium: { label: 'Medium', pixelRatio: 1.15, shadows: 1024, bloom: true, refract: 0.6, msaa: 2, shadowEvery: 2, grid: 200, rays: true },
+  low: { label: 'Low', pixelRatio: 0.85, shadows: 0, bloom: false, refract: 0.45, msaa: 0, shadowEvery: 2, grid: 150, rays: false },
 };
 
 const SHADOW_SPAN = 13;
@@ -46,6 +46,7 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
   let composer = null;
   let vmPass = null;
   let bloom = null;
+  let final = null;
   let size = { w: 1, h: 1 };
   let scale = 1;        // extra resolution scale from the frame-rate watch (1 = as the level says)
   let frameNo = 0;
@@ -84,7 +85,10 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
     hp.needsUpdate = true;
     bloom.enabled = q.bloom;
     composer.addPass(bloom);
-    composer.addPass(new OutputPass());
+    if (final) final.dispose();
+    final = createFinalPass();
+    final.setRays(q.rays);
+    composer.addPass(final.pass);
   }
 
   function resize(w, h) {
@@ -115,6 +119,7 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
       }
       if (rebuild) build();
       bloom.enabled = q.bloom;
+      final.setRays(q.rays);
       ocean.setDetail(q.grid);
       scale = 1;
       resize(size.w, size.h);
@@ -147,19 +152,19 @@ export function createPipeline({ renderer, scene, camera, vmScene, vmCamera, oce
       // (Except the very first time, when the shadow map doesn't exist yet.)
       renderer.shadowMap.needsUpdate = sun.castShadow && !sun.shadow.map;
       ocean.mesh.visible = false;
-      for (const o of aboveWaterOnly) o.visible = false;
       hidden.length = 0;
+      for (const o of aboveWaterOnly) if (o.visible) { o.visible = false; hidden.push(o); }
       hideAbove(scene);
       renderer.setRenderTarget(refractRT);
       renderer.clear();
       renderer.render(scene, camera);
       renderer.setRenderTarget(null);
       ocean.mesh.visible = true;
-      for (const o of aboveWaterOnly) o.visible = true;
       for (let i = 0; i < hidden.length; i++) hidden[i].visible = true;
 
       renderer.shadowMap.needsUpdate = shadowFrame;
 
+      final.update(camera, sky.discDir, sky.rays, sky.sunColor, sky.storm);
       vmPass.enabled = showArm;
       composer.render();
     },

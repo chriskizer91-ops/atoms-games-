@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { waterDetailTexture } from './textures.js';
 import { FRAME } from './frame.js';
+import { SUNSET_GLSL } from './sky.js';
 
 // The sea. You can see into it: whatever is under the surface fades into the
 // water's own colour with depth. The surface reflects the sky, sparkles where
@@ -170,10 +171,10 @@ const VERT = /* glsl */ `
 
 const FRAG = /* glsl */ `
   #include <packing>
-  uniform float uTime, uNear, uFar, uFogDensity, uRefract, uGlow, uDay, uWind, uRain;
+  uniform float uTime, uNear, uFar, uFogDensity, uRefract, uGlow, uDay, uWind, uRain, uFlash, uSunset, uCloud;
   uniform vec4 uFrame;
   uniform vec2 uScreen;
-  uniform vec3 uSunDir, uSunColor, uDeep, uShallow, uFogColor, uAbsorb;
+  uniform vec3 uSunDir, uSunColor, uDeep, uShallow, uFogColor, uAbsorb, uSunChart;
   uniform sampler2D tDetail, tScene, tDepth;
   uniform samplerCube tSky;
   varying vec3 vWorld;
@@ -182,6 +183,8 @@ const FRAG = /* glsl */ `
   varying float vH;
   varying float vHo;
   varying float vViewZ;
+
+  ${SUNSET_GLSL}
 
   float sceneViewZ(vec2 uv) {
     float d = texture2D(tDepth, uv).x;
@@ -230,23 +233,46 @@ const FRAG = /* glsl */ `
     thick = inFront ? 60.0 : max(thick, 0.0);
     vec3 behind = texture2D(tScene, suv + off).rgb;
     vec3 absorb = exp(-uAbsorb * thick);
+    // How far below the surface the thing behind it lies (not how far along
+    // the line of sight): sand a hand's depth down, or the deep.
+    float below = inFront ? 60.0 : max(0.0, vWorld.y - (cameraPosition.y - V.y * dist * behindZ / vViewZ));
+    float shallows = 1.0 - smoothstep(0.2, 3.5, below);
+
+    // Clouds drag their shadows across the sea.
+    float shade = 1.0;
+    if (uCloud > 0.0) {
+      float cs = texture2D(tDetail, vChart * 0.0041 + vec2(uTime * 0.0012, uTime * 0.0008)).a;
+      shade = 1.0 - uCloud * smoothstep(0.42, 0.7, cs) * (1.0 - smoothstep(250.0, 700.0, dist) * 0.5);
+    }
+
+    // Sunlight focused by the ripples dances on a shallow bottom.
+    if (shallows > 0.0) {
+      float ca = texture2D(tDetail, vChart * 0.55 + vec2(uTime * 0.045, uTime * 0.03)).a;
+      float cb = texture2D(tDetail, vChart * 0.83 - vec2(uTime * 0.036, -uTime * 0.041)).a;
+      float caustic = pow(clamp(1.0 - abs(ca - cb) * 3.2, 0.0, 1.0), 6.0);
+      behind *= 1.0 + caustic * shallows * smoothstep(0.03, 0.5, below) * 1.05 * uDay * shade;
+    }
 
     float sunUp = clamp(uSunDir.y * 2.0, 0.2, 1.0);
     // Daylight under cloud and at night: the water's own colour fades with the light.
-    float lightLvl = mix(0.1, 1.0, uDay);
+    float lightLvl = mix(0.1, 1.0, uDay) * shade + uFlash * 0.55;
+    float lowSun = 1.0 - smoothstep(0.08, 0.5, uSunDir.y);
     vec3 body = uDeep * sunUp * lightLvl;
     // Light scattering up through the crests: brightest looking toward the
     // sun through the thin top of a wave.
     float back = pow(max(dot(-V, uSunDir) * 0.5 + 0.5, 0.0), 3.0);
     float crestH = vH * 3.0 + vHo * 0.9;
     body += uShallow * clamp(crestH + 0.25, 0.0, 1.3) * (0.35 + back * 0.85) * lightLvl * lightLvl;
+    // Low sun shines through the backs of the waves: the crests glow with its colour.
+    body += uSunColor * vec3(0.5, 0.85, 0.6) * clamp(crestH, 0.0, 1.0) * back * lowSun * 0.22 * uDay;
     vec3 under = behind * absorb + body * (1.0 - absorb);
 
     vec3 col = mix(under, refl, fresnel);
 
     vec3 Hh = normalize(V + uSunDir);
     float NdH = max(dot(N, Hh), 0.0);
-    col += uSunColor * (pow(NdH, 1600.0) * 26.0 + pow(NdH, 200.0) * 0.3) * smoothstep(0.0, 0.1, uSunDir.y);
+    // The sun's glitter: pin-sharp sparkles, and at a low sun a broad burning road to the horizon.
+    col += uSunColor * (pow(NdH, 1600.0) * 26.0 + pow(NdH, 200.0) * (0.3 + 0.9 * lowSun) + pow(NdH, 40.0) * 0.16 * lowSun) * smoothstep(0.0, 0.1, uSunDir.y) * shade;
 
     // Foam where things break the surface, and on the tallest crests.
     float fn = dA.a * 0.6 + texture2D(tDetail, vChart * 0.9 + uTime * 0.03).a * 0.4;
@@ -265,16 +291,27 @@ const FRAG = /* glsl */ `
       whitecap = smoothstep(1.0 - cover, 1.06 - cover * 0.6, wn) * (0.4 + 0.6 * smoothstep(-0.15, 0.4, vHo + vH * 2.0));
       whitecap *= 1.0 - smoothstep(120.0, 600.0, dist) * 0.6;
     }
-    float foam = clamp(edge + crest * 0.45 + whitecap * 0.75, 0.0, 1.0);
-    vec3 foamCol = vec3(0.95, 0.98, 1.0) * (0.55 + 0.45 * sunUp) * mix(0.35, 1.0, lightLvl) + uSunColor * 0.08;
+    // On a beach the water's edge surges up and slides back, leaving lace.
+    float wash = 0.0;
+    if (shallows > 0.0 && !inFront) {
+      float surge = 0.16 + 0.12 * sin(uTime * 0.8 + vChart.x * 0.21 + vChart.y * 0.17);
+      wash = (1.0 - smoothstep(surge * 0.4, surge, below)) * smoothstep(0.28, 0.62, fn + 0.12);
+      wash += (1.0 - smoothstep(0.0, 0.55, below)) * smoothstep(0.62, 0.86, fn) * 0.5;
+      wash *= 1.0 - smoothstep(22.0, 85.0, dist);
+    }
+    float foam = clamp(edge + crest * 0.45 + whitecap * 0.75 + wash * 0.65, 0.0, 1.0);
+    vec3 foamCol = vec3(0.95, 0.98, 1.0) * (0.55 + 0.45 * sunUp) * mix(0.35, 1.0, min(lightLvl, 1.4)) + uSunColor * (0.08 + 0.2 * lowSun * uDay);
     // At night anything that disturbs the water lights it up.
     foamCol = mix(foamCol, vec3(0.2, 1.5, 1.7), uGlow);
     // Glowing foam stays close: far crests would light up the whole horizon.
     foam *= mix(1.0, 1.0 - smoothstep(20.0, 70.0, dist), uGlow);
     col = mix(col, foamCol, foam * 0.92);
 
+    // Haze takes the colour of the sky it fades into: fire toward a low sun.
     float fog = 1.0 - exp(-uFogDensity * uFogDensity * dist * dist);
-    col = mix(col, uFogColor, fog);
+    vec3 hazeDir = vec3(-V.x * uFrame.z - V.z * uFrame.w, 0.0, V.x * uFrame.w - V.z * uFrame.z);
+    vec3 fogCol = uSunset > 0.001 ? sunsetBands(uFogColor, hazeDir, uSunChart, uSunset) : uFogColor;
+    col = mix(col, fogCol + vec3(0.5, 0.55, 0.7) * uFlash * 0.25, fog);
 
     gl_FragColor = vec4(col, 1.0);
     #include <tonemapping_fragment>
@@ -306,6 +343,10 @@ export function createOcean(scene, { sky, fog }) {
     uOpenSwell: { value: 0.7 },
     uWind: { value: 6 },
     uRain: { value: 0 },
+    uFlash: { value: 0 },
+    uSunset: { value: 0 },
+    uCloud: { value: 0 },
+    uSunChart: { value: sky.trueSun },
     uFrame: { value: new THREE.Vector4(0, 0, 1, 0) },
     uIsle: { value: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()] },
     uGlow: { value: 0 },
@@ -360,6 +401,11 @@ export function createOcean(scene, { sky, fog }) {
     setWeather(wind, rain) {
       uniforms.uWind.value = wind;
       uniforms.uRain.value = rain;
+    },
+    // Sunset colour in the haze (0..1) and how dark the cloud shadows on the water are (0..1).
+    setSky(sunset, cloud) {
+      uniforms.uSunset.value = sunset;
+      uniforms.uCloud.value = cloud;
     },
     update(t, focus) {
       uniforms.uTime.value = t;

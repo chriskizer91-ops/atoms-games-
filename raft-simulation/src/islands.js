@@ -407,6 +407,7 @@ function buildIsland(rec) {
 
   // The lighthouse: striped tower on the high ground, lamp lit at night.
   let lamp = null;
+  let beam = null;
   if (rec.kind === 'lighthouse') {
     const s = spot(0.6, 0.85) || { x: 0, z: 0, h: heightLocal(0, 0) };
     const lh = new THREE.Group();
@@ -421,8 +422,46 @@ function buildIsland(rec) {
     const roof = new THREE.Mesh(G.roof, M.red);
     roof.position.y = 13.95;
     lh.add(roof);
+    // Two beams sweeping round from the lamp room once it is lit.
+    beam = new THREE.Group();
+    beam.position.y = 12.7;
+    // Soft shafts: brightest near the lamp and through the thick of the
+    // beam, fading to nothing at its end and at its edges.
+    const beamMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+      vertexShader: /* glsl */ `
+        varying float vAlong;
+        varying vec3 vN;
+        varying vec3 vV;
+        void main() {
+          vAlong = abs(position.x) / 110.0;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vN = normalize(normalMatrix * normal);
+          vV = normalize(-mv.xyz);
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: /* glsl */ `
+        varying float vAlong;
+        varying vec3 vN;
+        varying vec3 vV;
+        void main() {
+          float thick = pow(abs(dot(normalize(vN), normalize(vV))), 1.6);
+          float a = pow(1.0 - vAlong, 1.7) * thick * 0.42;
+          gl_FragColor = vec4(vec3(1.0, 0.86, 0.6) * a, a);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }`,
+    });
+    for (const dir of [1, -1]) {
+      const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 9, 110, 18, 1, true).rotateZ(Math.PI / 2).translate(55, 0, 0), beamMat);
+      cone.rotation.y = dir > 0 ? 0 : Math.PI;
+      beam.add(cone);
+    }
+    beam.visible = false;
+    lh.add(beam);
     lh.position.set(s.x, s.h - 0.2, s.z);
     lh.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    for (const c of beam.children) c.castShadow = false;
     tall.add(lh);
     // the door: E here lights the lamp
     const door = new THREE.Group();
@@ -436,7 +475,7 @@ function buildIsland(rec) {
     addRes('lamp', ds, door, G.hitSmall, 1, 0);
   }
 
-  return { group, R, heightLocal, shapeR, resources, size: S, lamp, detail, lod: -1 };
+  return { group, R, heightLocal, shapeR, resources, size: S, lamp, beam, detail, lod: -1 };
 }
 
 const LABEL = {
@@ -474,7 +513,7 @@ export function createIslands(scene, { fx, audio }) {
   };
   // Islands close enough to have a mesh in the scene (up to MAX_ACTIVE), by chart id.
   const actives = new Map();
-  const MAX_ACTIVE = 3;
+  const MAX_ACTIVE = 4;
   let primary = null;     // the one you're at (resting) or closest to
   let events = {};
 
@@ -577,7 +616,7 @@ export function createIslands(scene, { fx, audio }) {
     const want = [];
     for (const rec of st.chart.values()) {
       const d = distTo(rec);
-      if (d < 420 && (rec.kind !== 'lighthouse' || rec.seen || d < 300)) want.push([d, rec]);
+      if (d < 560 && (rec.kind !== 'lighthouse' || rec.seen || d < 300)) want.push([d, rec]);
     }
     want.sort((a, b) => a[0] - b[0]);
     const keep = new Set(want.slice(0, MAX_ACTIVE).map(([, r]) => r.id));
@@ -690,8 +729,10 @@ export function createIslands(scene, { fx, audio }) {
       out.length = 0;
       for (const a of actives.values()) {
         local(a.rec, tmpL);
-        out.push({ x: tmpL.x, z: tmpL.z, r: a.rec.R });
+        out.push({ x: tmpL.x, z: tmpL.z, r: a.rec.R, d: Math.hypot(tmpL.x, tmpL.z) });
       }
+      // nearest first: the sea only has room for the closest few
+      out.sort((p, q) => p.d - q.d);
       return out;
     },
 
@@ -985,13 +1026,17 @@ export function createIslands(scene, { fx, audio }) {
         place(a);
         // Far off in the haze an island is a skyline; further still, nothing at all.
         const far = distTo(a.rec) - a.rec.R;
-        const lod = far > 345 && a.rec.kind !== 'lighthouse' ? 2 : far > 130 ? 1 : 0;
+        const lod = far > 540 && a.rec.kind !== 'lighthouse' ? 2 : far > 130 ? 1 : 0;
         if (lod !== a.built.lod) {
           a.built.lod = lod;
           a.built.group.visible = lod < 2;
           a.built.detail.visible = lod === 0;
         }
         if (a.built.lamp) a.built.lamp.material.emissiveIntensity = a.rec.lit ? (ctx.night > 0.3 ? 6 : 1.5) : 0;
+        if (a.built.beam) {
+          a.built.beam.visible = !!a.rec.lit && ctx.night > 0.2;
+          a.built.beam.rotation.y += dt * 0.5;
+        }
       }
       return {
         speed, heading: st.heading,

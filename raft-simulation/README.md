@@ -80,6 +80,18 @@ The sailing rules and the sea come from the sailing game, *Sandcastle Cays* (the
 
 The file is bigger (about 1.3 MB, was 0.9 MB): the two castaways and their painted skins are inside it.
 
+### The look (added after Stage 5's first build)
+
+- **You can see much further.** The haze is about half as thick in fair weather, so islands show as blue shapes on the horizon from over 400 m off.
+- **Sunrise and sunset:** bands of fire and rose round the horizon, violet opposite the sun, a big low sun, a burning path of light across the water, and wave crests that glow as the low sun shines through them. The title screen sits at sunrise.
+- **Shafts of light** stream out from the sun (and faintly from the moon) past whatever is in front of it: the sail, the mast, a palm. Off on Low graphics.
+- **The sky:** high wispy cloud, towers of cloud standing on the horizon, a moon with grey seas on it, the Milky Way, shooting stars on clear nights, and a rainbow for a minute or two after rain when the sun is behind you.
+- **Storms:** forked lightning strikes where you're looking and lights the clouds round it, the sea and the deck; thunder follows by how far off it was. The swell is about half as big again as before, and the picture goes greyer and harder.
+- **The sea:** sunlight dances on shallow sand, the water's edge surges and slides back on beaches, and clouds drag their shadows across the water.
+- **Life:** gulls wheel over islands and a few ride the wind above the raft. Dolphins come up from astern when you're sailing well and leap alongside for half a minute. Now and then a whale breaches a little way off.
+- **The lighthouse** sweeps two beams round once its lamp is lit.
+- **Small things:** rain darkens the deck and makes it glossy; the view widens a little at speed and more when surfing; a film-style finish (a touch more contrast and colour, a soft darkening toward the corners).
+
 ## Stage 4
 
 - **Saving.** The game saves itself every 30 seconds, when you pause, and when you close or switch away from the tab. The title screen shows **Continue** with the day and time afloat of your saved raft. **New raft** asks once more before replacing it. Dying clears the save. It lives in this browser only.

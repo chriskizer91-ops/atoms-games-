@@ -182,6 +182,11 @@ export function createFx(scene) {
       sprites.emit(pos, { count: Math.round(26 * scale), color: WHITE, speed: [1.6 * scale, 3.4 * scale], up: [0.7, 1.3], outward: 0.8, spread: 0.12 * scale, size: [0.04, 0.09], grow: 0.6, alpha: 0.95, gravity: 9.8, drag: 0.4, life: [0.45, 0.9] });
       sprites.emit(pos, { count: Math.round(7 * scale), color: WHITE, speed: [0.3, 0.9], up: [0.3, 0.8], outward: 1, spread: 0.2 * scale, size: [0.25 * scale, 0.45 * scale], grow: 2.2, alpha: 0.45, gravity: 0, drag: 2.5, life: [0.6, 1.2] });
     },
+    // A great burst of white water seen from a long way off (a whale coming down).
+    plume(pos, scale = 1) {
+      sprites.emit(pos, { count: Math.round(16 * scale), color: WHITE, speed: [5 * scale, 13 * scale], up: [0.8, 1.7], outward: 0.7, spread: 1.5 * scale, size: [0.9 * scale, 2.2 * scale], grow: 1.8, alpha: 0.8, gravity: 9.8, drag: 0.35, life: [1.1, 2.3] });
+      sprites.emit(pos, { count: Math.round(5 * scale), color: WHITE, speed: [1, 3], up: [0.5, 1.2], outward: 1, spread: 2.5 * scale, size: [3 * scale, 6 * scale], grow: 2.4, alpha: 0.32, gravity: 0, drag: 1.4, life: [1.8, 3.4] });
+    },
     splinters(pos) {
       chunks.emit(pos, { count: 9, color: [0x9c7146, 0x6b4a2c, 0xb48a5a], speed: 1.8, size: [0.7, 1.5], gravity: 9.8, life: [0.8, 1.4] });
     },

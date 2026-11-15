@@ -5,6 +5,9 @@ import { setSwell } from './ocean.js';
 import { clamp, damp, rand, smoothstep, weightedPick } from './util.js';
 import { FRAME, dirToScene, frameYaw } from './frame.js';
 import { windAt, wrap } from './sailing.js';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 
 // Clock and weather. Every frame this rewrites the shared SKY state, the sun
 // light, the fog and the swell, and reports how hot, cold and wet it is.
@@ -14,8 +17,8 @@ const PAL = {
   zenithDay: C(0x2f73c4), zenithNight: C(0x070d1c), zenithStorm: C(0x56616b),
   horizonDay: C(0xbcd6e2), horizonNight: C(0x101b2c), horizonStorm: C(0x7d8a92),
   groundDay: C(0x0d3a4c), groundNight: C(0x03111a),
-  sunNoon: C(0xffe2b8), sunLow: C(0xff9a55), moon: C(0x8aa0d8),
-  sunset: new THREE.Color(0.55, 0.28, 0.1),
+  sunNoon: C(0xffe2b8), sunLow: C(0xff8442), moon: C(0x8aa0d8),
+  sunset: new THREE.Color(0.5, 0.24, 0.1),
 };
 
 const RAIN_DROPS = 1400;
@@ -44,7 +47,65 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
   const rainMesh = new THREE.LineSegments(rainGeo, rainMat);
   rainMesh.frustumCulled = false;
   rainMesh.visible = false;
-  scene.add(rainMesh);
+  // Everything the weather draws in the air: the rain and the lightning.
+  const air = new THREE.Group();
+  air.add(rainMesh);
+  scene.add(air);
+
+  // Forked lightning: a jagged main stroke from the cloud to the sea and a
+  // branch off it, drawn as fat bright lines for the fraction of a second a
+  // flash lasts.
+  const BOLT_MAIN = 18, BOLT_BRANCH = 9;
+  const boltMat = new LineMaterial({ color: 0xffffff, linewidth: 3.4, transparent: true, depthWrite: false, fog: false });
+  boltMat.color.setRGB(7, 8, 12);
+  const mkBolt = (n) => {
+    const g = new LineGeometry();
+    g.setPositions(new Float32Array(n * 3));
+    const l = new Line2(g, boltMat);
+    l.frustumCulled = false;
+    l.visible = false;
+    air.add(l);
+    return l;
+  };
+  const bolts = [mkBolt(BOLT_MAIN), mkBolt(BOLT_BRANCH)];
+  const boltPts = [new Float32Array(BOLT_MAIN * 3), new Float32Array(BOLT_BRANCH * 3)];
+  function strike(camPos, camera) {
+    // Somewhere ahead of where you're looking, a few hundred metres off.
+    let yaw = rand(0, Math.PI * 2);
+    if (camera) {
+      camera.getWorldDirection(tmpV);
+      yaw = Math.atan2(tmpV.x, tmpV.z) + rand(-1.0, 1.0);
+    }
+    const dist = rand(190, 430);
+    const x0 = camPos.x + Math.sin(yaw) * dist, z0 = camPos.z + Math.cos(yaw) * dist;
+    const top = rand(210, 280);
+    const lean = { x: rand(-40, 40), z: rand(-40, 40) };
+    const main = boltPts[0];
+    let fork = 6;
+    for (let i = 0; i < BOLT_MAIN; i++) {
+      const u = i / (BOLT_MAIN - 1);
+      const j = i === 0 || i === BOLT_MAIN - 1 ? 0 : 16 * (1 - u * 0.5);
+      main[i * 3] = x0 + lean.x * u + rand(-j, j);
+      main[i * 3 + 1] = top * (1 - u);
+      main[i * 3 + 2] = z0 + lean.z * u + rand(-j, j);
+    }
+    fork = 4 + Math.floor(rand(0, 6));
+    const br = boltPts[1];
+    const out = { x: rand(-1, 1) * 70, z: rand(-1, 1) * 70 };
+    for (let i = 0; i < BOLT_BRANCH; i++) {
+      const u = i / (BOLT_BRANCH - 1);
+      br[i * 3] = main[fork * 3] + out.x * u + rand(-7, 7) * u;
+      br[i * 3 + 1] = main[fork * 3 + 1] * (1 - u * 0.55);
+      br[i * 3 + 2] = main[fork * 3 + 2] + out.z * u + rand(-7, 7) * u;
+    }
+    // which way the stroke lies on the chart, for the sky
+    const sx = x0 - camPos.x, sz = z0 - camPos.z;
+    SKY.flashDir.set(sx * FRAME.c + sz * FRAME.s, top * 0.45, -sx * FRAME.s + sz * FRAME.c).normalize();
+    bolts[0].geometry.setPositions(main);
+    bolts[1].geometry.setPositions(br);
+    return dist;
+  }
+  const tmpV = new THREE.Vector3();
 
   function nextKind() {
     const table = {};
@@ -72,9 +133,13 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
   const info = { day: 1, hour: 8, kind: 'clear', daylight: 1, night: 0, rain: 0, storm: 0, heat: 0, cold: 0, wet: 0, wind, windX: 0, windZ: 0 };
   const tmpD = { x: 0, z: 0 };
   let lastYaw = 0, lastSunY = -9, lastCover = -9;
+  let wetMem = 0;         // how recently it rained, for the rainbow
+  let meteorIn = 30, meteorT = -1;
 
   const api = {
-    mesh: rainMesh,
+    mesh: air,
+    // Lightning is drawn in screen pixels: it needs to know the screen's size.
+    setViewport(w, h) { boltMat.resolution.set(w, h); },
     envInterval: 2.5, // seconds between sky-lighting refreshes
     get state() { return st; },
     get wind() { return wind; },
@@ -106,7 +171,8 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
       st.envTimer = 0; st.envAge = 1e9;
     },
 
-    update(dt, time, camPos, live) {
+    // camera (optional): so lightning strikes where you're looking.
+    update(dt, time, camPos, live, camera = null) {
       // ---- clock ----
       if (live) {
         const perHour = st.hour >= 6 && st.hour < 20 ? DAY.hourDay : DAY.hourNight;
@@ -132,10 +198,30 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
       const sy = SKY.trueSun.y;
       const daylight = smoothstep(-0.08, 0.15, sy);
       const night = 1 - smoothstep(-0.14, 0.04, sy);
-      const sunset = (1 - smoothstep(0.0, 0.3, sy)) * smoothstep(-0.18, 0.0, sy);
+      const sunset = (1 - smoothstep(0.02, 0.42, sy)) * smoothstep(-0.2, -0.02, sy);
       SKY.night = night;
       SKY.cover = st.cover;
       SKY.storm = st.storm;
+      SKY.sunset = sunset * (1 - 0.8 * st.storm) * (1 - 0.45 * st.cover);
+      // A rainbow for a minute or two after rain, once the cloud breaks and while the sun is not too high.
+      wetMem = Math.max(wetMem - dt / 110, Math.min(1, st.rain * 1.6));
+      SKY.rainbow = wetMem * (1 - smoothstep(0.4, 0.8, st.cover)) * daylight * (1 - smoothstep(0.6, 0.8, sy)) * (1 - st.storm);
+      // Shooting stars on clear nights.
+      if (meteorT >= 0) {
+        meteorT += dt / 0.9;
+        if (meteorT >= 1) meteorT = -1;
+      } else if (live && night > 0.7 && st.cover < 0.5) {
+        meteorIn -= dt;
+        if (meteorIn <= 0) {
+          meteorIn = rand(18, 60);
+          meteorT = 0;
+          const a0 = rand(0, Math.PI * 2), e0 = rand(0.35, 1.0);
+          SKY.meteorA.set(Math.cos(a0) * Math.cos(e0), Math.sin(e0), Math.sin(a0) * Math.cos(e0));
+          const a1 = a0 + rand(-0.5, 0.5), e1 = e0 - rand(0.12, 0.3);
+          SKY.meteorB.set(Math.cos(a1) * Math.cos(e1), Math.sin(e1), Math.sin(a1) * Math.cos(e1));
+        }
+      }
+      SKY.meteorT = meteorT;
 
       // The sky keeps chart directions (its dome turns with the chart); the
       // light itself is wanted in the raft's frame.
@@ -151,6 +237,18 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
         lightFrom(SKY.moonDir);
         if (SKY.sunDir.y < 0.1) { SKY.sunDir.y = 0.1; SKY.sunDir.normalize(); }
         SKY.sunColor.copy(PAL.moon).multiplyScalar(0.55);
+      }
+
+      // Where the bright disc really is in the scene (the light above is kept
+      // off the horizon), and how strongly its shafts of light show.
+      if (sy > -0.06) {
+        dirToScene(SKY.trueSun.x, SKY.trueSun.z, tmpD);
+        SKY.discDir.set(tmpD.x, SKY.trueSun.y, tmpD.z);
+        SKY.rays = smoothstep(-0.06, 0.03, sy) * (0.3 + 0.7 * (1 - smoothstep(0.1, 0.55, sy))) * (1 - 0.75 * st.cover) * (1 - st.storm);
+      } else {
+        dirToScene(SKY.moonDir.x, SKY.moonDir.z, tmpD);
+        SKY.discDir.set(tmpD.x, SKY.moonDir.y, tmpD.z);
+        SKY.rays = 0.3 * night * (1 - st.cover) * smoothstep(0.0, 0.15, SKY.moonDir.y);
       }
 
       SKY.zenith.copy(PAL.zenithNight).lerp(PAL.zenithDay, daylight);
@@ -172,12 +270,14 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
       ocean.uniforms.uGlow.value = night;
       ocean.uniforms.uDay.value = daylight * (1 - 0.45 * st.cover);
       // The long ocean swell grows with the weather; so does the wind.
-      setSwell(st.swell, 0.62 + (st.swell - 1) * 1.35);
+      setSwell(st.swell, 0.62 + (st.swell - 1) * 2.1);
       windAt(time, clamp(0.12 * st.cover + 0.3 * st.rain + 0.58 * st.storm, 0, 1), wind);
       dirToScene(-Math.cos(wind.from), -Math.sin(wind.from), tmpD);
       info.windX = tmpD.x;
       info.windZ = tmpD.z;
       ocean.setWeather(wind.speed, st.rain);
+      // Scattered cloud throws clear-edged shadows on the sea; overcast is one flat shade (already dimmed).
+      ocean.setSky(SKY.sunset, 0.42 * daylight * (1 - smoothstep(0.35, 0.8, st.cover)));
       fx.setGlow(night);
 
       // ---- lightning ----
@@ -186,7 +286,8 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
         if (st.nextFlash <= 0) {
           st.nextFlash = rand(5, 14);
           st.flashT = 0.45;
-          st.thunderIn = rand(0.4, 2.2);
+          // Thunder follows by how far off it struck.
+          st.thunderIn = 0.25 + strike(camPos, camera) / 240;
         }
       }
       if (st.flashT > 0) {
@@ -195,6 +296,14 @@ export function createWeather({ scene, sun, hemi, ocean, fx, audio, sky, onEnvir
         st.flash = (t < 0.08 ? 1 : t < 0.14 ? 0.2 : t < 0.22 ? 0.8 : Math.max(0, 1 - (t - 0.22) * 4.4));
       } else {
         st.flash = 0;
+      }
+      // The flash lights the sea and everything on it for an instant.
+      for (const b of bolts) b.visible = st.flash > 0.12;
+      boltMat.opacity = st.flash;
+      ocean.uniforms.uFlash.value = st.flash;
+      if (st.flash > 0) {
+        hemi.intensity += st.flash * 1.5;
+        hemi.color.lerp(tmpC.setRGB(0.75, 0.8, 1.0), st.flash);
       }
       if (st.thunderIn > 0) {
         st.thunderIn -= dt;

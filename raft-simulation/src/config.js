@@ -266,10 +266,10 @@ export const DAY = { start: 8, hourDay: 40, hourNight: 20 };
 
 export const WEATHER = {
   kinds: {
-    clear: { weight: 45, dur: [150, 260], cover: 0, rain: 0, storm: 0, swell: 1, fog: 0.0085 },
-    cloudy: { weight: 30, dur: [90, 160], cover: 0.55, rain: 0, storm: 0.1, swell: 1.12, fog: 0.0105 },
-    rain: { weight: 18, dur: [80, 140], cover: 0.85, rain: 0.6, storm: 0.45, swell: 1.3, fog: 0.016 },
-    storm: { weight: 7, dur: [70, 120], cover: 1, rain: 1, storm: 1, swell: 1.7, fog: 0.022 },
+    clear: { weight: 45, dur: [150, 260], cover: 0, rain: 0, storm: 0, swell: 1, fog: 0.0042 },
+    cloudy: { weight: 30, dur: [90, 160], cover: 0.55, rain: 0, storm: 0.1, swell: 1.12, fog: 0.0058 },
+    rain: { weight: 18, dur: [80, 140], cover: 0.85, rain: 0.6, storm: 0.45, swell: 1.3, fog: 0.0105 },
+    storm: { weight: 7, dur: [70, 120], cover: 1, rain: 1, storm: 1, swell: 1.7, fog: 0.015 },
   },
 };
 
