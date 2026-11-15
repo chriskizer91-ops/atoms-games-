@@ -24,6 +24,7 @@ import { createPlayer } from './player.js';
 import { createTools, makeHeldModels, SLOTS, BUILD_MODES } from './tools.js';
 import { createView } from './view.js';
 import { createLife } from './life.js';
+import { ART } from './art.js';
 import { materials } from './materials.js';
 import { lerp } from './util.js';
 import { createCastaway, CASTAWAYS } from './people/castaway.js';
@@ -555,10 +556,13 @@ try { view.set(localStorage.getItem(VIEW_KEY) === 'third'); } catch { /* storage
 // The body seen in third person (and on the title screen) is one of the fair
 // folk from Moon Faire. Your own arms take its skin colour.
 const BODY_KEY = 'raft-sim-body';
+const SLEEVES = { 'castaway-man-A': '#d9ccab', 'castaway-man-B': '#e8e1cc', 'castaway-woman-A': '#3e6d73', 'castaway-woman-B': '#c9705a' };
 let bodyId = null;
 async function applyBody(id, remember = true) {
   if (!CASTAWAYS.includes(id)) id = CASTAWAYS[0];
-  document.querySelectorAll('.castaway button').forEach((b) => b.classList.toggle('on', b.dataset.b === id));
+  const who = id.slice(0, -2), outfit = id.slice(-1);
+  document.querySelectorAll('.castaway button').forEach((b) => b.classList.toggle('on', b.dataset.b === who));
+  document.querySelectorAll('.outfit button').forEach((b) => b.classList.toggle('on', b.dataset.o === outfit));
   if (remember) {
     try { localStorage.setItem(BODY_KEY, id); } catch { /* storage blocked */ }
   }
@@ -569,12 +573,17 @@ async function applyBody(id, remember = true) {
   if (bodyId !== id) { body.dispose(); return; }   // another was picked meanwhile
   scene.add(body.root);
   view.setBody(body, makeHeldModels());
-  // The painted skin is pale under the fair's lamps; out here in the sun it is warmed a little.
-  tools.setSkin(new THREE.Color(body.skin).lerp(new THREE.Color(0xb07452), 0.5));
+  // Your own arms match: the skin (warmed a little for the sun) and the outfit's sleeves.
+  tools.setSkin(new THREE.Color(body.skin).lerp(new THREE.Color(0xb07452), 0.35));
+  tools.setSleeveBase(SLEEVES[id] || '#a89878');
   if (old) { scene.remove(old.root); old.dispose(); }
 }
-document.querySelectorAll('.castaway button').forEach((b) => b.addEventListener('click', () => applyBody(b.dataset.b)));
+const pickBody = (who, outfit) => applyBody(`${who || (bodyId || CASTAWAYS[0]).slice(0, -2)}-${outfit || (bodyId || CASTAWAYS[0]).slice(-1)}`);
+document.querySelectorAll('.castaway button').forEach((b) => b.addEventListener('click', () => pickBody(b.dataset.b, null)));
+document.querySelectorAll('.outfit button').forEach((b) => b.addEventListener('click', () => pickBody(null, b.dataset.o)));
 try { applyBody(localStorage.getItem(BODY_KEY) || CASTAWAYS[0], false); } catch { applyBody(CASTAWAYS[0], false); }
+// The notes found in bottles are written on a page from a ship's log.
+document.querySelector('.note-paper').style.backgroundImage = `url(${ART.note})`;
 
 // ---------- difficulty ----------
 const DIFF_KEY = 'raft-sim-difficulty';
@@ -1040,7 +1049,7 @@ function updateHelm(dt, ps) {
 }
 
 const shelterList = [];
-const sailView = { hoist: 0, boom: 0.14, fill: 0, rudder: 0 };
+const sailView = { hoist: 0, boom: 0.14, fill: 0, rudder: 0, windYaw: 0 };
 let twaNow = 0;
 function updateSailing(dt, wx, isl, ps) {
   const b = islands.boat;
@@ -1058,6 +1067,7 @@ function updateSailing(dt, wx, isl, ps) {
   sailView.boom = boomAngle(twaNow);
   sailView.fill = sailFill(twaNow);
   sailView.rudder = b.rudder;
+  sailView.windYaw = Math.atan2(-wx.windZ, wx.windX);
 
   // Spray off the bow when driving hard.
   game.sprayT = (game.sprayT || 0) - dt * Math.max(0, isl.through - 1.6);

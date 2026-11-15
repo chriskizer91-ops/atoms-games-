@@ -1,0 +1,7 @@
+{
+  "castaway-man": { "flat": { "soles": "#3a2e24" }, "rough": { "boots": 0.9, "straw": 0.9, "brim": 0.9 }, "seam": 0.2, "move": { "straw": [0, -0.035, 0], "band": [0, -0.035, 0], "brim": [0, -0.035, 0] } },
+  "castaway-man-A": { "flat": { "soles": "#3a2e24", "brim": "#d2ae62" } },
+  "castaway-man-B": { "flat": { "soles": "#2a2420", "brim": "#dcc88f" } },
+  "castaway-woman": { "flat": { "soles": "#3a2e24" }, "rough": { "boots": 0.9 }, "seam": 0.2 },
+  "castaway-woman-B": { "flat": { "soles": "#2a2420" } }
+}

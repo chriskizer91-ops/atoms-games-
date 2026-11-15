@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
 const root = path.join(__dirname, '..');
 const args = process.argv.slice(2);
 const flag = (n) => { const i = args.indexOf(n); return i >= 0 ? args.splice(i, 2)[1] : null; };
-const id = flag('--id') || 'farm-lad';
+const id = flag('--id') || 'castaway-man-A';
 const only = (flag('--only') || '').split(',').filter(Boolean);
 const outDir = path.resolve(args[0] || path.join(os.tmpdir(), 'person-look'));
 fs.mkdirSync(outDir, { recursive: true });

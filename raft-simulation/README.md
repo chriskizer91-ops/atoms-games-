@@ -70,7 +70,7 @@ The sailing rules and the sea come from the sailing game, *Sandcastle Cays* (the
   - a wake of foam astern under sail (it glimmers at night), spray off the bow at speed, rain that slants with the wind and pocks the water;
   - shallows round islands read turquoise.
 - **Your hands.** Jointed fingers with knuckles and nails, a wrist, a shaped forearm and a rolled sleeve. A second hand steadies the spear and holds the hook's coiled line. Food sits in a cupped palm.
-- **Third person (`V`).** A camera over your shoulder. The castaway walks, runs, swims, steers, and stabs, swings, throws and eats along with you. Choose the Farm lad or the Pie seller on the title screen or in the pause menu. The castaway also stands on the raft on the title screen. Their clothes are their own painted ones: they don't change with the wardrobe.
+- **Third person (`V`).** A camera over your shoulder. The castaway walks, runs, swims, steers, and stabs, swings, throws and eats along with you. Choose who you are on the title screen or in the pause menu. The castaway also stands on the raft on the title screen. Their clothes are their own painted ones: they don't change with the wardrobe.
 - **Smoother on a laptop:**
   - a fresh game now takes about 230 drawing commands a frame instead of about 920 (a large raft beside a big island: about 630 instead of over 2,000). Trees are merged into a few pieces, far islands are drawn as a skyline or not at all, and the pass that draws what's under the water skips everything above it;
   - the game watches the frame rate the whole time and trims or restores sharpness a step at a time, instead of checking once at the start;
@@ -78,7 +78,7 @@ The sailing rules and the sea come from the sailing game, *Sandcastle Cays* (the
   - the blur behind the HUD panels is gone (it was costly over a 3D view).
 - **Fixes:** a rare white glare (a broken pixel on a plank edge smeared by the glow effect) can no longer happen; storm clouds now smother the sun's glow.
 
-The file is bigger (about 1.3 MB, was 0.9 MB): the two castaways and their painted skins are inside it.
+The file is bigger (about 2.3 MB, was 0.9 MB): the castaways' painted outfits and the painted sail, flag and papers are inside it.
 
 ### The look (added after Stage 5's first build)
 
@@ -92,14 +92,19 @@ The file is bigger (about 1.3 MB, was 0.9 MB): the two castaways and their paint
 - **The lighthouse** sweeps two beams round once its lamp is lit.
 - **Small things:** rain darkens the deck and makes it glossy; the view widens a little at speed and more when surfing; a film-style finish (a touch more contrast and colour, a soft darkening toward the corners).
 
-### In progress: new outfits for the castaways
+### The castaways, refitted and repainted
 
-The Farm lad and the Pie seller are being refitted as castaways: new shapes (a sailcloth vest, rope belt and cut-off trousers for him; a belted tunic over rolled breeches for her, in place of the long skirt) and new painted outfits. The shapes are done; the paintings are being made outside the game from a brief.
+The Farm lad and the Pie seller are now castaways, each with two painted outfits. Choose **Man** or **Woman** and **Washed ashore** or **Seasoned mariner** on the title screen or in the pause menu.
 
-- `art/castaway-refit/castaway-refit.html`: the brief. For each outfit it shows the pictures to attach and the prompt to paste into an image generator, and the name to save the result under. `art/castaway-refit/pack/` holds the pictures and `prompts.md`; `Castaway-Refit-Pack.zip` is the same in one file.
-- `src/people/refit/`: the two new sets of shapes and `outfits.json` (who wears what, in which colours).
-- To remake the brief (for Claude sessions): `node src/people/port/blank.js <work dir with ref/> <out>` draws the grey guides and colour keys with Moon Faire's kit (the work dir is the one `port.js` makes), then `python3 tools/skin_brief.py <out> <moon-faire>/game <screenshots dir>` builds the page, the pack and the zip.
-- When the paintings come back, they are fitted with Moon Faire's `people/kit/prep_skin.py` and baked into `src/people/folk/` like the two people there now.
+- **New shapes.** He keeps his straw hat and kerchief and gains a sailcloth vest, a rope belt, a sheath knife and trousers cut off at the shin. She keeps her headscarf and swaps the long skirt and apron (which dragged when she swam) for a belted tunic over breeches rolled below the knee. Both have their feet bound in cloth.
+- **New paint.** The four outfits and the two weathered faces were painted outside the game from a brief and wrapped onto the models. Your own arms take the outfit's skin and sleeve colours.
+- **Painted things in the world:** the sail (patched canvas), a flag on a staff above the masthead that streams with the wind, the paper of the chart, and the paper of the messages in bottles.
+
+For Claude sessions:
+- `art/castaway-refit/`: the brief (`castaway-refit.html`, `pack/`, the zip) and the paintings that came back (`paintings/`). `art/world/`: the sail, chart, note and flag paintings.
+- `src/people/refit/`: the two sets of shapes, `outfits.json` (who wears what) and `skins.json` (finishing touches: flat-coloured parts, parts nudged).
+- To redo it: `node src/people/port/blank.js <work dir with ref/> <guides>` draws the grey guides and colour keys; `python3 tools/skin_brief.py <guides> <moon-faire>/game <screenshots>` builds the brief; `python3 -I tools/skin_fit.py <paintings> <guides> <fit>` measures each painting against its guide (needs `opencv-python-headless` and `scipy`); `node src/people/port/refit.js <work dir> <fit>` bakes `src/people/folk/castaway-*.js`; `python3 tools/world_art.py` packs `art/world` into `src/art.js`. The work dir is the one `port.js` makes from the Moon Faire sources.
+- The Farm lad and Pie seller as they were (`src/people/folk/farm-lad.js`, `pie-seller.js`) are still in the repo but no longer in the game.
 
 ## Stage 4
 

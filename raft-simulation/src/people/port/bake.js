@@ -32,15 +32,16 @@ function pack(B) {
   return P;
 }
 
-module.exports = async function bake({ work, people, ids, esbuild, chromium, nodePaths }) {
+module.exports = async function bake({ work, people, ids, esbuild, chromium, nodePaths, register }) {
   const PEOPLE = people;
-  fs.copyFileSync(path.join(__dirname, 'bake-page.js'), path.join(work, 'bake-page.js'));
+  fs.writeFileSync(path.join(work, 'bake-page.js'), fs.readFileSync(path.join(__dirname, 'bake-page.js'), 'utf8').replace(/__REFIT__/g, path.join(people, 'refit').replace(/\\/g, '/')));
   const js = esbuild.buildSync({ entryPoints: [path.join(work, 'bake-page.js')], bundle: true, format: 'iife', target: 'es2020', write: false, logLevel: 'warning', nodePaths }).outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   const html = path.join(work, 'bake.html'); fs.writeFileSync(html, `<!doctype html><meta charset="utf-8"><script>${js}</script>`);
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage(); const errs = [];
   page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.text()); }); page.on('pageerror', (e) => errs.push(e.message));
   await page.goto('file://' + html); await page.waitForFunction(() => window.__bake);
+  for (const [code, o] of Object.entries(register || {})) await page.evaluate(([code, o]) => window.__register(code, o), [code, o]);
   for (const id of ids) {
     const D = await page.evaluate((id) => window.__bake(id, 'quarter'), id);
     if (D.errors.length) throw new Error(id + ': ' + D.errors.join('; '));

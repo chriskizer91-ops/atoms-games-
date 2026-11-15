@@ -6,6 +6,9 @@ export default {
   id: 'castaway-woman',
   name: 'Castaway',
   base: 'pie-seller',
+  // The lighter build: what share of each part's triangles is kept. (The Pie seller's own left her legs out: they were
+  // under a long skirt. These legs show.)
+  weights: { quarter: { weight: { drop: [], keep: { head: 0.65, hands: 0.18, boots: 0.12, soles: 0.06, torso: 0.3, legs: 0.42, sleeve: 0.6, forearm: 0.6, tunic: 0.7, sash: 0.6, pouch: 0.5, cuff: 0.5, hair: 0.6, kerchief: 0.6 }, rest: 0.4, scale: 0.7387703469494953 } } },
   person() {
     const PERSON = {
       name: 'Castaway',

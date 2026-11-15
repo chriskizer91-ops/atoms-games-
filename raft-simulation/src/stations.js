@@ -3,6 +3,7 @@ import { TILE, DECK_Y, GRILL, CATCHER, CROPS, CROP_RAIN_BOOST, SMELT, STILL, ITE
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { materials } from './materials.js';
 import { makeFish } from './nets.js';
+import { ART } from './art.js';
 import { rand } from './util.js';
 
 // Things built on a floor piece with the hammer: crafting table, firepit grill
@@ -37,7 +38,8 @@ function init() {
     melon: new THREE.MeshStandardMaterial({ color: 0x3f7a35, roughness: 0.45 }),
     bamboo: new THREE.MeshStandardMaterial({ color: 0x9bb35a, roughness: 0.55 }),
     glass: new THREE.MeshStandardMaterial({ color: 0xd8f0ff, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }),
-    sail: new THREE.MeshStandardMaterial({ color: 0xd6ccb4, roughness: 0.9, side: THREE.DoubleSide }),
+    sail: new THREE.MeshStandardMaterial({ map: painted(ART.sail), roughness: 0.9, side: THREE.DoubleSide }),
+    flag: new THREE.MeshStandardMaterial({ map: painted(ART.flag), roughness: 0.85, side: THREE.DoubleSide }),
     sailPatch: new THREE.MeshStandardMaterial({ color: 0x3f74a8, roughness: 0.6, side: THREE.DoubleSide }),
     bar: new THREE.MeshStandardMaterial({ color: 0xb8bcc2, roughness: 0.35, metalness: 0.8 }),
     glow: new THREE.MeshStandardMaterial({ color: 0x2a1a12, emissive: 0xff7a2a, emissiveIntensity: 0, roughness: 0.9 }),
@@ -325,8 +327,15 @@ function buildSail() {
   const cloth = mesh(geo, M.sail);
   cloth.position.y = DECK_Y + 1.05;
   rig.add(cloth);
-  const patch = mesh(new THREE.PlaneGeometry(0.45, 0.5).translate(0.75, 1.9, 0.012), M.sailPatch, false);
-  cloth.add(patch);
+  // A flag at the masthead, streaming downwind.
+  const staff = mesh(new THREE.CylinderGeometry(0.018, 0.024, 0.9, 6).translate(0, 0.45, 0), M.bamboo);
+  staff.position.y = DECK_Y + 4.35;
+  g.add(staff);
+  const flagGeo = new THREE.PlaneGeometry(0.84, 0.56, 10, 4).translate(0.42 + 0.03, 0, 0);
+  const flag = mesh(flagGeo, M.flag);
+  flag.position.y = DECK_Y + 4.93;
+  g.add(flag);
+  const flagBase = flagGeo.attributes.position.array.slice();
   // A yard along the head of the sail: it comes down with the cloth.
   const yard = mesh(G.boom, M.bamboo);
   yard.scale.set(0.8, 1, 0.8);
@@ -348,7 +357,7 @@ function buildSail() {
   const crutch = mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.62, 8).translate(0, 0.31, 0), M.bamboo);
   crutch.position.set(-0.42, DECK_Y, 0.3);
   g.add(crutch);
-  return { group: g, rig, cloth, base, yard, oar, hoist: 0, swing: 0, belly: 0 };
+  return { group: g, rig, cloth, base, yard, oar, flag, flagBase, hoist: 0, swing: 0, belly: 0 };
 }
 
 // Four posts, a ladder and a railed platform to stand on.
@@ -397,7 +406,8 @@ function buildTower() {
   return { group: g };
 }
 
-const IDLE_SAIL = { hoist: 0, boom: 0.14, fill: 0, rudder: 0 };
+const IDLE_SAIL = { hoist: 0, boom: 0.14, fill: 0, rudder: 0, windYaw: 0 };
+const painted = (src) => { const t = new THREE.TextureLoader().load(src); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
 const STATION_KINDS = ['grill', 'catcher', 'table', 'anchor', 'planter', 'smelter', 'still', 'sail', 'tower'];
 const isStationMode = (m) => STATION_KINDS.includes(m);
 
@@ -776,9 +786,18 @@ export function createStations(raft, fx, audio) {
               + Math.sin(t * 17 + u * 9 + w * 5) * flap * u;
           }
           st.cloth.geometry.attributes.position.needsUpdate = true;
+          // The flag points where the wind goes and ripples harder the more it blows.
+          st.flag.rotation.y += (Math.atan2(Math.sin((sv.windYaw || 0) - st.flag.rotation.y), Math.cos((sv.windYaw || 0) - st.flag.rotation.y))) * (1 - Math.exp(-dt * 2));
+          const fa = st.flag.geometry.attributes.position.array;
+          for (let v = 0; v < fa.length; v += 3) {
+            const u = (st.flagBase[v] - 0.03) / 0.84;
+            fa[v + 2] = Math.sin(u * 7 - t * (7 + wind * 6)) * (0.03 + 0.05 * wind) * u;
+            fa[v + 1] = st.flagBase[v + 1] - u * u * 0.1 * (1 - wind) + Math.sin(u * 5 - t * 5) * 0.012 * u;
+          }
+          st.flag.geometry.attributes.position.needsUpdate = true;
           // Shading only needs refreshing a few times a second.
           st.normT = (st.normT || 0) - dt;
-          if (st.normT <= 0) { st.normT = 0.12; st.cloth.geometry.computeVertexNormals(); }
+          if (st.normT <= 0) { st.normT = 0.12; st.cloth.geometry.computeVertexNormals(); st.flag.geometry.computeVertexNormals(); }
           continue;
         }
         if (st.kind === 'tower' || st.kind === 'table') continue;

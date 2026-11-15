@@ -567,6 +567,13 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
       HM.nail.color.copy(color).lerp(new THREE.Color(0xf2d6cc), 0.55);
     },
 
+    // What the sleeves are when nothing from the wardrobe covers them: the outfit's own shirt.
+    setSleeveBase(hex) {
+      const was = sleeveMat.color.equals(sleeveBase);
+      sleeveBase.set(hex);
+      if (was) sleeveMat.color.copy(sleeveBase);
+    },
+
     setSleeve(hex) {
       if (hex == null) sleeveMat.color.copy(sleeveBase);
       else sleeveMat.color.setHex(hex);

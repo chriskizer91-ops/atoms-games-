@@ -37,8 +37,11 @@ import { buildBody } from './body.js';
 // thigh shin foot toe, plus three joints each of thb idx mid rng pnk.
 
 const FOLK = {
-  'farm-lad': () => import('./folk/farm-lad.js'),
-  'pie-seller': () => import('./folk/pie-seller.js'),
+  // the castaways (the Farm lad and the Pie seller from Moon Faire, refitted), each in two painted outfits
+  'castaway-man-A': () => import('./folk/castaway-man-A.js'),
+  'castaway-man-B': () => import('./folk/castaway-man-B.js'),
+  'castaway-woman-A': () => import('./folk/castaway-woman-A.js'),
+  'castaway-woman-B': () => import('./folk/castaway-woman-B.js'),
 };
 export const CASTAWAYS = Object.keys(FOLK);
 
@@ -72,7 +75,7 @@ const NONE = {};
 
 export async function createCastaway(opts = {}) {
   const t0 = performance.now();
-  const id = opts.id || 'farm-lad';
+  const id = opts.id || 'castaway-man-A';
   if (!FOLK[id]) throw new Error(`no castaway called ${id}`);
   const { default: D } = await FOLK[id]();
   const st = {

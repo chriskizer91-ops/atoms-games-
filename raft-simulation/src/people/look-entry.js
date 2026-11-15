@@ -44,7 +44,7 @@ import { createCastaway } from './castaway.js';
   composer.addPass(new RenderPass(scene, camera));
   composer.addPass(new OutputPass());
 
-  const id = new URLSearchParams(location.search).get('id') || 'farm-lad';
+  const id = new URLSearchParams(location.search).get('id') || 'castaway-man-A';
   const me = await createCastaway({ id });
   scene.add(me.root);
   // face the sun's side, so the front is lit

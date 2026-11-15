@@ -1,4 +1,5 @@
 import { ISLAND_SIZES, WORLD } from './config.js';
+import { ART } from './art.js';
 
 // The chart (M). Islands you have sighted, drawn by size; the line you have
 // travelled; where the current is taking you. With a sail built, click an
@@ -18,6 +19,8 @@ export function createMap({ islands, hasSail, audio, onCourse, windFrom }) {
     zoom: $('map-zoom'),
   };
   const ctx = el.canvas.getContext('2d');
+  const paper = new Image();
+  paper.src = ART.chart;
   let open = false;
   let zoomI = 1;
   let hover = null;
@@ -39,6 +42,11 @@ export function createMap({ islands, hasSail, audio, onCourse, windFrom }) {
     // paper and grid
     ctx.fillStyle = '#e9dcb8';
     ctx.fillRect(0, 0, W, H);
+    // the chart's own paper, covering the sheet
+    if (paper.complete && paper.naturalWidth) {
+      const k = Math.max(W / paper.naturalWidth, H / paper.naturalHeight), pw = paper.naturalWidth * k, ph = paper.naturalHeight * k;
+      ctx.drawImage(paper, (W - pw) / 2, (H - ph) / 2, pw, ph);
+    }
     const grad = ctx.createRadialGradient(cx, cy, Math.min(W, H) * 0.2, cx, cy, Math.max(W, H) * 0.7);
     grad.addColorStop(0, 'rgba(255,250,235,0)');
     grad.addColorStop(1, 'rgba(120,90,50,0.35)');
