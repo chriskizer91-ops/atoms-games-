@@ -1,0 +1,130 @@
+<meta charset="utf-8">
+<title>Castaway Refit Brief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column. Each castaway is a section; each picture to make is a card that holds, in the order you
+   use them, the pictures to attach, the prompt to copy and the name to save under. Colours are the raft game's own. */
+:root {
+  --bg: #eef3f4; --panel: #ffffff; --line: #cfdadd; --fg: #0b1820; --soft: #4a5d66;
+  --accent: #0c5273; --accent-fg: #ffffff; --rope: #9a6a1c; --field: #f6f9fa;
+  --display: "Barlow Semi Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0b1820; --panel: #13242e; --line: #26404c; --fg: #f1e8d4; --soft: #b6ae9c; --accent: #d9a95f; --accent-fg: #0b1820; --rope: #d9a95f; --field: #0e1d26; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0b1820; --panel: #13242e; --line: #26404c; --fg: #f1e8d4; --soft: #b6ae9c; --accent: #d9a95f; --accent-fg: #0b1820; --rope: #d9a95f; --field: #0e1d26; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); }
+main { max-width: 1040px; margin: 0 auto; padding-block: 28px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 28px; }
+h1, h2, h3, h4 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.1; }
+h1 { font-size: clamp(2.1rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: 0.01em; text-transform: uppercase; }
+h2 { font-size: 1.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+h2 small { font: 500 0.95rem var(--body); color: var(--soft); text-transform: none; letter-spacing: 0; margin-left: 8px; }
+h3 { font-size: 1.35rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+h4 { font-size: 1.05rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--rope); }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font: 700 0.8rem var(--display); letter-spacing: 0.2em; text-transform: uppercase; color: var(--rope); }
+.lead { font-size: 1.1rem; color: var(--soft); }
+header { display: flex; flex-direction: column; gap: 12px; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; counter-reset: s; }
+.steps li { counter-increment: s; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 16px; }
+.steps li::before { content: counter(s); font: 700 1.6rem var(--display); color: var(--accent); display: block; }
+.steps b { display: block; margin-bottom: 2px; }
+section { display: flex; flex-direction: column; gap: 16px; }
+.who { border-top: 3px solid var(--fg); padding-top: 22px; }
+figure { margin: 0; min-width: 0; }
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+figcaption { font-size: 0.86rem; color: var(--soft); margin-top: 6px; }
+.world { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.blank { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; align-items: start; }
+.palette, .swatches { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.palette span, .swatches span { display: inline-flex; align-items: center; gap: 7px; font-size: 0.86rem; }
+.palette i, .swatches i { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--line); flex: none; }
+.palette em { font: normal 0.78rem var(--mono); color: var(--soft); }
+.outfit { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.code { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); font-size: 1.1rem; flex: none; }
+.job { border-top: 1px dashed var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.jobhead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.save { font-size: 0.9rem; color: var(--soft); }
+.save b { font: 600 0.9rem var(--mono); color: var(--fg); overflow-wrap: anywhere; }
+.hint { font-size: 0.9rem; color: var(--soft); }
+.atts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.att { display: flex; flex-direction: column; gap: 5px; text-decoration: none; color: var(--fg); min-width: 0; }
+.att img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); background: #6e6e6e; }
+.att span { font: 500 0.76rem var(--mono); overflow-wrap: anywhere; }
+.att b { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--fg); color: var(--bg); font: 700 0.72rem var(--body); margin-right: 4px; }
+.att:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bar label { font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--soft); }
+button { font: 600 0.92rem var(--body); color: var(--accent-fg); background: var(--accent); border: 0; border-radius: 6px; padding: 9px 14px; cursor: pointer; }
+button.done { background: var(--fg); color: var(--bg); }
+textarea { width: 100%; font: 0.82rem/1.5 var(--mono); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; resize: vertical; }
+ul.want { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+code { font: 0.86em var(--mono); background: var(--field); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; overflow-wrap: anywhere; }
+.note { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Raft Simulation · painting brief</p>
+    <h1>Castaway refit</h1>
+    <p class="lead">The Farm lad and the Pie seller, re-cut as castaways. Their new shapes are built. What they need now is paint: one picture per outfit, made in ChatGPT from the prompts below, which I then wrap onto the 3D models.</p>
+  </header>
+
+  <section>
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><b>Open a card</b>Each card below is one picture to make.</li>
+      <li><b>Attach its pictures</b>In the order shown. They are all in the zip I sent; or press and hold (right-click on a laptop) a picture here to save it.</li>
+      <li><b>Copy the prompt</b>Paste it into ChatGPT with the pictures attached.</li>
+      <li><b>Save and send back</b>Save the result under the name on the card and send the files to me.</li>
+    </ol>
+    <div class="note">
+      <p><b>Why a grey guide?</b> The finished painting is laid back onto the model by position: every point of the body takes the colour at its own place on the sheet, front from the left figure, back from the right. So the one thing that matters is that the painted figures stay exactly where the grey ones are. If a result has moved, grown or changed the pose, ask ChatGPT to redo it “keeping both figures exactly on the guide”.</p>
+      <p><b>What is fixed and what is free.</b> The shapes are fixed (hat, vest, sash, cuffs: whatever is in the guide). Everything painted on them is free: colours, patterns, patches, stains, stitching. Change any line in a prompt to taste.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The world they live in</h2>
+    <p>For your eye, and for the painter's: the colours below are taken from the game, and the same card goes along as the fourth attachment to every outfit.</p>
+    <div class="world">/*WORLD*/</div>
+    <div class="palette">/*PALETTE*/</div>
+    <div class="atts">/*PALCARD*/</div>
+  </section>
+
+  /*ROWS*/
+
+  <section class="who" id="back">
+    <h2>What to send back</h2>
+    <p>The four body sheets, and the two faces that go with the “Seasoned mariner” outfits. Any of the extras if you made them. One outfit each is enough to start: send what you have and I will fit it.</p>
+    <ul class="want">/*WANT*/</ul>
+    <p class="hint">Sizes: body sheets 1536 × 1024, faces 1024 × 1024. PNG is best; JPG is fine. A little smaller or larger is no problem as long as the shape (3 by 2, or square) is kept.</p>
+  </section>
+</main>
+
+<script>
+// Every picture is in the page once; the cards point at them by name.
+const FILES = /*FILES*/;
+for (const el of document.querySelectorAll('[data-file]')) {
+  const u = FILES[el.dataset.file];
+  if (!u) continue;
+  if (el.tagName === 'IMG') el.src = u; else el.href = u;
+}
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-copy]');
+  if (!b) return;
+  const t = document.getElementById(b.dataset.copy);
+  let ok = false;
+  try { await navigator.clipboard.writeText(t.value); ok = true; } catch (err) { /* refused: fall back to selecting */ }
+  t.focus(); t.select();
+  if (!ok) { try { ok = document.execCommand('copy'); } catch (err) { ok = false; } }
+  b.textContent = ok ? 'Copied' : 'Selected: press copy';
+  b.classList.add('done');
+  setTimeout(() => { b.textContent = 'Copy prompt'; b.classList.remove('done'); }, 1800);
+});
+</script>

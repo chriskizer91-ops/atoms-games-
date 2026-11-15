@@ -1,0 +1,87 @@
+{
+  "frame": "Each sheet is 1536 x 1024 (3 wide by 2 tall): the person from the front on the left half, from behind on the right half. Each half is 1.5 m wide and 2 m tall.",
+  "palette": [
+    ["Deep sea", "#0c5273"], ["Shallows", "#178f8a"], ["Foam", "#eef6f8"], ["Deck plank", "#8a6a4c"], ["Wet plank", "#5f4936"],
+    ["Hemp rope", "#b89a62"], ["Sailcloth", "#d6ccb4"], ["Sail patch blue", "#3f74a8"], ["Bamboo", "#9aa860"], ["Beach sand", "#e2cd96"],
+    ["Wet sand", "#bfa771"], ["Island grass", "#6a9a3a"], ["Island rock", "#8b877c"], ["Float orange", "#f06a2a"], ["Plastic yellow", "#e7b93c"],
+    ["Sunset fire", "#f08a3c"], ["Sunset rose", "#d9788a"], ["Storm grey", "#56616b"], ["Night sky", "#101b2c"], ["Lamp gold", "#ffe2a0"]
+  ],
+  "people": [
+    {
+      "id": "castaway-man", "label": "The castaway man", "was": "the Farm lad", "style": "style-farm-lad.jpg", "face": "face-farm-lad.jpg",
+      "shapes": "a wide straw hat with a band; short hair showing under it at the sides and back; a kerchief knotted at the throat with one short tail on the chest; a loose shirt with the sleeves rolled into thick cuffs above the elbow and its tail hanging out over the hips; bare forearms and hands; a short open vest that ends at the waist; a rope belt of two turns with a knot and a short hanging end at his left hip (the right side of the front view); a sheath knife on his right hip (the left side of the front view); narrow trousers with a thick turn-up at mid-shin; below it the lower shin and foot are bound in cloth wraps (drawn as a boot shape in the guide) with a chunky sole",
+      "outfits": [
+        {
+          "code": "castaway-man-A", "name": "Washed ashore",
+          "who": "A young farmhand of about seventeen, a few weeks adrift on a raft in a warm sea. Everything he wears is what he had on, mended with what the sea gave him. Cheerful, sunburnt, practical.",
+          "colors": { "straw": "#d9b867", "band": "#4a5f7a", "hair": "#c9a66b", "kerchief": "#b5523a", "shirt": "#d9ccab", "torso": "#d9ccab", "sleeve": "#d9ccab", "vest": "#9b8257", "rope": "#b89a62", "sheath": "#5a3a24", "legs": "#5d6f73", "cuff": "#4c5c60", "boots": "#b9a888", "soles": "#4a3a2c", "forearm": "skin", "hand": "skin", "face": "skin" },
+          "paint": [
+            "HAT: golden straw (#d9b867) woven in rings, the rings a shade darker (#b08f45), the straw split and frayed along the edge of the brim, sun-bleached paler on top. Round the crown a band of faded indigo cloth (#4a5f7a) with a fish-hook stuck through it.",
+            "HAIR: short, sandy (#c9a66b), stiff with salt, showing below the hat at the sides and on the nape.",
+            "KERCHIEF: faded brick red (#b5523a) cotton, salt-stained paler along its folds, knotted at the throat, one short tail on the chest.",
+            "SHIRT: unbleached linen (#d9ccab) gone soft and grey-cream, with wavy white salt tide-lines across the chest and back, a small three-cornered tear at one shoulder, the collar open. The sleeves are rolled into fat cuffs above the elbow. The shirt tail hangs out below the vest and belt, its hem ragged, one corner darker where it is still damp.",
+            "VEST: cut from old sailcloth, warm tan canvas (#9b8257), unhemmed raw edges, sewn with big uneven stitches of dark tarred twine. On its back, a square patch of blue sail (#3f74a8) the size of a hand. Two bone toggles on cord loops at the front edge.",
+            "BELT: hemp rope (#b89a62) wound twice round the waist over the shirt, twisted strands clearly drawn, tied in a square knot at his left hip with a frayed end hanging a hand's length.",
+            "KNIFE: on his right hip a dark brown leather sheath (#5a3a24), scuffed pale at the tip, the knife's handle wrapped in tarred cord showing at the top.",
+            "TROUSERS: slate blue-grey canvas (#5d6f73), sun-faded almost to pale grey on the fronts of the thighs, salt-crusted at the knees, a tan patch (#9b8257) stitched on the left thigh. They end at mid-shin in a thick ragged turn-up (#4c5c60, the darker unfaded inside of the cloth).",
+            "FEET: bound in strips of pale sailcloth (#b9a888) wound round and round like bandages from the toes to halfway up the shin, tied with thin cord in a criss-cross, grubby at the toes, with a dark rope sole (#4a3a2c).",
+            "SKIN: forearms and hands lightly tanned with freckles, the knuckles sunburnt pink, a pale band at each wrist where the sleeves used to reach."
+          ]
+        },
+        {
+          "code": "castaway-man-B", "name": "Seasoned mariner",
+          "who": "The same young man after many months at sea: lean, deeply tanned, sure of himself. He has replaced what wore out with things hooked out of the water: sharkskin, bright plastic, tarpaulin.",
+          "colors": { "straw": "#e3d19a", "band": "#5b7a55", "hair": "#d8be84", "kerchief": "#34506b", "shirt": "#e8e1cc", "torso": "#e8e1cc", "sleeve": "#e8e1cc", "vest": "#6f7880", "rope": "#e0762f", "sheath": "#3b2a20", "legs": "#2f4e55", "cuff": "#243c42", "boots": "#3f74a8", "soles": "#2a2420", "forearm": "skin", "hand": "skin", "face": "skin" },
+          "paint": [
+            "HAT: the same straw hat bleached pale by the sun (#e3d19a), darker woven rings barely showing, one neat darn of dark twine on the brim. The band is a plait of sea-green cord (#5b7a55) with three small white shells threaded on it at the front.",
+            "HAIR: sun-bleached straw-blond (#d8be84), a little longer, curling on the nape.",
+            "KERCHIEF: deep indigo (#34506b) with tiny white dots, knotted at the throat, one short tail on the chest.",
+            "SHIRT: washed almost white (#e8e1cc) with thin horizontal navy stripes (#3b4f66) a finger apart, the stripes faded and broken where the cloth is worn, running all the way round front and back. Sleeves rolled into fat cuffs above the elbow, tail out, hem frayed. On the chest, lying over the shirt, a necklace of five white shark teeth on a dark cord.",
+            "VEST: sharkskin, cool grey (#6f7880), darker along the top of the shoulders and paler toward the bottom edge like a shark's back and belly, faintly rough and speckled, the edges bound with a narrow strip of pale canvas, laced at the front edges with thin cord through bone rings.",
+            "BELT: bright orange plastic rope (#e0762f), the kind that washes off ships, twisted strands clearly drawn, wound twice round the waist and knotted at his left hip, the melted end hanging a hand's length.",
+            "KNIFE: on his right hip a near-black oiled leather sheath (#3b2a20) with a row of pale stitches, the handle of the knife carved from white bone.",
+            "TROUSERS: dark teal oilskin (#2f4e55) with a dull waxy sheen, a square patch of bright yellow plastic sheet (#e7b93c) sewn on the right knee with big white stitches. They end at mid-shin in a thick rolled turn-up (#243c42).",
+            "FEET: bound in strips of blue tarpaulin (#3f74a8) wound like bandages from the toes to halfway up the shin, tied with orange cord in a criss-cross, with a black rubber sole (#2a2420).",
+            "SKIN: forearms and hands deeply tanned golden brown, freckles joined into patches, fine pale scars on the knuckles, a braided cord bracelet on the right wrist."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "castaway-woman", "label": "The castaway woman", "was": "the Pie seller", "style": "style-pie-seller.jpg", "face": "face-pie-seller.jpg",
+      "shapes": "a headscarf covering the top of the head, tied at the back; dark hair showing at the sides, with a round bun at the back of the head below the scarf; a close-fitting top with full upper sleeves ending in thick rolled cuffs above the elbow; bare forearms and hands; a wide sash wound round the waist with a knot and two short hanging ends at her right hip (the left side of the front view); a small pouch hanging on a cord at her left hip (the right side of the front view); a short flared skirt that is the bottom of the same tunic, ending at mid-thigh; narrow breeches with a thick rolled cuff just below the knee; bare shins are NOT shown, the lower leg is covered by the same cloth wraps as the feet, bound to just below the cuff, with a chunky sole",
+      "outfits": [
+        {
+          "code": "castaway-woman-A", "name": "Washed ashore",
+          "who": "A sturdy woman of about forty-five who sold hot pies at a night fair, a few weeks adrift on a raft in a warm sea. Capable, unhurried, sleeves always rolled.",
+          "colors": { "kerchief": "#d9b25a", "hair": "#2e2420", "torso": "#3e6d73", "sleeve": "#3e6d73", "tunic": "#3e6d73", "sash": "#c0603a", "pouch": "#7a5a3a", "rope": "#b89a62", "legs": "#6b5a48", "cuff": "#5a4b3c", "boots": "#b9a888", "soles": "#4a3a2c", "forearm": "skin", "hand": "skin", "face": "skin" },
+          "paint": [
+            "HEADSCARF: ochre yellow cotton (#d9b25a) with small cream dots (#f0deb0), sun-faded paler on top, salt-stained along the folds, tied at the back of the head.",
+            "HAIR: black-brown (#2e2420) with a few grey threads at the temples, smooth at the sides, gathered into a round bun at the back below the scarf.",
+            "TUNIC (the top, the upper sleeves and the short skirt are one garment): deep sea-teal wool (#3e6d73), bleached paler across the shoulders and the tops of the sleeves, darker in the folds of the skirt. A round neckline edged with a narrow band of ochre (#d9b25a) stitching. White salt tide-lines near the hem. The hem at mid-thigh is uneven, with one neat darned square near her left knee side. The sleeves end in fat rolled cuffs above the elbow, showing a paler lining.",
+            "SASH: a long strip of terracotta cloth (#c0603a) wound twice round the waist, the two turns clearly drawn, soft folds, knotted at her right hip with two short ends hanging to the top of the thigh, their tips frayed.",
+            "POUCH: at her left hip a small brown leather pouch (#7a5a3a) closed with a bone toggle, hanging from the sash on a short hemp cord (#b89a62).",
+            "BREECHES: brown homespun (#6b5a48), baggy at the knee, ending in a thick rolled cuff (#5a4b3c) just below the knee, a few flour-pale stains still on one thigh.",
+            "LEGS AND FEET: from below the cuff down to the toes, bound in strips of pale sailcloth (#b9a888) wound round and round like bandages, tied with thin cord in a criss-cross, grubby at the toes, with a dark rope sole (#4a3a2c).",
+            "SKIN: forearms and hands deep warm brown, strong, a thin pale burn scar across the back of the right hand."
+          ]
+        },
+        {
+          "code": "castaway-woman-B", "name": "Seasoned mariner",
+          "who": "The same woman after many months at sea: weathered, strong, entirely at home on the raft. She has remade her clothes from sail, rope and what the islands grow.",
+          "colors": { "kerchief": "#3f74a8", "hair": "#2e2420", "torso": "#c9705a", "sleeve": "#c9705a", "tunic": "#c9705a", "sash": "#b89a62", "pouch": "#8fa07a", "rope": "#5b7a55", "legs": "#34506b", "cuff": "#283f55", "boots": "#4f8f86", "soles": "#2a2420", "forearm": "skin", "hand": "skin", "face": "skin" },
+          "paint": [
+            "HEADSCARF: cut from a blue sail patch (#3f74a8), heavy cloth with a visible weave and a line of white running stitches along its front edge, sun-faded on top, tied at the back.",
+            "HAIR: black-brown (#2e2420) with a clear streak of grey from one temple, the bun at the back wound with a strip of the same blue cloth.",
+            "TUNIC (the top, the upper sleeves and the short skirt are one garment): sun-faded coral red (#c9705a), paler on the shoulders, with three patches of cream sailcloth (#d6ccb4) sewn on with neat cross-stitches in dark thread: one on the left shoulder, one on the front of the skirt, one on the back of the skirt. A row of small white shells sewn along the round neckline. The hem at mid-thigh is bound with a strip of the blue sail cloth. Sleeves end in fat rolled cuffs above the elbow.",
+            "SASH: plaited from pale hemp rope (#b89a62) and sea-green cord (#5b7a55), a flat wide plait wound twice round the waist, the plait pattern clearly drawn, knotted at her right hip with two short tasselled ends.",
+            "POUCH: at her left hip a little bag of knotted green-grey net (#8fa07a) with pale shells showing through the mesh, on a sea-green cord (#5b7a55).",
+            "BREECHES: indigo canvas (#34506b) faded at the thighs, a square patch of yellow plastic sheet (#e7b93c) sewn on the left knee with big white stitches, ending in a thick rolled cuff (#283f55) just below the knee.",
+            "LEGS AND FEET: from below the cuff down to the toes, bound in strips of sea-green cloth (#4f8f86) wound like bandages, tied with pale cord in a criss-cross, with a black rubber sole (#2a2420).",
+            "SKIN: forearms and hands deep brown, darker from the sun, a bracelet of small shells on the left wrist, the old burn scar on the back of the right hand."
+          ]
+        }
+      ]
+    }
+  ]
+}

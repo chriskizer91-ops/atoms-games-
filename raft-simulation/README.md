@@ -92,6 +92,15 @@ The file is bigger (about 1.3 MB, was 0.9 MB): the two castaways and their paint
 - **The lighthouse** sweeps two beams round once its lamp is lit.
 - **Small things:** rain darkens the deck and makes it glossy; the view widens a little at speed and more when surfing; a film-style finish (a touch more contrast and colour, a soft darkening toward the corners).
 
+### In progress: new outfits for the castaways
+
+The Farm lad and the Pie seller are being refitted as castaways: new shapes (a sailcloth vest, rope belt and cut-off trousers for him; a belted tunic over rolled breeches for her, in place of the long skirt) and new painted outfits. The shapes are done; the paintings are being made outside the game from a brief.
+
+- `art/castaway-refit/castaway-refit.html`: the brief. For each outfit it shows the pictures to attach and the prompt to paste into an image generator, and the name to save the result under. `art/castaway-refit/pack/` holds the pictures and `prompts.md`; `Castaway-Refit-Pack.zip` is the same in one file.
+- `src/people/refit/`: the two new sets of shapes and `outfits.json` (who wears what, in which colours).
+- To remake the brief (for Claude sessions): `node src/people/port/blank.js <work dir with ref/> <out>` draws the grey guides and colour keys with Moon Faire's kit (the work dir is the one `port.js` makes), then `python3 tools/skin_brief.py <out> <moon-faire>/game <screenshots dir>` builds the page, the pack and the zip.
+- When the paintings come back, they are fitted with Moon Faire's `people/kit/prep_skin.py` and baked into `src/people/folk/` like the two people there now.
+
 ## Stage 4
 
 - **Saving.** The game saves itself every 30 seconds, when you pause, and when you close or switch away from the tab. The title screen shows **Continue** with the day and time afloat of your saved raft. **New raft** asks once more before replacing it. Dying clears the save. It lives in this browser only.
