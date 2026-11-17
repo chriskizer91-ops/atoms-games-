@@ -89,8 +89,9 @@ export function createPlayer(camera) {
     // land: optional { heightAt(x, z) } for islands (-Infinity where there is none).
     update(t, dt, input, raft, events, swimBoost = 0, land = null) {
       // Look
-      p.yaw -= input.state.lookX * SENS;
-      p.pitch = clamp(p.pitch - input.state.lookY * SENS, -1.5, 1.5);
+      const ls = SENS * (p.lookScale ?? 1);
+      p.yaw -= input.state.lookX * ls;
+      p.pitch = clamp(p.pitch - input.state.lookY * ls, -1.5, 1.5);
       p.yaw -= input.edgeTurn() * 2.4 * dt;
 
       // Move
@@ -102,7 +103,7 @@ export function createPlayer(camera) {
       if (input.move('right')) wish.add(right);
       if (input.move('left')) wish.sub(right);
       // Hands on the steering oar: the keys steer the raft instead.
-      if (p.helm) wish.set(0, 0, 0);
+      if (p.helm || p.asleep) wish.set(0, 0, 0);
       const moving = wish.lengthSq() > 0;
       if (moving) wish.normalize();
       const sprint = input.move('sprint');
@@ -145,7 +146,7 @@ export function createPlayer(camera) {
         p.onLand = onLand && !onDeck;
         if (p.grounded && supported) {
           p.pos.y = ground;
-          if (input.movePressed('jump') && !p.helm) {
+          if (input.movePressed('jump') && !p.helm && !p.asleep) {
             p.velY = PLAYER.jump;
             p.grounded = false;
           }

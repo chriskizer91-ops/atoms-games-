@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 // Stroke icons on a 24-unit grid; colour comes from CSS currentColor.
 const ICONS = {
+  rod: '<path d="M4 21L17 4"/><path d="M17 4c2 3 3 7 2.5 11"/><circle cx="19.4" cy="17" r="1.6" fill="currentColor"/><path d="M7 17l2 2"/>',
   hook: '<circle cx="12" cy="4" r="2"/><path d="M12 6v10M12 16c-4 0-6-2-6-5M12 16c4 0 6-2 6-5M12 16v4"/><path d="M6 11l-1.5 1.5M18 11l1.5 1.5"/>',
   spear: '<path d="M4 20L16 8"/><path d="M15 5l5-1-1 5-3 1-2-2z" fill="currentColor"/><path d="M12.5 9.5l2 2"/>',
   hammer: '<path d="M5 20l8-8"/><path d="M10.5 6.5l4-4 7 7-4 4z" fill="currentColor" fill-opacity=".25"/><path d="M12 8l4 4"/>',
@@ -49,6 +50,7 @@ export function icon(name) {
 const $ = (id) => document.getElementById(id);
 
 export function createHud() {
+  const fm = { root: document.getElementById('fishmeter'), tension: document.getElementById('fm-tension'), progress: document.getElementById('fm-progress') };
   document.querySelectorAll('[data-icon]').forEach((el) => {
     el.insertAdjacentHTML('afterbegin', icon(el.dataset.icon));
   });
@@ -186,6 +188,17 @@ export function createHud() {
       if (el.buildbar.innerHTML !== html) el.buildbar.innerHTML = html;
     },
 
+    // The fight with a fish: how near the line is to snapping, and how much is reeled in.
+    setFishing(f, owned) {
+      el.slots[5]?.classList.toggle('empty', !owned);
+      const on = f.phase === 'reeling';
+      if (fm.root.hidden === on) fm.root.hidden = !on;
+      if (!on) return;
+      fm.tension.style.transform = `scaleX(${Math.min(1, f.tension)})`;
+      fm.tension.classList.toggle('hot', f.tension > 0.7);
+      fm.progress.style.transform = `scaleX(${Math.min(1, f.progress)})`;
+    },
+
     setCharge(c) {
       el.charge.classList.toggle('on', c > 0);
       el.chargeFill.style.transform = `scaleX(${c})`;
@@ -221,8 +234,9 @@ export function createHud() {
       t.innerHTML = text;
       el.toasts.prepend(t);
       while (el.toasts.children.length > 5) el.toasts.lastChild.remove();
-      setTimeout(() => t.classList.add('out'), 1800);
-      setTimeout(() => t.remove(), 2400);
+      const stay = kind === 'say' ? 4600 : 1800;
+      setTimeout(() => t.classList.add('out'), stay);
+      setTimeout(() => t.remove(), stay + 600);
     },
 
     hurt(amount) {

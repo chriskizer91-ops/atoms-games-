@@ -149,6 +149,9 @@ export const audio = {
   get ready() {
     return !!ctx && ctx.state === 'running';
   },
+  // For the music, which makes its own notes on the same output.
+  get context() { return ctx; },
+  get output() { return master; },
 
   splash(pan = 0, big = false) {
     if (!ctx) return;

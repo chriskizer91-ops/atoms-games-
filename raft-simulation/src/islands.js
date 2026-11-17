@@ -77,6 +77,7 @@ function init() {
     lamp: std({ color: 0xfff2c0, emissive: 0xffd77a, emissiveIntensity: 0, roughness: 0.3 }),
     doorWood: std({ color: 0x5a3b26, roughness: 0.8 }),
     bottleGlass: std({ color: 0x5f9a6a, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.7 }),
+    thatch: std({ color: 0x9a8a52, side: THREE.DoubleSide, roughness: 1 }),
     hit: new THREE.MeshBasicMaterial({ visible: false }),
   };
   const frond = frondGeometry();
@@ -475,7 +476,122 @@ function buildIsland(rec) {
     addRes('lamp', ds, door, G.hitSmall, 1, 0);
   }
 
-  return { group, R, heightLocal, shapeR, resources, size: S, lamp, beam, detail, lod: -1 };
+  // ----- what has happened here (built last, so the island's own shape and growth never change) -----
+  // A castaway's camp: a lean-to, a fire, and someone waiting by it.
+  let camp = null;
+  if (rec.kind === 'camp') {
+    const s = spot(0.3, 0.44) || spot(0.2, 0.6);
+    if (s) {
+      const g = new THREE.Group();
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * Math.PI * 2;
+        const st2 = new THREE.Mesh(G.rock, M.rock);
+        st2.scale.setScalar(0.22);
+        st2.position.set(Math.cos(a) * 0.42, 0.06, Math.sin(a) * 0.42);
+        st2.rotation.set(k, k * 2, 0);
+        g.add(st2);
+      }
+      for (let k = 0; k < 3; k++) {
+        const l = new THREE.Mesh(G.log, M.log);
+        l.scale.set(0.3, 0.35, 0.35);
+        l.position.y = 0.1;
+        l.rotation.y = k * 2.1;
+        g.add(l);
+      }
+      const ember = new THREE.Mesh(new THREE.CircleGeometry(0.3, 10).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x2a1a12, emissive: 0xff5a1a, emissiveIntensity: rec.rescued ? 0 : 2.4, roughness: 0.9 }));
+      ember.position.y = 0.16;
+      ember.userData.keep = true;
+      g.add(ember);
+      // the lean-to, its open side toward the fire
+      const lt = new THREE.Group();
+      for (const x of [-1.1, 1.1]) {
+        const p = new THREE.Mesh(G.cane, M.log);
+        p.scale.set(1.3, 1.7, 1.3);
+        p.position.set(x, -0.1, 0);
+        lt.add(p);
+      }
+      const ridge = new THREE.Mesh(G.cane, M.log);
+      ridge.scale.set(1.1, 2.5, 1.1);
+      ridge.rotation.z = Math.PI / 2;
+      ridge.position.set(1.25, 1.55, 0);
+      lt.add(ridge);
+      const thatch = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.3, 6, 1), M.thatch);
+      thatch.rotation.x = -Math.PI / 2 + 0.75;
+      thatch.position.set(0, 0.8, -0.78);
+      lt.add(thatch);
+      for (let k = 0; k < 5; k++) {
+        const rib = new THREE.Mesh(G.cane, M.log);
+        rib.scale.set(0.7, 2.3, 0.7);
+        rib.rotation.x = -0.82;
+        rib.position.set(-1.1 + k * 0.55, 1.58, 0.02);
+        lt.add(rib);
+      }
+      lt.position.set(0, 0, -2.3);
+      g.add(lt);
+      g.rotation.y = Math.atan2(s.x, s.z);          // the shelter's back to the hill, open to the sea
+      bake(g);
+      g.position.set(s.x, s.h, s.z);
+      g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      tall.add(g);
+      // where the castaway stands: beside the fire, on the seaward side
+      const out = Math.hypot(s.x, s.z) || 1;
+      const ps = { x: s.x + (s.x / out) * 1.5, z: s.z + (s.z / out) * 1.5 };
+      ps.h = heightLocal(ps.x, ps.z);
+      camp = { fire: s, stand: ps, ember };
+      const res = addRes('survivor', ps, new THREE.Group(), G.hitTree, rec.rescued ? 0 : 1, 0);
+      res.hit.scale.set(0.8, 0.5, 0.8);
+    }
+  }
+  // Buried treasure, if a map has marked this island.
+  if (rec.treasure === true && rec.kind !== 'camp') {
+    const s = spot(0.3, 0.5) || spot(0.2, 0.7);
+    if (s) {
+      const g = new THREE.Group();
+      const mark = new THREE.Group();
+      for (const a of [0.78, -0.78]) {
+        const pl = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 0.2), M.red);
+        pl.rotation.y = a;
+        pl.position.y = 0.05 + (a > 0 ? 0.03 : 0);
+        mark.add(pl);
+      }
+      const stake = new THREE.Mesh(G.cane, M.log);
+      stake.scale.set(0.8, 1.5, 0.8);
+      stake.position.set(0.9, 0, 0.5);
+      mark.add(stake);
+      const rag = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.28), M.red.clone());
+      rag.material.side = THREE.DoubleSide;
+      rag.position.set(1.14, 1.3, 0.5);
+      mark.add(rag);
+      mark.traverse((o) => { o.userData.keep = true; });
+      const chest = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.42, 0.55), M.doorWood);
+      body.position.y = 0.2;
+      const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.85, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), M.doorWood);
+      lid.position.set(0, 0.42, -0.27);
+      lid.rotation.x = -1.9;
+      const gold = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.06, 0.44), new THREE.MeshStandardMaterial({ color: 0xf2c14a, emissive: 0xb07a10, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.9 }));
+      gold.position.y = 0.4;
+      for (const x of [-0.3, 0.3]) {
+        const band = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.44, 0.57), M.strap);
+        band.position.set(x, 0.2, 0);
+        chest.add(band);
+      }
+      const pile = new THREE.Mesh(G.mound, M.sand);
+      pile.position.set(-0.9, 0, 0.2);
+      chest.add(body, lid, gold, pile);
+      chest.traverse((o) => { o.userData.keep = true; });
+      chest.visible = false;
+      mark.userData.keep = true;
+      chest.userData.keep = true;
+      g.add(mark, chest);
+      g.rotation.y = r() * 6;
+      const res = addRes('dig', s, g, G.hitSmall, 1, 0);
+      res.mark = mark;
+      res.chest = chest;
+    }
+  }
+
+  return { group, R, heightLocal, shapeR, resources, size: S, lamp, beam, detail, lod: -1, camp };
 }
 
 const LABEL = {
@@ -491,6 +607,8 @@ const LABEL = {
   log: () => 'Take the driftwood',
   crate: () => 'Open the crate',
   bottle: () => 'Pick up the bottle',
+  survivor: (n) => (n ? 'Talk to the castaway' : 'The fire has gone out'),
+  dig: (n) => (n ? 'Dig where the X is' : 'The chest is empty now'),
   lamp: (n) => (n ? 'Climb the lighthouse and light the lamp' : 'The lamp is lit'),
 };
 
@@ -547,6 +665,23 @@ export function createIslands(scene, { fx, audio }) {
     st.chart.set(id, makeRecord(id, x, z, sizeKey));
   }
 
+  // One of the islands a way down-current has a castaway's camp on it.
+  function placeCamp() {
+    if (campRec()) return;
+    const c0x = Math.floor(st.rw.x / WORLD.chunk), c0z = Math.floor(st.rw.z / WORLD.chunk);
+    for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) genChunk(c0x + dx, c0z + dz);
+    let best = null, bestScore = Infinity;
+    for (const rec of st.chart.values()) {
+      if (rec.kind !== 'island' || rec.visited || rec.id === 1 || rec.treasure) continue;
+      const d = distTo(rec);
+      if (d < 650 || d > 1500) continue;
+      const north = (st.rw.z - rec.z) / d;
+      const score = Math.abs(d - 950) - north * 300 + (rec.size === 'small' ? 250 : 0);
+      if (score < bestScore) { bestScore = score; best = rec; }
+    }
+    if (best) { best.kind = 'camp'; best.bottle = false; }
+  }
+
   let lastChunk = '';
   function ensureChart() {
     const cx = Math.floor(st.rw.x / WORLD.chunk), cz = Math.floor(st.rw.z / WORLD.chunk);
@@ -596,6 +731,8 @@ export function createIslands(scene, { fx, audio }) {
       if (res.kind === 'palm') res.nuts.forEach((n, i) => (n.visible = i < res.amount));
       else if (res.kind === 'bush') res.mesh.children.forEach((m) => { if (m.material !== M.hit) m.material = res.amount ? M.bush : M.bushDry; });
       else if (res.kind === 'rock' || res.kind === 'sand' || res.kind === 'clay' || res.kind === 'bamboo') res.mesh.scale.setScalar(res.amount ? 0.55 + 0.45 * (res.amount / res.max) : 0.4);
+      else if (res.kind === 'dig') { res.mark.visible = res.amount > 0; res.chest.visible = res.amount <= 0; }
+      else if (res.kind === 'survivor') { /* nothing to show: the castaway is drawn by the companion */ }
       else if (res.kind !== 'lamp') res.mesh.visible = res.amount > 0;
     }
   }
@@ -610,6 +747,105 @@ export function createIslands(scene, { fx, audio }) {
   // Where a chart point is in the scene (the raft's frame).
   const local = (rec, out = { x: 0, z: 0 }) => toScene(rec.x, rec.z, out);
   const tmpL = { x: 0, z: 0 };
+
+  const tmpV3 = new THREE.Vector3();
+  // The smoke of a castaway's fire: seen from a long way off, long before the island is.
+  const smokeMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    uniforms: { uTime: { value: 0 }, uAlpha: { value: 0 }, uLight: { value: 1 } },
+    vertexShader: /* glsl */ `
+      uniform float uTime;
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        vec3 p = position;
+        float y = uv.y;
+        p.x += y * y * 14.0 + sin(y * 5.0 - uTime * 0.5) * 1.6 * y;     // leaning downwind, wavering
+        p.z += cos(y * 4.0 - uTime * 0.4) * 1.2 * y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform float uTime, uAlpha, uLight;
+      varying vec2 vUv;
+      void main() {
+        float a = smoothstep(0.0, 0.05, vUv.y) * pow(1.0 - vUv.y, 1.2);
+        float n = 0.62 + 0.38 * sin(vUv.y * 22.0 - uTime * 1.3 + sin(vUv.x * 12.566) * 1.4);
+        gl_FragColor = vec4(vec3(0.2, 0.2, 0.22) * uLight, min(1.0, a * n * uAlpha * 1.5));
+      }`,
+  });
+  const smoke = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 0.3, 60, 12, 24, true).translate(0, 30, 0), smokeMat);
+  smoke.visible = false;
+  smoke.frustumCulled = false;
+  smoke.userData.above = true;
+  scene.add(smoke);
+  function campRec() {
+    for (const rec of st.chart.values()) if (rec.kind === 'camp') return rec;
+    return null;
+  }
+  function updateSmoke(dt, night) {
+    const rec = campRec();
+    const d = rec && !rec.rescued ? distTo(rec) : Infinity;
+    const want = d < 1500 ? 1 : 0;
+    smokeMat.uniforms.uAlpha.value += (want * 0.75 - smokeMat.uniforms.uAlpha.value) * Math.min(1, dt * 0.8);
+    smoke.visible = smokeMat.uniforms.uAlpha.value > 0.01 && !!rec;
+    if (!smoke.visible) return;
+    smokeMat.uniforms.uTime.value += dt;
+    smokeMat.uniforms.uLight.value = 1 - 0.72 * (night || 0);
+    const a = actives.get(rec.id);
+    if (a?.built.camp && d < 470) {
+      // close enough that the island is drawn: the smoke rises from the fire itself
+      tmpV3.set(a.built.camp.fire.x, a.built.camp.fire.h + 0.2, a.built.camp.fire.z);
+      a.built.group.localToWorld(tmpV3);
+      smoke.position.copy(tmpV3);
+      smoke.scale.setScalar(1);
+    } else {
+      // further off: drawn nearer and smaller, so the sea haze doesn't swallow it
+      local(rec, tmpL);
+      const s = Math.min(1, 470 / d);
+      smoke.position.set(tmpL.x * s, 1.5 * s, tmpL.z * s);
+      const far = d > 470 ? 1 : 0;
+      smoke.scale.set(s * (1 + far * 2.2), s * (1 + far * 0.7), s * (1 + far * 2.2));
+    }
+    if (!rec.hailed && d < 1300) {
+      rec.hailed = true;
+      rec.seen = true;
+      events.onSmoke?.(rec);
+    }
+  }
+
+  // Land too far off to be drawn shows in a spyglass as a low grey shape on the horizon.
+  const farMat = new THREE.MeshBasicMaterial({ color: 0x6f8494, transparent: true, opacity: 0, fog: false, depthWrite: false });
+  const farGeo = new THREE.SphereGeometry(1, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+  const farMeshes = [0, 1, 2].map(() => {
+    const m = new THREE.Mesh(farGeo, farMat);
+    m.visible = false;
+    m.userData.above = true;
+    scene.add(m);
+    return m;
+  });
+  const farList = [];
+  function farLand(k) {
+    if (k < 0.02) { if (farMat.opacity) { farMat.opacity = 0; for (const m of farMeshes) m.visible = false; } return; }
+    farList.length = 0;
+    for (const rec of st.chart.values()) {
+      if (actives.has(rec.id)) continue;
+      const d = distTo(rec);
+      if (d > 500 && d < WORLD.spySight) farList.push([d, rec]);
+    }
+    farList.sort((a, b) => a[0] - b[0]);
+    if (scene.fog) farMat.color.copy(scene.fog.color).multiplyScalar(0.78);
+    farMat.opacity = k * 0.8;
+    for (let i = 0; i < farMeshes.length; i++) {
+      const m = farMeshes[i], e = farList[i];
+      m.visible = !!e;
+      if (!e) continue;
+      const [d, rec] = e;
+      local(rec, tmpL);
+      const s = 480 / d;
+      m.position.set(tmpL.x * s, -0.5, tmpL.z * s);
+      m.scale.set(rec.R * 1.5 * s, (rec.R * 0.32 + 3) * s, rec.R * 1.5 * s);
+    }
+  }
 
   // Which islands should have meshes: the one you're resting at, then the nearest.
   function pickActives() {
@@ -703,6 +939,7 @@ export function createIslands(scene, { fx, audio }) {
       st.chart.set(2, makeRecord(2, Math.sin(a) * 2600, -Math.cos(a) * 2600, 'large', 'lighthouse'));
       st.chart.get(2).bottle = false;
       ensureChart();
+      placeCamp();
       pickActives();
     },
 
@@ -752,6 +989,23 @@ export function createIslands(scene, { fx, audio }) {
         res.amount = 0;
         res.rec.lit = true;
         events.onLamp?.();
+        return null;
+      }
+      if (res.kind === 'survivor') {
+        res.amount = 0;
+        res.rec.rescued = true;
+        const a = actives.get(res.rec.id);
+        if (a?.built.camp) a.built.camp.ember.material.emissiveIntensity = 0;
+        events.onSurvivor?.(res.rec);
+        return null;
+      }
+      if (res.kind === 'dig') {
+        res.amount = 0;
+        res.rec.treasure = 'dug';
+        refreshResources(actives.get(res.rec.id));
+        res.mesh.getWorldPosition(tmpV3);
+        fx.splash?.(tmpV3.setY(tmpV3.y + 0.3), 0.8);
+        events.onTreasure?.(res.rec);
         return null;
       }
       const rnd = Math.random;
@@ -812,6 +1066,35 @@ export function createIslands(scene, { fx, audio }) {
       if (rec) rec.seen = true;
       return rec;
     },
+    camp: campRec,
+    // Where the castaway stands at the camp, in the scene, if the island is close enough to be drawn.
+    campStand(out) {
+      const rec = campRec();
+      const a = rec && actives.get(rec.id);
+      if (!a?.built.camp) return null;
+      const s = a.built.camp.stand;
+      out.set(s.x, s.h, s.z);
+      a.built.group.localToWorld(out);
+      return out;
+    },
+    // A treasure map marks an island a fair way off (one map at a time). Returns its record, or null.
+    markTreasure() {
+      for (const rec of st.chart.values()) if (rec.treasure === true) return null;
+      const c0x = Math.floor(st.rw.x / WORLD.chunk), c0z = Math.floor(st.rw.z / WORLD.chunk);
+      for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) genChunk(c0x + dx, c0z + dz);
+      const list = [];
+      for (const rec of st.chart.values()) {
+        if (rec.kind !== 'island' || rec.treasure || actives.has(rec.id) || rec.id === st.resting) continue;
+        const d = distTo(rec);
+        if (d > 600 && d < 1700) list.push([d, rec]);
+      }
+      if (!list.length) return null;
+      list.sort((a, b) => a[0] - b[0]);
+      const rec = list[Math.floor(Math.random() * Math.min(3, list.length))][1];
+      rec.treasure = true;
+      rec.seen = true;
+      return rec;
+    },
     lighthouse() {
       for (const rec of st.chart.values()) if (rec.kind === 'lighthouse') return rec;
       return null;
@@ -862,6 +1145,7 @@ export function createIslands(scene, { fx, audio }) {
       st.chart = new Map(d.chart.map((r) => [r.id, r]));
       lastChunk = '';
       st.pickT = 0;
+      placeCamp();
       pickActives();
     },
 
@@ -876,11 +1160,21 @@ export function createIslands(scene, { fx, audio }) {
       const sight = ctx.onTower ? WORLD.towerSight : WORLD.sight;
       for (const rec of st.chart.values()) {
         if (rec.seen || rec.kind === 'lighthouse') continue;
-        if (distTo(rec) < sight) {
+        const d = distTo(rec);
+        if (d < sight) {
           rec.seen = true;
           events.onSighted?.(rec);
+        } else if (ctx.spy && d < WORLD.spySight) {
+          // Through the spyglass: only where it's pointed.
+          local(rec, tmpL);
+          if ((tmpL.x * ctx.spy.x + tmpL.z * ctx.spy.z) / (Math.hypot(tmpL.x, tmpL.z) || 1) > 0.985) {
+            rec.seen = true;
+            events.onSighted?.(rec, true);
+          }
         }
       }
+      farLand(ctx.spyK || 0);
+      updateSmoke(dt, ctx.night);
 
       // ---- movement ----
       // The raft's middle on the chart (the scene origin is its first plank).
@@ -1026,7 +1320,7 @@ export function createIslands(scene, { fx, audio }) {
         place(a);
         // Far off in the haze an island is a skyline; further still, nothing at all.
         const far = distTo(a.rec) - a.rec.R;
-        const lod = far > 540 && a.rec.kind !== 'lighthouse' ? 2 : far > 130 ? 1 : 0;
+        const lod = far > 540 && a.rec.kind !== 'lighthouse' ? 2 : far > (ctx.spyK > 0.3 ? 460 : 130) ? 1 : 0;
         if (lod !== a.built.lod) {
           a.built.lod = lod;
           a.built.group.visible = lod < 2;

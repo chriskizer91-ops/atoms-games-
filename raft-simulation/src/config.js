@@ -175,6 +175,7 @@ export const CLOTHING = {
 
 // Made in the crafting panel. spear/hook entries replace the tool in your hand.
 export const GEAR = {
+  spyglass: { name: 'Spyglass', cost: { glass: 2, bamboo: 2, scrap: 1 }, bench: true, once: true, text: 'Hold Z to look through it. Sweep the horizon: land you find goes on the chart from far further off.' },
   bandage: { name: 'Palm-fiber bandage', cost: { fiber: 3 }, text: 'Wrap a wound: heals 30 health straight away.' },
   rope: { name: 'Rope', cost: { fiber: 3 }, makes: { rope: 1 }, text: 'Twist palm fiber into a length of rope.' },
   seaweedRope: { name: 'Seaweed rope', cost: { seaweed: 4 }, makes: { rope: 1 }, text: 'Dried, twisted seaweed makes rope too.' },
@@ -189,6 +190,10 @@ export const GEAR = {
   steelSpear: {
     name: 'Forged spear', cost: { metalBar: 3, bamboo: 2, rope: 2 }, bench: true, once: true, upgrade: 'spear', level: 4,
     text: 'A forged blade on a bamboo shaft. Hits count 3.5 times toward driving a shark off.',
+  },
+  rod: {
+    name: 'Fishing rod', cost: { wood: 2, fiber: 4, scrap: 1 }, once: true,
+    text: 'A cane, a line and a bent-metal hook. Slot 6: click to cast, click again when the float dips, then hold to reel. Ease off when the fish runs or the line snaps.',
   },
   metalHook: {
     name: 'Metal hook', cost: { scrap: 3, fiber: 3 }, bench: true, once: true, upgrade: 'hook', level: 2,
@@ -205,6 +210,8 @@ export const STATIONS = {
   grill: { name: 'Firepit grill', cost: { wood: 5, scrap: 1 }, text: 'Burn wood to cook raw fish. Lights the raft at night.' },
   catcher: { name: 'Rain catcher', cost: { plastic: 5, wood: 3, fiber: 2 }, bench: true, text: 'Collects fresh water to drink, fastest in rain.' },
   anchor: { name: 'Anchor', cost: { scrap: 4, rope: 3, wood: 2 }, bench: true, text: 'Drop it and the raft stops drifting: an island alongside stays as long as you like.' },
+  hammock: { name: 'Hammock', cost: { wood: 4, rope: 2, fiber: 4 }, text: 'Lie in it (E) after dark and sleep until dawn. The night passes overhead while you do.' },
+  lantern: { name: 'Lantern', cost: { wood: 2, plastic: 2, scrap: 1 }, text: 'A bottle lamp on a post. It lights itself at dusk, and fish come to its light.' },
   planter: { name: 'Planter', cost: { wood: 4, clay: 2 }, text: 'A box of soil. Plant seeds from islands; crops grow faster in rain.' },
   smelter: { name: 'Smelter', cost: { stone: 8, clay: 5 }, bench: true, text: 'Burns wood to smelt metal ore into bars and sand into glass.' },
   still: { name: 'Solar still', cost: { glass: 2, bamboo: 3, plastic: 2 }, bench: true, text: 'Turns sea water into fresh water in any weather. Holds 4 drinks.' },
@@ -251,6 +258,7 @@ export const WORLD = {
   islandChance: 0.85,
   sight: 420,          // islands this close get marked on the map
   towerSight: 1000,    // ... and this close from the top of a lookout tower
+  spySight: 1500,      // ... and this close in the direction a spyglass is pointed
   pullLateral: 220,    // drifting, the current carries you to islands this far off your line
 };
 export const ISLAND_SIZES = {

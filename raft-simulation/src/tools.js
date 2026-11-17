@@ -6,6 +6,8 @@ import { HOOK, SPEAR, HAMMER, COSTS, FISH, FOODS, ITEMS, STATIONS, UPGRADES, SPE
 import { makeFish } from './nets.js';
 import { waveHeight } from './ocean.js';
 import { makeArm, handMaterials, CUP } from './hands.js';
+import { makeRod, createRod } from './rod.js';
+import { FISH_KINDS } from './fishing.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { materials } from './materials.js';
 import { clamp, damp, lerp } from './util.js';
@@ -16,6 +18,7 @@ export const SLOTS = [
   { id: 'hammer', name: 'Hammer' },
   { id: 'food', name: 'Food' },
   { id: 'fish', name: 'Raw fish' },
+  { id: 'rod', name: 'Fishing rod' },
 ];
 // The food slot holds one of these; R switches to the next one you have.
 export const FOOD_KINDS = ['coconut', 'cooked', 'potato', 'melon'];
@@ -28,6 +31,8 @@ export const BUILD_MODES = [
   { id: 'table', label: 'Crafting table' },
   { id: 'grill', label: 'Grill' },
   { id: 'catcher', label: 'Rain catcher' },
+  { id: 'hammock', label: 'Hammock' },
+  { id: 'lantern', label: 'Lantern' },
   { id: 'planter', label: 'Planter' },
   { id: 'anchor', label: 'Anchor' },
   { id: 'smelter', label: 'Smelter' },
@@ -139,6 +144,7 @@ const POSE = {
   hammer: { pos: V(0.29, -0.2, -0.5), fore: V(0.4, -0.12, 0.9), grip: V(-0.08, 0.9, -0.42) },
   food: { pos: V(0.17, -0.21, -0.56), fore: V(0.5, -0.45, 0.74), grip: V(0.85, 0.35, -0.36), cup: true },
   fish: { pos: V(0.17, -0.21, -0.56), fore: V(0.5, -0.45, 0.74), grip: V(0.85, 0.35, -0.36), cup: true },
+  rod: { pos: V(0.25, -0.2, -0.46), fore: V(0.45, -0.18, 0.87), grip: V(-0.16, 0.74, -0.65) },
 };
 // The other hand: forward on the spear's shaft, or holding the hook's coiled line.
 const LEFT_SHOULDER = V(-0.5, -0.62, 0.12);
@@ -156,7 +162,7 @@ export function makeHeldModels() {
   const fish = makeFish();
   fish.scale.setScalar(0.9);
   fish.rotation.z = Math.PI / 2;
-  return { hook: wrap(hook), spear: wrap(makeSpear()), hammer: wrap(makeHammer()), food: wrap(food), fish: wrap(fish) };
+  return { hook: wrap(hook), spear: wrap(makeSpear()), hammer: wrap(makeHammer()), food: wrap(food), fish: wrap(fish), rod: wrap(makeRod({ cane: MAT.handle, rope: MAT.rope })) };
 }
 
 export function createTools({ scene, camera, raft, nets, rails, stations, islands, crafting, bait, debris, shark, fx, audio, inventory, stats, events }) {
@@ -214,7 +220,13 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
     cooked: makeFish(),
     potato: makePotato(),
     melon: makeMelon(),
+    rod: makeRod({ cane: MAT.handle, rope: MAT.rope }),
   };
+  // The rod's float, line and fish out in the world.
+  const rodFx = createRod(scene, { fx, audio });
+  const tipW = new THREE.Vector3();
+  const fishPlace = { land: 0, night: 0, eager: 0 };
+  const fishUi = { phase: 'idle', tension: 0, progress: 0, running: false };
   // Food sits in the cupped hand.
   models.potato.position.set(CUP.x + 0.012, 0.0, CUP.z + 0.004);
   models.potato.rotation.z = Math.PI / 2;
@@ -529,6 +541,7 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
 
     reset() {
       releaseHook(false);
+      rodFx.stop();
       st.food = 'coconut';
       st.slot = 0;
       st.swap = 1;
@@ -574,6 +587,10 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
       if (was) sleeveMat.color.copy(sleeveBase);
     },
 
+    // Where you are fishing: how near land (0..1), how dark (0..1), how keen the fish are (0..1).
+    rod: rodFx,
+    setFishingPlace(land, night, eager) { fishPlace.land = land; fishPlace.night = night; fishPlace.eager = eager; },
+
     setSleeve(hex) {
       if (hex == null) sleeveMat.color.copy(sleeveBase);
       else sleeveMat.color.setHex(hex);
@@ -583,6 +600,7 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
       vmCamera.aspect = w / h;
       vmCamera.updateProjectionMatrix();
       ropeMat.resolution.set(w, h);
+      rodFx.resize(w, h);
     },
 
     update(t, dt, input, player, sunDir) {
@@ -600,14 +618,17 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
       if (input.state.wheel) api.setSlot(st.slot + input.state.wheel, player);
 
       const id = slotId();
-      const m0 = input.state.mouse[0];
-      const click = input.state.clicked[0];
-      const release = input.state.released[0];
+      const m0 = !p.asleep && input.state.mouse[0];
+      const click = !p.asleep && input.state.clicked[0];
+      const release = !p.asleep && input.state.released[0];
       let prompt = null;
 
       // Look-at pickup (E)
       st.lookDebris = p.tower ? null : debris.lookTarget(camPos, camDir, PLAYER.reach + (p.inWater ? 0.6 : 0));
-      if (p.tower) {
+      if (p.asleep) {
+        prompt = { key: 'E', text: 'Wake up' };
+        if (input.wasPressed('KeyE')) events.onWake?.();
+      } else if (p.tower) {
         prompt = { key: 'E', text: 'Climb down' };
         if (input.wasPressed('KeyE')) events.onClimbDown?.();
       } else if (st.lookDebris) {
@@ -647,6 +668,40 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
             events.onCollect?.(gained, 'net');
           }
         }
+      }
+
+      // ----- fishing rod -----
+      const hasRod = crafting.hasGear('rod');
+      if (id === 'rod' && !hasRod && !prompt) prompt = { text: 'No fishing rod yet. Make one in the crafting panel (C).', dim: true };
+      if (hasRod) {
+        // the rod's tip, out in the world
+        vmScene.updateMatrixWorld();
+        models.rod.localToWorld(tipW.copy(models.rod.userData.tip));
+        tipW.z -= 0.05;
+        camera.localToWorld(tipW);
+        const using = id === 'rod' && !p.inWater && !p.tower;
+        if (using && click && !rodFx.out && st.cooldown <= 0 && st.swap >= 1) {
+          const open = (x, z) => !raft.isSupported(x, z) && raft.edgeDistance(x, z) > 0.6 && islands.heightAt(x, z) < -0.35;
+          if (rodFx.cast(tipW, camDir, open, fishPlace)) { startAnim('throw', 0.35); st.cooldown = 0.5; }
+          else { audio.error(); events.onFishing?.('nowater'); }
+        }
+        const r = rodFx.update(t, dt, tipW, using && click, using && m0, (!using && rodFx.out) || (using && input.state.clicked[2]));
+        if (r.event === 'caught') {
+          const f = FISH_KINDS[r.kind];
+          inventory.add({ fish: f.meat });
+          audio.pickup();
+          startAnim('throw', 0.3);
+        }
+        if (r.event) events.onFishing?.(r.event, r.kind, r.kg);
+        fishUi.phase = r.phase; fishUi.tension = r.tension; fishUi.progress = r.progress; fishUi.running = r.running;
+        if (using && !prompt) {
+          if (r.phase === 'idle') prompt = { text: 'Click to cast' , dim: true };
+          else if (r.phase === 'waiting') prompt = { text: 'Waiting for a bite... (right-click to reel in)', dim: true };
+          else if (r.phase === 'bite') prompt = { key: 'Click', text: 'A bite! Strike now' };
+          else if (r.phase === 'reeling') prompt = { text: r.running ? 'It is running: ease off!' : 'Hold to reel it in', dim: !r.running };
+        }
+      } else {
+        fishUi.phase = 'idle';
       }
 
       // ----- hook -----
@@ -942,6 +997,7 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
       heldGrapple.visible = h.mode === 'held' || h.mode === 'charging';
       danglingLine.visible = heldGrapple.visible;
       coil.visible = id === 'hook';
+      models.rod.visible = id === 'rod' && hasRod;
       if (id === 'food') models[st.food].visible = inventory.get(st.food) > 0;
       models.fish.visible = id === 'fish' && inventory.get('fish') > 0;
       if (spearBlade) spearBlade.material = [null, MAT.stone, MAT.bone, MAT.metal, MAT.steel][crafting.spearLevel()];
@@ -960,6 +1016,8 @@ export function createTools({ scene, camera, raft, nets, rails, stations, island
         hammerMode: st.hammerMode,
         food: st.food,
         hookOut: h.mode !== 'held' && h.mode !== 'charging',
+        fishing: fishUi,
+        hasRod,
       };
     },
 

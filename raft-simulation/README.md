@@ -4,7 +4,7 @@ A first-person ocean survival game for laptops. You're stranded on a small raft.
 
 **To play:** open `index.html` in Chrome, Edge or Firefox. You can double-click it. It's one self-contained file and works offline.
 
-Or open the private link for this build (Stage 5): https://claude.ai/artifact/9XeTdgwmeQyFmbi5bX8Zra. (For Claude sessions: build it with `node tools/build.js --artifact <file>` and republish to that link. The older link, https://claude.ai/artifact/588Ef85T4WQtWmVuQw8hVP, still holds Stage 4.)
+Or open the private link for this build (Stage 6): https://claude.ai/artifact/9XeTdgwmeQyFmbi5bX8Zra. (For Claude sessions: build it with `node tools/build.js --artifact <file>` and republish to that link. The older link, https://claude.ai/artifact/588Ef85T4WQtWmVuQw8hVP, still holds Stage 4.)
 
 ## Controls
 
@@ -15,13 +15,16 @@ Or open the private link for this build (Stage 5): https://claude.ai/artifact/9X
 | Left click | Use the tool in your hand (hold to wind up the hook, hold again to reel in) |
 | Right click | Hook: let go of the line. Hammer: open the build menu. Raw fish: throw it as bait |
 | `Q` (hammer out) | Open the build menu and pick what to build (`R` steps to the next thing) |
-| `1`–`5` or scroll | Switch tool: hook, spear, hammer, food, raw fish |
+| `1`–`6` or scroll | Switch tool: hook, spear, hammer, food, raw fish, fishing rod |
 | `R` (food slot) | Switch to the next food you have: coconut, cooked fish, potato, watermelon |
 | `E` | Grab something within reach; empty a net; use what you built; climb the lookout tower; gather on islands |
 | `C` or `Tab` | Crafting and wardrobe |
 | `M` | Map. With a sail built, click an island and the raft sails itself there |
 | `E` at the sail | Take the steering oar. Then `A` `D` steer, `W` `S` raise and lower the sail a notch, `E` or `Space` lets go |
 | `V` | Switch between your own eyes and a view from behind |
+| `J` | Logbook: fish caught, things seen, treasure, messages read |
+| `Z` (hold, once you have a spyglass) | Look through the spyglass |
+| `H` | Hide or show everything on screen, for a clear view |
 | `Space` | Jump, or climb back aboard from the water |
 | `Shift` | Run or swim faster |
 | `Esc` | Pause |
@@ -47,7 +50,21 @@ Or open the private link for this build (Stage 5): https://claude.ai/artifact/9X
 | Time between shark attacks | 1.5× | 1× | 0.7× | never attacks |
 | Spear hits to drive a shark off | 1 fewer | as listed | 1 more | — |
 
-## Stage 5 (this build): wind and sail
+## Stage 6 (this build): more to do, more to find
+
+Everything here was added in answer to "what would make this more fun, more interesting, more beautiful".
+
+- **A fishing rod** (crafting panel: 2 wood, 4 palm fiber, 1 scrap; slot `6`). Click to cast. When the float dips, click to strike, then hold to reel. The fish runs now and then: let go while it does or the line snaps. Nine kinds of fish, from grunts by the reefs to yellowfin tuna in open water; what bites depends on how near land you are and whether it's night. They bite sooner at dawn and dusk, in the rain, and near a lit lantern. The rules are the ones from *Sandcastle Cays*, reworked.
+- **Another survivor.** Somewhere down-current a thin line of smoke stands on the horizon. It's on your map as soon as you see it. The other castaway from the *Marigold* is keeping a fire there (Marta if you play the man, Finn if you play the woman). Talk to them and they come aboard for good: they walk the raft, pull things out of the water for you, mend bitten floor, fight the shark with you, and have something to say about what happens.
+- **Treasure maps.** Every second bottle has a chart rolled up in it as well: an X goes on your map. Dig at the X on that island for a sea chest. The first holds a brass spyglass, the second a lucky lure (fish bite far sooner), the third an old sea chart that fills in your map; every chest has gold coins and good materials. After the story's eight messages, bottles keep coming with maps.
+- **A spyglass** (hold `Z`). A long narrow view. Land too far to see by eye shows as a grey shape on the horizon, and pointing the glass at it charts it. It can also be made at the crafting table (2 glass, 2 bamboo, 1 scrap).
+- **A hammock** (hammer menu: 4 wood, 2 rope, 4 palm fiber). After dark, lie in it and the night goes by overhead at about an hour a second, stars wheeling, until the sun comes up. You wake rested, hungry and thirsty. The shark leaves you be while you sleep.
+- **A lantern** (hammer menu: 2 wood, 2 plastic, 1 scrap). Lights itself at dusk and throws a warm light across the deck.
+- **A logbook** (`J`). Days at sea, islands charted, chests and coins; every kind of fish you've landed with your biggest and a line about it; the things you've seen (whale, dolphins, turtle, flying fish, glowing jellyfish, rainbow, shooting star, lightning, both sharks, the lighthouse, the smoke); and every message you've read, to read again. It's saved with the game.
+- **More life in the sea.** A turtle surfaces beside a slow raft for a breath. Flying fish burst off a wave and glide. On calm nights the water around the raft fills with slow glowing jellyfish.
+- **Music.** A quiet score that plays itself: a few soft plucked notes and a held chord, bright by day, lower at dusk, sparse and minor at night, almost nothing in a storm, with a small flourish for land sighted, a first catch, treasure and dawn. It's made on the spot like every other sound in the game. Turn it off in the pause menu. (It has been measured, not listened to: the build machine has no ears. If it grates, say so.)
+
+## Stage 5: wind and sail
 
 The sailing rules and the sea come from the sailing game, *Sandcastle Cays* (the `sand` repo), reworked for a raft. The body you see in third person is the Farm lad (or the Pie seller) from *Moon Faire*.
 
@@ -225,7 +242,9 @@ For Claude sessions:
 2. **Building, nets, fish and bait, a shark that remembers you** (done)
 3. **Crafting, clothing, weather and day/night, grill and rain catcher, the hammerhead** (done)
 3.5. **Your changes: clothing for looks, no cold, a build menu, crafting table, recipe unlocks, upgrades, islands, anchor, difficulty** (done)
-4. **Saving, peaceful mode, a charted sea with islands in three sizes, the map and sail, new materials, planters and crops, railings, lookout tower, smelter, solar still, messages in bottles and an ending, sound polish** ← this build
+4. **Saving, peaceful mode, a charted sea with islands in three sizes, the map and sail, new materials, planters and crops, railings, lookout tower, smelter, solar still, messages in bottles and an ending, sound polish** (done)
+5. **Wind and real sailing, a new sea and sky, third person and the painted castaways** (done)
+6. **Fishing rod, a second survivor, treasure maps, spyglass, hammock and lantern, logbook, more sea life, music** ← this build
 
 Predators are a tier table in `src/config.js`. A third species only needs a new entry there, plus its look and tactic in `src/shark.js`.
 
@@ -240,7 +259,7 @@ NODE_PATH=/opt/node-tools/node_modules node tools/look.js <outDir> [steps.js]   
 NODE_PATH=/opt/node-tools/node_modules node tools/person-look.js <outDir>            # the castaway on their own: standing, walking, swimming, each move
 ```
 
-`tools/smoke.js` simulates input to play through everything (61 checks): hook, shark bite, spear and scar, repair, rebuild, swim, shark chase, climb, coconut, building a floor piece, putting up a net, a net catching material and a fish, emptying it, eating fish, bait luring the shark, a net torn off, opening the build menu with Q and picking from it, night with no cold meter, recipes locked until their materials are found, clothing made and worn for looks, the crafting table, spear and hook upgrades, the grill and its stone-oven upgrade, a reinforced floor, the rain catcher, drifting up to an island, wading ashore and gathering stone, the raft waiting for you, the anchor, difficulty, the reef shark leaving for good, the hammerhead ramming you off the raft, save/restore, and for Stage 4: island sizes, gathering the new materials on a large island, rope, the smelter (bars and glass), planting and harvesting (and rain speeding it up), the food slot, the solar still, a railing stopping you, climbing the tower and spotting a far island, the sail and map taking you to an island, messages in bottles and the lighthouse reveal, the ending and keeping on playing, peaceful mode, and saving Stage 4 state; and for Stage 5: taking the steering oar and raising the sail, sailing fast across the wind and stalling head to wind, an island swinging round the raft as it turns, and switching to third person and back. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
+`tools/smoke.js` simulates input to play through everything (67 checks): hook, shark bite, spear and scar, repair, rebuild, swim, shark chase, climb, coconut, building a floor piece, putting up a net, a net catching material and a fish, emptying it, eating fish, bait luring the shark, a net torn off, opening the build menu with Q and picking from it, night with no cold meter, recipes locked until their materials are found, clothing made and worn for looks, the crafting table, spear and hook upgrades, the grill and its stone-oven upgrade, a reinforced floor, the rain catcher, drifting up to an island, wading ashore and gathering stone, the raft waiting for you, the anchor, difficulty, the reef shark leaving for good, the hammerhead ramming you off the raft, save/restore, and for Stage 4: island sizes, gathering the new materials on a large island, rope, the smelter (bars and glass), planting and harvesting (and rain speeding it up), the food slot, the solar still, a railing stopping you, climbing the tower and spotting a far island, the sail and map taking you to an island, messages in bottles and the lighthouse reveal, the ending and keeping on playing, peaceful mode, and saving Stage 4 state; and for Stage 5: taking the steering oar and raising the sail, sailing fast across the wind and stalling head to wind, an island swinging round the raft as it turns, and switching to third person and back; and for Stage 6: landing a fish with the rod, sleeping a night away in the hammock, charting far land through the spyglass, a treasure map leading to a chest, finding the other castaway and watching them haul and mend, and the new sea life and the logbook surviving a save. It fails on any console error. It steps the game itself and renders only before each screenshot, because a headless browser draws in software.
 
 | File | What it does |
 |---|---|
@@ -260,6 +279,11 @@ NODE_PATH=/opt/node-tools/node_modules node tools/person-look.js <outDir>       
 | `src/islands.js` | The chart of islands (generated square by square), three island sizes and their terrain and resources, the raft's drift and sailing, visits, gathering, the lighthouse |
 | `src/map.js` | The map screen: charted islands, your trail, setting a course |
 | `src/story.js` | The eight messages in bottles and the ending |
+| `src/fishing.js`, `src/rod.js` | The fishing rules (what bites where, the fight) and the rod, float, line and fish in the world |
+| `src/companion.js` | The other castaway: waiting at the camp, then walking the raft, hauling, mending, fighting the shark, talking |
+| `src/journal.js` | The logbook |
+| `src/sealife.js` | Turtle, flying fish, glowing jellyfish (`src/life.js` has the gulls, dolphins and whale) |
+| `src/music.js` | The self-playing score |
 | `src/shark.js` | Shark and hammerhead models (bodies bend as they swim), scars, and behaviour: circle, approach, bite, ram, chase, flee, follow bait, distracted, leave for good |
 | `src/player.js` | First-person movement: walking, jumping, falling in, swimming, climbing, railings, the tower platform |
 | `src/tools.js` | Hook, spear, hammer and food: first-person view model, animations, actions, what `E` does |

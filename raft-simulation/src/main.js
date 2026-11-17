@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CURRENT_SPEED, STATS, SHARK_TIERS, ITEMS, TILE, DECK_Y, GRUDGE, CLOTHING, GEAR, STATIONS, UPGRADES, CATCHER, STILL, CROPS, ISLAND_SIZES, NEXT_PREDATOR_DELAY, DIFFICULTY } from './config.js';
+import { CURRENT_SPEED, STATS, SHARK_TIERS, ITEMS, TILE, DECK_Y, GRUDGE, CLOTHING, GEAR, STATIONS, UPGRADES, CATCHER, STILL, CROPS, ISLAND_SIZES, NEXT_PREDATOR_DELAY, DIFFICULTY, DAY, EYE } from './config.js';
 import { createOcean, setShelters, waveHeight } from './ocean.js';
 import { createWake } from './wake.js';
 import { createSailHud } from './sailhud.js';
@@ -24,6 +24,10 @@ import { createPlayer } from './player.js';
 import { createTools, makeHeldModels, SLOTS, BUILD_MODES } from './tools.js';
 import { createView } from './view.js';
 import { createLife } from './life.js';
+import { createJournal, SIGHTS } from './journal.js';
+import { createCompanion } from './companion.js';
+import { createMusic } from './music.js';
+import { FISH_KINDS } from './fishing.js';
 import { ART } from './art.js';
 import { materials } from './materials.js';
 import { lerp } from './util.js';
@@ -74,6 +78,25 @@ const view = createView(camera);
 player.setRails(rails);
 const input = createInput(canvas);
 const hud = createHud();
+const veil = document.getElementById('veil');
+const journal = createJournal({ story, islands, getDay: () => weather.state.day });
+// Music: on unless you've turned it off (pause menu).
+const music = createMusic();
+const MUSIC_KEY = 'raft-sim-music';
+function setMusic(on, remember = true) {
+  music.setOn(on);
+  document.querySelectorAll('.music button').forEach((b) => b.classList.toggle('on', (b.dataset.m === 'on') === on));
+  if (remember) { try { localStorage.setItem(MUSIC_KEY, on ? 'on' : 'off'); } catch { /* storage blocked */ } }
+}
+document.querySelectorAll('.music button').forEach((b) => b.addEventListener('click', () => setMusic(b.dataset.m === 'on')));
+try { setMusic(localStorage.getItem(MUSIC_KEY) !== 'off', false); } catch { setMusic(true, false); }
+const musicMood = { night: 0, sunset: 0, storm: 0 };
+// The other survivor (made once the things they work with exist; see below).
+let companion = null;
+// Something seen for the first time goes in the logbook, with a word about it.
+function sight(key) {
+  if (journal.see(key)) hud.toast(`Logbook: ${SIGHTS[key].name.toLowerCase()} (J)`, 'gain');
+}
 const sailHud = createSailHud();
 
 // ---------- game state ----------
@@ -125,6 +148,15 @@ const GOAL_GROUPS = [
     ],
   },
   {
+    title: 'Goals: a life at sea',
+    goals: [
+      { id: 'angler', text: 'Land a fish with a fishing rod (press C to make one)', target: 1 },
+      { id: 'sleep', text: 'Sleep a night through in a hammock', target: 1 },
+      { id: 'treasure', text: 'Follow a treasure map and dig up the chest', target: 1 },
+      { id: 'rescue', text: 'Find whoever is keeping that fire', target: 1 },
+    ],
+  },
+  {
     title: 'Goals: the far horizon',
     goals: [
       { id: 'chart', text: 'Chart islands on your map (M)', target: 6 },
@@ -139,6 +171,7 @@ const HINTS = {
   hook: 'Hold left mouse to wind up, let go to throw. Hold again to reel in.',
   spear: 'Click to stab. A few good hits send the shark away.',
   fish: 'Click to eat it raw. Right-click to throw it as bait for the shark.',
+  rod: 'Click to cast. Click when the float dips. Hold to reel; let go when the fish runs.',
 };
 const FOOD_HINTS = {
   coconut: 'Coconut: click to crack it open for food and water. R: next food.',
@@ -211,7 +244,7 @@ const crafting = createCrafting({
   events: {
     onCraft: (id) => {
       const def = CLOTHING[id] || GEAR[id];
-      hud.toast(id === 'bandage' ? 'Bandaged up: +30 health' : `Made: ${def.name}`, 'gain');
+      hud.toast(id === 'bandage' ? 'Bandaged up: +30 health' : id === 'spyglass' ? 'Made: Spyglass. Hold Z to look through it.' : id === 'rod' ? 'Made: Fishing rod. Press 6 to take it out.' : `Made: ${def.name}`, 'gain');
       if (CLOTHING[id]) progress('wear');
       tools?.setSleeve(crafting.sleeveColor());
     },
@@ -271,12 +304,18 @@ const events = {
     if (how === 'island' && gained.stone) progress('stone');
     if (gained.bottle) {
       inventory.spend({ bottle: gained.bottle });
-      if (story.done) {
+      // Every other bottle has a scrap of chart rolled up in it as well; once the
+      // story is told, bottles are charts or just glass.
+      const note = story.done ? null : story.readNext();
+      const rec = !note || note.n % 2 === 0 ? islands.markTreasure() : null;
+      const chart = rec ? treasureLines(rec) : null;
+      if (note) openNote(chart ? { ...note, body: [...note.body, `<span class="aside">${chart.join(' ')}</span>`] } : note);
+      else if (chart) openNote({ label: 'A treasure map', title: 'A chart on sailcloth', body: chart });
+      else {
         inventory.add({ glass: 1 });
         hud.toast('The bottle was empty. Glass is glass: +1 glass', 'gain');
-      } else {
-        openNote(story.readNext());
       }
+      if (rec) hud.toast('A treasure map: the X is on your chart (M)', 'gain');
     }
   },
   onMissing(cost) {
@@ -384,6 +423,7 @@ const events = {
     if (r.craft) openMenu('craft', true);
     if (r.map) openMap();
     if (r.helm) takeHelm(station);
+    if (r.sleep) startSleep(station);
     if (r.climb) {
       player.climbTower({ x: station.tile.i * TILE, z: station.tile.j * TILE, h: TOWER_TOP - DECK_Y, tile: station.tile });
       audio.climb?.();
@@ -415,6 +455,7 @@ const events = {
       progress('harvest');
     }
   },
+  onWake() { wakeUp(false); },
   onClimbDown() {
     player.climbTower(null);
     audio.climb?.();
@@ -474,6 +515,20 @@ const events = {
     progress('coconut');
     hud.toast('Coconut: food and water', 'gain');
   },
+  onFishing(ev, kind, kg) {
+    if (ev === 'bite') audio.pickup();
+    else if (ev === 'missed') hud.toast('Too slow: it took the bait and went', 'warn');
+    else if (ev === 'snapped') { audio.crack(0); hud.toast('The line snapped. Ease off when the fish runs.', 'warn'); }
+    else if (ev === 'nowater') hud.toast('Cast toward open water', 'warn');
+    else if (ev === 'caught') {
+      const f = FISH_KINDS[kind], r = journal.catchFish(kind, kg);
+      hud.toast(`<span class="ti">${icon('fish')}</span>${f.name}, ${kg.toFixed(1)} kg: +${f.meat} raw fish${r.best && !r.first ? ' (your biggest yet)' : ''}`, 'gain');
+      if (kg > 4) companion.say('fish', 0.7);
+      if (r.first) music.sting('find');
+      if (r.first) hud.alert(`A new fish for the logbook: ${f.name.toLowerCase()}. ${f.fact}`, { kind: 'good', duration: 9 });
+      progress('angler');
+    }
+  },
   onEnterWater(p) {
     fx.splash(p.setY(0.1), 1.6);
     audio.splash(0, true);
@@ -488,9 +543,11 @@ tools = createTools({ scene, camera, raft, nets, rails, stations, islands, craft
 const islandName = (rec) => (rec.kind === 'lighthouse' ? 'the lighthouse island' : `a ${ISLAND_SIZES[rec.size].label.toLowerCase()} island`);
 const chartPoint = (rec) => { const p = toScene(rec.x, rec.z); return tmpV.set(p.x, 2, p.z); };
 islands.on({
-  onSighted(rec) {
+  onSighted(rec, spy) {
     progress('chart');
-    hud.alert(`Land on the horizon: ${islandName(rec)}. It's on your map (M).`, {
+    music.sting('find');
+    companion.say(rec.kind === 'lighthouse' ? 'lighthouse' : 'land', 0.6);
+    hud.alert(`${spy ? 'Through the spyglass, far off' : 'Land on the horizon'}: ${islandName(rec)}. It's on your map (M).`, {
       kind: 'good', duration: 6, follow: () => chartPoint(rec),
     });
   },
@@ -507,6 +564,21 @@ islands.on({
   onDepart() {
     hud.alert('The raft is drifting away from the island.', { kind: 'good', duration: 3 });
   },
+  onSmoke(rec) {
+    sight('smoke');
+    hud.alert('Smoke on the horizon. Someone is keeping a fire. It\'s on your map (M).', { kind: 'good', duration: 9, follow: () => chartPoint(rec) });
+  },
+  onSurvivor() {
+    companion.join();
+    music.sting('prize');
+    progress('rescue');
+    audio.pickup();
+    openNote({
+      label: 'A castaway', title: companion.name,
+      body: [...companion.meetLines, `<span class="aside">${companion.name} has joined you, and will pull things out of the water, patch bitten floor and help drive the shark off.</span>`],
+    });
+  },
+  onTreasure(rec) { openChest(rec); },
   onLamp() {
     if (story.light()) {
       progress('lamp');
@@ -519,6 +591,19 @@ stations.onRipe((st) => hud.toast(`${ITEMS[CROPS[st.crop].food].name} ready to h
 rails.onBuiltOver(() => {
   inventory.add(STATIONS.rail.cost);
   hud.toast('Took a railing down to build there and kept its materials', 'gain');
+});
+companion = createCompanion(scene, {
+  raft, stations, debris, shark, islands, inventory, fx, audio,
+  makeHeld: makeHeldModels, sharkEvents: () => events,
+});
+const companionCtx = { player: null, daylight: 1, live: false };
+const lootText = (loot) => Object.entries(loot).map(([k, n]) => `+${n} ${ITEMS[k].name.toLowerCase()}`).join(', ');
+companion.on({
+  onSay(name, text) { hud.toast(`<b>${name}:</b> “${text}”`, 'say'); },
+  onHaul(name, loot) {
+    hud.toast(`${name} hauled in: ${lootText(loot)}`, 'gain');
+    if (loot.wood) { game.counters.wood += loot.wood; progress('wood', loot.wood); }
+  },
 });
 const map = createMap({
   islands, audio,
@@ -573,6 +658,7 @@ async function applyBody(id, remember = true) {
   if (bodyId !== id) { body.dispose(); return; }   // another was picked meanwhile
   scene.add(body.root);
   view.setBody(body, makeHeldModels());
+  companion.setBody(id);
   // Your own arms match: the skin (warmed a little for the sun) and the outfit's sleeves.
   tools.setSkin(new THREE.Color(body.skin).lerp(new THREE.Color(0xb07452), 0.35));
   tools.setSleeveBase(SLEEVES[id] || '#a89878');
@@ -664,6 +750,8 @@ function newGame() {
   crafting.reset();
   islands.reset();
   story.reset();
+  journal.reset();
+  companion.reset();
   player.reset();
   tools.reset();
   tools.setSleeve(null);
@@ -671,6 +759,9 @@ function newGame() {
   Object.assign(game.stats, { health: 100, hunger: 100, thirst: 100 });
   game.landed = false;
   game.helm = null;
+  game.sleep = null;
+  player.state.asleep = false;
+  veil.classList.remove('on');
   game.sailTip = {};
   life.reset();
   wake.reset();
@@ -707,6 +798,8 @@ function serialize() {
     islands: islands.serialize(),
     rails: rails.serialize(),
     story: story.serialize(),
+    journal: journal.serialize(),
+    companion: companion.serialize(),
     food: tools.food,
     difficulty: game.difficulty,
     nextPredatorIn: game.nextPredatorIn,
@@ -726,6 +819,8 @@ function restore(d) {
   islands.restore(d.islands);
   rails.restore(d.rails);
   story.restore(d.story);
+  journal.restore(d.journal);
+  companion.restore(d.companion);
   if (d.food) tools.setFood(d.food);
   if (d.difficulty) applyDifficulty(d.difficulty, false);
   game.nextPredatorIn = d.nextPredatorIn || 0;
@@ -879,17 +974,20 @@ function openMenu(tab = 'craft', bench = false, pick = null) {
 function openMap() {
   if (holdInput('map')) map.open();
 }
+function openJournal() {
+  if (holdInput('journal')) journal.open();
+}
 const noteEl = { root: document.getElementById('note'), count: document.getElementById('note-count'), title: document.getElementById('note-title'), body: document.getElementById('note-body') };
 function openNote(note) {
   if (!note) return;
-  progress('bottle');
+  if (note.n) progress('bottle');
   if (note.reveal) {
     const lh = islands.lighthouse();
     if (lh) islands.reveal(lh.id);
   }
   audio.paper?.();
   const show = () => {
-    noteEl.count.textContent = `Message ${note.n} of ${note.of}`;
+    noteEl.count.textContent = note.label || `Message ${note.n} of ${note.of}`;
     noteEl.title.textContent = note.title;
     noteEl.body.innerHTML = note.body.map((p) => `<p>${p}</p>`).join('');
     noteEl.root.hidden = false;
@@ -910,6 +1008,9 @@ function openEnding() {
     ['Messages found', `${story.read} of 8`],
     ['Floor pieces built', game.counters.built],
     ['Times you drove a shark off', game.counters.repels],
+    ['Kinds of fish landed', `${Object.keys(journal.state.fish).length} of ${Object.keys(FISH_KINDS).length}`],
+    ['Chests dug up', journal.state.treasure],
+    ['Going home with you', companion.joined ? companion.name : 'no one'],
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   showScreen('ending');
 }
@@ -931,6 +1032,7 @@ function closeMenu(relock = true) {
   game.menuClosedAt = performance.now();
   if (kind === 'craft') crafting.close();
   if (kind === 'map') map.close();
+  if (kind === 'journal') journal.close();
   if (kind === 'note') noteEl.root.hidden = true;
   if (relock) {
     input.state.enabled = true;
@@ -940,6 +1042,7 @@ function closeMenu(relock = true) {
 }
 document.getElementById('craft-close').addEventListener('click', () => closeMenu());
 document.getElementById('map-close').addEventListener('click', () => closeMenu());
+document.getElementById('journal-close').addEventListener('click', () => closeMenu());
 document.getElementById('note-close').addEventListener('click', () => closeMenu());
 
 input.onLockChange((locked) => {
@@ -969,6 +1072,17 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (game.menu === 'map') closeMenu();
     else if (!game.menu) openMap();
+    return;
+  }
+  if (e.code === 'KeyH' && !game.menu) {
+    const off = document.body.classList.toggle('nohud');
+    if (!off) hud.toast('H: hide everything on screen, for a clear view', 'gain');
+    return;
+  }
+  if (e.code === 'KeyJ') {
+    e.preventDefault();
+    if (game.menu === 'journal') closeMenu();
+    else if (!game.menu) openJournal();
     return;
   }
   if (e.code === 'KeyC' || e.code === 'Tab' || (e.code === 'KeyQ' && game.menu)) {
@@ -1010,6 +1124,110 @@ function leaveHelm(note) {
   player.state.helm = false;
   if (note) hud.toast(note, 'gain');
 }
+// ---------- treasure ----------
+const COMPASS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+function treasureLines(rec) {
+  const st = islands.state;
+  const dx = rec.x - st.rw.x, dz = rec.z - st.rw.z;
+  const way = COMPASS[((Math.round(Math.atan2(dx, -dz) / (Math.PI / 4)) % 8) + 8) % 8];
+  const d = Math.round(Math.hypot(dx, dz) / 50) * 50;
+  return [
+    'Rolled up in the bottle is a square of sailcloth with a chart inked on it: one island, and an X.',
+    `It lies to the ${way}, about ${d} metres off. You've copied the X onto your own chart (M).`,
+  ];
+}
+// What a chest holds: the first few have something you can't make; all of them have coin and good materials.
+function openChest(rec) {
+  const n = journal.state.treasure;
+  const loot = { scrap: 3 + Math.floor(Math.random() * 3), rope: 2, glass: 1 + Math.floor(Math.random() * 2) };
+  if (n >= 1) loot.metalBar = 1 + Math.floor(Math.random() * 2);
+  const coins = 20 + Math.floor(Math.random() * 41);
+  const body = ['Under a foot of sand the spade hits wood: a sea chest, iron-banded, the lock rusted through.'];
+  let prize = null;
+  if (!crafting.hasGear('spyglass')) {
+    crafting.grant('spyglass');
+    prize = 'a brass spyglass';
+    body.push('Inside, wrapped in oilcloth: <b>a brass spyglass</b>. Hold Z to look through it. Land you find in it goes on your chart from far further off.');
+  } else if (!crafting.hasGear('lure')) {
+    crafting.grant('lure');
+    prize = 'a lucky lure';
+    body.push('Inside, in a tin: <b>a lure of mother-of-pearl</b>, worn smooth by somebody\'s thumb. With it on your line, fish bite far sooner.');
+  } else if (!journal.state.seaChart) {
+    journal.state.seaChart = true;
+    prize = 'an old sea chart';
+    let k = 0;
+    for (const r of islands.state.chart.values()) {
+      if (!r.seen && r.kind !== 'lighthouse' && Math.hypot(r.x - islands.state.rw.x, r.z - islands.state.rw.z) < 2600) { r.seen = true; k++; }
+    }
+    body.push(`Inside, in a tube: <b>an old sea chart</b> of these waters. ${k} island${k === 1 ? '' : 's'} you had never seen ${k === 1 ? 'is' : 'are'} on your map now.`);
+  }
+  const parts = Object.entries(loot).map(([k, v]) => `${v} ${ITEMS[k].name.toLowerCase()}`);
+  body.push(`${prize ? 'And under it' : 'Inside'}: ${coins} gold coins, and ${parts.join(', ')}.`);
+  inventory.add(loot);
+  journal.foundTreasure(prize, coins);
+  music.sting('prize');
+  progress('treasure');
+  audio.pickup();
+  companion.say('treasure');
+  openNote({ label: `Chest ${n + 1}`, title: 'Buried treasure', body });
+}
+
+// ---------- sleeping ----------
+// In a hammock after dark: you lie back, and the night goes by overhead at
+// about an hour a second until the sun comes up.
+const SLEEP_RATE = 22;
+function startSleep(station) {
+  if (game.sleep) return;
+  if (game.helm) leaveHelm();
+  const ps = player.state;
+  game.sleep = { t: 0, x: station.tile.i * TILE, z: station.tile.j * TILE, lie: 0, third: view.third, waking: false, hours: 0, hour0: weather.state.hour };
+  ps.asleep = true;
+  view.set(false);
+  veil.classList.add('on');
+  audio.paper?.();
+}
+function wakeUp(dawn) {
+  const sl = game.sleep;
+  if (!sl || sl.waking) return;
+  sl.waking = true;
+  player.state.asleep = false;
+  veil.classList.remove('on');
+  view.set(sl.third);
+  shark.holdOff(40);
+  const s = game.stats;
+  const k = clamp(sl.hours / 8, 0, 1);
+  s.hunger = Math.max(8, s.hunger - 16 * k);
+  s.thirst = Math.max(8, s.thirst - 20 * k);
+  s.health = Math.min(100, s.health + 40 * k);
+  if (dawn) { hud.toast('You slept until dawn: rested, hungry and thirsty.', 'gain'); progress('sleep'); }
+  else hud.toast(sl.hours > 0.5 ? `You slept ${Math.round(sl.hours)} hour${Math.round(sl.hours) === 1 ? '' : 's'}.` : 'Awake again.', 'gain');
+}
+// How fast the clock runs this frame (1, or much faster asleep).
+function sleepRate() {
+  const sl = game.sleep;
+  return sl && !sl.waking && sl.t > 0.9 ? SLEEP_RATE : 1;
+}
+function updateSleep(dt, wx) {
+  const sl = game.sleep;
+  if (!sl) return;
+  const ps = player.state;
+  sl.t += dt;
+  if (!sl.waking) {
+    if (sl.t > 0.9) {
+      if (!sl.open) { sl.open = true; veil.classList.remove('on'); ps.yaw = Math.PI / 2; ps.pitch = 0.95; }
+      sl.hours += (dt * SLEEP_RATE) / DAY.hourNight;
+      shark.holdOff(30);
+      if (wx.hour >= 6 && wx.hour < 19) wakeUp(true);
+    }
+    ps.pos.x = sl.x; ps.pos.z = sl.z;
+    ps.vel?.set?.(0, 0, 0);
+  }
+  sl.lie = lerp(sl.lie, sl.waking ? 0 : 1, 1 - Math.exp(-dt * (sl.waking ? 4 : 2.5)));
+  camera.position.y -= sl.lie * (EYE - 0.9);
+  camera.updateMatrixWorld();
+  if (sl.waking && sl.lie < 0.02) game.sleep = null;
+}
+
 function sailTip(id, text, kind = 'good', every = 45) {
   const last = game.sailTip[id];
   if (last !== undefined && game.time - last < every) return;
@@ -1104,10 +1322,24 @@ function updateLife(dt, wx, through, live) {
 const side = (x) => (x < 0 ? 'port' : 'starboard');
 life.on({
   onDolphins(s, where) {
+    sight('dolphins');
+    companion.say('dolphins', 0.8);
     hud.alert(`Dolphins! Coming up on the ${side(s)} side.`, { kind: 'good', duration: 6, follow: where });
   },
   onWhale(where, dx) {
+    sight('whale');
+    companion.say('whale');
     hud.alert('A whale is breaching!', { kind: 'good', duration: 6, follow: where });
+  },
+  onTurtle(where) {
+    hud.alert('A sea turtle has come up beside the raft.', { kind: 'good', duration: 6, follow: where });
+    sight('turtle');
+  },
+  onFlyingFish(where) {
+    if (journal.see('flyingfish')) hud.alert('Flying fish!', { kind: 'good', duration: 3, follow: where });
+  },
+  onJellyfish() {
+    if (journal.see('jellyfish')) hud.alert('The water is glowing: jellyfish, drifting up in the dark.', { kind: 'good', duration: 7 });
   },
   onWhaleSplash(p) {
     const s = placeSound(p);
@@ -1132,10 +1364,41 @@ let fovNow = 72;
 function speedView(dt, isl) {
   const want = 72 + 4 * clamp((isl.through - 1.2) / 2, 0, 1) + 7 * clamp(isl.surfing / 1.5, 0, 1);
   fovNow = lerp(fovNow, want, 1 - Math.exp(-dt * 1.6));
-  if (Math.abs(camera.fov - fovNow) > 0.05) {
-    camera.fov = fovNow;
+  const f = lerp(fovNow, 13, spy.k * spy.k * (3 - 2 * spy.k));
+  if (Math.abs(camera.fov - f) > 0.05) {
+    camera.fov = f;
     camera.updateProjectionMatrix();
   }
+}
+
+// The spyglass (hold Z): a long narrow look at the horizon.
+const spy = { k: 0, on: false, dir: { x: 0, z: 0 }, el: document.getElementById('scope') };
+function updateSpy(dt, ps) {
+  spy.on = crafting.hasGear('spyglass') && input.isDown('KeyZ') && !game.menu && !game.sleep && !ps.inWater;
+  spy.k = clamp(spy.k + (spy.on ? dt : -dt) * 5, 0, 1);
+  ps.lookScale = 1 - 0.84 * spy.k;
+  const show = spy.k > 0.02;
+  if (spy.el.hidden === show) { spy.el.hidden = !show; document.body.classList.toggle('spying', show); }
+  if (show) spy.el.style.opacity = spy.k;
+  camera.getWorldDirection(tmpV);
+  const l = Math.hypot(tmpV.x, tmpV.z) || 1;
+  spy.dir.x = tmpV.x / l; spy.dir.z = tmpV.z / l;
+}
+
+// Things the sky and the sea show you, noted in the logbook the first time.
+let sightIn = 0;
+function watchSights(dt, wx) {
+  sightIn -= dt;
+  if (sightIn > 0) return;
+  sightIn = 0.5;
+  if (SKY.rainbow > 0.45) sight('rainbow');
+  if (SKY.meteorT >= 0 && wx.night > 0.5) sight('meteor');
+  if (weather.state.flashT > 0) sight('lightning');
+  const land = islands.center();
+  if (land && wx.daylight > 0.3 && Math.hypot(land.x, land.z) < land.r + 150) sight('gulls');
+  if (!shark.gone && shark.state !== 'circle') sight(shark.tierIndex > 0 ? 'hammerhead' : 'reef');
+  const lh = islands.lighthouse();
+  if (lh && lh.seen) sight('lighthouse');
 }
 
 // ---------- per-frame ----------
@@ -1190,9 +1453,12 @@ function updatePlay(dt) {
   raft.update(game.time, dt);
   // Hammer and net rays this frame need the raft's current pose, not last frame's.
   raft.group.updateMatrixWorld(true);
-  const wx = weather.update(dt, game.time, camera.position, true, camera);
+  const wx = weather.update(dt * sleepRate(), game.time, camera.position, true, camera);
+  stations.setNight(wx.night);
   updateHelm(dt, player.state);
   player.update(game.time, dt, input, raft, events, 0, islands);
+  updateSleep(dt, wx);
+  updateSpy(dt, player.state);
   view.aim(player.state, game.time, dt);
   const ui = tools.update(game.time, dt, input, player, SKY.sunDir);
   // Footsteps on the deck or sand, strokes when swimming.
@@ -1204,6 +1470,7 @@ function updatePlay(dt) {
     else if (ps0.grounded) audio.step(ps0.onLand ? 'sand' : 'deck');
   }
   tools.setLighting(sun.intensity, sun.color, hemi.intensity);
+  watchSights(dt, wx);
   const ps = player.state;
   bait.update(game.time, dt, raft, debris.flow);
   // Wading in an island's shallows is safe; the shark won't come in that far.
@@ -1219,11 +1486,15 @@ function updatePlay(dt) {
     aboard: !ps.inWater && !ps.onLand, onLand: ps.onLand, anchored: stations.anchored(),
     hasSail: !!stations.has('sail'), onTower: !!ps.tower, night: wx.night,
     wind: wx.wind, steer: helmIn.steer,
+    spy: spy.k > 0.8 ? spy.dir : null, spyK: spy.k,
     // downhill ahead when a wave lifts the stern
     slope: (waveHeight(0, 6, game.time) - waveHeight(0, -6, game.time)) / 12,
   });
   updateSailing(dt, wx, isl, ps);
   updateLife(dt, wx, isl.through, true);
+  companionCtx.player = ps.pos; companionCtx.daylight = wx.daylight; companionCtx.live = true;
+  companion.update(game.time, dt, companionCtx);
+  if (wx.kind !== game.lastKind) { if (wx.kind === 'storm') companion.say('storm'); game.lastKind = wx.kind; }
   wetDeck(wx.rain);
   speedView(dt, isl);
   keepOffIsland(dt);
@@ -1266,6 +1537,8 @@ function updatePlay(dt) {
   if (game.lastHour < 6 && wx.hour >= 6) {
     progress('night');
     hud.alert(`Dawn of day ${wx.day}.`, { kind: 'good', duration: 3 });
+    companion.say('dawn', 0.7);
+    music.sting('dawn');
   }
   game.lastHour = wx.hour;
 
@@ -1311,6 +1584,14 @@ function updatePlay(dt) {
   hud.setSlot(ui.slot, hintFor(SLOTS[ui.slot].id, ui));
   hud.setPrompt(ui.prompt);
   hud.setCharge(ui.charge);
+  hud.setFishing(ui.fishing, ui.hasRod);
+  // Fish bite better at dawn and dusk and in the rain; what bites depends on how near land you are.
+  {
+    const ic2 = islands.center();
+    const near = ic2 ? clamp(1 - (Math.hypot(ic2.x - ps.pos.x, ic2.z - ps.pos.z) - ic2.r) / 60, 0, 1) : 0;
+    const lamp = (stations.lanternNear(ps.pos.x, ps.pos.z) ? 0.6 : 0) + (crafting.hasGear('lure') ? 0.9 : 0);
+    tools.setFishingPlace(near, wx.night, clamp(SKY.sunset * 0.8 + wx.rain * 0.5 + lamp, 0, 1.6));
+  }
   hud.setSwimming(ps.inWater && view.eyes);
   const islandNote = isl.resting
     ? (stations.anchored() ? 'Island: anchored' : `Island: ${formatTime(isl.visitLeft)}`)
@@ -1327,6 +1608,8 @@ function updateTitle(dt) {
   updateWorld(dt);
   shark.update(game.time, dt, { raft, nets, player: { pos: new THREE.Vector3(0, 0.4, 0), inWater: false }, fx, events: {} });
   shark.holdOff(30);
+  companionCtx.live = false;
+  companion.update(game.time, dt, companionCtx);
   const c = raft.center();
   view.pose(dt, c.x + 0.3, raft.deckHeightAt(c.x + 0.3, c.z + 0.2), c.z + 0.2, 2.6);
   camera.position.set(c.x + Math.sin(titleAngle) * 7.5, 3.1, c.z + Math.cos(titleAngle) * 7.5);
@@ -1360,11 +1643,13 @@ function frame(now) {
 
   ocean.update(game.time, camera.position);
   sky.update(game.time, camera.position);
+  musicMood.night = SKY.night; musicMood.sunset = SKY.sunset; musicMood.storm = SKY.storm;
+  music.update(dt, audio.context, audio.output, musicMood, game.mode === 'play' && !game.menu);
   if (game.mode === 'play') watchPerf(now);
   else perf.last = now;
 
   const playing = game.mode === 'play' || game.mode === 'paused';
-  pipeline.render(playing && view.eyes, playing ? player.state.pos : camera.position);
+  pipeline.render(playing && view.eyes && !game.sleep && spy.k < 0.3, playing ? player.state.pos : camera.position);
   input.endFrame(dt);
   requestAnimationFrame(frame);
 }
@@ -1392,14 +1677,14 @@ else start(window.claude?.hot?.data ?? {});
 window.__game = {
   game, raft, shark, debris, nets, rails, bait, stations, weather, crafting, islands, story, map, player, tools, inventory, input, camera, events,
   applyDifficulty, takeHelm, leaveHelm, wake, ocean, sky, renderer, scene, view, life, SKY,
-  openMenu, closeMenu, openMap, openNote,
+  openMenu, closeMenu, openMap, openNote, openJournal, journal, companion, music, audio, hud,
   newGame, enterPlay, serialize, restore, TILE, applyQuality, pipeline, saveGame, readSave, clearSave,
   hold: false,
   draw() {
     ocean.update(game.time, camera.position);
     sky.update(game.time, camera.position);
     const playing = game.mode === 'play' || game.mode === 'paused';
-    pipeline.render(playing && view.eyes, playing ? player.state.pos : camera.position);
+    pipeline.render(playing && view.eyes && !game.sleep && spy.k < 0.3, playing ? player.state.pos : camera.position);
   },
   step(sec, fn, draw = true) {
     const n = Math.round(sec / (1 / 60));

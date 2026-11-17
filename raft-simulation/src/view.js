@@ -114,7 +114,7 @@ export function createView(camera) {
       st.anim = info.anim;
       // Moon Faire's skin glows a little for a night fair: out here, only by day.
       b.glow = 0.25 * (info.daylight ?? 1);
-      upd.speed = st.speed; upd.swim = st.swim; upd.moving = p.moveAmount; upd.hold = p.inWater || p.helm ? null : info.slot; upd.steer = st.steer;
+      upd.speed = st.speed; upd.swim = st.swim; upd.moving = p.moveAmount; upd.hold = p.inWater || p.helm ? null : info.slot === 'rod' ? 'hook' : info.slot; upd.steer = st.steer;
       b.update(dt, upd);
     },
 

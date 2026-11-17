@@ -2,12 +2,14 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { waveHeight } from './ocean.js';
 import { clamp, damp, rand, smoothstep } from './util.js';
+import { createSeaLife } from './sealife.js';
 
 // Life on the sea, for scale and for moments worth stopping to watch:
 //  - gulls wheeling over an island and a few riding the wind above the raft;
 //  - dolphins that come up from astern when you're sailing well, and leap
 //    alongside for a while;
-//  - now and then, a long way off, a whale throwing itself out of the sea.
+//  - now and then, a long way off, a whale throwing itself out of the sea;
+//  - turtles, flying fish and glowing jellyfish (sealife.js).
 // Everything is built in code. Gulls are one draw call between them.
 
 const GULLS = 16;
@@ -195,6 +197,7 @@ export function createLife(scene, { fx, audio }) {
   scene.add(whale);
   const wh = { on: false, t: 0, x: 0, z: 0, yaw: 0, timer: rand(70, 130), hit: false, roll: 1 };
 
+  const small = createSeaLife(scene, { fx, audio });
   const v = new THREE.Vector3();
   const light = new THREE.Color();
   let events = {};
@@ -226,14 +229,15 @@ export function createLife(scene, { fx, audio }) {
   }
 
   return {
-    on(e) { events = e; },
-    get state() { return { dol, wh }; },
-    startDolphins, startWhale,
+    on(e) { events = e; small.on(e); },
+    get state() { return { dol, wh, ...small.state }; },
+    startDolphins, startWhale, startTurtle: small.startTurtle, startFlyers: small.startFlyers,
     reset() {
       dol.on = false; dol.timer = 22;
       wh.on = false; wh.timer = rand(70, 130);
       whale.visible = false;
       for (const d of pod) d.mesh.visible = false;
+      small.reset();
     },
 
     // c: { camera, raft {x, z}, land {x, z, r} | null, through (m/s under sail), day 0..1, night 0..1, storm 0..1,
@@ -241,6 +245,7 @@ export function createLife(scene, { fx, audio }) {
     update(t, dt, c) {
       light.copy(c.sunColor).multiplyScalar(0.55 * c.sunLevel).addScalar(0.3 + 0.35 * c.day);
       gulls.update(t, dt, c.land, c.raft, (1 - smoothstep(0.35, 0.7, c.night)) * (1 - smoothstep(0.4, 0.8, c.storm)), light, c.fog);
+      small.update(t, dt, c);
       if (!c.live) return;
 
       // ----- dolphins: they like a raft that is moving -----

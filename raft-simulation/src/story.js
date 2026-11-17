@@ -86,12 +86,12 @@ export function createStory() {
       return { ...note, n: st.read, of: NOTES.length };
     },
 
-    // A bottle floats by every so often until all the notes are found.
+    // A bottle floats by every so often: the notes first, and after them the
+    // odd one with a treasure map in it (or nothing).
     tick(dt) {
-      if (st.read >= NOTES.length) return false;
       st.nextBottle -= dt;
       if (st.nextBottle <= 0) {
-        st.nextBottle = 240 + Math.random() * 120;
+        st.nextBottle = (st.read >= NOTES.length ? 420 : 240) + Math.random() * 120;
         return true;
       }
       return false;

@@ -26,7 +26,7 @@ export function createMap({ islands, hasSail, audio, onCourse, windFrom }) {
   let hover = null;
   let spots = [];  // [{ rec, x, y, r }]
 
-  const sizeName = (rec) => (rec.kind === 'lighthouse' ? 'Lighthouse island' : `${ISLAND_SIZES[rec.size].label} island`);
+  const sizeName = (rec) => (rec.kind === 'lighthouse' ? 'Lighthouse island' : rec.kind === 'camp' ? (rec.rescued ? 'Castaway camp' : 'Smoke') : rec.treasure === true ? 'Treasure' : `${ISLAND_SIZES[rec.size].label} island`);
 
   function draw() {
     const W = el.canvas.clientWidth, H = el.canvas.clientHeight;
@@ -110,6 +110,16 @@ export function createMap({ islands, hasSail, audio, onCourse, windFrom }) {
         ctx.fillStyle = '#b8342b';
         ctx.beginPath(); ctx.moveTo(sx - 3, sy + 4); ctx.lineTo(sx + 3, sy + 4); ctx.lineTo(sx + 1.5, sy - 8); ctx.lineTo(sx - 1.5, sy - 8); ctx.closePath(); ctx.fill();
         if (rec.lit) { ctx.fillStyle = 'rgba(255,215,120,0.9)'; ctx.beginPath(); ctx.arc(sx, sy - 9, 3, 0, Math.PI * 2); ctx.fill(); }
+      }
+      if (rec.treasure === true) {
+        ctx.strokeStyle = '#b8342b';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(sx - 6, sy - 6); ctx.lineTo(sx + 6, sy + 6); ctx.moveTo(sx + 6, sy - 6); ctx.lineTo(sx - 6, sy + 6); ctx.stroke();
+      }
+      if (rec.kind === 'camp' && !rec.rescued) {
+        ctx.strokeStyle = 'rgba(70,70,76,0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.bezierCurveTo(sx + 5, sy - 6, sx - 4, sy - 11, sx + 3, sy - 18); ctx.stroke();
       }
       if (hover === rec || dest === rec) {
         ctx.strokeStyle = dest === rec ? '#28597f' : '#3b2a1d';

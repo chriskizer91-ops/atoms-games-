@@ -46,6 +46,8 @@ function init() {
     ghost: new THREE.MeshBasicMaterial({ color: 0xcfeeff, transparent: true, opacity: 0.22, depthWrite: false }),
     ghostEdge: new THREE.LineBasicMaterial({ color: 0xeaf8ff, transparent: true, opacity: 0.7 }),
     hit: new THREE.MeshBasicMaterial({ visible: false }),
+    canvas: new THREE.MeshStandardMaterial({ color: 0xd9c9a0, roughness: 0.95, side: THREE.DoubleSide }),
+    lamp: new THREE.MeshStandardMaterial({ color: 0xfff0c8, emissive: 0xffb04a, emissiveIntensity: 0, roughness: 0.3, transparent: true, opacity: 0.9 }),
   };
   const ghost = new THREE.CylinderGeometry(0.5, 0.5, 0.9, 16).translate(0, DECK_Y + 0.45, 0);
   G = {
@@ -161,6 +163,61 @@ function buildTable() {
   coil.position.set(0.3, DECK_Y + 0.94, -0.12);
   g.add(coil);
   return { group: g };
+}
+
+// A hammock slung between two posts, corner to corner of its floor piece.
+function buildHammock() {
+  const g = new THREE.Group();
+  for (const s of [-1, 1]) {
+    const p = mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.25, 7), M.log);
+    p.position.set(s * 0.72, DECK_Y + 0.62, 0);
+    p.rotation.z = -s * 0.12;
+    g.add(p);
+    const tie = mesh(G.lash, M.rope);
+    tie.position.set(s * 0.66, DECK_Y + 1.1, 0);
+    tie.rotation.x = Math.PI / 2;
+    tie.scale.setScalar(0.7);
+    g.add(tie);
+  }
+  // The cloth: a sagging sheet, narrow at the ends, with a little belly across.
+  const geo = new THREE.PlaneGeometry(1.3, 0.62, 12, 4).rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const u = pos.getX(i) / 0.65, w = pos.getZ(i) / 0.31;
+    const narrow = 0.25 + 0.75 * Math.cos(u * Math.PI / 2);
+    pos.setZ(i, pos.getZ(i) * narrow);
+    pos.setY(i, -0.46 * (1 - u * u) + 0.1 * w * w * narrow);
+  }
+  geo.computeVertexNormals();
+  const cloth = mesh(geo, M.canvas);
+  cloth.position.y = DECK_Y + 1.08;
+  g.add(cloth);
+  return { group: g, cloth };
+}
+
+// A bottle lamp hung from a bent post.
+function buildLantern() {
+  const g = new THREE.Group();
+  const post = mesh(new THREE.CylinderGeometry(0.03, 0.04, 1.75, 7), M.log);
+  post.position.set(0.3, DECK_Y + 0.87, 0.3);
+  g.add(post);
+  const arm = mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.42, 6).rotateZ(Math.PI / 2), M.log);
+  arm.position.set(0.12, DECK_Y + 1.7, 0.3);
+  g.add(arm);
+  const cord = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.16, 5), M.rope, false);
+  cord.position.set(-0.04, DECK_Y + 1.62, 0.3);
+  g.add(cord);
+  const lampMat = M.lamp.clone();
+  const lamp = mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.2, 10), lampMat, false);
+  lamp.position.set(-0.04, DECK_Y + 1.44, 0.3);
+  g.add(lamp);
+  const cap = mesh(new THREE.CylinderGeometry(0.03, 0.08, 0.05, 10), M.metal, false);
+  cap.position.set(-0.04, DECK_Y + 1.56, 0.3);
+  g.add(cap);
+  const base = mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.02, 10), M.metal, false);
+  base.position.set(-0.04, DECK_Y + 1.33, 0.3);
+  g.add(base);
+  return { group: g, lamp };
 }
 
 function buildAnchor() {
@@ -418,6 +475,7 @@ export function createStations(raft, fx, audio) {
   raft.group.add(ghostLayer);
   const ghosts = [];
   let mode = null;
+  let night = 0;
   let dirty = true;
   let lost = () => {};
   const events = {};
@@ -430,6 +488,7 @@ export function createStations(raft, fx, audio) {
     const built = {
       grill: buildGrill, catcher: buildCatcher, table: buildTable, anchor: buildAnchor,
       planter: buildPlanter, smelter: buildSmelter, still: buildStill, sail: buildSail, tower: buildTower,
+      hammock: buildHammock, lantern: buildLantern,
     }[kind]();
     built.group.userData.above = true;
     tile.group.add(built.group);
@@ -573,6 +632,8 @@ export function createStations(raft, fx, audio) {
       if (st.kind === 'table') return { key: 'E', text: 'Use the crafting table', act: 'craft' };
       if (st.kind === 'sail') return { key: 'E', text: 'Take the steering oar', act: 'helm' };
       if (st.kind === 'tower') return { key: 'E', text: 'Climb the lookout tower', act: 'climb' };
+      if (st.kind === 'hammock') return night > 0.5 ? { key: 'E', text: 'Sleep until dawn', act: 'sleep' } : { text: 'A hammock: come back after dark to sleep', dim: true };
+      if (st.kind === 'lantern') return { text: night > 0.25 ? 'The lantern is lit' : 'The lantern lights itself at dusk', dim: true };
       if (st.kind === 'planter') {
         if (st.crop && st.grow >= 1) return { key: 'E', text: `Harvest the ${ITEMS[CROPS[st.crop].food].name.toLowerCase()}`, act: 'harvest' };
         if (st.crop) return { text: `${ITEMS[CROPS[st.crop].food].name} growing: ${Math.floor(st.grow * 100)}%`, dim: true };
@@ -620,6 +681,7 @@ export function createStations(raft, fx, audio) {
       if (act === 'map') return { map: true };
       if (act === 'helm') return { helm: true };
       if (act === 'climb') return { climb: true };
+      if (act === 'sleep') return { sleep: true };
       if (act === 'plant') {
         const c = nextSeed(st, inv);
         if (!c) return null;
@@ -712,6 +774,13 @@ export function createStations(raft, fx, audio) {
       for (const st of list.values()) if (st.kind === kind) return st;
       return null;
     },
+    setNight(n) { night = n; },
+    // Is there a lit lantern within `reach` metres of this point?
+    lanternNear(x, z, reach = 9) {
+      if (night < 0.25) return false;
+      for (const st of list.values()) if (st.kind === 'lantern' && Math.hypot(st.tile.i * TILE - x, st.tile.j * TILE - z) < reach) return true;
+      return false;
+    },
 
     // sail: { hoist 0..1, boom (radians, + to starboard), fill 0..1, rudder } from the sailing.
     update(t, dt, weatherKind, playerPos, wind = 0, sail = null) {
@@ -800,7 +869,16 @@ export function createStations(raft, fx, audio) {
           if (st.normT <= 0) { st.normT = 0.12; st.cloth.geometry.computeVertexNormals(); st.flag.geometry.computeVertexNormals(); }
           continue;
         }
-        if (st.kind === 'tower' || st.kind === 'table') continue;
+        if (st.kind === 'tower' || st.kind === 'table' || st.kind === 'hammock') continue;
+        if (st.kind === 'lantern') {
+          const lit = night > 0.25 ? 1 : 0;
+          st.lamp.material.emissiveIntensity = lit * (2.6 + Math.sin(t * 9 + st.tile.i * 3) * 0.25);
+          if (lit) {
+            const d = Math.hypot(st.tile.i * TILE - playerPos.x, st.tile.j * TILE - playerPos.z) + 3;   // a fire wins when both are near
+            if (d < nearestD) { nearestD = d; nearest = st; }
+          }
+          continue;
+        }
         if (st.kind === 'grill') {
           const burning = st.fuel > 0;
           if (burning) {
@@ -850,8 +928,9 @@ export function createStations(raft, fx, audio) {
         }
       }
       if (nearest) {
-        fireLight.position.set(nearest.tile.i * TILE, DECK_Y + 0.6, nearest.tile.j * TILE);
-        fireLight.intensity = 3.4 + Math.sin(t * 17) * 0.7 + Math.sin(t * 7.3) * 0.5;
+        const lamp = nearest.kind === 'lantern';
+        fireLight.position.set(nearest.tile.i * TILE - (lamp ? 0.04 : 0), DECK_Y + (lamp ? 1.4 : 0.6), nearest.tile.j * TILE + (lamp ? 0.3 : 0));
+        fireLight.intensity = lamp ? 2.6 + Math.sin(t * 9) * 0.2 : 3.4 + Math.sin(t * 17) * 0.7 + Math.sin(t * 7.3) * 0.5;
       } else {
         fireLight.intensity = 0;
       }

@@ -283,6 +283,8 @@ export function createCrafting({ inventory, stats, audio, events, hasTable }) {
     spearLevel() { return st.gear.has('steelSpear') ? 4 : st.gear.has('metalSpear') ? 3 : st.gear.has('boneSpear') ? 2 : 1; },
     hookLevel() { return st.gear.has('metalHook') ? 2 : 1; },
     hasGear(id) { return st.gear.has(id); },
+    // Given, not made (found in a chest).
+    grant(id) { st.gear.add(id); },
     worn(slot) { return st.worn[slot]; },
     sleeveColor() { return st.worn.body ? CLOTHING[st.worn.body].color : null; },
     // For tests: make or wear without the panel (bench recipes count as at the table).

@@ -52,6 +52,10 @@
 
   <div id="crosshair"></div>
   <div id="charge"><div id="charge-fill"></div></div>
+  <div id="fishmeter" hidden>
+    <div class="fm"><span>Line strain</span><div class="bar"><i id="fm-tension"></i></div></div>
+    <div class="fm"><span>Reeled in</span><div class="bar"><i id="fm-progress"></i></div></div>
+  </div>
   <div id="prompt" hidden>
     <kbd id="prompt-key"></kbd><span id="prompt-text"></span><span id="prompt-cost"></span>
   </div>
@@ -72,6 +76,7 @@
       <div class="slot" data-icon="hammer"><kbd>3</kbd><span class="sname">Hammer</span></div>
       <div class="slot" id="food-slot"><span class="ficon"></span><kbd>4</kbd><span class="sname" id="food-name">Coconut</span><em id="food-count">0</em></div>
       <div class="slot" data-icon="fish"><kbd>5</kbd><span class="sname">Raw fish</span><em id="fish-count">0</em></div>
+      <div class="slot" data-icon="rod"><kbd>6</kbd><span class="sname">Rod</span></div>
     </div>
   </div>
 
@@ -88,6 +93,8 @@
 
   <div id="waterline"></div>
   <div id="vignette"></div>
+  <div id="veil"></div>
+  <div id="scope" hidden><i></i></div>
 </div>
 
 <section id="title" class="screen">
@@ -108,11 +115,14 @@
       <div><dt>Mouse</dt><dd>Look and aim</dd></div>
       <div><dt>Left click</dt><dd>Use tool (hold to wind up the hook)</dd></div>
       <div><dt>Right click</dt><dd>Let go of the hook, pick a build, throw bait</dd></div>
-      <div><dt><kbd>1</kbd>–<kbd>5</kbd> or scroll</dt><dd>Switch tool</dd></div>
+      <div><dt><kbd>1</kbd>–<kbd>6</kbd> or scroll</dt><dd>Switch tool</dd></div>
       <div><dt><kbd>E</kbd></dt><dd>Grab, gather, use what you built</dd></div>
       <div><dt><kbd>C</kbd> or <kbd>Tab</kbd></dt><dd>Crafting and wardrobe</dd></div>
       <div><dt><kbd>M</kbd></dt><dd>Map (with a sail: click an island)</dd></div>
       <div><dt><kbd>E</kbd> at the sail</dt><dd>Take the oar: <kbd>A</kbd> <kbd>D</kbd> steer, <kbd>W</kbd> <kbd>S</kbd> sail up, down</dd></div>
+      <div><dt><kbd>Z</kbd> (hold, with a spyglass)</dt><dd>Look through the spyglass</dd></div>
+      <div><dt><kbd>H</kbd></dt><dd>Hide or show everything on screen, for a clear view</dd></div>
+      <div><dt><kbd>J</kbd></dt><dd>Logbook: fish caught, things seen, messages read</dd></div>
       <div><dt><kbd>V</kbd></dt><dd>Your own eyes, or a view from behind</dd></div>
       <div><dt><kbd>Q</kbd> (hammer out)</dt><dd>Choose what to build</dd></div>
       <div><dt><kbd>R</kbd></dt><dd>Next thing to build, or next food</dd></div>
@@ -131,6 +141,10 @@
     <div class="difficulty" role="group" aria-label="Difficulty">
       <span class="label">Difficulty</span>
       <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button><button type="button" data-d="peaceful">Peaceful</button>
+    </div>
+    <div class="music" role="group" aria-label="Music">
+      <span class="label">Music</span>
+      <button type="button" data-m="on">On</button><button type="button" data-m="off">Off</button>
     </div>
     <div class="quality" role="group" aria-label="Graphics quality">
       <span class="label">Graphics</span>
@@ -170,6 +184,17 @@
       <canvas id="map-canvas" aria-label="Chart of the islands you have seen"></canvas>
       <aside id="map-info"></aside>
     </div>
+  </div>
+</section>
+
+<section id="journal" class="screen" hidden>
+  <div class="journal-panel panel">
+    <header class="craft-head">
+      <h2>Logbook</h2>
+      <span class="craft-hint">Everything here is something that happened to you.</span>
+      <button type="button" id="journal-close" class="ghost">Close (J)</button>
+    </header>
+    <div id="journal-body"></div>
   </div>
 </section>
 

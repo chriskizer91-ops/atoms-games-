@@ -922,6 +922,12 @@ fs.mkdirSync(outDir, { recursive: true });
     const G = window.__game; const T = G.TILE; const p = G.player.state;
     G.inventory.add({ bamboo: 8, rope: 6, plastic: 8 });
     G.raft.build(-1, -1); G.raft.build(-2, 0);
+    // Start in open water: earlier checks put test islands down wherever they needed one, and two of
+    // those side by side would catch the raft again the moment it cast off.
+    const sea = G.islands.state;
+    for (let k = 0; k < 60 && [...sea.chart.values()].some((r) => Math.hypot(r.x - sea.rw.x, r.z - sea.rw.z) < r.R + 260); k++) { sea.rw.x += 97; sea.rw.z -= 53; }
+    sea.resting = null; sea.lock = null; sea.dest = null;
+    G.step(0.5);
     const free = [...G.raft.tiles.values()].find((t) => !t.broken && !G.stations.hasStation(t) && (t.i !== 0 || t.j !== 0));
     G.tools.pickBuild('sail', G.player); G.step(0.4);
     // stand on the near side of that floor piece, looking down at it
@@ -1135,6 +1141,177 @@ fs.mkdirSync(outDir, { recursive: true });
     return { body: true, id: body.id, tris: body.triangles, behind, at, eyes, built, tiles0 };
   });
   check('V switches to a view from behind with the castaway in it, and back', third.body && third.behind && third.at && third.eyes, JSON.stringify(third));
+
+  // ---------- Stage 6: more to do ----------
+  // 47. The fishing rod: cast, strike on the bite, fight it in; the fish goes in the logbook
+  const fishing = await page.evaluate(() => {
+    const G = window.__game;
+    G.newGame(); G.game.mode = 'play'; G.applyDifficulty('peaceful', false);
+    G.view.set(false);
+    G.crafting.grant('rod');
+    const p = G.player.state; p.pos.set(0, 0.42, 0); p.yaw = 0.6; p.pitch = -0.12;
+    G.tools.setSlot(5, G.player); G.step(1.2);
+    G.click(0, 1); G.step(1.5);
+    const s = G.tools.rod.state;
+    const cast = s.phase;
+    s.t = s.wait - 0.05; G.step(0.25);
+    const bite = s.phase;
+    G.click(0, 1); G.step(0.1);
+    const hooked = s.phase;
+    G.step(45, () => { G.input.state.mouse[0] = s.phase === 'reeling' && !s.running && s.tension < 0.7; });
+    G.input.state.mouse[0] = false;
+    return { cast, bite, hooked, end: s.phase, fish: G.inventory.get('fish'), kinds: Object.keys(G.journal.state.fish) };
+  });
+  check('the fishing rod: cast, strike on the bite, reel it in', fishing.cast === 'waiting' && fishing.bite === 'bite' && fishing.hooked === 'reeling' && fishing.fish > 0 && fishing.kinds.length === 1, JSON.stringify(fishing));
+
+  // 48. A hammock: sleep after dark and the night goes by; you wake at dawn
+  const sleep = await page.evaluate(() => {
+    const G = window.__game;
+    G.weather.setTime(22); G.step(0.5);
+    const tile = [...G.raft.tiles.values()].find((t) => !G.stations.hasStation(t));
+    const st = G.stations.add(tile, 'hammock');
+    const prompt = G.stations.describe(st, G.inventory);
+    G.events.onStationUse(st, 'sleep', { sleep: true });
+    G.step(4);
+    const mid = { hour: G.weather.state.hour, asleep: G.player.state.asleep };
+    G.step(9);
+    return { prompt: prompt.text, mid, hour: G.weather.state.hour, asleep: G.player.state.asleep, sleeping: !!G.game.sleep };
+  });
+  check('a hammock: sleep after dark, wake at dawn', sleep.prompt === 'Sleep until dawn' && sleep.mid.asleep && !sleep.asleep && !sleep.sleeping && sleep.hour >= 6 && sleep.hour < 8, JSON.stringify(sleep));
+
+  // 49. The spyglass: a narrow view, and land far off in it goes on the chart
+  const spyglass = await page.evaluate(() => {
+    const G = window.__game;
+    G.weather.setTime(10); G.weather.setWeather('clear', true);
+    G.crafting.grant('spyglass');
+    const st = G.islands.state;
+    let far = null;
+    for (const r of st.chart.values()) {
+      const d = Math.hypot(r.x - st.rw.x, r.z - st.rw.z);
+      if (!r.seen && r.kind === 'island' && d > 500 && d < 1400 && (!far || d < far.d)) far = { r, d };
+    }
+    if (!far) return { far: false };
+    const fr = st.heading - Math.PI, c = Math.cos(fr), s = Math.sin(fr);
+    const dx = far.r.x - st.rw.x, dz = far.r.z - st.rw.z;
+    const p = G.player.state;
+    p.yaw = Math.atan2(-(dx * c - dz * s), -(dx * s + dz * c)); p.pitch = 0;
+    G.step(0.5);
+    const before = far.r.seen;
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyZ' }));
+    G.step(1.5);
+    const fov = G.camera.fov, seen = far.r.seen;
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyZ' }));
+    G.step(1);
+    return { far: true, d: Math.round(far.d), before, seen, fov, fovAfter: G.camera.fov };
+  });
+  check('the spyglass: a narrow view that charts land far off', spyglass.far && !spyglass.before && spyglass.seen && spyglass.fov < 20 && spyglass.fovAfter > 60, JSON.stringify(spyglass));
+
+  // 50. A treasure map in a bottle marks an island; digging at the X turns up a chest
+  const treasure = await page.evaluate(() => {
+    const G = window.__game;
+    G.newGame(); G.game.mode = 'play'; G.applyDifficulty('peaceful', false);
+    G.events.onCollect({ bottle: 1 }, 'hand'); G.closeMenu();
+    G.events.onCollect({ bottle: 1 }, 'hand');
+    const noteShown = !document.getElementById('note').hidden;
+    G.closeMenu();
+    const st = G.islands.state;
+    const rec = [...st.chart.values()].find((r) => r.treasure === true);
+    if (!rec) return { rec: false };
+    const d0 = Math.hypot(rec.x - st.rw.x, rec.z - st.rw.z);
+    const k = (rec.R + 30) / d0;
+    st.rw.x = rec.x - (rec.x - st.rw.x) * k; st.rw.z = rec.z - (rec.z - st.rw.z) * k;
+    G.step(2);
+    let hit = null;
+    G.scene.traverse((o) => { if (o.userData && o.userData.res && o.userData.res.kind === 'dig') hit = o; });
+    if (!hit) return { rec: true, hit: false };
+    const v = G.camera.position.clone();
+    hit.getWorldPosition(v);
+    const p = G.player.state;
+    for (const a of [0, 1.57, 3.14, 4.71, 0.78, 2.35, 3.9, 5.5]) {
+      hit.getWorldPosition(v);
+      p.pos.set(v.x + Math.sin(a) * 2.0, v.y + 0.4, v.z + Math.cos(a) * 2.0); p.onLand = true; p.inWater = false; p.grounded = true;
+      G.step(0.5);
+      hit.getWorldPosition(v);
+      G.aimAt(v.x, v.y + 0.1, v.z); G.step(0.2);
+      if (G.tools.state.prompt && G.tools.state.prompt.text === 'Dig where the X is') { G.key('KeyE'); G.step(0.4); break; }
+    }
+    const j = G.journal.state;
+    G.closeMenu();
+    return { rec: true, hit: true, noteShown, d0: Math.round(d0), dug: rec.treasure, chests: j.treasure, coins: j.coins, spyglass: G.crafting.hasGear('spyglass'), scrap: G.inventory.get('scrap') };
+  });
+  check('a treasure map marks an island and the X gives up a chest', treasure.rec && treasure.hit && treasure.noteShown && treasure.dug === 'dug' && treasure.chests === 1 && treasure.coins > 0 && treasure.spyglass && treasure.scrap >= 3, JSON.stringify(treasure));
+
+  // 51. The other castaway: smoke marks their camp, they come aboard, and they work
+  const mate = await page.evaluate(async () => {
+    const G = window.__game;
+    G.newGame(); G.game.mode = 'play'; G.applyDifficulty('normal', false);
+    for (let i = 0; i < 40 && !G.view.state.body; i++) await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 600));
+    const st = G.islands.state;
+    const camp = G.islands.camp();
+    if (!camp) return { camp: false };
+    const d0 = Math.hypot(camp.x - st.rw.x, camp.z - st.rw.z);
+    let k = 1000 / d0;
+    st.rw.x = camp.x - (camp.x - st.rw.x) * k; st.rw.z = camp.z - (camp.z - st.rw.z) * k;
+    G.step(1);
+    const hailed = !!camp.hailed && camp.seen;
+    k = (camp.R + 40) / 1000;
+    st.rw.x = camp.x - (camp.x - st.rw.x) * k; st.rw.z = camp.z - (camp.z - st.rw.z) * k;
+    G.step(2);
+    const v = G.camera.position.clone();
+    const stand = G.islands.campStand(v);
+    if (!stand) return { camp: true, hailed, stand: false };
+    const p = G.player.state;
+    // walk up to them from whichever side is clear (a bush or the fire may be in the way from some)
+    for (const a of [0, 1.57, 3.14, 4.71, 0.78, 2.35, 3.9, 5.5]) {
+      G.islands.campStand(v);
+      p.pos.set(v.x + Math.sin(a) * 1.9, v.y + 0.4, v.z + Math.cos(a) * 1.9); p.onLand = true; p.inWater = false; p.grounded = true;
+      G.step(0.5);
+      G.islands.campStand(v);
+      G.aimAt(v.x, v.y + 1.0, v.z); G.step(0.2);
+      if (G.tools.state.prompt && G.tools.state.prompt.text === 'Talk to the castaway') { G.key('KeyE'); G.step(0.4); break; }
+    }
+    const joined = G.companion.joined, note = !document.getElementById('note').hidden;
+    G.closeMenu();
+    // back aboard: something floats by, a floor piece is bitten
+    p.pos.set(0, 0.42, 0); p.onLand = false; G.step(0.5);
+    const c = G.companion.state;
+    c.haulT = 0; c.wait = 0.1; c.mode = 'idle';
+    const wood0 = G.inventory.get('wood');
+    G.debris.spawn('plank', 3.4, -1.2);
+    G.step(9);
+    const wood = G.inventory.get('wood');
+    const tile = [...G.raft.tiles.values()][2];
+    G.raft.damage(tile, 60, [1, 0]);
+    const hp0 = tile.hp;
+    c.wait = 0.1; c.mode = 'idle'; c.job = null;
+    G.step(14);
+    return { camp: true, hailed, stand: true, joined, note, name: G.companion.name, wood0, wood, hp0, hp: tile.hp, saved: G.serialize().companion };
+  });
+  check('the other castaway: found by their smoke, comes aboard, hauls and mends', mate.camp && mate.hailed && mate.stand && mate.joined && mate.note && mate.wood > mate.wood0 && mate.hp > mate.hp0 + 20 && mate.saved.joined, JSON.stringify(mate));
+  await shot('28-the-other-castaway');
+
+  // 52. Turtles, flying fish, glowing jellyfish; all of it noted in the logbook, which survives a save
+  const sea = await page.evaluate(() => {
+    const G = window.__game;
+    G.weather.setTime(10); G.weather.setWeather('clear', true);
+    G.life.startTurtle(G.raft.center());
+    G.life.startFlyers(G.camera, G.raft.center());
+    G.step(2);
+    const day = { turtle: G.life.state.tu.on, flyers: G.life.state.fl.on };
+    G.weather.setTime(23.5); G.step(9);
+    const glow = G.life.state.js.glow;
+    const seen = Object.keys(G.journal.state.seen);
+    G.openJournal();
+    const book = !document.getElementById('journal').hidden && document.getElementById('journal-body').textContent.includes('sea turtle');
+    G.closeMenu();
+    const save = G.serialize();
+    G.newGame(); G.game.mode = 'play';
+    const cleared = Object.keys(G.journal.state.seen).length;
+    G.restore(save); G.game.mode = 'play';
+    return { day, glow, seen, book, cleared, back: Object.keys(G.journal.state.seen).length, mate: G.companion.joined };
+  });
+  check('turtles, flying fish and jellyfish turn up, and the logbook keeps them through a save', sea.day.turtle && sea.day.flyers && sea.glow > 0.8 && ['turtle', 'flyingfish', 'jellyfish'].every((k) => sea.seen.includes(k)) && sea.book && sea.cleared === 0 && sea.back === sea.seen.length && sea.mate, JSON.stringify(sea));
   await page.evaluate(() => { const G = window.__game; G.view.set(true); const p = G.player.state; p.yaw = 0.6; p.pitch = -0.15; G.tools.setSlot(1, G.player); G.step(1.2); });
   await shot('27-third-person');
   await page.evaluate(() => { const G = window.__game; G.view.set(false); G.step(0.5); });
